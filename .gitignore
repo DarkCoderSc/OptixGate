@@ -1,0 +1,7 @@
+**/__history
+**/__recovery
+**/*.dproj.local
+**/*.identcache
+**/*.dcu
+**/Win32
+**/Win64
