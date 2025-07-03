@@ -1,0 +1,204 @@
+{******************************************************************************}
+{                                                                              }
+{         ____             _     ____          _           ____                }
+{        |  _ \  __ _ _ __| | __/ ___|___   __| | ___ _ __/ ___|  ___          }
+{        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
+{        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
+{        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
+{                              Project: Optix Neo                              }
+{                                                                              }
+{                                                                              }
+{                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
+{                   https://github.com/darkcodersc                             }
+{                   License: Apache License 2.0                                }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{******************************************************************************}
+
+unit Optix.Protocol.Client.Handler;
+
+interface
+
+{$I Optix.inc}
+
+uses Optix.Protocol.Sockets.Client, Optix.Protocol.Packet, Generics.Collections,
+     Optix.Sockets.Helper, System.SysUtils, XSuperObject,
+     Winapi.Windows;
+
+type
+  TOptixClientHandlerThread = class(TOptixClientThread)
+  private
+    FPacketQueue : TThreadedQueue<TOptixPacket>;
+
+    {@M}
+    procedure Initialize();
+  protected
+    {@C}
+    procedure ClientExecute(); override;
+    procedure EstablishedConnection(); virtual;
+    procedure PacketReceived(const APacketBody : ISuperObject); virtual; abstract;
+  public
+    {$IFDEF CLIENT}
+    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
+    {$ENDIF}
+
+    {$IFDEF SERVER}
+    constructor Create(const AClient : TClientSocket);
+    {$ENDIF}
+
+    destructor Destroy(); override;
+
+    {@M}
+    procedure AddPacket(const APacket : TOptixPacket);
+  end;
+
+implementation
+
+uses Optix.Sockets.Exceptions, System.SyncObjs;
+
+{ TOptixClientHandlerThread.EstablishedConnection }
+procedure TOptixClientHandlerThread.EstablishedConnection();
+begin
+  ///
+end;
+
+{ TOptixClientHandlerThread.ClientExecute }
+procedure TOptixClientHandlerThread.ClientExecute();
+var APacket     : TOptixPacket;
+    APacketBody : ISuperObject;
+begin
+  if not Assigned(FPacketQueue) then
+    Exit();
+  ///
+
+  EstablishedConnection();
+
+  while not Terminated do begin
+    APacket := nil;
+    ///
+
+    //--------------------------------------------------------------------------
+    // Dispatch Outgoing Packets (Egress)
+    //--------------------------------------------------------------------------
+    while (FPacketQueue.PopItem(APacket) = TWaitResult.wrSignaled) do begin
+      try
+        if Terminated then
+          break;
+        ///
+
+        // Dispatch Packet
+        try
+          if Assigned(APacket) then
+            FClient.SendPacket(APacket);
+        except
+          on E : ESocketException do
+            raise;
+
+          on E : Exception do begin
+            // Void
+          end;
+        end;
+      finally
+        if Assigned(APacket) then
+          FreeAndNil(APacket);
+      end;
+    end;
+
+    // -------------------------------------------------------------------------
+    // Dispatch Incomming Packets (Ingress)
+    // -------------------------------------------------------------------------
+    try
+      FClient.ReceivePacket(APacketBody);
+
+      // /!\ `PacketReceived` (@Abstract) is responsible for handling
+      // Packet Memory.
+      PacketReceived(APacketBody);
+    except
+      on E : ESocketException do
+        raise;
+
+      on E : Exception do begin
+        // Void
+      end;
+    end;
+  end; // while not Terminated do begin
+end;
+
+{ TOptixClientHandlerThread.Initialize }
+procedure TOptixClientHandlerThread.Initialize();
+begin
+  FPacketQueue := TThreadedQueue<TOptixPacket>.Create(1024, INFINITE, 100);
+end;
+
+{ TOptixClientHandlerThread.Create }
+{$IFDEF CLIENT}
+constructor TOptixClientHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
+begin
+  inherited Create(ARemoteAddress, ARemotePort);
+  ///
+
+  Initialize();
+end;
+{$ENDIF}
+
+{$IFDEF SERVER}
+constructor TOptixClientHandlerThread.Create(const AClient : TClientSocket);
+begin
+  inherited Create(AClient);
+  ///
+
+  Initialize();
+end;
+{$ENDIF}
+
+{ TOptixClientHandlerThread.ClientExecute }
+destructor TOptixClientHandlerThread.Destroy();
+begin
+  if Assigned(FPacketQueue) then begin
+    FPacketQueue.DoShutDown();
+
+    ///
+    FreeAndNil(FPacketQueue);
+  end;
+
+  ///
+  inherited Destroy();
+end;
+
+{ TOptixClientHandlerThread.ClientExecute }
+procedure TOptixClientHandlerThread.AddPacket(const APacket : TOptixPacket);
+begin
+  if not Assigned(APacket) then
+    Exit();
+  ///
+
+  FPacketQueue.PushItem(APacket);
+end;
+
+end.

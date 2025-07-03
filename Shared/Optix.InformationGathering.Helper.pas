@@ -1,0 +1,380 @@
+{******************************************************************************}
+{                                                                              }
+{         ____             _     ____          _           ____                }
+{        |  _ \  __ _ _ __| | __/ ___|___   __| | ___ _ __/ ___|  ___          }
+{        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
+{        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
+{        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
+{                              Project: Optix Neo                              }
+{                                                                              }
+{                                                                              }
+{                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
+{                   https://github.com/darkcodersc                             }
+{                   License: Apache License 2.0                                }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{******************************************************************************}
+
+unit Optix.InformationGathering.Helper;
+
+interface
+
+uses Winapi.Windows, System.Classes, System.Hash;
+
+type
+  TProcessArchitecture = (
+    paOther,
+    pa86_32,
+    pa86_64
+  );
+
+  TSidNameUse = (
+                  SidTypeUser,
+                  SidTypeGroup,
+                  SidTypeDomain,
+                  SidTypeAlias,
+                  SidTypeWellKnownGroup,
+                  SidTypeDeletedAccount,
+                  SidTypeInvalid,
+                  SidTypeUnknown,
+                  SidTypeComputer,
+                  SidTypeLabel,
+                  SidTypeLogonSession
+  );
+
+  STORAGE_QUERY_TYPE = (
+    PropertyStandardQuery = 0,
+    PropertyExistsQuery,
+    PropertyMaskQuery,
+    PropertyQueryMaxDefined
+  );
+  TStorageQueryType = STORAGE_QUERY_TYPE;
+
+  STORAGE_PROPERTY_ID = (
+    StorageDeviceProperty = 0,
+    StorageAdapterProperty
+  );
+  TStoragePropertyID = STORAGE_PROPERTY_ID;
+
+  STORAGE_PROPERTY_QUERY = record
+    PropertyId           : STORAGE_PROPERTY_ID;
+    QueryType            : STORAGE_QUERY_TYPE;
+    AdditionalParameters : array[0..9] of AnsiChar;
+  end;
+  TStoragePropertyQuery = STORAGE_PROPERTY_QUERY;
+
+  STORAGE_BUS_TYPE = (
+    BusTypeUnknown = 0,
+    BusTypeScsi,
+    BusTypeAtapi,
+    BusTypeAta,
+    BusType1394,
+    BusTypeSsa,
+    BusTypeFibre,
+    BusTypeUsb,
+    BusTypeRAID,
+    BusTypeiScsi,
+    BusTypeSas,
+    BusTypeSata,
+    BusTypeMaxReserved = $7F
+  );
+  TStorageBusType = STORAGE_BUS_TYPE;
+
+  STORAGE_DEVICE_DESCRIPTOR = record
+    Version               : DWORD;
+    Size                  : DWORD;
+    DeviceType            : Byte;
+    DeviceTypeModifier    : Byte;
+    RemovableMedia        : Boolean;
+    CommandQueueing       : Boolean;
+    VendorIdOffset        : DWORD;
+    ProductIdOffset       : DWORD;
+    ProductRevisionOffset : DWORD;
+    SerialNumberOffset    : DWORD;
+    BusType               : STORAGE_BUS_TYPE;
+    RawPropertiesLength   : DWORD;
+    RawDeviceProperties   : array[0..0] of AnsiChar;
+  end;
+  TStorageDeviceDescriptor = STORAGE_DEVICE_DESCRIPTOR;
+  PStorageDeviceDescriptor = ^TStorageDeviceDescriptor;
+
+  STORAGE_DESCRIPTOR_HEADER = record
+    Version : DWORD;
+    Size    : DWORD;
+  end;
+  TStorageDescriptorHeader = STORAGE_DESCRIPTOR_HEADER;
+  PStorageDescriptorHeader = ^TStorageDescriptorHeader;
+
+  TOptixInformationGathering = class
+  public
+    class function ComputerName() : string; static;
+    class function TryGetComputerName() : string; static;
+    class function UserName() : string; static;
+    class function TryGetUserName() : string; static;
+    class function CurrentProcessArchitecture() : TProcessArchitecture; static;
+    class function GetUserSidByType(const AUserName : String; ASidType : TSidNameUse = SidTypeUser) : String; static;
+    class function GetWindowsDirectory() : string; static;
+    class function GetHardDriveSerial() : String; static;
+    class function GetUserUID() : TGUID; static;
+    class function GetCurrentUserSid() : String; static;
+  end;
+
+  function ProcessArchitectureToString(const AValue : TProcessArchitecture) : String;
+
+implementation
+
+uses Optix.Exceptions, System.SysUtils, Optix.InformationGathering.Process;
+
+(* Local *)
+
+{ _.ProcessArchitectureToString }
+function ProcessArchitectureToString(const AValue : TProcessArchitecture) : String;
+begin
+  result := '';
+  ///
+
+  case AValue of
+    pa86_32 : result := 'x32';
+    pa86_64 : result := 'x64';
+  end;
+end;
+
+(* TOptixInformationGathering *)
+
+{ TOptixInformationGathering.CurrentProcessArchitecture }
+class function TOptixInformationGathering.CurrentProcessArchitecture() : TProcessArchitecture;
+begin
+  result := paOther;
+  ///
+
+  {$IFDEF WIN32}
+    result := pa86_32;
+  {$ENDIF}
+
+  {$IFDEF WIN64}
+    result := pa86_64;
+  {$ENDIF}
+end;
+
+{ TOptixInformationGathering.UserName }
+class function TOptixInformationGathering.UserName() : string;
+var ABufferLen : DWORD;
+    ABuffer    : array[0..255 -1] of WideChar;
+begin
+  result := '';
+  ///
+
+  ABufferLen := Length(ABuffer);
+
+  if GetUserName(ABuffer, ABufferLen) then
+    SetString(result, ABuffer, ABufferLen)
+  else
+    raise EWindowsException.Create('GetUserName');
+end;
+
+{ TOptixInformationGathering.TryUserName}
+class function TOptixInformationGathering.TryGetUserName() : String;
+begin
+  result := '';
+  try
+    result := UserName();
+  except
+    on E : EWindowsException do begin
+      // Ignore, we just try but we can log
+    end;
+  end;
+end;
+
+{ TOptixInformationGathering.ComputerName }
+class function TOptixInformationGathering.ComputerName() : string;
+var ABufferLen : DWORD;
+    ABuffer    : array[0..255 -1] of WideChar;
+begin
+  result := '';
+  ///
+
+  ABufferLen := Length(ABuffer);
+
+  if GetComputerName(ABuffer, ABufferLen) then
+    SetString(result, ABuffer, ABufferLen)
+  else
+    raise EWindowsException.Create('GetComputerName');
+end;
+
+{ TOptixInformationGathering.TryGetComputerName }
+class function TOptixInformationGathering.TryGetComputerName() : String;
+begin
+  result := '';
+  try
+    result := ComputerName();
+  except
+    on E : EWindowsException do begin
+      // Ignore, we just try but we can log
+    end;
+  end;
+end;
+
+{ TOptixInformationGathering.GetUserSidByType }
+class function TOptixInformationGathering.GetUserSidByType(const AUserName : String; ASidType : TSidNameUse = SidTypeUser) : String;
+var ptrSID         : PSID;
+    ASidSize       : Cardinal;
+    ARefDomainSize : Cardinal;
+    ASidNameUse    : SID_NAME_USE;
+    ARefDomain     : String;
+    ARet           : Boolean;
+    ASid           : PWideChar;
+begin
+  result := '';
+  ///
+
+  ASidSize       := 0;
+  ARefDomainSize := 0;
+
+  ASidNameUse := Cardinal(ASidType);
+
+  LookupAccountNameW(nil, PWideChar(AUserName), nil, ASidSize, nil, ARefDomainSize, ASidNameUse);
+
+  GetMem(ptrSID, ASidSize);
+  try
+    SetLength(ARefDomain, ARefDomainSize);
+
+    ARet := LookupAccountNameW(
+                                  nil,
+                                  PWideChar(AUserName),
+                                  ptrSID,
+                                  ASidSize,
+                                  PWideChar(ARefDomain),
+                                  ARefDomainSize,
+                                  ASidNameUse
+    );
+
+    if ARet then begin
+      ConvertSidToStringSidW(ptrSID, ASid);
+      try
+        result := String(ASid);
+      finally
+        LocalFree(ASid);
+      end;
+    end;
+  finally
+    FreeMem(ptrSID, ASidSize);
+  end;
+end;
+
+{ TOptixInformationGathering.GetCurrentUserSid() }
+class function TOptixInformationGathering.GetCurrentUserSid() : String;
+begin
+  result := GetUserSidByType(TOptixInformationGathering.UserName);
+end;
+
+{ TOptixInformationGathering.GetWindowsDirectory }
+class function TOptixInformationGathering.GetWindowsDirectory() : string;
+var ALen  : Cardinal;
+begin
+  SetLength(result, MAX_PATH);
+
+  ALen := WinAPI.Windows.GetWindowsDirectory(@result[1], MAX_PATH);
+
+  SetLength(result, ALen);
+  if ALen > MAX_PATH then
+    WinAPI.Windows.GetWindowsDirectory(@result[1], ALen);
+
+  ///
+  result := IncludeTrailingPathDelimiter(result);
+end;
+
+{ TOptixInformationGathering.GetHardDriveSerial }
+class function TOptixInformationGathering.GetHardDriveSerial() : String;
+begin
+  result := '';
+  ///
+
+  var hFile := CreateFileW('\\.\PhysicalDrive0', 0, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING, 0, 0);
+  if hFile = INVALID_HANDLE_VALUE then
+    raise EWindowsException.Create('CreateFileW');
+  try
+    var AStoragePropertyQuery : TStoragePropertyQuery;
+    ZeroMemory(@AStoragePropertyQuery, SizeOf(TStoragePropertyQuery));
+
+    AStoragePropertyQuery.PropertyId := StorageDeviceProperty;
+    AStoragePropertyQuery.QueryType := PropertyStandardQuery;
+
+    var AStorageDescriptorHeader : TStorageDescriptorHeader;
+    var ABytesReturned : DWORD;
+
+    if not DeviceIoControl(
+      hFile,
+      IOCTL_STORAGE_QUERY_PROPERTY,
+      @AStoragePropertyQuery,
+      SizeOf(TStoragePropertyQuery),
+      @AStorageDescriptorHeader,
+      SizeOf(TStorageDescriptorHeader),
+      ABytesReturned,
+      nil
+    ) then
+      raise EWindowsException.Create('DeviceIoControl(1)');
+
+    var pBuffer : Pointer;
+    GetMem(pBuffer, AStorageDescriptorHeader.Size);
+    try
+      if not DeviceIoControl(
+        hFile,
+        IOCTL_STORAGE_QUERY_PROPERTY,
+        @AStoragePropertyQuery,
+        SizeOf(TStoragePropertyQuery),
+        pBuffer,
+        AStorageDescriptorHeader.Size,
+        ABytesReturned,
+        nil
+      ) then
+        raise EWindowsException.Create('DeviceIoControl(2)');
+
+     ///
+     result := String(PAnsiChar(NativeUInt(pBuffer) + PStorageDeviceDescriptor(pBuffer)^.SerialNumberOffset));
+    finally
+      FreeMem(pBuffer, AStorageDescriptorHeader.Size);
+    end;
+  finally
+    CloseHandle(hFile);
+  end;
+end;
+
+{ TOptixInformationGathering.GetUserUID }
+class function TOptixInformationGathering.GetUserUID() : TGUID;
+begin
+  var A128BitHash := THashMD5.GetHashBytes(
+    GetHardDriveSerial +                                  // Uniqueness in machine level
+    GetCurrentUserSid +                                   // Uniqueness in user level
+    IntToStr(Cardinal(TProcessInformation.IsElevated()))  // Uniqueness in elevation level
+  );
+
+  Move(A128BitHash[0], result, SizeOf(TGUID));
+end;
+
+end.

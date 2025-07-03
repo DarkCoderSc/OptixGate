@@ -1,0 +1,199 @@
+{******************************************************************************}
+{                                                                              }
+{         ____             _     ____          _           ____                }
+{        |  _ \  __ _ _ __| | __/ ___|___   __| | ___ _ __/ ___|  ___          }
+{        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
+{        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
+{        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
+{                              Project: Optix Neo                              }
+{                                                                              }
+{                                                                              }
+{                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
+{                   https://github.com/darkcodersc                             }
+{                   License: Apache License 2.0                                }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{******************************************************************************}
+
+unit Optix.Protocol.Network.Server;
+
+interface
+
+uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject,
+     Generics.Collections, Optix.Sockets.Helper, Optix.Thread,
+     Optix.Protocol.SessionHandler;
+
+type
+  TOptixServerThread = class;
+
+  TOnServerStart = procedure(Sender : TOptixServerThread; const ASocketFd : TSocket) of object;
+  TOnServerStop  = procedure(Sender : TOptixServerThread) of object;
+  TOnServerError = procedure(Sender : TOptixServerThread; const AErrorMessage : String) of object;
+
+  (* TOptixServerThread *)
+  TOptixServerThread = class(TOptixThread)
+  private
+    FBindAddress          : String;
+    FBindPort             : Word;
+    FServer               : TServerSocket;
+
+    FOnServerStart        : TOnServerStart;
+    FOnServerError        : TOnServerError;
+    FOnServerStop         : TOnServerStop;
+
+    FOnSessionConnect     : TOnSessionConnect;
+    FOnSessionDisconnect  : TOnSessionDisconnect;
+    FOnReceivePacket      : TOnReceivePacket;
+
+    {@M}
+    procedure Close();
+  protected
+    {@M}
+    procedure ThreadExecute(); override;
+    procedure TerminatedSet(); override;
+  public
+    {@C}
+    constructor Create(const ABindAddress : String; const ABindPort : Word); overload;
+    destructor Destroy(); override;
+
+    {@G/S}
+    property OnServerStart       : TOnServerStart       read FOnServerStart       write FOnServerStart;
+    property OnServerError       : TOnServerError       read FOnServerError       write FOnServerError;
+    property OnServerStop        : TOnServerStop        read FOnServerStop        write FOnServerStop;
+    property OnSessionConnect    : TOnSessionConnect    read FOnSessionConnect    write FOnSessionConnect;
+    property OnSessionDisconnect : TOnSessionDisconnect read FOnSessionDisconnect write FOnSessionDisconnect;
+    property OnReceivePacket     : TOnReceivePacket     read FOnReceivePacket     write FOnReceivePacket;
+
+    {@G}
+    property Port : Word read FBindPort;
+  end;
+
+implementation
+
+uses Winapi.Windows, System.SysUtils;
+
+(* TOptixServerThread *)
+
+{ TOptixServerThread.ThreadExecute }
+procedure TOptixServerThread.ThreadExecute();
+var AClient : TClientSocket;
+begin
+  try
+    try
+      FServer := TServerSocket.Create(FBindAddress, FBindPort);
+      FServer.Listen();
+
+      if Assigned(FOnServerStart) then
+        Synchronize(procedure begin
+          FOnServerStart(self, FServer.Socket);
+        end);
+
+      while not Terminated do begin
+        AClient := nil;
+        try
+          AClient := FServer.AcceptClient();
+          ///
+
+          var ASessionHandler := TOptixSessionHandlerThread.Create(AClient);
+          ASessionHandler.OnSessionConnect := OnSessionConnect;
+          ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
+          ASessionHandler.OnReceivePacket := OnReceivePacket;
+          ASessionHandler.Start();
+        except
+          if Assigned(AClient) then
+            FreeAndNil(AClient);
+
+          ///
+          break;
+        end;
+      end;
+    except
+      on E : Exception do begin
+        if Assigned(FOnServerError) then
+          Synchronize(procedure begin
+            FOnServerError(self, E.Message);
+          end);
+      end;
+    end;
+  finally
+    if Assigned(FOnServerStop) then
+      Synchronize(procedure begin
+        FOnServerStop(self);
+      end);
+
+    ///
+    self.Close();
+  end;
+end;
+
+{ TOptixServerThread.Close }
+procedure TOptixServerThread.Close();
+begin
+  if Assigned(FServer) then
+    FServer.Close();
+end;
+
+{ TOptixServerThread.TerminatedSet }
+procedure TOptixServerThread.TerminatedSet();
+begin
+  self.Close();
+
+  ///
+  inherited TerminatedSet();
+end;
+
+{ TOptixServerThread.Create }
+constructor TOptixServerThread.Create(const ABindAddress : String; const ABindPort : Word);
+begin
+  inherited Create();
+  ///
+
+  FOnServerStart        := nil;
+  FOnServerError        := nil;
+  FOnServerStop         := nil;
+  FOnSessionConnect     := nil;
+  FOnSessionDisconnect  := nil;
+  FOnReceivePacket      := nil;
+
+  FBindAddress := ABindAddress;
+  FBindPort    := ABindPort;
+  FServer      := nil;
+end;
+
+{ TOptixServerThread.Destroy }
+destructor TOptixServerThread.Destroy();
+begin
+  if Assigned(FServer) then
+    FreeAndNil(FServer);
+
+  ///
+  inherited Destroy();
+end;
+
+end.
