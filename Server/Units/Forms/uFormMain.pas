@@ -46,13 +46,21 @@ unit uFormMain;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, VirtualTrees.BaseAncestorVCL,
-  VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees,
-  Optix.Protocol.Network.Server, Optix.Sockets.Helper, Winapi.Winsock2,
-  Vcl.ComCtrls;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
+  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
+  VirtualTrees, Optix.Protocol.Network.Server, Optix.Sockets.Helper,
+  Winapi.Winsock2, Vcl.ComCtrls, XSuperObject, Optix.Func.SessionInformation,
+  Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands;
 
 type
+  TTreeData = record
+    Handler            : TOptixSessionHandlerThread;
+    SessionInformation : TOptixSessionInformation;
+    SpawnDate          : TDateTime;
+  end;
+  PTreeData = ^TTreeData;
+
   TFormMain = class(TForm)
     MainMenu: TMainMenu;
     Server1: TMenuItem;
@@ -82,9 +90,21 @@ type
     FodHelper1: TMenuItem;
     SYSTEMTaskScheduler1: TMenuItem;
     StatusBar: TStatusBar;
+    TimerRefresh: TTimer;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
+      var NodeDataSize: Integer);
+    procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex);
+    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure TimerRefreshTimer(Sender: TObject);
+    procedure erminate1Click(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
   private
     FServer : TOptixServerThread;
 
@@ -93,13 +113,19 @@ type
     procedure OnServerStop(Sender : TOptixServerThread);
     procedure OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
 
-    procedure OnSessionConnect(Sender : TObject);
-    procedure OnSessionDisconnect(Sender : TObject);
-    procedure OnReceivePacket(Sender : TObject);
+    procedure OnSessionConnected(const pData : PTreeData);
+    procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
+    procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
 
     procedure UpdateStatus(const ACaption : String = '');
+
+    procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
+    function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
+    function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
   public
-    { Public declarations }
+    {@M}
+    procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
+    procedure SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand); overload;
   end;
 
 var
@@ -107,7 +133,86 @@ var
 
 implementation
 
+uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper;
+
 {$R *.dfm}
+
+procedure TFormMain.SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand);
+begin
+  if not Assigned(pNode) then
+    Exit();
+  ///
+
+  var pData := PTreeData(pNode.GetData);
+  if Assigned(pData^.Handler) then
+    pData^.Handler.AddPacket(ACommand);
+end;
+
+procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
+begin
+  SendCommand(GetNodeBySessionId(ASessionId), ACommand);
+end;
+
+procedure TFormMain.OnSessionConnected(const pData : PTreeData);
+begin
+  ///
+end;
+
+function TFormMain.GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+    if Assigned(pData^.SessionInformation) and (pData^.SessionInformation.SessionId = ASessionId) then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
+end;
+
+function TFormMain.GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  if not Assigned(AHandler) then
+    Exit();
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+    if Assigned(pData^.Handler) and (pData^.Handler = AHandler) then begin
+      result := pNode;
+
+      ///
+      break;
+    end;
+  end;
+end;
+
+procedure TFormMain.RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
+begin
+  if not Assigned(ASessionInformation) or not Assigned(AHandler) then
+    Exit();
+  ///
+
+  // Should never happend!
+  if GetNodeBySessionId(ASessionInformation.SessionId) <> nil then
+    Exit();
+
+  var pNode := VST.AddChild(nil);
+  var pData := PTreeData(pNode.GetData);
+
+  pData^.Handler := AHandler;
+  pData^.SessionInformation := ASessionInformation;
+  pData^.SpawnDate := Now;
+
+  ///
+  VST.Refresh();
+end;
 
 procedure TFormMain.UpdateStatus(const ACaption : String = '');
 begin
@@ -115,6 +220,59 @@ begin
     StatusBar.Panels[0].Text := 'Idle.'
   else
     StatusBar.Panels[0].Text := ACaption;
+end;
+
+procedure TFormMain.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormMain.VSTFocusChanged(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex);
+begin
+  TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormMain.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  var pData := PTreeData(Node);
+  if not Assigned(pData) then
+    Exit();
+  ///
+
+  if Assigned(pData^.Handler) then
+    pData^.Handler.Terminate;
+
+  if Assigned(pData^.SessionInformation) then
+    FreeAndNil(pData^.SessionInformation);
+end;
+
+procedure TFormMain.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
+  var NodeDataSize: Integer);
+begin
+  NodeDataSize := SizeOf(TTreeData);
+end;
+
+procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+begin
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) or not Assigned(pData^.SessionInformation) or
+     not Assigned(pData^.Handler) then
+    Exit();
+  ///
+
+  CellText := '';
+
+  case Column of
+    0 : CellText := pData^.Handler.PeerAddress;
+    1 : CellText := pData^.SessionInformation.Username;
+    2 : CellText := pData^.SessionInformation.Computer;
+    3 : CellText := pData^.SessionInformation.WindowsVersion;
+    4 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
+    5 : CellText := pData^.SessionInformation.ProcessDetail;
+    6 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
+  end;
 end;
 
 procedure TFormMain.OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
@@ -129,6 +287,9 @@ begin
   Start1.Tag := 0;
   Start1.Caption := 'Start';
   UpdateStatus();
+
+  ///
+  VST.Clear();
 end;
 
 procedure TFormMain.OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
@@ -136,26 +297,70 @@ begin
   Application.MessageBox(PWideChar(AErrorMessage), 'Server Error', MB_ICONHAND);
 end;
 
-procedure TFormMain.OnSessionConnect(Sender : TObject);
+procedure TFormMain.OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
 begin
-  allocconsole();
-  writeln('Connected!');
-end;
+  var pNode := GetNodeByHandler(Sender);
+  if not Assigned(pNode) then
+    Exit();
 
-procedure TFormMain.OnSessionDisconnect(Sender : TObject);
-begin
-  allocconsole();
-  writeln('Disconnected!');
-end;
+  VST.DeleteNode(pNode);
 
-procedure TFormMain.OnReceivePacket(Sender : TObject);
-begin
   ///
+  VST.Refresh();
+end;
+
+procedure TFormMain.PopupMenuPopup(Sender: TObject);
+begin
+  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+
+  self.erminate1.Visible := VST.FocusedNode <> nil;
+end;
+
+procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
+begin
+  if not Assigned(ASerializedPacket) or
+     not ASerializedPacket.Contains('PacketClass') then
+      Exit();
+  ///
+
+  // TODO: make it more generic (Class Registry or RTTI)
+  var AClassName := ASerializedPacket.S['PacketClass'];
+  var AHandleMemory := False;
+
+  var AOptixPacket : TOptixPacket := nil;
+  try
+    try
+      if AClassName = 'TOptixSessionInformation' then begin
+        AOptixPacket := TOptixSessionInformation.Create(ASerializedPacket);
+
+
+        // Dispatch to data handler
+        if AOptixPacket is TOptixSessionInformation then begin
+          AHandleMemory := True;
+
+          ///
+          RegisterSession(Sender, TOptixSessionInformation(AOptixPacket));
+        end;
+      end;
+
+      // else if ...
+    finally
+      if not AHandleMemory and Assigned(AOptixPacket) then
+        FreeAndNil(AOptixPacket);
+    end;
+  except
+    // TODO: log packet errors
+  end;
 end;
 
 procedure TFormMain.Close1Click(Sender: TObject);
 begin
   Application.Terminate;
+end;
+
+procedure TFormMain.erminate1Click(Sender: TObject);
+begin
+  SendCommand(VST.FocusedNode, TOptixCommandTerminate.Create());
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -181,7 +386,6 @@ begin
       FServer.OnServerStart       := OnServerStart;
       FServer.OnServerError       := OnServerError;
       FServer.OnServerStop        := OnServerStop;
-      FServer.OnSessionConnect    := OnSessionConnect;
       FServer.OnSessionDisconnect := OnSessionDisconnect;
       FServer.OnReceivePacket     := OnReceivePacket;
 
@@ -189,6 +393,11 @@ begin
       FServer.Start();
     end;
   end;
+end;
+
+procedure TFormMain.TimerRefreshTimer(Sender: TObject);
+begin
+  VST.Refresh();
 end;
 
 end.

@@ -45,33 +45,28 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
-uses System.Classes,
-     Optix.Protocol.Client.Handler,
-     Optix.Protocol.Packet,
-     XSuperObject,
-     Optix.Sockets.Helper,
-     Winapi.Windows;
+uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
+     XSuperObject, Optix.Sockets.Helper, Winapi.Windows;
 
 type
-  TOnSessionConnect = procedure(Sender : TObject) of object;
-  TOnSessionDisconnect = procedure(Sender : TObject) of object;
-  TOnReceivePacket = procedure(Sender : TObject) of object;
+  TOptixSessionHandlerThread = class;
+
+  TOnSessionDisconnect = procedure(Sender : TOptixSessionHandlerThread) of object;
+  TOnReceivePacket = procedure(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject) of object;
 
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
   private
-    FOnSessionConnect    : TOnSessionConnect;
     FOnSessionDisconnect : TOnSessionDisconnect;
     FOnReceivePacket     : TOnReceivePacket;
   protected
     {@M}
     procedure ClientTerminate(); override;
-    procedure PacketReceived(const APacketBody : ISuperObject); override;
+    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
   public
     {@C}
     constructor Create(const AClient : TClientSocket); overload;
 
     {@G/S}
-    property OnSessionConnect    : TOnSessionConnect    read FOnSessionConnect    write FOnSessionConnect;
     property OnSessionDisconnect : TOnSessionDisconnect read FOnSessionDisconnect write FOnSessionDisconnect;
     property OnReceivePacket     : TOnReceivePacket     read FOnReceivePacket     write FOnReceivePacket;
   end;
@@ -84,7 +79,6 @@ begin
   inherited Create(AClient);
   ///
 
-  FOnSessionConnect    := nil;
   FOnSessionDisconnect := nil;
   FOnReceivePacket     := nil;
 end;
@@ -102,9 +96,17 @@ begin
 end;
 
 { TOptixSessionHandlerThread.PacketReceived }
-procedure TOptixSessionHandlerThread.PacketReceived(const APacketBody : ISuperObject);
+procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
 begin
-  // TODO
+  if not Assigned(ASerializedPacket) or
+     not ASerializedPacket.Contains('PacketClass') or
+     not Assigned(FOnReceivePacket) then
+      Exit();
+  ///
+
+  Synchronize(procedure begin
+    FOnReceivePacket(self, ASerializedPacket);
+  end);
 end;
 
 end.

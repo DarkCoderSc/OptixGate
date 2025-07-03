@@ -141,11 +141,18 @@
         <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas">
             <Form>* Server Units *</Form>
         </DCCReference>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Response.pas"/>
+        <DCCReference Include="..\Shared\XSuperJSON.pas"/>
+        <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.InformationGathering.Process.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Network.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
+        <DCCReference Include="Units\Optix.Helper.pas"/>
+        <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
-        <DCCReference Include="..\Shared\XSuperJSON.pas"/>
         <DCCReference Include="Units\Forms\uFormMain.pas">
             <Form>FormMain</Form>
         </DCCReference>

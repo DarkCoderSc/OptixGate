@@ -54,6 +54,9 @@ type
   TOptixClientThread = class(TOptixThread)
   private
     FOnClientDisconnect : TOnClientDisconnect;
+
+    {@M}
+    function GetPeerAddress() : String;
   protected
     FClient : TClientSocket;
 
@@ -70,6 +73,9 @@ type
 
     {@G/S}
     property OnClientDisconnect : TOnClientDisconnect read FOnClientDisconnect write FOnClientDisconnect;
+
+    {@G}
+    property PeerAddress : String read GetPeerAddress;
   end;
 
 implementation
@@ -128,6 +134,16 @@ begin
 
   if Assigned(FClient) then
     FClient.Close();
+end;
+
+{ TOptixClientThread.GetPeerAddress }
+function TOptixClientThread.GetPeerAddress() : String;
+begin
+  result := '';
+  ///
+
+  if Assigned(FClient) then
+    result := FClient.RemoteAddress;
 end;
 
 end.

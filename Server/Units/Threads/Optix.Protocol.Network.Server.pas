@@ -63,11 +63,12 @@ type
     FBindPort             : Word;
     FServer               : TServerSocket;
 
+    FClientSockets        : TList<TSocket>;
+
     FOnServerStart        : TOnServerStart;
     FOnServerError        : TOnServerError;
     FOnServerStop         : TOnServerStop;
 
-    FOnSessionConnect     : TOnSessionConnect;
     FOnSessionDisconnect  : TOnSessionDisconnect;
     FOnReceivePacket      : TOnReceivePacket;
 
@@ -86,7 +87,6 @@ type
     property OnServerStart       : TOnServerStart       read FOnServerStart       write FOnServerStart;
     property OnServerError       : TOnServerError       read FOnServerError       write FOnServerError;
     property OnServerStop        : TOnServerStop        read FOnServerStop        write FOnServerStop;
-    property OnSessionConnect    : TOnSessionConnect    read FOnSessionConnect    write FOnSessionConnect;
     property OnSessionDisconnect : TOnSessionDisconnect read FOnSessionDisconnect write FOnSessionDisconnect;
     property OnReceivePacket     : TOnReceivePacket     read FOnReceivePacket     write FOnReceivePacket;
 
@@ -120,8 +120,11 @@ begin
           AClient := FServer.AcceptClient();
           ///
 
+          // Ensure clients dies when server dies.
+          if not FClientSockets.Contains(AClient.Socket) then
+            FClientSockets.Add(AClient.Socket);
+
           var ASessionHandler := TOptixSessionHandlerThread.Create(AClient);
-          ASessionHandler.OnSessionConnect := OnSessionConnect;
           ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
           ASessionHandler.OnReceivePacket := OnReceivePacket;
           ASessionHandler.Start();
@@ -177,18 +180,29 @@ begin
   FOnServerStart        := nil;
   FOnServerError        := nil;
   FOnServerStop         := nil;
-  FOnSessionConnect     := nil;
   FOnSessionDisconnect  := nil;
   FOnReceivePacket      := nil;
 
   FBindAddress := ABindAddress;
   FBindPort    := ABindPort;
   FServer      := nil;
+
+  FClientSockets := TList<TSocket>.Create();
 end;
 
 { TOptixServerThread.Destroy }
 destructor TOptixServerThread.Destroy();
 begin
+  if Assigned(FClientSockets) then begin
+    for var ASocket in FClientSockets do begin
+      Shutdown(ASocket, SD_BOTH);
+      CloseSocket(ASocket);
+    end;
+
+    ///
+    FreeAndNil(FClientSockets);
+  end;
+
   if Assigned(FServer) then
     FreeAndNil(FServer);
 

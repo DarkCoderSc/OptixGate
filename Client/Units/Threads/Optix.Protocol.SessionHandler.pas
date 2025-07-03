@@ -55,25 +55,31 @@ type
   protected
     {@M}
     procedure EstablishedConnection(); override;
-    procedure PacketReceived(const APacketBody : ISuperObject); override;
+    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
   public
     constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
   end;
 
 implementation
 
-uses Winapi.Windows;
+uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils;
 
 { TOptixSessionHandlerThread.EstablishedConnection }
 procedure TOptixSessionHandlerThread.EstablishedConnection();
 begin
-  ///
+  var APacket := TOptixSessionInformation.Create();
+  try
+    FClient.SendPacket(APacket);
+  finally
+    FreeAndNil(APacket);
+  end;
 end;
 
 { TOptixSessionHandlerThread.PacketReceived }
-procedure TOptixSessionHandlerThread.PacketReceived(const APacketBody : ISuperObject);
+procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
 begin
-  // TODO
+  allocconsole();
+  writeln(ASerializedPacket.AsJson(True));
 end;
 
 { TOptixSessionHandlerThread.Create }

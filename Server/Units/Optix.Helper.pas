@@ -1,0 +1,112 @@
+{******************************************************************************}
+{                                                                              }
+{         ____             _     ____          _           ____                }
+{        |  _ \  __ _ _ __| | __/ ___|___   __| | ___ _ __/ ___|  ___          }
+{        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
+{        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
+{        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
+{                              Project: Optix Neo                              }
+{                                                                              }
+{                                                                              }
+{                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://github.com/darkcodersc                             }
+{                   License: Apache License 2.0                                }
+{                                                                              }
+{                                                                              }
+{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{******************************************************************************}
+
+unit Optix.Helper;
+
+interface
+
+uses System.Classes,
+     System.SysUtils,
+     System.DateUtils,
+     System.Math,
+     System.TimeSpan;
+
+// Format Utilities
+function FormatInt(const AInteger : Integer) : String;
+
+// Date Utilities
+function ElapsedTime(const ADays, AHours, AMinutes, ASeconds : UInt64) : String; overload;
+function ElapsedTime(const AMilliseconds : UInt64) : String; overload;
+function ElapsedDateTime(const AFirstDateTime, ASecondDateTime : TDateTime) : String;
+
+implementation
+
+uses Winapi.Windows;
+
+{ _.FormatInt }
+function FormatInt(const AInteger : Integer) : String;
+begin
+  result := Format('%d (0x%p)', [
+    AInteger,
+    Pointer(AInteger)
+  ]);
+end;
+
+{ _.ElapsedTime }
+function ElapsedTime(const ADays, AHours, AMinutes, ASeconds : UInt64) : String;
+begin
+  if ADays > 0 then
+    result := Format('%d days, %.2d:%.2d:%.2d', [
+      ADays,
+      AHours,
+      AMinutes,
+      ASeconds
+    ])
+  else if AHours > 0 then
+    result := Format('%.2d:%.2d:%.2d', [
+      AHours,
+      AMinutes,
+      ASeconds
+    ])
+  else if AMinutes > 0 then
+    result := Format('%d minutes and %.2d seconds.', [
+      AMinutes,
+      ASeconds
+    ])
+  else if ASeconds >= 0 then
+    result := Format('%d seconds.', [ASeconds]);
+end;
+
+{ _.ElapsedTime }
+function ElapsedTime(const AMilliseconds : UInt64) : String;
+var ASpan : TTimeSpan;
+begin
+  ASpan := TTimeSpan.FromMilliseconds(AMilliseconds);
+  ///
+
+  result := ElapsedTime(
+    ASpan.Days,
+    ASpan.Hours,
+    ASpan.Minutes,
+    ASpan.Seconds
+  );
+end;
+
+{ _.ElapsedDateTime }
+function ElapsedDateTime(const AFirstDateTime, ASecondDateTime : TDateTime) : String;
+var AElaspedTime  : TDateTime;
+    ADays         : Integer;
+    AHours        : Word;
+    AMinutes      : Word;
+    ASeconds      : Word;
+    AMilliSeconds : Word;
+begin
+  AElaspedTime := ASecondDateTime - AFirstDateTime;
+  ///
+
+  ADays := DaysBetween(ASecondDateTime, AFirstDateTime);
+
+  DecodeTime(AElaspedTime, AHours, AMinutes, ASeconds, AMilliSeconds);
+
+  ///
+  result := ElapsedTime(ADays, AHours, AMinutes, ASeconds);
+end;
+
+end.

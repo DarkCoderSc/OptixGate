@@ -94,11 +94,13 @@
         <DCCReference Include="..\Shared\Optix.Sockets.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Exceptions.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Response.pas"/>
         <DCCReference Include="..\Shared\Optix.Interfaces.pas"/>
         <DCCReference Include="..\Shared\Optix.Thread.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas"/>
         <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.InformationGathering.Process.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
         <DCCReference Include="..\Shared\XSuperJSON.pas"/>

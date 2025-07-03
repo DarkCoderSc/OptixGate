@@ -45,25 +45,27 @@ unit Optix.Protocol.Packet;
 
 interface
 
-uses System.Classes, Optix.Interfaces, XSuperObject;
+uses System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject;
 
 type
   TOptixPacket = class(TInterfacedPersistent, IOptixSerializable)
   protected
-
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
   public
     {@M}
-    function Serialize() : ISuperObject;
-    procedure DeSerialize(const ASerializedObject : ISuperObject);
+    function Serialize() : ISuperObject; virtual;
 
     {@C}
-    constructor Create(); virtual;
+    constructor Create(const ASerializedObject : ISuperObject = nil); virtual;
   end;
 
 implementation
 
+uses Optix.InformationGathering.Helper;
+
 { TOptixPacket.Create }
-constructor TOptixPacket.Create();
+constructor TOptixPacket.Create(const ASerializedObject : ISuperObject = nil);
 begin
   inherited Create();
   ///
@@ -73,7 +75,10 @@ end;
 { TOptixPacket.Serialize }
 function TOptixPacket.Serialize() : ISuperObject;
 begin
+  result := TSuperObject.Create();
   ///
+
+  result.S['PacketClass'] := self.ClassName;
 end;
 
 { TOptixPacket.DeSerialize }

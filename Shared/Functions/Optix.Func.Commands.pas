@@ -41,56 +41,43 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit Optix.Func.Commands;
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+interface
 
-{$R *.res}
+uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
+     XSuperObject, Optix.Protocol.Packet;
 
-uses
-  System.SysUtils,
-  Winapi.Windows,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas';
-
-begin
-  IsMultiThread := True;
-  try
-    var AUserUID := TOptixInformationGathering.GetUserUID();
-
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
-
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor;
-    finally
-      CloseHandle(AMutex);
-    end;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+type
+  TOptixCommand = class(TOptixPacket)
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+  public
+    {@M}
+    function Serialize() : ISuperObject; virtual;
   end;
+
+  // Simple Commands
+  TOptixCommandTerminate = class(TOptixCommand);
+
+implementation
+
+(* TOptixCommand *)
+
+{ TOptixCommand.Serialize }
+function TOptixCommand.Serialize() : ISuperObject;
+begin
+  result := TSuperObject.Create();
+  ///
+
+  result.S['CommandClass'] := self.ClassName;
+end;
+
+{ TOptixCommand.DeSerialize }
+procedure TOptixCommand.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  ///
+end;
+
 end.

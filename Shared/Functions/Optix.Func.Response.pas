@@ -41,56 +41,76 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit Optix.Func.Response;
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+interface
 
-{$R *.res}
+uses System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject,
+     Optix.Protocol.Packet;
 
-uses
-  System.SysUtils,
-  Winapi.Windows,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas';
+type
+  TOptixResponse = class(TOptixPacket)
+  protected
+    FSessionId : TGUID;
 
-begin
-  IsMultiThread := True;
-  try
-    var AUserUID := TOptixInformationGathering.GetUserUID();
+    {@M}
+    procedure Refresh(); virtual; abstract;
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
 
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
+    {@C}
+    constructor Create(const ASerializedObject : ISuperObject = nil); virtual;
 
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor;
-    finally
-      CloseHandle(AMutex);
-    end;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+    {@G}
+    property SessionId : TGUID read FSessionId;
   end;
+
+  var SESSION_ID : TGUID;
+
+implementation
+
+uses Optix.InformationGathering.Helper;
+
+{ TOptixResponse.Create }
+constructor TOptixResponse.Create(const ASerializedObject : ISuperObject = nil);
+begin
+  inherited Create();
+  ///
+
+  if Assigned(ASerializedObject) then
+    DeSerialize(ASerializedObject)
+  else begin
+    FSessionId := SESSION_ID;
+
+    ///
+    self.Refresh();
+  end;
+end;
+
+{ TOptixResponse.Serialize }
+function TOptixResponse.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['SessionId'] := FSessionId.ToString;
+end;
+
+{ TOptixResponse.DeSerialize }
+procedure TOptixResponse.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FSessionId := TGUID.Create(ASerializedObject.S['SessionId']);
+end;
+
+initialization
+  SESSION_ID := TOptixInformationGathering.GetUserUID();
+
 end.

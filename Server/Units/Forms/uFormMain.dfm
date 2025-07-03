@@ -23,7 +23,7 @@ object FormMain: TFormMain
     Left = 0
     Top = 0
     Width = 1015
-    Height = 667
+    Height = 648
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -46,9 +46,14 @@ object FormMain: TFormMain
     TextMargin = 8
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnChange = VSTChange
+    OnFocusChanged = VSTFocusChanged
+    OnFreeNode = VSTFreeNode
+    OnGetText = VSTGetText
+    OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitHeight = 686
+    ExplicitTop = -10
     Columns = <
       item
         MaxWidth = 20000
@@ -95,18 +100,13 @@ object FormMain: TFormMain
         MinWidth = 20
         Position = 5
         Spacing = 6
-        Text = 'Process Id'
+        Text = 'Process'
         Width = 280
-      end
-      item
-        Position = 6
-        Text = 'Process Arch'
-        Width = 210
       end
       item
         MaxWidth = 20000
         MinWidth = 20
-        Position = 7
+        Position = 6
         Spacing = 6
         Text = 'Elevated Status'
         Width = 200
@@ -114,8 +114,8 @@ object FormMain: TFormMain
   end
   object StatusBar: TStatusBar
     Left = 0
-    Top = 1334
-    Width = 2030
+    Top = 648
+    Width = 1015
     Height = 38
     Margins.Left = 6
     Margins.Top = 6
@@ -148,6 +148,7 @@ object FormMain: TFormMain
     end
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 448
     Top = 272
     object ProcessManager1: TMenuItem
@@ -206,6 +207,12 @@ object FormMain: TFormMain
     end
     object erminate1: TMenuItem
       Caption = 'Terminate'
+      OnClick = erminate1Click
     end
+  end
+  object TimerRefresh: TTimer
+    OnTimer = TimerRefreshTimer
+    Left = 640
+    Top = 272
   end
 end

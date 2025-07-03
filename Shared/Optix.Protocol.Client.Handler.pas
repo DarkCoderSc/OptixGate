@@ -62,7 +62,7 @@ type
     {@C}
     procedure ClientExecute(); override;
     procedure EstablishedConnection(); virtual;
-    procedure PacketReceived(const APacketBody : ISuperObject); virtual; abstract;
+    procedure PacketReceived(const ASerializedPacket : ISuperObject); virtual; abstract;
   public
     {$IFDEF CLIENT}
     constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
@@ -90,8 +90,8 @@ end;
 
 { TOptixClientHandlerThread.ClientExecute }
 procedure TOptixClientHandlerThread.ClientExecute();
-var APacket     : TOptixPacket;
-    APacketBody : ISuperObject;
+var APacket           : TOptixPacket;
+    ASerializedPacket : ISuperObject;
 begin
   if not Assigned(FPacketQueue) then
     Exit();
@@ -134,11 +134,12 @@ begin
     // Dispatch Incomming Packets (Ingress)
     // -------------------------------------------------------------------------
     try
-      FClient.ReceivePacket(APacketBody);
+      ASerializedPacket := nil;
 
-      // /!\ `PacketReceived` (@Abstract) is responsible for handling
-      // Packet Memory.
-      PacketReceived(APacketBody);
+      FClient.ReceivePacket(ASerializedPacket);
+
+      if Assigned(ASerializedPacket) then
+        PacketReceived(ASerializedPacket);
     except
       on E : ESocketException do
         raise;

@@ -1,0 +1,61 @@
+{******************************************************************************}
+{                                                                              }
+{         ____             _     ____          _           ____                }
+{        |  _ \  __ _ _ __| | __/ ___|___   __| | ___ _ __/ ___|  ___          }
+{        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
+{        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
+{        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
+{                              Project: Optix Neo                              }
+{                                                                              }
+{                                                                              }
+{                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://github.com/darkcodersc                             }
+{                   License: Apache License 2.0                                }
+{                                                                              }
+{                                                                              }
+{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{******************************************************************************}
+
+unit Optix.VCL.Helper;
+
+interface
+
+uses VCL.Menus;
+
+type
+  TOptixVCLHelper = class
+    public
+      { TPopupMenu }
+      class procedure UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean); static;
+      class procedure HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
+      class procedure ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
+  end;
+
+implementation
+
+{ TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility }
+class procedure TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean);
+begin
+  if not Assigned(APopupMenu) then
+    Exit();
+  ///
+
+  for var I := 0 to APopupMenu.Items.Count -1 do
+    APopupMenu.Items[I].Visible := AVisible;
+end;
+
+{ TOptixVCLHelper.HideAllPopupMenuRootItems }
+class procedure TOptixVCLHelper.HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
+begin
+  UpdatePopupMenuRootItemsVisibility(APopupMenu, False);
+end;
+
+{ TOptixVCLHelper.ShowAllPopupMenuRootItems }
+class procedure TOptixVCLHelper.ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
+begin
+  UpdatePopupMenuRootItemsVisibility(APopupMenu, True);
+end;
+
+end.
