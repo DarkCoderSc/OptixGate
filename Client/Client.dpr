@@ -56,6 +56,7 @@ uses
   Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
   Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
+  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',
   Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
@@ -65,7 +66,8 @@ uses
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas';
+  XSuperObject in '..\Shared\XSuperObject.pas',
+  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas';
 
 begin
   IsMultiThread := True;

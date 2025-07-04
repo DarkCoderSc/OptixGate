@@ -41,68 +41,83 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.SessionHandler;
+unit Optix.WinApiEx;
 
 interface
 
-uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     XSuperObject;
+uses Winapi.Windows;
 
 type
-  TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
-  private
+  (* Netapi32.dll *)
+  NET_API_STATUS = DWORD;
 
-  protected
-    {@M}
-    procedure EstablishedConnection(); override;
-    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
-  public
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
+  {$A8}
+  WKSTA_INFO_100 = record
+    wki100_platform_id  : DWORD;
+    wki100_computername : LPWSTR;
+    wki100_langroup     : LPWSTR;
+    wki100_ver_major    : DWORD;
+    wki100_ver_minor    : DWORD;
   end;
+  TWkstaInfo100 = WKSTA_INFO_100;
+  PWkstaInfo100 = ^TWkstaInfo100;
+  {$A4}
+
+
+  DOMAIN_CONTROLLER_INFO = record
+    DomainControllerName        : LPWSTR;
+    DomainControllerAddress     : LPWSTR;
+    DomainControllerAddressType : ULONG;
+    DomainGuid                  : TGUID;
+    DomainName                  : LPWSTR;
+    DnsForestName               : LPWSTR;
+    Flags                       : ULONG;
+    DcSiteName                  : LPWSTR;
+    ClientSiteName              : LPWSTR;
+  end;
+  TDomainControllerInfo = DOMAIN_CONTROLLER_INFO;
+  PDomainControllerInfo = ^TDomainControllerInfo;
+
+const
+  NERR_Success                  = 0;
+
+  DS_DIRECTORY_SERVICE_REQUIRED = $00000010;
+
+  SECURITY_NT_AUTHORITY : TSIDIdentifierAuthority = (
+    Value: (0, 0, 0, 0, 0, 5)
+  );
+
+  DOMAIN_ALIAS_RID_ADMINS       = $00000220;
+  SECURITY_BUILTIN_DOMAIN_RID   = $00000020;
+
+(* Netapi32.dll *)
+function DsGetDcNameW(
+  ComputerName         : LPCWSTR;
+  DomainName           : LPCWSTR;
+  GUID                 : PGUID;
+  SiteName             : LPCWSTR;
+  Flags                : ULONG;
+  out DomainControllerInfo : PDomainControllerInfo
+) : NET_API_STATUS; stdcall; external 'Netapi32.dll' Name 'DsGetDcNameW';
+
+function NetWkstaGetInfo(
+  servername : LPWSTR;
+  level      : DWORD;
+  out bufptr : Pointer
+) : NET_API_STATUS; stdcall; external 'Netapi32.dll' Name 'NetWkstaGetInfo';
+
+function NetApiBufferFree(
+  Buffer : Pointer
+) : NET_API_STATUS; stdcall; external 'Netapi32.dll';
+
+(* Advapi32.dll *)
+
+function CheckTokenMembership(
+  TokenHandle  : THandle;
+  SIdToCheck   : PSID;
+  var IsMember : Boolean
+): BOOL; stdcall; external 'Advapi32.dll';
 
 implementation
-
-uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
-     Optix.Func.Commands;
-
-{ TOptixSessionHandlerThread.EstablishedConnection }
-procedure TOptixSessionHandlerThread.EstablishedConnection();
-begin
-  var APacket := TOptixSessionInformation.Create();
-  try
-    FClient.SendPacket(APacket);
-  finally
-    FreeAndNil(APacket);
-  end;
-end;
-
-{ TOptixSessionHandlerThread.PacketReceived }
-procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
-begin
-  if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') then
-      Exit();
-  ///
-
-  // TODO: make it more generic (Class Registry or RTTI)
-  var AClassName := ASerializedPacket.S['PacketClass'];
-
-  var AOptixPacket : TOptixPacket := nil;
-  try
-    if AClassName = 'TOptixCommandTerminate' then
-      self.Terminate;
-  finally
-    if Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
-  end;
-end;
-
-{ TOptixSessionHandlerThread.Create }
-constructor TOptixSessionHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
-begin
-  inherited Create(ARemoteAddress, ARemotePort);
-  ///
-
-end;
 
 end.

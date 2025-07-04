@@ -36,9 +36,20 @@ function ElapsedTime(const ADays, AHours, AMinutes, ASeconds : UInt64) : String;
 function ElapsedTime(const AMilliseconds : UInt64) : String; overload;
 function ElapsedDateTime(const AFirstDateTime, ASecondDateTime : TDateTime) : String;
 
+function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;
+
 implementation
 
 uses Winapi.Windows;
+
+{ _.DefaultIfEmpty }
+function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;
+begin
+  if String.IsNullOrEmpty(AValue) then
+    result := ADefault
+  else
+    result := AValue;
+end;
 
 { _.FormatInt }
 function FormatInt(const AInteger : Integer) : String;

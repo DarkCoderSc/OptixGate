@@ -41,68 +41,78 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.SessionHandler;
+unit uFormAbout;
 
 interface
 
-uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     XSuperObject;
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls,
+  Vcl.ComCtrls;
 
 type
-  TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
+  TFormAbout = class(TForm)
+    ImageLogo: TVirtualImage;
+    LabelName: TLabel;
+    LabelDarkCoderSc: TLabel;
+    ButtonClose: TButton;
+    LabelDisclaimer: TLabel;
+    procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure ButtonCloseClick(Sender: TObject);
   private
-
-  protected
     {@M}
-    procedure EstablishedConnection(); override;
-    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
+    procedure DoResize();
   public
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
+    { Public declarations }
   end;
+
+var
+  FormAbout: TFormAbout;
 
 implementation
 
-uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
-     Optix.Func.Commands;
+uses uFormMain;
 
-{ TOptixSessionHandlerThread.EstablishedConnection }
-procedure TOptixSessionHandlerThread.EstablishedConnection();
+{$R *.dfm}
+
+procedure TFormAbout.ButtonCloseClick(Sender: TObject);
 begin
-  var APacket := TOptixSessionInformation.Create();
-  try
-    FClient.SendPacket(APacket);
-  finally
-    FreeAndNil(APacket);
-  end;
+  self.Close();
 end;
 
-{ TOptixSessionHandlerThread.PacketReceived }
-procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
+procedure TFormAbout.DoResize();
 begin
-  if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') then
-      Exit();
-  ///
+  ImageLogo.Top  := self.ScaleValue(8);
+  ImageLogo.Left := (ClientWidth div 2) - (ImageLogo.Width div 2);
 
-  // TODO: make it more generic (Class Registry or RTTI)
-  var AClassName := ASerializedPacket.S['PacketClass'];
+  LabelName.Top  := ImageLogo.Top + ImageLogo.Height + self.ScaleValue(8);
+  LabelName.Left := (ClientWidth div 2) - (LabelName.Width div 2);
 
-  var AOptixPacket : TOptixPacket := nil;
-  try
-    if AClassName = 'TOptixCommandTerminate' then
-      self.Terminate;
-  finally
-    if Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
-  end;
+  LabelDarkCoderSc.Top  := LabelName.Top + LabelName.Height + self.ScaleValue(4);
+  LabelDarkCoderSc.Left := (ClientWidth div 2) - (labelDarkCoderSc.Width div 2);
+
+  LabelDisclaimer.Top   := labelDarkCoderSc.Top + labelDarkCoderSc.Height + self.ScaleValue(8);
+  LabelDisclaimer.Left  := self.ScaleValue(8);
+  LabelDisclaimer.Width := ClientWidth - (LabelDisclaimer.Left * 2);
+
+  self.LabelDisclaimer.AutoSize := False;
+  self.LabelDisclaimer.AutoSize := True;
+
+  ButtonClose.Top  := LabelDisclaimer.Top + LabelDisclaimer.Height + self.ScaleValue(8);
+  ButtonClose.Left := (ClientWidth div 2) - (ButtonClose.Width div 2);
+
+  ClientHeight := ButtonClose.Top + ButtonClose.Height + self.ScaleValue(8);
 end;
 
-{ TOptixSessionHandlerThread.Create }
-constructor TOptixSessionHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
+procedure TFormAbout.FormResize(Sender: TObject);
 begin
-  inherited Create(ARemoteAddress, ARemotePort);
-  ///
+  DoResize();
+end;
 
+procedure TFormAbout.FormShow(Sender: TObject);
+begin
+  DoResize();
 end;
 
 end.

@@ -41,68 +41,28 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.SessionHandler;
+unit Optix.Constants;
 
 interface
 
-uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     XSuperObject;
+uses VCL.Graphics, Winapi.Windows;
 
-type
-  TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
-  private
+const
+ (* IMAGES *)
+ IMAGE_USER          = 0;
+ IMAGE_USER_ADMIN    = 1;
+ IMAGE_USER_ELEVATED = 2;
+ IMAGE_USER_SYSTEM   = 3;
 
-  protected
-    {@M}
-    procedure EstablishedConnection(); override;
-    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
-  public
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
-  end;
+var
+ (* COLORS *)
+ COLOR_USER_ELEVATED : TColor;
+ COLOR_USER_SYSTEM   : TColor;
 
 implementation
 
-uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
-     Optix.Func.Commands;
-
-{ TOptixSessionHandlerThread.EstablishedConnection }
-procedure TOptixSessionHandlerThread.EstablishedConnection();
-begin
-  var APacket := TOptixSessionInformation.Create();
-  try
-    FClient.SendPacket(APacket);
-  finally
-    FreeAndNil(APacket);
-  end;
-end;
-
-{ TOptixSessionHandlerThread.PacketReceived }
-procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
-begin
-  if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') then
-      Exit();
-  ///
-
-  // TODO: make it more generic (Class Registry or RTTI)
-  var AClassName := ASerializedPacket.S['PacketClass'];
-
-  var AOptixPacket : TOptixPacket := nil;
-  try
-    if AClassName = 'TOptixCommandTerminate' then
-      self.Terminate;
-  finally
-    if Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
-  end;
-end;
-
-{ TOptixSessionHandlerThread.Create }
-constructor TOptixSessionHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
-begin
-  inherited Create(ARemoteAddress, ARemotePort);
-  ///
-
-end;
+initialization
+  COLOR_USER_ELEVATED := RGB(234, 249, 254);
+  COLOR_USER_SYSTEM   := RGB(242, 228, 247);
 
 end.

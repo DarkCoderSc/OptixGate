@@ -51,7 +51,9 @@ uses
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, Optix.Protocol.Network.Server, Optix.Sockets.Helper,
   Winapi.Winsock2, Vcl.ComCtrls, XSuperObject, Optix.Func.SessionInformation,
-  Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands;
+  Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands,
+  Vcl.BaseImageCollection, Vcl.ImageCollection, System.ImageList, Vcl.ImgList,
+  Vcl.VirtualImageList, Vcl.StdCtrls;
 
 type
   TTreeData = record
@@ -91,6 +93,8 @@ type
     SYSTEMTaskScheduler1: TMenuItem;
     StatusBar: TStatusBar;
     TimerRefresh: TTimer;
+    ImageCollection: TImageCollection;
+    VirtualImageList: TVirtualImageList;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -105,6 +109,13 @@ type
     procedure TimerRefreshTimer(Sender: TObject);
     procedure erminate1Click(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
+    procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
+      var ImageIndex: TImageIndex);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+      TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure About1Click(Sender: TObject);
   private
     FServer : TOptixServerThread;
 
@@ -133,7 +144,8 @@ var
 
 implementation
 
-uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper;
+uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants,
+     Optix.InformationGathering.Process, uFormAbout;
 
 {$R *.dfm}
 
@@ -222,6 +234,30 @@ begin
     StatusBar.Panels[0].Text := ACaption;
 end;
 
+procedure TFormMain.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+
+  if not Assigned(pData^.SessionInformation) then
+    Exit();
+
+  var AColor := clNone;
+
+  if pData^.SessionInformation.IsSystem then
+    AColor := COLOR_USER_SYSTEM
+  else if pData^.SessionInformation.ElevatedStatus = esElevated then
+    AColor := COLOR_USER_ELEVATED;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    ///
+    TargetCanvas.FillRect(CellRect);
+  end;
+end;
+
 procedure TFormMain.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
@@ -240,11 +276,37 @@ begin
     Exit();
   ///
 
-  if Assigned(pData^.Handler) then
-    pData^.Handler.Terminate;
-
   if Assigned(pData^.SessionInformation) then
     FreeAndNil(pData^.SessionInformation);
+end;
+
+procedure TFormMain.VSTGetImageIndex(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+  var Ghosted: Boolean; var ImageIndex: TImageIndex);
+begin
+  var pData := PTreeData(Node.GetData);
+
+  if Column <> 0 then
+    Exit();
+
+  case Kind of
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected: begin
+      if pData^.SessionInformation.IsSystem then
+        ImageIndex := IMAGE_USER_SYSTEM
+      else begin
+        if pData^.SessionInformation.ElevatedStatus = esElevated then
+          ImageIndex := IMAGE_USER_ELEVATED
+        else begin
+          if pData^.SessionInformation.IsInAdminGroup then
+            ImageIndex := IMAGE_USER_ADMIN
+          else
+            ImageIndex := IMAGE_USER;
+        end;
+      end;
+    end;
+    TVTImageKind.ikState: ;
+    TVTImageKind.ikOverlay: ;
+  end;
 end;
 
 procedure TFormMain.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -266,12 +328,17 @@ begin
 
   case Column of
     0 : CellText := pData^.Handler.PeerAddress;
-    1 : CellText := pData^.SessionInformation.Username;
-    2 : CellText := pData^.SessionInformation.Computer;
-    3 : CellText := pData^.SessionInformation.WindowsVersion;
-    4 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
-    5 : CellText := pData^.SessionInformation.ProcessDetail;
-    6 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
+    1 : CellText := Format('%s@%s', [
+      pData^.SessionInformation.Username,
+      pData^.SessionInformation.Computer
+    ]);
+    2 : CellText := DefaultIfEmpty(pData^.SessionInformation.Langroup);
+    3 : CellText := DefaultIfEmpty(pData^.SessionInformation.DomainName);
+    4 : CellText := pData^.SessionInformation.WindowsVersion;
+    5 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
+    6 : CellText := pData^.SessionInformation.ProcessDetail;
+    7 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
+    8 : CellText := BoolToStr(pData^.SessionInformation.IsInAdminGroup, True);
   end;
 end;
 
@@ -351,6 +418,11 @@ begin
   except
     // TODO: log packet errors
   end;
+end;
+
+procedure TFormMain.About1Click(Sender: TObject);
+begin
+  FormAbout.ShowModal();
 end;
 
 procedure TFormMain.Close1Click(Sender: TObject);

@@ -47,16 +47,17 @@ uses
   Vcl.Forms,
   Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
   Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
+  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas' {* External Libraries *},
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
+  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas' {* External Libraries *},
+  Optix.Thread in '..\Shared\Optix.Thread.pas' {* Server Units *},
+  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas' {* Server Units *},
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
+  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
   Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
   Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
@@ -64,7 +65,11 @@ uses
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
-  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain};
+  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
+  Vcl.Themes,
+  Vcl.Styles,
+  Optix.Constants in 'Units\Optix.Constants.pas',
+  uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout};
 
 {$R *.res}
 
@@ -74,6 +79,8 @@ begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+  TStyleManager.TrySetStyle('Aqua Light Slate');
   Application.CreateForm(TFormMain, FormMain);
+  Application.CreateForm(TFormAbout, FormAbout);
   Application.Run;
 end.

@@ -143,13 +143,19 @@ type
     class function GetHardDriveSerial() : String; static;
     class function GetUserUID() : TGUID; static;
     class function GetCurrentUserSid() : String; static;
+    class function TryGetCurrentUserSid() : String; static;
+    class function GetLangroup() : String; static;
+    class function GetDomainName() : String; static;
+    class function IsCurrentUserInAdminGroup() : Boolean;
+    class function TryIsCurrentUserInAdminGroup() : Boolean;
   end;
 
   function ProcessArchitectureToString(const AValue : TProcessArchitecture) : String;
 
 implementation
 
-uses Optix.Exceptions, System.SysUtils, Optix.InformationGathering.Process;
+uses Optix.Exceptions, System.SysUtils, Optix.InformationGathering.Process,
+     Optix.WinApiEx;
 
 (* Local *)
 
@@ -293,6 +299,16 @@ begin
   result := GetUserSidByType(TOptixInformationGathering.UserName);
 end;
 
+{ TOptixInformationGathering.TryGetCurrentUserSid }
+class function TOptixInformationGathering.TryGetCurrentUserSid() : String;
+begin
+  try
+    result := TOptixInformationGathering.GetCurrentUserSid();
+  except
+
+  end;
+end;
+
 { TOptixInformationGathering.GetWindowsDirectory }
 class function TOptixInformationGathering.GetWindowsDirectory() : string;
 var ALen  : Cardinal;
@@ -375,6 +391,109 @@ begin
   );
 
   Move(A128BitHash[0], result, SizeOf(TGUID));
+end;
+
+{ TOptixInformationGathering.GetLangroup }
+class function TOptixInformationGathering.GetLangroup() : String;
+begin
+  result := '';
+  ///
+
+  var pWkstaInfo : PWkstaInfo100;
+
+  if NetWkstaGetInfo(nil, 100, Pointer(pWkstaInfo)) = NERR_Success then begin
+    result := string(pWkstaInfo.wki100_langroup);
+
+    ///
+    NetApiBufferFree(pWkstaInfo);
+  end;
+end;
+
+{ TOptixInformationGathering.GetDomainName }
+class function TOptixInformationGathering.GetDomainName() : String;
+begin
+  result := '';
+  ///
+
+  var pDcInfo : PDomainControllerInfo;
+
+  if DsGetDcNameW(nil, nil, nil, nil, DS_DIRECTORY_SERVICE_REQUIRED, pDcInfo) = ERROR_SUCCESS then begin
+    result := pDcInfo^.DomainName;
+
+    ///
+    NetApiBufferFree(pDcInfo);
+  end;
+end;
+
+{ TOptixInformationGathering.IsCurrentUserInAdminGroup }
+class function TOptixInformationGathering.IsCurrentUserInAdminGroup() : Boolean;
+begin
+  result := False;
+  ///
+
+  var hToken : THandle := 0;
+  var pAdminSID : PSID := nil;
+  try
+    if not OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, hToken) then
+      raise EWindowsException.Create('OpenProcessToken');
+
+    var AReturnLength : DWORD;
+
+    GetTokenInformation(hToken, TokenGroups, nil, 0, AReturnLength);
+    if GetLastError() <> ERROR_INSUFFICIENT_BUFFER then
+      raise EWindowsException.Create('GetTokenInformation(1)');
+
+    var pTokenInfo : PTokenGroups;
+    GetMem(pTokenInfo, AReturnLength);
+    try
+      if not GetTokenInformation(hToken, TokenGroups, pTokenInfo, AReturnLength, AReturnLength) then
+        raise EWindowsException.Create('GetTokenInformation(2)');
+
+        if not AllocateAndInitializeSid(
+            SECURITY_NT_AUTHORITY,
+            2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            pAdminSID
+      ) then
+        raise EWindowsException.Create('AllocateAndInitializeSid');
+
+      {$R-}
+      for var I := 0 to pTokenInfo^.GroupCount -1 do begin
+        if EqualSID(pAdminSID, pTokenInfo^.Groups[I].Sid) then begin
+          result := True;
+
+          break
+        end;
+      end;
+      {$R+}
+    finally
+      FreeMem(pTokenInfo, AReturnLength);
+    end;
+  finally
+    if Assigned(pAdminSID) then
+      FreeSid(pAdminSID);
+
+    if hToken <> 0 then
+      CloseHandle(hToken);
+  end;
+end;
+
+{ TOptixInformationGathering.TryIsCurrentUserInAdminGroup }
+class function TOptixInformationGathering.TryIsCurrentUserInAdminGroup() : Boolean;
+begin
+  result := False;
+  try
+    result := IsCurrentUserInAdminGroup();
+  except
+
+  end;
 end;
 
 end.
