@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -107,7 +107,7 @@ begin
   FUserName       := TOptixInformationGathering.TryGetUserName();
   FUserSid        := TOptixInformationGathering.TryGetCurrentUserSid();
   FComputer       := TOptixInformationGathering.TryGetComputerName();
-  FElevatedStatus := TProcessInformation.IsElevated();
+  FElevatedStatus := TProcessInformationHelper.IsElevated();
   FLangroup       := TOptixInformationGathering.GetLangroup;
   FDomainName     := TOptixInformationGathering.GetDomainName;
   FIsInAdminGroup := TOptixInformationGathering.TryIsCurrentUserInAdminGroup();

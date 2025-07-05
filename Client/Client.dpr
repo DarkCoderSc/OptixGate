@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -63,11 +63,13 @@ uses
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
   Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
+  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas';
+  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
+  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas';
 
 begin
   IsMultiThread := True;
@@ -82,8 +84,13 @@ begin
         Exit();
       ///
 
+      // Enable certain useful privileges (if possible)
+      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
+      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
+
       var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
       ASessionHandler.Retry := True;
+      ASessionHandler.RetryDelay := 1000;
       ASessionHandler.Start();
 
       ///

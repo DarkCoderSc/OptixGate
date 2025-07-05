@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -51,6 +51,14 @@ type
   (* Netapi32.dll *)
   NET_API_STATUS = DWORD;
 
+  UNICODE_STRING = record
+    Length         : USHORT;
+    MaximumLength  : USHORT;
+    Buffer         : PWideChar;
+  end;
+  TUnicodeString = UNICODE_STRING;
+  PUnicodeString = ^TUnicodeString;
+
   {$A8}
   WKSTA_INFO_100 = record
     wki100_platform_id  : DWORD;
@@ -78,6 +86,45 @@ type
   TDomainControllerInfo = DOMAIN_CONTROLLER_INFO;
   PDomainControllerInfo = ^TDomainControllerInfo;
 
+  SYSTEM_PROCESS_INFORMATION = record
+    NextEntryOffset              : ULONG;
+    NumberOfThreads              : ULONG;
+    WorkingSetPrivateSize        : LARGE_INTEGER;
+    HardFaultCount               : ULONG;
+    NumberOfThreadsHighWaterMark : ULONG;
+    CycleTime                    : ULONGLONG;
+    CreateTime                   : _FILETIME;
+    UserTimer                    : LARGE_INTEGER;
+    KernelTime                   : LARGE_INTEGER;
+    ModuleName                   : TUnicodeString;
+    BasePriority                 : LONG;
+    ProcessID                    : NativeUInt;
+    InheritedFromProcessId       : NativeUInt;
+    HandleCount                  : ULONG;
+    SessionId                    : ULONG;
+    UniqueProcessKey             : ULONG_PTR;
+    PeakVirtualSize              : ULONG_PTR;
+    VirtualSize                  : ULONG_PTR;
+    PageFaultCount               : ULONG;
+    PeakWorkingSetSize           : ULONG_PTR;
+    WorkingSetSize               : ULONG_PTR;
+    QuotePeakPagedPoolUsage      : ULONG_PTR;
+    QuotaPagedPoolUsage          : ULONG_PTR;
+    QuotaPeakNonPagedPoolUsage   : ULONG_PTR;
+    QuotaNonPagedPoolUsage       : ULONG_PTR;
+    PagefileUsage                : ULONG_PTR;
+    PeakPagefileUsage            : ULONG_PTR;
+    PrivatePageCount             : ULONG_PTR;
+    ReadOperationCount           : LARGE_INTEGER;
+    WriteOperationCount          : LARGE_INTEGER;
+    OtherOperationCount          : LARGE_INTEGER;
+    ReadTransferCount            : LARGE_INTEGER;
+    WriteTransferCount           : LARGE_INTEGER;
+    OtherTransferCount           : LARGE_INTEGER
+  end;
+  TSystemProcessInformation = SYSTEM_PROCESS_INFORMATION;
+  PSystemProcessInformation = ^TSystemProcessInformation;
+
 const
   NERR_Success                  = 0;
 
@@ -89,6 +136,9 @@ const
 
   DOMAIN_ALIAS_RID_ADMINS       = $00000220;
   SECURITY_BUILTIN_DOMAIN_RID   = $00000020;
+
+  SYSTEM_PROCESS_INFORMATION_CLASS  = 5;
+  PROCESS_QUERY_LIMITED_INFORMATION = $00001000;
 
 (* Netapi32.dll *)
 function DsGetDcNameW(
@@ -117,6 +167,22 @@ function CheckTokenMembership(
   SIdToCheck   : PSID;
   var IsMember : Boolean
 ): BOOL; stdcall; external 'Advapi32.dll';
+
+(* NTDLL.dll *)
+
+function NtQuerySystemInformation(
+  SystemInformationClass  : DWORD;
+  SystemInformation       : Pointer;
+  SystemInformationLength : DWORD;
+  var ReturnLength        : DWORD
+) : Cardinal; stdcall; external 'NTDLL.DLL';
+
+function QueryFullProcessImageNameW(
+  hProcess   : THandle;
+  dwFlags    : DWORD;
+  lpExeName  : PWideChar;
+  var dwSize : DWORD
+): BOOL; stdcall; external kernel32 name 'QueryFullProcessImageNameW';
 
 implementation
 

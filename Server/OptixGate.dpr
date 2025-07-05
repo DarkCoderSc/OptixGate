@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -51,10 +51,11 @@ uses
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas' {* External Libraries *},
   Optix.Thread in '..\Shared\Optix.Thread.pas' {* Server Units *},
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas' {* Server Units *},
+  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
+  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
@@ -62,6 +63,7 @@ uses
   Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
+  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
@@ -69,7 +71,9 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   Optix.Constants in 'Units\Optix.Constants.pas',
-  uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout};
+  uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout},
+  uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
+  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas';
 
 {$R *.res}
 
@@ -82,5 +86,6 @@ begin
   TStyleManager.TrySetStyle('Aqua Light Slate');
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
+  // Application.CreateForm(TFormProcessManager, FormProcessManager);
   Application.Run;
 end.

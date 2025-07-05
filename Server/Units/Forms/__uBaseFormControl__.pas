@@ -41,24 +41,60 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Interfaces;
+unit __uBaseFormControl__;
 
 interface
 
-uses System.Classes, XSuperObject;
+uses VCL.Forms, VCL.Controls, System.Classes, Winapi.Messages, XSuperObject,
+     Optix.Func.Commands;
 
 type
-  IOptixEnumerator = Interface(IInterface)
-    function Refresh() : Integer;
+  TBaseFormControl = class(TForm)
+  private
+    FGUID : TGUID;
+  protected
+    {@M}
+    procedure SendCommand(const ACommand : TOptixWindowedCommand);
+  public
+    {@G}
+    property GUID : TGUID read FGUID;
 
-    procedure Clear();
-  end;
+    {@M}
+    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual; abstract;
 
-  IOptixSerializable = Interface(IInterface)
-    function Serialize() : ISuperObject;
-    procedure DeSerialize(const ASerializedObject : ISuperObject);
+    {@C}
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy(); override;
   end;
 
 implementation
+
+uses System.SysUtils, Winapi.Windows, uFormMain;
+
+{ TBaseFormControl.Create }
+constructor TBaseFormControl.Create(AOwner : TComponent);
+begin
+  inherited;
+  ///
+
+  FGUID := TGUID.NewGuid();
+end;
+
+{ TBaseFormControl.Destroy }
+destructor TBaseFormControl.Destroy();
+begin
+
+  ///
+  inherited;
+end;
+
+{ TBaseFormControl.SendCommand }
+procedure TBaseFormControl.SendCommand(const ACommand : TOptixWindowedCommand);
+begin
+  ACommand.WindowGUID := FGUID;
+
+  ///
+  FormMain.SendCommand(self, ACommand);
+end;
 
 end.

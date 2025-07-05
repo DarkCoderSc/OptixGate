@@ -41,24 +41,93 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Interfaces;
+unit Optix.System.Helper;
 
 interface
 
-uses System.Classes, XSuperObject;
+uses Winapi.Windows;
 
 type
-  IOptixEnumerator = Interface(IInterface)
-    function Refresh() : Integer;
-
-    procedure Clear();
-  end;
-
-  IOptixSerializable = Interface(IInterface)
-    function Serialize() : ISuperObject;
-    procedure DeSerialize(const ASerializedObject : ISuperObject);
+  TSystemHelper = class
+  public
+    {@M}
+    class function FileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
+    class function TryFileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
+    class procedure NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+    class procedure TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
   end;
 
 implementation
+
+uses Optix.Exceptions, System.SysUtils;
+
+{ TSystemHelper.NTSetPrivilege }
+class procedure TSystemHelper.NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+begin
+  var hToken : THandle;
+  if not OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then
+    raise EWindowsException.Create('OpenProcessToken');
+
+  try
+    var ATokenPrivilege : TOKEN_PRIVILEGES;
+
+    if not LookupPrivilegeValue(nil, PChar(APrivilegeName), ATokenPrivilege.Privileges[0].Luid) then
+      raise EWindowsException.Create('LookupPrivilegeValue');
+
+    ATokenPrivilege.PrivilegeCount := 1;
+
+    case AEnabled of
+      True  : ATokenPrivilege.Privileges[0].Attributes  := SE_PRIVILEGE_ENABLED;
+      False : ATokenPrivilege.Privileges[0].Attributes  := 0;
+    end;
+
+    if not AdjustTokenPrivileges(
+                                  hToken,
+                                  False,
+                                  ATokenPrivilege,
+                                  SizeOf(TOKEN_PRIVILEGES),
+                                  PTokenPrivileges(nil)^,
+                                  PDWORD(nil)^
+    ) then
+      raise EWindowsException.Create('AdjustTokenPrivileges');
+  finally
+    CloseHandle(hToken);
+  end;
+end;
+
+{ TSystemHelper.TryNTSetPrivilege }
+class procedure TSystemHelper.TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+begin
+  try
+    NTSetPrivilege(APrivilegeName, AEnabled);
+  except
+
+  end;
+end;
+
+{ TSystemHelper.FileTimeToDateTime }
+class function TSystemHelper.FileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
+begin
+  var ALocalFileTime: TFileTime;
+  if not FileTimeToLocalFileTime(AFileTime, ALocalFileTime) then
+    raise EWindowsException.Create('FileTimeToLocalFileTime');
+
+  var ASystemTime : TSystemTime;
+  if not FileTimeToSystemTime(AFileTime, ASystemTime) then
+    raise EWindowsException.Create('FileTimeToSystemTime');
+
+  ///
+  Result := SystemTimeToDateTime(ASystemTime);
+end;
+
+{ TSystemHelper.TryFileTimeToDateTime }
+class function TSystemHelper.TryFileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
+begin
+  try
+    result := FileTimeToDateTime(AFileTime);
+  except
+    result := Now;
+  end;
+end;
 
 end.

@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -52,6 +52,7 @@ type
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+    procedure BeforeCreate(); virtual;
   public
     {@M}
     function Serialize() : ISuperObject; virtual;
@@ -67,6 +68,9 @@ uses Optix.InformationGathering.Helper;
 { TOptixPacket.Create }
 constructor TOptixPacket.Create(const ASerializedObject : ISuperObject = nil);
 begin
+  BeforeCreate();
+  ///
+
   inherited Create();
   ///
 
@@ -83,6 +87,12 @@ end;
 
 { TOptixPacket.DeSerialize }
 procedure TOptixPacket.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  ///
+end;
+
+{ TOptixPacket.BeforeCreate }
+procedure TOptixPacket.BeforeCreate();
 begin
   ///
 end;

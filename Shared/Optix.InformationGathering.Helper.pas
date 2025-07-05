@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -387,7 +387,7 @@ begin
   var A128BitHash := THashMD5.GetHashBytes(
     GetHardDriveSerial +                                  // Uniqueness in machine level
     GetCurrentUserSid +                                   // Uniqueness in user level
-    IntToStr(Cardinal(TProcessInformation.IsElevated()))  // Uniqueness in elevation level
+    IntToStr(Cardinal(TProcessInformationHelper.IsElevated()))  // Uniqueness in elevation level
   );
 
   Move(A128BitHash[0], result, SizeOf(TGUID));

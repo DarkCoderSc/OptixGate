@@ -102,11 +102,13 @@
         <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.InformationGathering.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
         <DCCReference Include="..\Shared\XSuperJSON.pas"/>
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
+        <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

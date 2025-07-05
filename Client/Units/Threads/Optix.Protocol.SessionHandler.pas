@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -63,17 +63,18 @@ type
 implementation
 
 uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
-     Optix.Func.Commands;
+     Optix.Func.Commands, Optix.Func.Enum.Process;
 
 { TOptixSessionHandlerThread.EstablishedConnection }
 procedure TOptixSessionHandlerThread.EstablishedConnection();
 begin
-  var APacket := TOptixSessionInformation.Create();
-  try
-    FClient.SendPacket(APacket);
-  finally
-    FreeAndNil(APacket);
-  end;
+//  var APacket := TOptixSessionInformation.Create();
+//  try
+//    FClient.SendPacket(APacket);
+//  finally
+//    FreeAndNil(APacket);
+//  end;
+  self.AddPacket(TOptixSessionInformation.Create());
 end;
 
 { TOptixSessionHandlerThread.PacketReceived }
@@ -87,10 +88,18 @@ begin
   // TODO: make it more generic (Class Registry or RTTI)
   var AClassName := ASerializedPacket.S['PacketClass'];
 
+  var AWindowGUID := TGUID.Empty;
+  if ASerializedPacket.Contains('WindowGUID') then
+    AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
+
   var AOptixPacket : TOptixPacket := nil;
   try
     if AClassName = 'TOptixCommandTerminate' then
-      self.Terminate;
+      self.Terminate
+    else if AClassName = 'TOptixRefreshProcess' then
+      self.AddPacket(TProcessList.Create(AWindowGUID));
+
+    // ... //
   finally
     if Assigned(AOptixPacket) then
       FreeAndNil(AOptixPacket);

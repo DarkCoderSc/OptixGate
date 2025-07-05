@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -44,6 +44,8 @@
 unit Optix.Thread;
 
 interface
+
+{$I Optix.inc}
 
 uses System.Classes, Generics.Collections, System.SyncObjs;
 
@@ -146,6 +148,8 @@ begin
       ///
       FIntervalEvent.WaitFor(1000);
     end;
+
+    TOptixThread.SignalHiveAndWait();
   finally
     ExitThread(0); // !important
   end;
@@ -326,6 +330,8 @@ begin
   end;
 end;
 
+
+
 initialization
   OPTIX_THREAD_HIVE := TThreadList<TOptixThread>.Create();
 
@@ -333,8 +339,13 @@ initialization
 
 finalization
   if Assigned(OPTIX_WATCHDOG) then begin
+    // The client can do it during process finalization, but the server, due to
+    // its GUI nature, cannot. It must be called manually from the GUI (OnClose)
+    {$IFDEF CLIENT}
     TOptixThread.TerminateWait(OPTIX_WATCHDOG);
+    {$ENDIF}
 
+    ///
     FreeAndNil(OPTIX_WATCHDOG);
   end;
 

@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -49,35 +49,51 @@ uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
      XSuperObject, Optix.Protocol.Packet;
 
 type
-  TOptixCommand = class(TOptixPacket)
+  TOptixCommand = class(TOptixPacket);
+
+  TOptixWindowedCommand = class(TOptixCommand)
+  private
+    FWindowGUID : TGUID;
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@M}
-    function Serialize() : ISuperObject; virtual;
+    function Serialize() : ISuperObject; override;
+
+    {@G/S}
+    property WindowGUID : TGUID read FWindowGUID write FWindowGUID;
   end;
 
   // Simple Commands
   TOptixCommandTerminate = class(TOptixCommand);
 
+  // Simple Windowed Commands
+  TOptixRefreshProcess = class(TOptixWindowedCommand);
+
 implementation
 
-(* TOptixCommand *)
+(* TOptixWindowedCommand *)
 
-{ TOptixCommand.Serialize }
-function TOptixCommand.Serialize() : ISuperObject;
+{ TOptixWindowedCommand.Serialize }
+function TOptixWindowedCommand.Serialize() : ISuperObject;
 begin
-  result := TSuperObject.Create();
+  result := inherited;
   ///
 
-  result.S['CommandClass'] := self.ClassName;
+  result.S['WindowGUID'] := FWindowGUID.ToString;
 end;
 
-{ TOptixCommand.DeSerialize }
-procedure TOptixCommand.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixWindowedCommand.DeSerialize }
+procedure TOptixWindowedCommand.DeSerialize(const ASerializedObject : ISuperObject);
 begin
+  inherited;
   ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FWindowGUID := TGUID.Create(ASerializedObject.S['WindowGUID']);
 end;
 
 end.

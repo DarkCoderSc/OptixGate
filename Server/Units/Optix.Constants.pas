@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -53,16 +53,22 @@ const
  IMAGE_USER_ADMIN    = 1;
  IMAGE_USER_ELEVATED = 2;
  IMAGE_USER_SYSTEM   = 3;
+ IMAGE_ALIEN         = 6;
+ IMAGE_PROCESS       = 7;
+ IMAGE_PROCESS_X32   = 8;
+ IMAGE_PROCESS_X64   = 9;
 
 var
  (* COLORS *)
  COLOR_USER_ELEVATED : TColor;
  COLOR_USER_SYSTEM   : TColor;
+ COLOR_LIST_LIMY     : TColor;
 
 implementation
 
 initialization
   COLOR_USER_ELEVATED := RGB(234, 249, 254);
   COLOR_USER_SYSTEM   := RGB(242, 228, 247);
+  COLOR_LIST_LIMY     := RGB(220, 254, 215);
 
 end.

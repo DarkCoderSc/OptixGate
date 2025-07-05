@@ -5,7 +5,7 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
@@ -54,18 +54,24 @@ type
     esElevated
   );
 
-  TProcessInformation = class
+  TProcessInformationHelper = class
   public
     {@M}
+    class function IsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus; static;
+    class function TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus; static;
     class function IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus; static;
     class function TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus; static;
+    class procedure GetProcessUserInformation(const AProcessId : Cardinal; var AUserName, ADomain : String);
+    class function TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean;
+    class function GetProcessImagePath(const AProcessID : Cardinal) : String; static;
+    class function TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String;
   end;
 
   function ElevatedStatusToString(const AValue : TElevatedStatus) : String;
 
 implementation
 
-uses Optix.Exceptions;
+uses Optix.Exceptions, Optix.WinApiEx, System.SysUtils;
 
 (* Local *)
 
@@ -81,10 +87,10 @@ begin
   end;
 end;
 
-(* TProcessInformation *)
+(* TProcessInformationHelper *)
 
-{ TProcessInformation.IsElevated }
-class function TProcessInformation.IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
+{ TProcessInformationHelper.IsElevated }
+class function TProcessInformationHelper.IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
 var AToken        : THandle;
     ATokenInfo    : TTokenElevation;
     AReturnLength : DWORD;
@@ -111,8 +117,8 @@ begin
     result := esLimited;
 end;
 
-{ TProcessInformation.TryGetIsElevated }
-class function TProcessInformation.TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
+{ TProcessInformationHelper.TryGetIsElevated }
+class function TProcessInformationHelper.TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
 begin
   result := esUnknown;
   try
@@ -121,6 +127,178 @@ begin
     on E : EWindowsException do begin
       // Ignore, we just try but we can log
     end;
+  end;
+end;
+
+{ TProcessInformationHelper.IsElevatedByProcessId }
+class function TProcessInformationHelper.IsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
+begin
+  var hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    result := IsElevated(hProcess);
+  finally
+    CloseHandle(hProcess);
+  end;
+end;
+
+{ TProcessInformationHelper.TryIsElevatedByProcessId }
+class function TProcessInformationHelper.TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
+begin
+  try
+    result := IsElevatedByProcessId(AProcessId);
+  except
+
+  end;
+end;
+
+{ TProcessInformationHelper.GetProcessUserInformation }
+class procedure TProcessInformationHelper.GetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String);
+begin
+  AUserName    := '';
+  ADomain      := '';
+
+  var AFlags : Cardinal := 0;
+
+  if TOSVersion.Major < 6 then
+    AFlags := PROCESS_QUERY_INFORMATION
+  else
+    AFlags := PROCESS_QUERY_LIMITED_INFORMATION;
+
+  var ptrTokenUser : PTokenUser := nil;
+  var ATokenSize   : Cardinal := 0;
+  var hToken       : THandle := 0;
+
+  var hProcess := OpenProcess(AFlags, False, AProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    if not OpenProcessToken(hProcess, TOKEN_QUERY, hToken) then
+      raise EWindowsException.Create('OpenProcessToken');
+    ///
+
+    var AReturnedLength : Cardinal;
+
+    if not GetTokenInformation(hToken, TokenUser, nil, 0, AReturnedLength) then
+      if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
+        raise EWindowsException.Create('GetTokenInformation(1)');
+
+    ATokenSize := AReturnedLength;
+
+    GetMem(ptrTokenUser, AReturnedLength);
+
+    if not GetTokenInformation(hToken, TokenUser, ptrTokenUser, AReturnedLength, AReturnedLength) then
+      raise EWindowsException.Create('GetTokenInformation(2)');
+
+    var AUserLength   := DWORD(0);
+    var ADomainLength := DWORD(0);
+    ///
+
+    var ASidNameUser : SID_NAME_USE;
+    
+    if not LookupAccountSid(
+                            nil,
+                            ptrTokenUser.User.Sid,
+                            nil,
+                            AUserLength,
+                            nil,
+                            ADomainLength,
+                            ASidNameUser
+    ) then
+      if GetLastError <> ERROR_INSUFFICIENT_BUFFER then
+        raise EWindowsException.Create('LookupAccountSid(1)');
+    ///
+    
+    if (AUserLength > 0) and (ADomainLength > 0) then begin
+      var pUserBuffer : PWideChar;
+      var pDomainBuffer : PWideChar;
+
+      AUserLength := AUserLength * SizeOf(WideChar);
+      ADomainLength := ADomainLength * SizeOf(WideChar);
+
+      GetMem(pUserBuffer, AUserLength);
+      GetMem(pDomainBuffer, ADomainLength);
+      try
+        if LookupAccountSid(
+                              nil,
+                              ptrTokenUser.User.Sid,
+                              pUserBuffer,
+                              AUserLength,
+                              pDomainBuffer,
+                              ADomainLength,
+                              ASidNameUser
+        ) then begin
+          AUsername := String(pUserBuffer);
+          ADomain := String(pDomainBuffer);
+        end else
+          raise EWindowsException.Create('LookupAccountSid(2)');
+      finally
+        FreeMem(pUserBuffer, AUserLength);
+        FreeMem(pDomainBuffer, ADomainLength);
+      end;
+    end;
+  finally
+    if hToken <> 0 then
+      Closehandle(hToken);
+      
+    if Assigned(ptrTokenUser) then
+      FreeMem(ptrTokenUser, ATokenSize);
+    ///
+
+    CloseHandle(hProcess);
+  end;
+end;
+
+{ TProcessInformationHelper.TryGetProcessUserInformation }
+class function TProcessInformationHelper.TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean;
+begin
+  try
+    GetProcessUserInformation(AProcessId, AUsername, ADomain);
+
+    ///
+    result := True;
+  except
+    result := False;
+  end;
+end;
+
+{ TProcessInformationHelper.GetProcessImagePath }
+class function TProcessInformationHelper.GetProcessImagePath(const AProcessID : Cardinal) : String;
+begin
+  result := '';
+  ///
+
+  if (TOSVersion.Major < 6) then
+    raise Exception.Create('Method not compatible with current OS Version. Requires >= 6');
+  ///
+
+
+  var hProc := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessID);
+  if hProc = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    var ALength := DWORD(MAX_PATH * 2);
+
+    // Alternative to GetMem
+    SetLength(result, ALength);
+
+    if NOT QueryFullProcessImageNameW(hProc, 0, @result[1], ALength) then
+      raise EWindowsException.Create('QueryFullProcessImageNameW');
+
+    SetLength(result, ALength);
+  finally
+    CloseHandle(hProc);
+  end;
+end;
+
+{ TProcessInformationHelper.TryGetProcessImagePath }
+class function TProcessInformationHelper.TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String;
+begin
+  try
+    result := GetProcessImagePath(AProcessId);
+  except
+    result := ADefault;
   end;
 end;
 
