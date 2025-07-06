@@ -45,7 +45,7 @@ unit Optix.InformationGathering.Process;
 
 interface
 
-uses Winapi.Windows, System.Classes;
+uses Winapi.Windows, System.Classes, Optix.WinApiEx, Optix.Types;
 
 type
   TElevatedStatus = (
@@ -61,17 +61,19 @@ type
     class function TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus; static;
     class function IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus; static;
     class function TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus; static;
-    class procedure GetProcessUserInformation(const AProcessId : Cardinal; var AUserName, ADomain : String);
-    class function TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean;
+    class procedure GetProcessUserInformation(const AProcessId : Cardinal; var AUserName, ADomain : String); static;
+    class function TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean; static;
     class function GetProcessImagePath(const AProcessID : Cardinal) : String; static;
-    class function TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String;
+    class function TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String; static;
+    class function IsWow64Process(const AProcessId : Cardinal) : Boolean; static;
+    class function TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult; static;
   end;
 
   function ElevatedStatusToString(const AValue : TElevatedStatus) : String;
 
 implementation
 
-uses Optix.Exceptions, Optix.WinApiEx, System.SysUtils;
+uses Optix.Exceptions, System.SysUtils;
 
 (* Local *)
 
@@ -299,6 +301,38 @@ begin
     result := GetProcessImagePath(AProcessId);
   except
     result := ADefault;
+  end;
+end;
+
+{ TProcessInformationHelper.IsWow64Process }
+class function TProcessInformationHelper.IsWow64Process(const AProcessId : Cardinal) : Boolean;
+begin
+  result := False;
+  ///
+
+  var hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    // TODO: Support IsWow64Process2() for >= Windows 10
+    var AWow64Process : BOOL;
+    if not Winapi.Windows.IsWow64Process(hProcess, AWow64Process) then
+      raise EWindowsException.Create('IsWow64Process');
+    ///
+
+    result := AWow64Process;
+  finally
+    CloseHandle(hProcess);
+  end;
+end;
+
+{ TProcessInformationHelper.TryIsWow64Process }
+class function TProcessInformationHelper.TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult;
+begin
+  try
+    result := CastResult(IsWow64Process(AProcessId))
+  except
+    result := brError;
   end;
 end;
 

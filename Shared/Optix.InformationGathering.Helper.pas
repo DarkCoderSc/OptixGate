@@ -45,99 +45,16 @@ unit Optix.InformationGathering.Helper;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.Hash;
+uses Winapi.Windows, System.Classes, System.Hash, Optix.WinApiEx;
 
 type
-  TProcessArchitecture = (
-    paOther,
-    pa86_32,
-    pa86_64
-  );
-
-  TSidNameUse = (
-                  SidTypeUser,
-                  SidTypeGroup,
-                  SidTypeDomain,
-                  SidTypeAlias,
-                  SidTypeWellKnownGroup,
-                  SidTypeDeletedAccount,
-                  SidTypeInvalid,
-                  SidTypeUnknown,
-                  SidTypeComputer,
-                  SidTypeLabel,
-                  SidTypeLogonSession
-  );
-
-  STORAGE_QUERY_TYPE = (
-    PropertyStandardQuery = 0,
-    PropertyExistsQuery,
-    PropertyMaskQuery,
-    PropertyQueryMaxDefined
-  );
-  TStorageQueryType = STORAGE_QUERY_TYPE;
-
-  STORAGE_PROPERTY_ID = (
-    StorageDeviceProperty = 0,
-    StorageAdapterProperty
-  );
-  TStoragePropertyID = STORAGE_PROPERTY_ID;
-
-  STORAGE_PROPERTY_QUERY = record
-    PropertyId           : STORAGE_PROPERTY_ID;
-    QueryType            : STORAGE_QUERY_TYPE;
-    AdditionalParameters : array[0..9] of AnsiChar;
-  end;
-  TStoragePropertyQuery = STORAGE_PROPERTY_QUERY;
-
-  STORAGE_BUS_TYPE = (
-    BusTypeUnknown = 0,
-    BusTypeScsi,
-    BusTypeAtapi,
-    BusTypeAta,
-    BusType1394,
-    BusTypeSsa,
-    BusTypeFibre,
-    BusTypeUsb,
-    BusTypeRAID,
-    BusTypeiScsi,
-    BusTypeSas,
-    BusTypeSata,
-    BusTypeMaxReserved = $7F
-  );
-  TStorageBusType = STORAGE_BUS_TYPE;
-
-  STORAGE_DEVICE_DESCRIPTOR = record
-    Version               : DWORD;
-    Size                  : DWORD;
-    DeviceType            : Byte;
-    DeviceTypeModifier    : Byte;
-    RemovableMedia        : Boolean;
-    CommandQueueing       : Boolean;
-    VendorIdOffset        : DWORD;
-    ProductIdOffset       : DWORD;
-    ProductRevisionOffset : DWORD;
-    SerialNumberOffset    : DWORD;
-    BusType               : STORAGE_BUS_TYPE;
-    RawPropertiesLength   : DWORD;
-    RawDeviceProperties   : array[0..0] of AnsiChar;
-  end;
-  TStorageDeviceDescriptor = STORAGE_DEVICE_DESCRIPTOR;
-  PStorageDeviceDescriptor = ^TStorageDeviceDescriptor;
-
-  STORAGE_DESCRIPTOR_HEADER = record
-    Version : DWORD;
-    Size    : DWORD;
-  end;
-  TStorageDescriptorHeader = STORAGE_DESCRIPTOR_HEADER;
-  PStorageDescriptorHeader = ^TStorageDescriptorHeader;
-
   TOptixInformationGathering = class
   public
     class function ComputerName() : string; static;
     class function TryGetComputerName() : string; static;
     class function UserName() : string; static;
     class function TryGetUserName() : string; static;
-    class function CurrentProcessArchitecture() : TProcessArchitecture; static;
+    class function CurrentProcessArchitecture() : TProcessorArchitecture; static;
     class function GetUserSidByType(const AUserName : String; ASidType : TSidNameUse = SidTypeUser) : String; static;
     class function GetWindowsDirectory() : string; static;
     class function GetHardDriveSerial() : String; static;
@@ -146,21 +63,21 @@ type
     class function TryGetCurrentUserSid() : String; static;
     class function GetLangroup() : String; static;
     class function GetDomainName() : String; static;
-    class function IsCurrentUserInAdminGroup() : Boolean;
-    class function TryIsCurrentUserInAdminGroup() : Boolean;
+    class function IsCurrentUserInAdminGroup() : Boolean; static;
+    class function TryIsCurrentUserInAdminGroup() : Boolean; static;
+    class function GetWindowsArchitecture() : TProcessorArchitecture; static;
   end;
 
-  function ProcessArchitectureToString(const AValue : TProcessArchitecture) : String;
+  function ProcessArchitectureToString(const AValue : TProcessorArchitecture) : String;
 
 implementation
 
-uses Optix.Exceptions, System.SysUtils, Optix.InformationGathering.Process,
-     Optix.WinApiEx;
+uses Optix.Exceptions, System.SysUtils, Optix.InformationGathering.Process;
 
 (* Local *)
 
 { _.ProcessArchitectureToString }
-function ProcessArchitectureToString(const AValue : TProcessArchitecture) : String;
+function ProcessArchitectureToString(const AValue : TProcessorArchitecture) : String;
 begin
   result := '';
   ///
@@ -174,9 +91,9 @@ end;
 (* TOptixInformationGathering *)
 
 { TOptixInformationGathering.CurrentProcessArchitecture }
-class function TOptixInformationGathering.CurrentProcessArchitecture() : TProcessArchitecture;
+class function TOptixInformationGathering.CurrentProcessArchitecture() : TProcessorArchitecture;
 begin
-  result := paOther;
+  result := paUnknown;
   ///
 
   {$IFDEF WIN32}
@@ -493,6 +410,22 @@ begin
     result := IsCurrentUserInAdminGroup();
   except
 
+  end;
+end;
+
+{ TOptixInformationGathering.GetWindowsArchitecture }
+class function TOptixInformationGathering.GetWindowsArchitecture() : TProcessorArchitecture;
+begin
+  var ASystemInfo : TSystemInfo;
+  GetNativeSystemInfo(ASystemInfo);
+
+  case ASystemInfo.wProcessorArchitecture of
+    PROCESSOR_ARCHITECTURE_INTEL : result := pa86_32;
+    PROCESSOR_ARCHITECTURE_AMD64 : result := pa86_64;
+    PROCESSOR_ARCHITECTURE_ARM   : result := paARM;
+    PROCESSOR_ARCHITECTURE_ARM64 : result := paARM64;
+    else
+      result := paUnknown;
   end;
 end;
 

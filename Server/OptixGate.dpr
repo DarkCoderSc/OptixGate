@@ -56,6 +56,7 @@ uses
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
+  Optix.Types in '..\Shared\Optix.Types.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',

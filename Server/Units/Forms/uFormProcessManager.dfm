@@ -44,8 +44,6 @@ object FormProcessManager: TFormProcessManager
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 579
-    ExplicitHeight = 425
     Columns = <
       item
         Position = 0
@@ -104,6 +102,32 @@ object FormProcessManager: TFormProcessManager
     object Refresh1: TMenuItem
       Caption = 'Refresh'
       OnClick = Refresh1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object Exclude1: TMenuItem
+      Caption = 'Exclude'
+      object DifferentArchitecture1: TMenuItem
+        AutoCheck = True
+        Caption = 'Different Architecture'
+        OnClick = DifferentArchitecture1Click
+      end
+      object UnreachableProcess1: TMenuItem
+        AutoCheck = True
+        Caption = 'Unreachable Process'
+        Checked = True
+        OnClick = UnreachableProcess1Click
+      end
+    end
+    object Options1: TMenuItem
+      Caption = 'Options'
+      object ColorBackground1: TMenuItem
+        AutoCheck = True
+        Caption = 'Color Background'
+        Checked = True
+        OnClick = ColorBackground1Click
+      end
     end
   end
 end

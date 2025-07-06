@@ -69,7 +69,8 @@ uses
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas';
+  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
+  Optix.Types in '..\Shared\Optix.Types.pas';
 
 begin
   IsMultiThread := True;

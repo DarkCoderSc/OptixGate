@@ -48,7 +48,49 @@ interface
 uses Winapi.Windows;
 
 type
-  (* Netapi32.dll *)
+  //----------------------------------------------------------------------------
+
+  TProcessorArchitecture = (
+    paUnknown,
+    pa86_32,
+    pa86_64,
+    paARM,
+    paARM64
+  );
+
+  TSidNameUse = (
+    SidTypeUser,
+    SidTypeGroup,
+    SidTypeDomain,
+    SidTypeAlias,
+    SidTypeWellKnownGroup,
+    SidTypeDeletedAccount,
+    SidTypeInvalid,
+    SidTypeUnknown,
+    SidTypeComputer,
+    SidTypeLabel,
+    SidTypeLogonSession
+  );
+
+  STORAGE_BUS_TYPE = (
+    BusTypeUnknown = 0,
+    BusTypeScsi,
+    BusTypeAtapi,
+    BusTypeAta,
+    BusType1394,
+    BusTypeSsa,
+    BusTypeFibre,
+    BusTypeUsb,
+    BusTypeRAID,
+    BusTypeiScsi,
+    BusTypeSas,
+    BusTypeSata,
+    BusTypeMaxReserved = $7F
+  );
+  TStorageBusType = STORAGE_BUS_TYPE;
+
+  //----------------------------------------------------------------------------
+
   NET_API_STATUS = DWORD;
 
   UNICODE_STRING = record
@@ -125,8 +167,56 @@ type
   TSystemProcessInformation = SYSTEM_PROCESS_INFORMATION;
   PSystemProcessInformation = ^TSystemProcessInformation;
 
+  STORAGE_QUERY_TYPE = (
+    PropertyStandardQuery = 0,
+    PropertyExistsQuery,
+    PropertyMaskQuery,
+    PropertyQueryMaxDefined
+  );
+  TStorageQueryType = STORAGE_QUERY_TYPE;
+
+  STORAGE_PROPERTY_ID = (
+    StorageDeviceProperty = 0,
+    StorageAdapterProperty
+  );
+  TStoragePropertyID = STORAGE_PROPERTY_ID;
+
+  STORAGE_PROPERTY_QUERY = record
+    PropertyId           : STORAGE_PROPERTY_ID;
+    QueryType            : STORAGE_QUERY_TYPE;
+    AdditionalParameters : array[0..9] of AnsiChar;
+  end;
+  TStoragePropertyQuery = STORAGE_PROPERTY_QUERY;
+
+  STORAGE_DEVICE_DESCRIPTOR = record
+    Version               : DWORD;
+    Size                  : DWORD;
+    DeviceType            : Byte;
+    DeviceTypeModifier    : Byte;
+    RemovableMedia        : Boolean;
+    CommandQueueing       : Boolean;
+    VendorIdOffset        : DWORD;
+    ProductIdOffset       : DWORD;
+    ProductRevisionOffset : DWORD;
+    SerialNumberOffset    : DWORD;
+    BusType               : STORAGE_BUS_TYPE;
+    RawPropertiesLength   : DWORD;
+    RawDeviceProperties   : array[0..0] of AnsiChar;
+  end;
+  TStorageDeviceDescriptor = STORAGE_DEVICE_DESCRIPTOR;
+  PStorageDeviceDescriptor = ^TStorageDeviceDescriptor;
+
+  STORAGE_DESCRIPTOR_HEADER = record
+    Version : DWORD;
+    Size    : DWORD;
+  end;
+  TStorageDescriptorHeader = STORAGE_DESCRIPTOR_HEADER;
+  PStorageDescriptorHeader = ^TStorageDescriptorHeader;
+
+//------------------------------------------------------------------------------
+
 const
-  NERR_Success                  = 0;
+  NERR_Success = 0;
 
   DS_DIRECTORY_SERVICE_REQUIRED = $00000010;
 
@@ -139,6 +229,10 @@ const
 
   SYSTEM_PROCESS_INFORMATION_CLASS  = 5;
   PROCESS_QUERY_LIMITED_INFORMATION = $00001000;
+
+  PROCESSOR_ARCHITECTURE_ARM64 = 12;
+
+//------------------------------------------------------------------------------
 
 (* Netapi32.dll *)
 function DsGetDcNameW(
@@ -184,6 +278,23 @@ function QueryFullProcessImageNameW(
   var dwSize : DWORD
 ): BOOL; stdcall; external kernel32 name 'QueryFullProcessImageNameW';
 
+//------------------------------------------------------------------------------
+
+function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : String;
+
 implementation
+
+{ _.ProcessorArchitectureToString }
+function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : String;
+begin
+  case AValue of
+    pa86_32   : result := 'x86 (32Bit)';
+    pa86_64   : result := 'x86-64 / AMD64 (64Bit)';
+    paARM     : result := 'ARM (32Bit)';
+    paARM64   : result := 'ARM64 (64Bit)';
+    else
+      result := 'Unknown';
+  end;
+end;
 
 end.

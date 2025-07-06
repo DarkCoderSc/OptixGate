@@ -161,6 +161,7 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Response.pas"/>
         <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.Types.pas"/>
         <DCCReference Include="..\Shared\XSuperJSON.pas"/>
         <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>

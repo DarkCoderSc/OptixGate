@@ -22,7 +22,7 @@ unit Optix.VCL.Helper;
 
 interface
 
-uses VCL.Menus;
+uses VCL.Menus, VirtualTrees, VirtualTrees.Types;
 
 type
   TOptixVCLHelper = class
@@ -33,7 +33,31 @@ type
       class procedure ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
   end;
 
+  TOptixVirtualTreesHelper = class
+    public
+      class function GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64; static;
+  end;
+
 implementation
+
+(* TOptixVirtualTreesHelper *)
+
+{ TOptixVirtualTreesHelper.GetVisibleNodesCount }
+class function TOptixVirtualTreesHelper.GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64;
+begin
+  result := 0;
+  ///
+
+  if not Assigned(AVST) then
+    Exit();
+
+  for var pNode in AVST.Nodes do begin
+    if vsVisible in pNode.States then
+      Inc(result);
+  end;
+end;
+
+(* TOptixVCLHelper *)
 
 { TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility }
 class procedure TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean);

@@ -41,34 +41,31 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Constants;
+unit Optix.Types;
 
 interface
 
-uses VCL.Graphics, Winapi.Windows;
+type
+  TBoolResult = (brTrue, brFalse, brError);
 
-const
- (* IMAGES *)
- IMAGE_USER           = 0;
- IMAGE_USER_ADMIN     = 1;
- IMAGE_USER_ELEVATED  = 2;
- IMAGE_USER_SYSTEM    = 3;
- IMAGE_PROCESS_SELF   = 6;
- IMAGE_PROCESS        = 7;
- IMAGE_PROCESS_X86_32 = 8;
- IMAGE_PROCESS_X86_64 = 9;
-
-var
- (* COLORS *)
- COLOR_USER_ELEVATED : TColor;
- COLOR_USER_SYSTEM   : TColor;
- COLOR_LIST_LIMY     : TColor;
+function CastResult(const AValue : TBoolResult) : Boolean; overload;
+function CastResult(const AValue : Boolean) : TBoolResult; overload;
 
 implementation
 
-initialization
-  COLOR_USER_ELEVATED := RGB(234, 249, 254);
-  COLOR_USER_SYSTEM   := RGB(242, 228, 247);
-  COLOR_LIST_LIMY     := RGB(220, 254, 215);
+{ _.CastResult }
+function CastResult(const AValue : TBoolResult) : Boolean;
+begin
+  result := AValue = brTrue;
+end;
+
+{ _.CastResult }
+function CastResult(const AValue : Boolean) : TBoolResult;
+begin
+  if AValue then
+    result := brTrue
+  else
+    result := brFalse;
+end;
 
 end.

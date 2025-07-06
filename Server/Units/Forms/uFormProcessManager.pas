@@ -43,10 +43,7 @@
 
 {
   TODO:
-    - Display + Filter Process Architecture (x86-32 / x86-64)
-    - Filter Out-Of-Privilege Processes (Check Thread Count, Elevation Status, Missing Username to guess)
-    - Highlight and iconize NTA/SYSTEM process like for S.I.N
-    - Same for Elevated Process
+    - Show Process Commandline
     - Kill Process
     - Dump Process to File
 }
@@ -59,7 +56,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, XSuperObject, Optix.Func.Enum.Process;
+  VirtualTrees, Vcl.Menus, XSuperObject, Optix.Func.Enum.Process, Optix.WinApiEx;
 
 type
   TTreeData = record
@@ -67,10 +64,22 @@ type
   end;
   PTreeData = ^TTreeData;
 
+  TFilterKind = (
+    fkDifferentArch,
+    fkUnreachable
+  );
+  TFilterKinds = set of TFilterKind;
+
   TFormProcessManager = class(TBaseFormControl)
     PopupMenu: TPopupMenu;
     VST: TVirtualStringTree;
     Refresh1: TMenuItem;
+    N1: TMenuItem;
+    Exclude1: TMenuItem;
+    DifferentArchitecture1: TMenuItem;
+    UnreachableProcess1: TMenuItem;
+    Options1: TMenuItem;
+    ColorBackground1: TMenuItem;
     procedure Refresh1Click(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -86,12 +95,23 @@ type
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: TImageIndex);
+    procedure DifferentArchitecture1Click(Sender: TObject);
+    procedure UnreachableProcess1Click(Sender: TObject);
+    procedure ColorBackground1Click(Sender: TObject);
   private
+    FClientArchitecture          : TProcessorArchitecture;
+    FRemoteProcessorArchitecture : TProcessorArchitecture;
+
     {@M}
     procedure Refresh(const AProcessList : TProcessList);
+    procedure ApplyFilters(const AFilters : TFilterKinds = []);
+    procedure ApplyFilterSettings();
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+
+    {@C}
+    constructor Create(AOwner : TComponent; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); overload;
   end;
 
 var
@@ -99,10 +119,86 @@ var
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Helper,
-     Optix.InformationGathering.Process, Optix.Constants;
+uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Types,
+     Optix.InformationGathering.Process, Optix.Constants,
+     VirtualTrees.Types, Optix.VCL.Helper;
 
 {$R *.dfm}
+
+procedure TFormProcessManager.ApplyFilterSettings();
+begin
+  var AFilters : TFilterKinds := [];
+
+  if DifferentArchitecture1.Checked then
+    Include(AFilters, fkDifferentArch);
+
+  if UnreachableProcess1.Checked then
+    Include(AFilters, fkUnreachable);
+
+  ///
+  ApplyFilters(AFilters);
+end;
+
+procedure TFormProcessManager.ColorBackground1Click(Sender: TObject);
+begin
+  VST.Refresh();
+end;
+
+procedure TFormProcessManager.ApplyFilters(const AFilters : TFilterKinds = []);
+begin
+  VST.BeginUpdate();
+  try
+    for var pNode in VST.Nodes do begin
+      var AExclude := False;
+      var pData := PTreeData(pNode.GetData);
+      try
+        if not Assigned(pData^.ProcessInformation) then begin
+          AExclude := True;
+
+          ///
+          continue;
+        end;
+
+        ///
+        if (fkDifferentArch in AFilters) then begin
+              AExclude := (pData^.ProcessInformation.IsWow64Process <> brError) and
+                          (
+                            ((FClientArchitecture = pa86_32) and (pData^.ProcessInformation.IsWow64Process = brFalse)) or
+                            ((FClientArchitecture = pa86_64) and (pData^.ProcessInformation.IsWow64Process = brTrue))
+                          );
+        end;
+
+        if AExclude then
+          continue;
+
+        if (fkUnreachable in AFilters) then begin
+          // Good sign, it is!
+          AExclude := (String.IsNullOrEmpty(pData^.ProcessInformation.ImagePath) and (pData^.ProcessInformation.Elevated = esUnknown));
+        end;
+      finally
+        VST.IsVisible[pNode] := not AExclude;
+      end;
+    end;
+  finally
+    VST.EndUpdate();
+  end;
+end;
+
+constructor TFormProcessManager.Create(AOwner : TComponent; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
+begin
+  inherited Create(AOwner);
+  ///
+
+  FClientArchitecture          := AClientArchitecture;
+  FRemoteProcessorArchitecture := ARemoteProcessorArchitecture;
+
+  Caption := Caption + ' - ' + ProcessorArchitectureToString(ARemoteProcessorArchitecture);
+end;
+
+procedure TFormProcessManager.DifferentArchitecture1Click(Sender: TObject);
+begin
+  ApplyFilterSettings();
+end;
 
 procedure TFormProcessManager.Refresh(const AProcessList : TProcessList);
 begin
@@ -121,6 +217,9 @@ begin
       pData^.ProcessInformation := TProcessInformation.Create(AProcessInformation);
     end;
   finally
+    ApplyFilterSettings();
+
+    ///
     VST.EndUpdate();
   end;
 end;
@@ -130,10 +229,19 @@ begin
   SendCommand(TOptixRefreshProcess.Create());
 end;
 
+procedure TFormProcessManager.UnreachableProcess1Click(Sender: TObject);
+begin
+  ApplyFilterSettings();
+end;
+
 procedure TFormProcessManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
+  if not self.ColorBackground1.Checked then
+    Exit();
+  ///
+
   var pData := PTreeData(Node.GetData);
 
   if not Assigned(pData^.ProcessInformation) then
@@ -144,7 +252,10 @@ begin
   if pData^.ProcessInformation.IsCurrentProcess then
     AColor := COLOR_LIST_LIMY
   else begin
-    // ... Other checks (TODO) ... //
+    if pData^.ProcessInformation.IsSystem then
+      AColor := COLOR_USER_SYSTEM
+    else if pData^.ProcessInformation.Elevated = esElevated then
+      AColor := COLOR_USER_ELEVATED;
   end;
 
   if AColor <> clNone then begin
@@ -188,11 +299,16 @@ begin
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected: begin
       if pData^.ProcessInformation.IsCurrentProcess then
-        ImageIndex := IMAGE_ALIEN
+        ImageIndex := IMAGE_PROCESS_SELF
       else begin
-        ImageIndex := IMAGE_PROCESS;
-
-        // ... Other checks (TODO) ... //
+        if (FRemoteProcessorArchitecture = pa86_64) and
+           (pData^.ProcessInformation.IsWow64Process <> brError) then begin
+          if pData^.ProcessInformation.IsWow64Process = brTrue then
+            ImageIndex := IMAGE_PROCESS_X86_32
+          else
+            ImageIndex := IMAGE_PROCESS_X86_64;
+        end else
+          ImageIndex := IMAGE_PROCESS;
       end;
     end;
   end;
@@ -216,7 +332,14 @@ begin
     Exit();
 
   case Column of
-    0  : CellText := ExtractFileName(pData^.ProcessInformation.ImagePath);
+    0  : begin
+      if (FRemoteProcessorArchitecture = pa86_64) and
+         (pData^.ProcessInformation.IsWow64Process = brTrue) then begin
+        CellText := Format('%s (32 bit)', [pData^.ProcessInformation.Name]);
+      end else
+        CellText := pData^.ProcessInformation.Name;
+    end;
+
     1  : CellText := FormatInt(pData^.ProcessInformation.Id);
     2  : CellText := FormatInt(pData^.ProcessInformation.ParentId);
     3  : CellText := IntToStr(pData^.ProcessInformation.ThreadCount);

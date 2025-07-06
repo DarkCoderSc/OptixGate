@@ -47,22 +47,23 @@ interface
 
 uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
      XSuperObject, Optix.Func.Response, Optix.InformationGathering.Helper,
-     Optix.InformationGathering.Process;
+     Optix.InformationGathering.Process, Optix.WinApiEx;
 
 type
   TOptixSessionInformation = class(TOptixResponse)
   private
-    FWindowsVersion : String;
-    FUsername       : String;
-    FUserSid        : String;
-    FComputer       : String;
-    FProcessId      : Cardinal;
-    FImagePath      : String;
-    FArchitecture   : TProcessArchitecture;
-    FElevatedStatus : TElevatedStatus;
-    FLangroup       : String;
-    FDomainName     : String;
-    FIsInAdminGroup : Boolean;
+    FWindowsVersion      : String;
+    FUsername            : String;
+    FUserSid             : String;
+    FComputer            : String;
+    FProcessId           : Cardinal;
+    FImagePath           : String;
+    FArchitecture        : TProcessorArchitecture;
+    FWindowsArchitecture : TProcessorArchitecture;
+    FElevatedStatus      : TElevatedStatus;
+    FLangroup            : String;
+    FDomainName          : String;
+    FIsInAdminGroup      : Boolean;
 
     {@M}
     function GetProcessDetail() : String;
@@ -78,17 +79,18 @@ type
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Architecture   : TProcessArchitecture read FArchitecture;
-    property WindowsVersion : String               read FWindowsVersion;
-    property ProcessId      : Cardinal             read FProcessId;
-    property Username       : String               read FUsername;
-    property Computer       : String               read FComputer;
-    property ImagePath      : String               read FImagePath;
-    property ElevatedStatus : TElevatedStatus      read FElevatedStatus;
-    property Langroup       : String               read FLangroup;
-    property DomainName     : String               read FDomainName;
-    property IsInAdminGroup : Boolean              read FIsInAdminGroup;
-    property UserSid        : String               read FUserSid;
+    property Architecture        : TProcessorArchitecture read FArchitecture;
+    property WindowsArchitecture : TProcessorArchitecture read FWindowsArchitecture;
+    property WindowsVersion      : String                 read FWindowsVersion;
+    property ProcessId           : Cardinal               read FProcessId;
+    property Username            : String                 read FUsername;
+    property Computer            : String                 read FComputer;
+    property ImagePath           : String                 read FImagePath;
+    property ElevatedStatus      : TElevatedStatus        read FElevatedStatus;
+    property Langroup            : String                 read FLangroup;
+    property DomainName          : String                 read FDomainName;
+    property IsInAdminGroup      : Boolean                read FIsInAdminGroup;
+    property UserSid             : String                 read FUserSid;
 
     property ProcessDetail      : String  read GetProcessDetail;
     property ElevatedStatus_STR : String  read GetElevatedStatusString;
@@ -100,17 +102,18 @@ implementation
 { TOptixSessionInformation.Refresh }
 procedure TOptixSessionInformation.Refresh();
 begin
-  FWindowsVersion := TOSVersion.ToString();
-  FArchitecture   := TOptixInformationGathering.CurrentProcessArchitecture;
-  FProcessId      := GetCurrentProcessId();
-  FImagePath      := GetModuleName(hInstance);
-  FUserName       := TOptixInformationGathering.TryGetUserName();
-  FUserSid        := TOptixInformationGathering.TryGetCurrentUserSid();
-  FComputer       := TOptixInformationGathering.TryGetComputerName();
-  FElevatedStatus := TProcessInformationHelper.IsElevated();
-  FLangroup       := TOptixInformationGathering.GetLangroup;
-  FDomainName     := TOptixInformationGathering.GetDomainName;
-  FIsInAdminGroup := TOptixInformationGathering.TryIsCurrentUserInAdminGroup();
+  FWindowsVersion      := TOSVersion.ToString();
+  FArchitecture        := TOptixInformationGathering.CurrentProcessArchitecture;
+  FProcessId           := GetCurrentProcessId();
+  FImagePath           := GetModuleName(hInstance);
+  FUserName            := TOptixInformationGathering.TryGetUserName();
+  FUserSid             := TOptixInformationGathering.TryGetCurrentUserSid();
+  FComputer            := TOptixInformationGathering.TryGetComputerName();
+  FElevatedStatus      := TProcessInformationHelper.IsElevated();
+  FLangroup            := TOptixInformationGathering.GetLangroup;
+  FDomainName          := TOptixInformationGathering.GetDomainName;
+  FIsInAdminGroup      := TOptixInformationGathering.TryIsCurrentUserInAdminGroup();
+  FWindowsArchitecture := TOptixInformationGathering.GetWindowsArchitecture();
 end;
 
 { TOptixSessionInformation.Serialize }
@@ -119,17 +122,18 @@ begin
   result := inherited;
   ///
 
-  result.S['Username']       := FUsername;
-  result.S['UserSid']        := FUserSid;
-  result.S['Computer']       := FComputer;
-  result.S['WindowsVersion'] := FWindowsVersion;
-  result.I['ProcessId']      := FProcessId;
-  result.I['Architecture']   := Integer(FArchitecture);
-  result.S['ImagePath']      := FImagePath;
-  result.I['ElevatedStatus'] := Integer(FElevatedStatus);
-  result.S['Langroup']       := FLangroup;
-  result.S['DomainName']     := FDomainName;
-  result.B['IsInAdminGroup'] := FIsInAdminGroup;
+  result.S['Username']            := FUsername;
+  result.S['UserSid']             := FUserSid;
+  result.S['Computer']            := FComputer;
+  result.S['WindowsVersion']      := FWindowsVersion;
+  result.I['ProcessId']           := FProcessId;
+  result.I['Architecture']        := Integer(FArchitecture);
+  result.S['ImagePath']           := FImagePath;
+  result.I['ElevatedStatus']      := Integer(FElevatedStatus);
+  result.S['Langroup']            := FLangroup;
+  result.S['DomainName']          := FDomainName;
+  result.B['IsInAdminGroup']      := FIsInAdminGroup;
+  result.I['WindowsArchitecture'] := Cardinal(FWindowsArchitecture);
 end;
 
 { TOptixSessionInformation.DeSerialize }
@@ -141,34 +145,36 @@ begin
   if not Assigned(ASerializedObject) then
     Exit();
 
-  FUsername       := ASerializedObject.S['Username'];
-  FUserSid        := ASerializedObject.S['UserSid'];
-  FComputer       := ASerializedObject.S['Computer'];
-  FWindowsVersion := ASerializedObject.S['WindowsVersion'];
-  FProcessId      := ASerializedObject.I['ProcessId'];
-  FArchitecture   := TProcessArchitecture(ASerializedObject.I['Architecture']);
-  FImagePath      := ASerializedObject.S['ImagePath'];
-  FElevatedStatus := TElevatedStatus(ASerializedObject.I['ElevatedStatus']);
-  FLangroup       := ASerializedObject.S['Langroup'];
-  FDomainName     := ASerializedObject.S['DomainName'];
-  FIsInAdminGroup := ASerializedObject.B['IsInAdminGroup'];
+  FUsername            := ASerializedObject.S['Username'];
+  FUserSid             := ASerializedObject.S['UserSid'];
+  FComputer            := ASerializedObject.S['Computer'];
+  FWindowsVersion      := ASerializedObject.S['WindowsVersion'];
+  FProcessId           := ASerializedObject.I['ProcessId'];
+  FArchitecture        := TProcessorArchitecture(ASerializedObject.I['Architecture']);
+  FImagePath           := ASerializedObject.S['ImagePath'];
+  FElevatedStatus      := TElevatedStatus(ASerializedObject.I['ElevatedStatus']);
+  FLangroup            := ASerializedObject.S['Langroup'];
+  FDomainName          := ASerializedObject.S['DomainName'];
+  FIsInAdminGroup      := ASerializedObject.B['IsInAdminGroup'];
+  FWindowsArchitecture := TProcessorArchitecture(ASerializedObject.I['WindowsArchitecture']);
 end;
 
 { TOptixSessionInformation.DeSerialize }
 procedure TOptixSessionInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TOptixSessionInformation then begin
-    FUsername        := TOptixSessionInformation(ASource).FUsername;
-    FUserSid         := TOptixSessionInformation(ASource).FUserSid;
-    FComputer        := TOptixSessionInformation(ASource).FComputer;
-    FWindowsVersion  := TOptixSessionInformation(ASource).FWindowsVersion;
-    FProcessId       := TOptixSessionInformation(ASource).FProcessId;
-    FArchitecture    := TOptixSessionInformation(ASource).FArchitecture;
-    FImagePath       := TOptixSessionInformation(ASource).FImagePath;
-    FElevatedStatus  := TOptixSessionInformation(ASource).FElevatedStatus;
-    FLangroup        := TOptixSessionInformation(ASource).Langroup;
-    FDomainName      := TOptixSessionInformation(ASource).DomainName;
-    FIsInAdminGroup  := TOptixSessionInformation(ASource).IsInAdminGroup;
+    FUsername            := TOptixSessionInformation(ASource).FUsername;
+    FUserSid             := TOptixSessionInformation(ASource).FUserSid;
+    FComputer            := TOptixSessionInformation(ASource).FComputer;
+    FWindowsVersion      := TOptixSessionInformation(ASource).FWindowsVersion;
+    FProcessId           := TOptixSessionInformation(ASource).FProcessId;
+    FArchitecture        := TOptixSessionInformation(ASource).FArchitecture;
+    FImagePath           := TOptixSessionInformation(ASource).FImagePath;
+    FElevatedStatus      := TOptixSessionInformation(ASource).FElevatedStatus;
+    FLangroup            := TOptixSessionInformation(ASource).Langroup;
+    FDomainName          := TOptixSessionInformation(ASource).DomainName;
+    FIsInAdminGroup      := TOptixSessionInformation(ASource).IsInAdminGroup;
+    FWindowsArchitecture := TOptixSessionInformation(ASource).WindowsArchitecture;
   end else
     inherited;
 end;

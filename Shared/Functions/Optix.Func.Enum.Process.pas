@@ -46,11 +46,13 @@ unit Optix.Func.Enum.Process;
 interface
 
 uses Optix.Func.Response, Optix.Interfaces, XSuperObject, System.Classes,
-     Generics.Collections, Optix.WinApiEx, Optix.InformationGathering.Process;
+     Generics.Collections, Optix.WinApiEx, Optix.InformationGathering.Process,
+     Optix.Types;
 
 type
   TProcessInformation = class(TInterfacedPersistent, IOptixSerializable)
   private
+    FName             : String;
     FImagePath        : String;
     FId               : Cardinal;
     FParentId         : Cardinal;
@@ -62,9 +64,11 @@ type
     FThreadCount      : Cardinal;
     FCreatedTime      : TDateTime;
     FCurrentProcessId : Cardinal;
+    FIsWow64Process   : TBoolResult;
 
     {@}
     function EvaluateIfCurrentProcess() : Boolean;
+    function CheckIfSystemUser() : Boolean;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
@@ -79,6 +83,7 @@ type
     constructor Create(const ASource : TProcessInformation); overload;
 
     {@G}
+    property Name             : String          read FName;
     property ImagePath        : String          read FImagePath;
     property Id               : Cardinal        read FId;
     property ParentId         : Cardinal        read FParentId;
@@ -90,6 +95,8 @@ type
     property ThreadCount      : Cardinal        read FThreadCount;
     property CreatedTime      : TDateTime       read FCreatedTime;
     property IsCurrentProcess : Boolean         read EvaluateIfCurrentProcess;
+    property IsWow64Process   : TBoolResult     read FIsWow64Process;
+    property IsSystem         : Boolean         read CheckIfSystemUser;
   end;
 
   TProcessList = class(TOptixWindowedResponse)
@@ -118,6 +125,12 @@ uses Winapi.Windows, Optix.Exceptions, System.SysUtils,
 
 (* TProcessInformation *)
 
+{ TProcessInformation.CheckIfSystemUser() }
+function TProcessInformation.CheckIfSystemUser() : Boolean;
+begin
+  result := String.Compare(FUserSid, 'S-1-5-18', True) =  0;
+end;
+
 { TProcessInformation.DeSerialize }
 procedure TProcessInformation.DeSerialize(const ASerializedObject : ISuperObject);
 begin
@@ -127,6 +140,7 @@ begin
 
   // TODO: One day, optimized Deserialization / Serializaion using RTTI. But must
   // be carefully tested to ensure it works as expected for common data formats.
+  FName             := ASerializedObject.S['Name'];
   FImagePath        := ASerializedObject.S['ImagePath'];
   FId               := ASerializedObject.I['Id'];
   FParentId         := ASerializedObject.I['ParentId'];
@@ -138,6 +152,7 @@ begin
   FThreadCount      := ASerializedObject.I['ThreadCount'];
   FCreatedTime      := ASerializedObject.D['CreatedTime'];
   FCurrentProcessId := ASerializedObject.I['CurrentProcessId'];
+  FIsWow64Process   := TBoolResult(ASerializedObject.I['IsWow64Process']);
 end;
 
 { TProcessInformation.Serialize }
@@ -146,6 +161,7 @@ begin
   result := TSuperObject.Create();
   ///
 
+  result.S['Name']             := FName;
   result.S['ImagePath']        := FImagePath;
   result.I['Id']               := FId;
   result.I['ParentId']         := FParentId;
@@ -157,12 +173,14 @@ begin
   result.I['ThreadCount']      := FThreadCount;
   result.D['CreatedTime']      := FCreatedTime;
   result.I['CurrentProcessId'] := FCurrentProcessId;
+  result.I['IsWow64Process']   := Cardinal(FIsWow64Process);
 end;
 
 { TProcessInformation.Assign }
 procedure TProcessInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TProcessInformation then begin
+    FName             := TProcessInformation(ASource).FName;
     FImagePath        := TProcessInformation(ASource).FImagePath;
     FId               := TProcessInformation(ASource).FId;
     FParentId         := TProcessInformation(ASource).FParentId;
@@ -174,6 +192,7 @@ begin
     FThreadCount      := TProcessInformation(ASource).FThreadCount;
     FCreatedTime      := TProcessInformation(ASource).FCreatedTime;
     FCurrentProcessId := TProcessInformation(ASource).FCurrentProcessId;
+    FIsWow64Process   := TProcessInformation(ASource).FIsWow64Process;
   end else
     inherited;
 end;
@@ -210,12 +229,12 @@ begin
   if not Assigned(pProcessInformation) then
     raise Exception.Create(''); // TODO
 
-  FImagePath := TProcessInformationHelper.TryGetProcessImagePath(
-    pProcessInformation^.ProcessID,
-    String(pProcessInformation^.ModuleName.Buffer)
-  );
+  FId := pProcessInformation^.ProcessID;
+  ///
 
-  FId         := pProcessInformation^.ProcessID;
+  FName := String(pProcessInformation^.ModuleName.Buffer);
+
+  FImagePath := TProcessInformationHelper.TryGetProcessImagePath(FId);
   FParentId   := pProcessInformation^.InheritedFromProcessId;
   FElevated   := TProcessInformationHelper.TryIsElevatedByProcessId(FId);
 
@@ -232,6 +251,8 @@ begin
   FCreatedTime := TSystemHelper.TryFileTimeToDateTime(pProcessInformation^.CreateTime);
 
   FCurrentProcessId := GetCurrentProcessId();
+
+  FIsWow64Process := TProcessInformationHelper.TryIsWow64Process(FId)
 end;
 
 (* TProcessList *)

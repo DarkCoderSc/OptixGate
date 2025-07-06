@@ -109,6 +109,7 @@
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
         <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.Types.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

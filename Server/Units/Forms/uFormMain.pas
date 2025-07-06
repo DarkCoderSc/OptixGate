@@ -492,7 +492,11 @@ begin
   var AForm := GetControlForm(pData, TFormProcessManager);
 
   if not Assigned(AForm) then begin
-    AForm := TFormProcessManager.Create(self);
+    AForm := TFormProcessManager.Create(
+      self,
+      pData^.SessionInformation.Architecture,
+      pData^.SessionInformation.WindowsArchitecture
+    );
 
     ///
     pData^.Forms.Add(AForm);
