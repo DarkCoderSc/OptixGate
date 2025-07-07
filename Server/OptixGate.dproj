@@ -170,6 +170,7 @@
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
         <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
         <DCCReference Include="Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
@@ -184,6 +185,9 @@
             <Form>FormProcessManager</Form>
         </DCCReference>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
+        <DCCReference Include="Units\Forms\uFormLogs.pas">
+            <Form>FormLogs</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

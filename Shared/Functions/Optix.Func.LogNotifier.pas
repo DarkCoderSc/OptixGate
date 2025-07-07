@@ -41,68 +41,92 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit Optix.Func.LogNotifier;
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+interface
 
-{$R *.res}
+uses Optix.Func.Response, System.SysUtils, XSuperObject;
 
-uses
-  System.SysUtils,
-  Winapi.Windows,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Types in '..\Shared\Optix.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas';
+type
+  TLogKind = (
+    lkInformation,
+    lkException
+    (* ... *)
+  );
 
-begin
-  IsMultiThread := True;
-  try
-    var AUserUID := TOptixInformationGathering.GetUserUID();
+  TLogNotifier = class(TOptixResponse)
+  private
+    FMessage    : String;
+    FContext    : String;
+    FKind       : TLogKind;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@C}
+    constructor Create(const AMessage : String; const AContext : String; const AKind : TLogKind); overload;
 
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
+    {@M}
+    function Serialize() : ISuperObject; override;
 
-      // Enable certain useful privileges (if possible)
-      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
-      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
-
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.RetryDelay := 1000;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor;
-    finally
-      CloseHandle(AMutex);
-    end;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+    {@G}
+    property Kind       : TLogKind read FKind;
+    property LogMessage : String   read FMessage;
+    property Context    : String   read FContext;
   end;
+
+  function LogKindToString(const AValue : TLogKind) : String;
+
+implementation
+
+(* TLogNotifier *)
+
+{ TLogNotifier.Create }
+constructor TLogNotifier.Create(const AMessage : String; const AContext : String; const AKind : TLogKind);
+begin
+  inherited Create();
+  ///
+
+  FKind    := AKind;
+  FMessage := AMessage;
+  FContext := AContext;
+end;
+
+{ TLogNotifier.Serialize }
+function TLogNotifier.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.I['Kind']    := Cardinal(FKind);
+  result.S['Message'] := FMessage;
+  result.S['Context'] := FContext;
+end;
+
+{ TLogNotifier.DeSerialize }
+procedure TLogNotifier.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FKind    := TLogKind(ASerializedObject.I['Kind']);
+  FMessage := ASerializedObject.S['Message'];
+  FContext := ASerializedObject.S['Context'];
+end;
+
+(* TLogKind *)
+
+function LogKindToString(const AValue : TLogKind) : String;
+begin
+  case AValue of
+    lkInformation : result := 'Information';
+    lkException   : result := 'Exception';
+    else
+      result := 'Unknown';
+  end;
+end;
+
 end.

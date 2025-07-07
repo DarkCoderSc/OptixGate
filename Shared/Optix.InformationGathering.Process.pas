@@ -67,6 +67,8 @@ type
     class function TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String; static;
     class function IsWow64Process(const AProcessId : Cardinal) : Boolean; static;
     class function TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult; static;
+    class function GetProcessCommandLine(const AProcessId : Cardinal) : String; static;
+    class function TryGetProcessCommandLine(const AProcessId : Cardinal) : String; static;
   end;
 
   function ElevatedStatusToString(const AValue : TElevatedStatus) : String;
@@ -333,6 +335,68 @@ begin
     result := CastResult(IsWow64Process(AProcessId))
   except
     result := brError;
+  end;
+end;
+
+{ TProcessInformationHelper.GetProcessCommandLine }
+class function TProcessInformationHelper.GetProcessCommandLine(const AProcessId : Cardinal) : String;
+begin
+  var hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, AProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    var AProcessBasicInformation : TProcessBasicInformation;
+    var AReturnLength : Cardinal;
+
+    var ARet := NtQueryInformationProcess(
+      hProcess,
+      ProcessBasicInformation,
+      @AProcessBasicInformation,
+      SizeOf(TProcessBasicInformation),
+      AReturnLength
+    );
+
+    if ARet < 0 then
+      raise Exception.Create('Could not retrieve target process PEB address.');
+    ///
+
+    var pPEBOffset := Pointer(NativeUInt(AProcessBasicInformation.PebBaseAddress));
+
+    var APEB : TPEB;
+    var ABytesRead : SIZE_T;
+
+    if not ReadProcessMemory(hProcess, pPEBOffset, @APEB, SizeOf(TPEB), ABytesRead) then
+      raise EWindowsException.Create('ReadProcessMemory(1)');
+
+    var ARTLUserProcessParameters : TRTLUserProcessParameters;
+    if not ReadProcessMemory(hProcess, APEB.ProcessParameters, @ARTLUserProcessParameters, SizeOf(TRTLUserProcessParameters), ABytesRead) then
+      raise EWindowsException.Create('ReadProcessMemory(2)');
+
+    var pCommandLine : PWideChar;
+    var pCommandLineSize := ARTLUserProcessParameters.CommandLine.Length * SizeOf(WideChar);
+
+    GetMem(pCommandLine, pCommandLineSize);
+    try
+      if not ReadProcessMemory(hProcess, ARTLUserProcessParameters.CommandLine.Buffer, pCommandLine, pCommandLineSize, ABytesRead) then
+        raise EWindowsException.Create('ReadProcessMemory(3)');
+
+      ///
+      result := string(pCommandLine);
+    finally
+      FreeMem(pCommandLine, pCommandLineSize);
+    end;
+  finally
+    CloseHandle(hProcess);
+  end;
+end;
+
+{ TProcessInformationHelper.TryGetProcessCommandLine }
+class function TProcessInformationHelper.TryGetProcessCommandLine(const AProcessId : Cardinal) : String;
+begin
+  try
+    result := GetProcessCommandLine(AProcessId);
+  except
+    result := '';
   end;
 end;
 

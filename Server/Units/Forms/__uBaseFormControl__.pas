@@ -51,10 +51,16 @@ uses VCL.Forms, VCL.Controls, System.Classes, Winapi.Messages, XSuperObject,
 type
   TBaseFormControl = class(TForm)
   private
-    FGUID : TGUID;
+    FGUID            : TGUID;
+    FUserIdentifier  : String;
+    FOriginalCaption : String;
   protected
     {@M}
-    procedure SendCommand(const ACommand : TOptixWindowedCommand);
+    procedure SendCommand(const ACommand : TOptixCommand);
+
+    procedure CMVisibleChanged(var AMessage: TMessage); message CM_VISIBLECHANGED;
+
+    procedure RefreshCaption(); virtual;
   public
     {@G}
     property GUID : TGUID read FGUID;
@@ -63,7 +69,8 @@ type
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual; abstract;
 
     {@C}
-    constructor Create(AOwner : TComponent); override;
+    constructor Create(AOwner : TComponent); overload; override;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String); overload;
     destructor Destroy(); override;
   end;
 
@@ -77,7 +84,18 @@ begin
   inherited;
   ///
 
-  FGUID := TGUID.NewGuid();
+  FGUID            := TGUID.NewGuid();
+  FOriginalCaption := self.Caption; // Default
+  FUserIdentifier  := '';
+end;
+
+{ TBaseFormControl.Create }
+constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String);
+begin
+  Create(AOwner);
+  ///
+
+  FUserIdentifier := AUserIdentifier;
 end;
 
 { TBaseFormControl.Destroy }
@@ -89,12 +107,34 @@ begin
 end;
 
 { TBaseFormControl.SendCommand }
-procedure TBaseFormControl.SendCommand(const ACommand : TOptixWindowedCommand);
+procedure TBaseFormControl.SendCommand(const ACommand : TOptixCommand);
 begin
   ACommand.WindowGUID := FGUID;
 
   ///
   FormMain.SendCommand(self, ACommand);
+end;
+
+{ TBaseFormControl.CMVisibleChanged }
+procedure TBaseFormControl.CMVisibleChanged(var AMessage: TMessage);
+begin
+  inherited;
+  ///
+
+  if self.Visible then
+    RefreshCaption();
+end;
+
+{ TBaseFormControl.RefreshCaption }
+procedure TBaseFormControl.RefreshCaption();
+begin
+  if String.IsNullOrEmpty(FUserIdentifier) then
+    Caption := FOriginalCaption
+  else
+    Caption := Format('%s (%s)', [
+      FOriginalCaption,
+      FUserIdentifier
+    ]);
 end;
 
 end.

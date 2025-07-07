@@ -43,9 +43,8 @@
 
 {
   TODO:
-    - Show Process Commandline
-    - Kill Process
     - Dump Process to File
+    - Column Sorting
 }
 
 unit uFormProcessManager;
@@ -80,6 +79,10 @@ type
     UnreachableProcess1: TMenuItem;
     Options1: TMenuItem;
     ColorBackground1: TMenuItem;
+    N2: TMenuItem;
+    KillProcess1: TMenuItem;
+    N3: TMenuItem;
+    Clear1: TMenuItem;
     procedure Refresh1Click(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -98,6 +101,9 @@ type
     procedure DifferentArchitecture1Click(Sender: TObject);
     procedure UnreachableProcess1Click(Sender: TObject);
     procedure ColorBackground1Click(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure KillProcess1Click(Sender: TObject);
+    procedure Clear1Click(Sender: TObject);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
@@ -106,12 +112,15 @@ type
     procedure Refresh(const AProcessList : TProcessList);
     procedure ApplyFilters(const AFilters : TFilterKinds = []);
     procedure ApplyFilterSettings();
+    function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
+    procedure RemoveProcess(const AProcessId : Cardinal);
+    procedure RefreshCaption(); override;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
 
     {@C}
-    constructor Create(AOwner : TComponent; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); overload;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); overload;
   end;
 
 var
@@ -121,9 +130,48 @@ implementation
 
 uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Types,
      Optix.InformationGathering.Process, Optix.Constants,
-     VirtualTrees.Types, Optix.VCL.Helper;
+     VirtualTrees.Types, Optix.VCL.Helper, Optix.Protocol.Packet;
 
 {$R *.dfm}
+
+procedure TFormProcessManager.RefreshCaption();
+begin
+  inherited;
+  ///
+
+  Caption := Caption + ' - ' + ProcessorArchitectureToString(FRemoteProcessorArchitecture);
+end;
+
+function TFormProcessManager.GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+    if not Assigned(pData^.ProcessInformation) then
+      continue;
+    ///
+
+    if pData^.ProcessInformation.Id = AProcessId then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
+end;
+
+procedure TFormProcessManager.RemoveProcess(const AProcessId : Cardinal);
+begin
+  var pNode := GetNodeByProcessid(AProcessId);
+  if not Assigned(pNode) then
+    Exit();
+  ///
+
+  VST.DeleteNode(pNode);
+
+  VST.Refresh();
+end;
 
 procedure TFormProcessManager.ApplyFilterSettings();
 begin
@@ -137,6 +185,11 @@ begin
 
   ///
   ApplyFilters(AFilters);
+end;
+
+procedure TFormProcessManager.Clear1Click(Sender: TObject);
+begin
+  VST.Clear();
 end;
 
 procedure TFormProcessManager.ColorBackground1Click(Sender: TObject);
@@ -184,20 +237,38 @@ begin
   end;
 end;
 
-constructor TFormProcessManager.Create(AOwner : TComponent; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
+constructor TFormProcessManager.Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
 begin
-  inherited Create(AOwner);
+  inherited Create(AOwner, AUserIdentifier);
   ///
 
   FClientArchitecture          := AClientArchitecture;
   FRemoteProcessorArchitecture := ARemoteProcessorArchitecture;
-
-  Caption := Caption + ' - ' + ProcessorArchitectureToString(ARemoteProcessorArchitecture);
 end;
 
 procedure TFormProcessManager.DifferentArchitecture1Click(Sender: TObject);
 begin
   ApplyFilterSettings();
+end;
+
+procedure TFormProcessManager.KillProcess1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+  ///
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+
+  if Application.MessageBox('You are about to terminate a process. This action may affect system stability. Do you want to continue?', 'Kill Process', MB_ICONQUESTION + MB_YESNO) = ID_NO then
+    Exit();
+
+  ///
+  SendCommand(TOptixKillProcess.Create(pData^.ProcessInformation.Id));
+end;
+
+procedure TFormProcessManager.PopupMenuPopup(Sender: TObject);
+begin
+  self.KillProcess1.Visible := VST.FocusedNode <> nil;
 end;
 
 procedure TFormProcessManager.Refresh(const AProcessList : TProcessList);
@@ -348,7 +419,8 @@ begin
     6  : CellText := IntToStr(pData^.ProcessInformation.SessionId);
     7  : CellText := ElevatedStatusToString(pData^.ProcessInformation.Elevated);
     8  : CellText := DateTimeToStr(pData^.ProcessInformation.CreatedTime);
-    9  : CellText := pData^.ProcessInformation.ImagePath;
+    9  : CellText := pData^.ProcessInformation.CommandLine;
+    10 : CellText := pData^.ProcessInformation.ImagePath;
   end;
 
   ///
@@ -357,13 +429,24 @@ end;
 
 procedure TFormProcessManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
-  if AClassName = 'TProcessList' then begin
-    var AProcessList := TProcessList.Create(ASerializedPacket);
-    try
-      Refresh(AProcessList);
-    finally
-      FreeAndNil(AProcessList);
+  var AOptixPacket : TOptixPacket := nil;
+  try
+    // -------------------------------------------------------------------------
+    if AClassName = TProcessList.ClassName then begin
+      AOptixPacket := TProcessList.Create(ASerializedPacket);
+
+      Refresh(TProcessList(AOptixPacket));
+    end
+    // -------------------------------------------------------------------------
+    else if AClassName = TOptixKillProcess.ClassName then begin
+      AOptixPacket := TOptixKillProcess.Create(ASerializedPacket);
+
+      RemoveProcess(TOptixKillProcess(AOptixPacket).ProcessId);
     end;
+    // -------------------------------------------------------------------------
+  finally
+    if Assigned(AOptixPacket) then
+      FreeAndNil(AOptixPacket);
   end;
 end;
 

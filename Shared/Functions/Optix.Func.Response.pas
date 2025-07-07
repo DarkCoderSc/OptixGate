@@ -51,40 +51,11 @@ uses System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject,
 type
   TOptixResponse = class(TOptixPacket)
   protected
-    FSessionId : TGUID;
-
-    {@M}
-    procedure Refresh(); virtual; abstract;
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    procedure Refresh(); virtual;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
     {@C}
-    constructor Create(const ASerializedObject : ISuperObject = nil); override;
-
-    {@G}
-    property SessionId : TGUID read FSessionId;
+    constructor Create(); override;
   end;
-
-  TOptixWindowedResponse = class(TOptixResponse)
-  private
-    FWindowGUID : TGUID;
-
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-  public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@C}
-    constructor Create(const AWindowGUID : TGUID; const ASerializedObject : ISuperObject = nil); overload; virtual;
-
-    {@G}
-    property WindowGUID : TGUID read FWindowGUID;
-  end;
-
-  var SESSION_ID : TGUID;
 
 implementation
 
@@ -93,77 +64,18 @@ uses Optix.InformationGathering.Helper, Winapi.Windows;
 (* TOptixResponse *)
 
 { TOptixResponse.Create }
-constructor TOptixResponse.Create(const ASerializedObject : ISuperObject = nil);
-begin
-  inherited Create();
-  ///
-
-  if Assigned(ASerializedObject) then
-    DeSerialize(ASerializedObject)
-  else begin
-    FSessionId := SESSION_ID;
-
-    ///
-    self.Refresh();
-  end;
-end;
-
-{ TOptixResponse.Serialize }
-function TOptixResponse.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['SessionId'] := FSessionId.ToString;
-end;
-
-{ TOptixResponse.DeSerialize }
-procedure TOptixResponse.DeSerialize(const ASerializedObject : ISuperObject);
+constructor TOptixResponse.Create();
 begin
   inherited;
   ///
 
-  if not Assigned(ASerializedObject) then
-    Exit();
-
-  FSessionId := TGUID.Create(ASerializedObject.S['SessionId']);
+  Refresh();
 end;
 
-(* TOptixWindowedResponse *)
-
-{ TOptixWindowedResponse.Create }
-constructor TOptixWindowedResponse.Create(const AWindowGUID : TGUID; const ASerializedObject : ISuperObject = nil);
+{ TOptixResponse.Refresh }
+procedure TOptixResponse.Refresh();
 begin
-  inherited Create(ASerializedObject);
   ///
-
-  FWindowGUID := AWindowGUID;
 end;
-
-{ TOptixWindowedResponse.Serialize }
-function TOptixWindowedResponse.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['WindowGUID'] := FWindowGUID.ToString;
-end;
-
-{ TOptixWindowedResponse.DeSerialize }
-procedure TOptixWindowedResponse.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
-
-  FWindowGUID := TGUID.Create(ASerializedObject.S['WindowGUID']);
-end;
-
-(* __INIT__ *)
-
-initialization
-  SESSION_ID := TOptixInformationGathering.GetUserUID();
 
 end.

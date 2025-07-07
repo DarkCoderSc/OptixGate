@@ -41,6 +41,11 @@
 {                                                                              }
 {******************************************************************************}
 
+{
+  TODO:
+    - Column Sorting
+}
+
 unit uFormMain;
 
 interface
@@ -61,6 +66,9 @@ type
     SessionInformation : TOptixSessionInformation;
     SpawnDate          : TDateTime;
     Forms              : TObjectList<TBaseFormControl>;
+
+    ///
+    function ToString: String;
   end;
   PTreeData = ^TTreeData;
 
@@ -89,6 +97,9 @@ type
     TimerRefresh: TTimer;
     ImageCollection: TImageCollection;
     VirtualImageList: TVirtualImageList;
+    N5: TMenuItem;
+    ransfers1: TMenuItem;
+    Logs1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -114,6 +125,7 @@ type
     procedure VSTInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure Logs1Click(Sender: TObject);
   private
     FServer : TOptixServerThread;
 
@@ -131,9 +143,9 @@ type
     procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
     function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
     function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
-    function GetControlForm(const pData : PTreeData; const AClass : TClass) : TBaseFormControl; overload;
+    function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
     function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
-    function ControlFormExists(const pData : PTreeData; const AClass : TClass) : Boolean;
+    function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
   public
     {@M}
@@ -149,16 +161,38 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants,
      Optix.InformationGathering.Process, uFormAbout, uFormProcessManager,
-     Optix.Thread;
+     Optix.Thread, uFormLogs, Optix.Func.LogNotifier;
 
 {$R *.dfm}
 
-function TFormMain.GetControlForm(const pData : PTreeData; const AClass : TClass) : TBaseFormControl;
+(* TTreeData *)
+
+{ TTreeData.ToString }
+function TTreeData.ToString: String;
+begin
+  if not Assigned(SessionInformation) or not Assigned(Handler) then
+    result := ''
+  else
+    result := Format('%s@%s:%s', [
+      SessionInformation.Username,
+      SessionInformation.Computer,
+      Handler.PeerAddress
+    ]);
+end;
+
+(* TFormMain *)
+
+function TFormMain.GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl;
 begin
   result := nil;
   ///
 
-  if not Assigned(pData) or not Assigned(pData^.Forms) then
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+
+  if not Assigned(pData^.Forms) then
     Exit();
 
   for var AForm in pData^.Forms do begin
@@ -194,9 +228,9 @@ begin
   end;
 end;
 
-function TFormMain.ControlFormExists(const pData : PTreeData; const AClass : TClass) : Boolean;
+function TFormMain.ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
 begin
-  result := GetControlForm(pData, AClass) <> nil;
+  result := GetControlForm(pNode, AClass) <> nil;
 end;
 
 procedure TFormMain.SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand);
@@ -271,6 +305,21 @@ begin
   end;
 end;
 
+procedure TFormMain.Logs1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var AForm := GetControlForm(VST.FocusedNode, TFormLogs);
+
+  // Should always exists
+  if not Assigned(AForm) then
+    Exit();
+
+  ///
+  AForm.Show();
+end;
+
 function TFormMain.GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
 begin
   result := nil;
@@ -307,6 +356,10 @@ begin
   pData^.Handler := AHandler;
   pData^.SessionInformation := ASessionInformation;
   pData^.SpawnDate := Now;
+
+  // Create mandatory windows
+  var AForm := TFormLogs.Create(self, pData^.ToString);
+  pData^.Forms.Add(AForm);
 
   ///
   VST.Refresh();
@@ -480,6 +533,7 @@ begin
 
   self.erminate1.Visible       := VST.FocusedNode <> nil;
   self.ProcessManager1.Visible := self.erminate1.Visible;
+  self.Logs1.Visible           := self.erminate1.Visible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
@@ -487,13 +541,15 @@ begin
   if VST.FocusedNode = nil then
     Exit();
 
-  var pData := PTreeData(VST.FocusedNode.GetData);
-
-  var AForm := GetControlForm(pData, TFormProcessManager);
+  var AForm := GetControlForm(VST.FocusedNode, TFormProcessManager);
 
   if not Assigned(AForm) then begin
+    var pData := PTreeData(VST.FocusedNode.GetData);
+    ///
+
     AForm := TFormProcessManager.Create(
       self,
+      pData^.ToString,
       pData^.SessionInformation.Architecture,
       pData^.SessionInformation.WindowsArchitecture
     );
@@ -509,7 +565,9 @@ end;
 procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
 begin
   if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') then
+     not ASerializedPacket.Contains('PacketClass') or
+     not ASerializedPacket.Contains('WindowGUID') or
+     not ASerializedPacket.Contains('SessionId') then
       Exit();
   ///
 
@@ -517,18 +575,18 @@ begin
   var AClassName := ASerializedPacket.S['PacketClass'];
   var AHandleMemory := False;
 
-  var ASessionID := TGUID.Empty;
-  if ASerializedPacket.Contains('SessionId') then
-    ASessionId := TGUID.Create(ASerializedPacket.S['SessionId']);
+  var AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
+  var ASessionId := TGUID.Create(ASerializedPacket.S['SessionId']);
+
+  var pNode := GetNodeBySessionId(ASessionId);
 
   var AOptixPacket : TOptixPacket := nil;
   try
     try
-      if not ASerializedPacket.Contains('WindowGUID') then begin
-        { Responses }
-        if AClassName = 'TOptixSessionInformation' then begin
+      if AWindowGUID.IsEmpty then begin
+        { Responses ---------------------------------------------------------- }
+        if AClassName = TOptixSessionInformation.ClassName then begin
           AOptixPacket := TOptixSessionInformation.Create(ASerializedPacket);
-
 
           // Dispatch to data handler
           if AOptixPacket is TOptixSessionInformation then begin
@@ -537,18 +595,24 @@ begin
             ///
             RegisterSession(Sender, TOptixSessionInformation(AOptixPacket));
           end;
-        end;
+        end
+        // ---------------------------------------------------------------------
+        else if (AClassName = TLogNotifier.ClassName) then begin
+          var ALogsForm := GetControlForm(pNode, TFormLogs);
 
+          if Assigned(ALogsForm) then
+            ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
+        end;
+        // ---------------------------------------------------------------------
         // ... //
         // else if ...
         // ... //
       end else begin
-        { Windowed Responses }
-        var AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
-        var pNode := GetNodeBySessionId(ASessionId);
+        { Windowed Responses ------------------------------------------------- }
         var AControlForm := GetControlForm(pNode, AWindowGUID);
         if Assigned(AControlForm) then
           AControlForm.ReceivePacket(AClassName, ASerializedPacket);
+        // ---------------------------------------------------------------------
       end;
     finally
       if not AHandleMemory and Assigned(AOptixPacket) then

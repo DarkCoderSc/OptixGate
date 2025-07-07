@@ -51,41 +51,53 @@ uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
 type
   TOptixCommand = class(TOptixPacket);
 
-  TOptixWindowedCommand = class(TOptixCommand)
+  // Simple Commands
+  TOptixCommandTerminate = class(TOptixCommand);
+
+  TOptixRefreshProcess = class(TOptixCommand);
+
+  // Parameterized Commands
+  TOptixKillProcess = class(TOptixCommand)
   private
-    FWindowGUID : TGUID;
+    FProcessId : Cardinal;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
+    {@C}
+    constructor Create(const AProcessId : Cardinal) overload;
+
     {@M}
     function Serialize() : ISuperObject; override;
 
-    {@G/S}
-    property WindowGUID : TGUID read FWindowGUID write FWindowGUID;
+    {@G}
+    property ProcessId : Cardinal read FProcessId;
   end;
-
-  // Simple Commands
-  TOptixCommandTerminate = class(TOptixCommand);
-
-  // Simple Windowed Commands
-  TOptixRefreshProcess = class(TOptixWindowedCommand);
 
 implementation
 
-(* TOptixWindowedCommand *)
+(* TOptixKillProcess *)
 
-{ TOptixWindowedCommand.Serialize }
-function TOptixWindowedCommand.Serialize() : ISuperObject;
+{ TOptixKillProcess.Create }
+constructor TOptixKillProcess.Create(const AProcessId : Cardinal);
+begin
+  inherited Create();
+  ///
+
+  FProcessId := AProcessId;
+end;
+
+{ TOptixKillProcess.Serialize }
+function TOptixKillProcess.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
 
-  result.S['WindowGUID'] := FWindowGUID.ToString;
+  result.I['ProcessId'] := FProcessId;
 end;
 
-{ TOptixWindowedCommand.DeSerialize }
-procedure TOptixWindowedCommand.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixKillProcess.DeSerialize }
+procedure TOptixKillProcess.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
@@ -93,7 +105,7 @@ begin
   if not Assigned(ASerializedObject) then
     Exit();
 
-  FWindowGUID := TGUID.Create(ASerializedObject.S['WindowGUID']);
+  FProcessId := ASerializedObject.I['ProcessId'];
 end;
 
 end.

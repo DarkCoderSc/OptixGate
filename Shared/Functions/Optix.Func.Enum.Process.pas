@@ -47,7 +47,7 @@ interface
 
 uses Optix.Func.Response, Optix.Interfaces, XSuperObject, System.Classes,
      Generics.Collections, Optix.WinApiEx, Optix.InformationGathering.Process,
-     Optix.Types;
+     Optix.Types, Optix.Protocol.Packet;
 
 type
   TProcessInformation = class(TInterfacedPersistent, IOptixSerializable)
@@ -65,6 +65,7 @@ type
     FCreatedTime      : TDateTime;
     FCurrentProcessId : Cardinal;
     FIsWow64Process   : TBoolResult;
+    FCommandLine      : String;
 
     {@}
     function EvaluateIfCurrentProcess() : Boolean;
@@ -97,9 +98,10 @@ type
     property IsCurrentProcess : Boolean         read EvaluateIfCurrentProcess;
     property IsWow64Process   : TBoolResult     read FIsWow64Process;
     property IsSystem         : Boolean         read CheckIfSystemUser;
+    property CommandLine      : String          read FCommandLine;
   end;
 
-  TProcessList = class(TOptixWindowedResponse)
+  TProcessList = class(TOptixResponse)
   private
     FList : TObjectList<TProcessInformation>;
   protected
@@ -153,6 +155,7 @@ begin
   FCreatedTime      := ASerializedObject.D['CreatedTime'];
   FCurrentProcessId := ASerializedObject.I['CurrentProcessId'];
   FIsWow64Process   := TBoolResult(ASerializedObject.I['IsWow64Process']);
+  FCommandLine      := ASerializedObject.S['CommandLine'];
 end;
 
 { TProcessInformation.Serialize }
@@ -174,6 +177,7 @@ begin
   result.D['CreatedTime']      := FCreatedTime;
   result.I['CurrentProcessId'] := FCurrentProcessId;
   result.I['IsWow64Process']   := Cardinal(FIsWow64Process);
+  result.S['CommandLine']      := FCommandLine;
 end;
 
 { TProcessInformation.Assign }
@@ -193,6 +197,7 @@ begin
     FCreatedTime      := TProcessInformation(ASource).FCreatedTime;
     FCurrentProcessId := TProcessInformation(ASource).FCurrentProcessId;
     FIsWow64Process   := TProcessInformation(ASource).FIsWow64Process;
+    FCommandLine      := TProcessInformation(ASource).FCommandLine;
   end else
     inherited;
 end;
@@ -252,7 +257,9 @@ begin
 
   FCurrentProcessId := GetCurrentProcessId();
 
-  FIsWow64Process := TProcessInformationHelper.TryIsWow64Process(FId)
+  FIsWow64Process := TProcessInformationHelper.TryIsWow64Process(FId);
+
+  FCommandLine := TProcessInformationHelper.TryGetProcessCommandLine(FId);
 end;
 
 (* TProcessList *)

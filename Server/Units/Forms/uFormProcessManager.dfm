@@ -11,7 +11,6 @@ object FormProcessManager: TFormProcessManager
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poMainFormCenter
-  ShowInTaskBar = True
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
@@ -92,11 +91,17 @@ object FormProcessManager: TFormProcessManager
       end
       item
         Position = 9
+        Text = 'Command Line'
+        Width = 260
+      end
+      item
+        Position = 10
         Text = 'Image Path'
-        Width = 200
+        Width = 250
       end>
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 131
     Top = 150
     object Refresh1: TMenuItem
@@ -104,6 +109,13 @@ object FormProcessManager: TFormProcessManager
       OnClick = Refresh1Click
     end
     object N1: TMenuItem
+      Caption = '-'
+    end
+    object KillProcess1: TMenuItem
+      Caption = 'Kill Process'
+      OnClick = KillProcess1Click
+    end
+    object N2: TMenuItem
       Caption = '-'
     end
     object Exclude1: TMenuItem
@@ -128,6 +140,13 @@ object FormProcessManager: TFormProcessManager
         Checked = True
         OnClick = ColorBackground1Click
       end
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object Clear1: TMenuItem
+      Caption = 'Clear'
+      OnClick = Clear1Click
     end
   end
 end

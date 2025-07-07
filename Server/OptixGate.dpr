@@ -65,6 +65,7 @@ uses
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
   __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
+  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
@@ -74,7 +75,8 @@ uses
   Optix.Constants in 'Units\Optix.Constants.pas',
   uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout},
   uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas';
+  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
+  uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs};
 
 {$R *.res}
 
@@ -87,6 +89,7 @@ begin
   TStyleManager.TrySetStyle('Aqua Light Slate');
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
+  // Application.CreateForm(TFormLogs, FormLogs);
   // Application.CreateForm(TFormProcessManager, FormProcessManager);
   Application.Run;
 end.

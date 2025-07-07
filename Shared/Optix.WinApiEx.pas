@@ -89,6 +89,12 @@ type
   );
   TStorageBusType = STORAGE_BUS_TYPE;
 
+  TProcessInformationClass = (
+    // ...
+    ProcessBasicInformation = 0
+    // ...
+  );
+
   //----------------------------------------------------------------------------
 
   NET_API_STATUS = DWORD;
@@ -213,6 +219,36 @@ type
   TStorageDescriptorHeader = STORAGE_DESCRIPTOR_HEADER;
   PStorageDescriptorHeader = ^TStorageDescriptorHeader;
 
+  _RTL_USER_PROCESS_PARAMETERS = record
+    Reserved1     : array[0..16-1] of byte;
+    Reserved2     : array[0..10-1] of PVOID;
+    ImagePathName : TUnicodeString;
+    CommandLine   : TUnicodeString;
+  end;
+  TRTLUserProcessParameters = _RTL_USER_PROCESS_PARAMETERS;
+  PRTLUserProcessParameters = ^TRTLUserProcessParameters;
+
+  PEB = record
+    Reserved1         : array[0..2-1] of byte;
+    BeingDebugged     : byte;
+    Reserved2         : array[0..1-1] of byte;
+    Reserved3         : array[0..2-1] of PVOID;
+    Ldr               : PVOID;
+    ProcessParameters : PRTLUserProcessParameters;
+  end;
+  TPEB = PEB;
+  PPEB = ^TPEB;
+
+  _PROCESS_BASIC_INFORMATION = record
+    Reserved1                    : PVOID;
+    PebBaseAddress               : PPEB;
+    Reserved2                    : array[0..1] of PVOID;
+    UniqueProcessId              : ULONG_PTR;
+    Reserved3                    : PVOID;
+  end;
+  TProcessBasicInformation = _PROCESS_BASIC_INFORMATION;
+  PProcessBasicInformation = ^TProcessBasicInformation;
+
 //------------------------------------------------------------------------------
 
 const
@@ -277,6 +313,14 @@ function QueryFullProcessImageNameW(
   lpExeName  : PWideChar;
   var dwSize : DWORD
 ): BOOL; stdcall; external kernel32 name 'QueryFullProcessImageNameW';
+
+function NtQueryInformationProcess(
+  ProcessHandle            : THandle;
+  ProcessInformationClass  : TProcessInformationClass;
+  ProcessInformation       : Pointer;
+  ProcessInformationLength : ULONG;
+  var ReturnLength         : ULONG
+) : NTSTATUS; stdcall; external 'NTDLL.DLL';
 
 //------------------------------------------------------------------------------
 

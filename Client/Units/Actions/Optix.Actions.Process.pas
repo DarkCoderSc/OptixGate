@@ -41,68 +41,34 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit Optix.Actions.Process;
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+interface
 
-{$R *.res}
+uses Winapi.Windows;
 
-uses
-  System.SysUtils,
-  Winapi.Windows,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Types in '..\Shared\Optix.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas';
-
-begin
-  IsMultiThread := True;
-  try
-    var AUserUID := TOptixInformationGathering.GetUserUID();
-
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
-
-      // Enable certain useful privileges (if possible)
-      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
-      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
-
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.RetryDelay := 1000;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor;
-    finally
-      CloseHandle(AMutex);
-    end;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+type
+  TProcessActions = class
+    {@M}
+    class procedure TerminateProcess(const AProcessId : Cardinal); static;
   end;
+
+implementation
+
+uses Optix.Exceptions;
+
+{ TProcessActions.TerminateProcess }
+class procedure TProcessActions.TerminateProcess(const AProcessId : Cardinal);
+begin
+  var hProcess := OpenProcess(PROCESS_TERMINATE, False, AProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    if not Winapi.Windows.TerminateProcess(hProcess, 0) then
+      raise EWindowsException.Create('TerminateProcess');
+  finally
+    CloseHandle(hProcess);
+  end;
+end;
+
 end.

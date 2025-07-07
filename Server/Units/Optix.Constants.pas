@@ -57,12 +57,14 @@ const
  IMAGE_PROCESS        = 7;
  IMAGE_PROCESS_X86_32 = 8;
  IMAGE_PROCESS_X86_64 = 9;
+ IMAGE_EXCEPTION      = 10;
 
 var
  (* COLORS *)
  COLOR_USER_ELEVATED : TColor;
  COLOR_USER_SYSTEM   : TColor;
  COLOR_LIST_LIMY     : TColor;
+ COLOR_LIST_RED      : TColor;
 
 implementation
 
@@ -70,5 +72,6 @@ initialization
   COLOR_USER_ELEVATED := RGB(234, 249, 254);
   COLOR_USER_SYSTEM   := RGB(242, 228, 247);
   COLOR_LIST_LIMY     := RGB(220, 254, 215);
+  COLOR_LIST_RED      := RGB(254, 220, 225);
 
 end.

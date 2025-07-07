@@ -63,7 +63,8 @@ type
 implementation
 
 uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
-     Optix.Func.Commands, Optix.Func.Enum.Process;
+     Optix.Func.Commands, Optix.Func.Enum.Process, Optix.Actions.Process,
+     Optix.Func.LogNotifier;
 
 { TOptixSessionHandlerThread.EstablishedConnection }
 procedure TOptixSessionHandlerThread.EstablishedConnection();
@@ -93,15 +94,36 @@ begin
     AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
 
   var AOptixPacket : TOptixPacket := nil;
+  var AHandleMemory : Boolean := False;
   try
-    if AClassName = 'TOptixCommandTerminate' then
-      self.Terminate
-    else if AClassName = 'TOptixRefreshProcess' then
-      self.AddPacket(TProcessList.Create(AWindowGUID));
+    try
+      // -----------------------------------------------------------------------
+      if AClassName = TOptixCommandTerminate.ClassName then
+        Terminate
+      // -----------------------------------------------------------------------
+      else if AClassName = TOptixRefreshProcess.ClassName then
+        AddPacket(TProcessList.Create(AWindowGUID))
+      // -----------------------------------------------------------------------
+      else if AClassName = TOptixKillProcess.ClassName then begin
+        AHandleMemory := True;
+        ///
 
-    // ... //
+        AOptixPacket := TOptixKillProcess.Create(ASerializedPacket);
+
+        TProcessActions.TerminateProcess(TOptixKillProcess(AOptixPacket).ProcessId);
+
+        // Telling, everything is okay!
+        AddPacket(AOptixPacket);
+      end;
+      // -----------------------------------------------------------------------
+
+      // ... //
+    except
+      on E : Exception do
+        AddPacket(TLogNotifier.Create(E.Message, AClassName, lkException));
+    end;
   finally
-    if Assigned(AOptixPacket) then
+    if not AHandleMemory and Assigned(AOptixPacket) then
       FreeAndNil(AOptixPacket);
   end;
 end;
