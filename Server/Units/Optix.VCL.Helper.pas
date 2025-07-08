@@ -11,7 +11,7 @@
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {    I dedicate this work to my daughter & wife                                }
@@ -31,6 +31,10 @@ type
       class procedure UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean); static;
       class procedure HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
       class procedure ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
+      class procedure ShowForm(const AForm : TForm); static; // Use Winja code to do that propertly
+                                                             // Use ShowForm (custom) everytime we need to show a control form
+                                                             // Implement show form in Control Forms list
+                                                             // Also implement in Control Forms Row the extended information (process = number of enumerated process)
   end;
 
   TOptixVirtualTreesHelper = class

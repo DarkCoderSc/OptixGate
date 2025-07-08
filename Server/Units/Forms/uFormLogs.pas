@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {                                                                              }
@@ -80,6 +80,9 @@ type
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+
+    {@C}
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String); override;
   end;
 
 var
@@ -91,8 +94,19 @@ uses Optix.Helper, Optix.Protocol.Packet, Optix.Constants, uFormMain;
 
 {$R *.dfm}
 
+constructor TFormLogs.Create(AOwner : TComponent; const AUserIdentifier : String);
+begin
+  inherited;
+  ///
+
+  FSpecialForm := True;
+end;
+
 procedure TFormLogs.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
+  inherited;
+  ///
+
   if not Assigned(ASerializedPacket) then
     Exit();
   ///

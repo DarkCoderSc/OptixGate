@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {                                                                              }
@@ -76,7 +76,9 @@ uses
   uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout},
   uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
   Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs};
+  uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs},
+  uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
+  uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms};
 
 {$R *.res}
 
@@ -89,6 +91,8 @@ begin
   TStyleManager.TrySetStyle('Aqua Light Slate');
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
+  // Application.CreateForm(TFormFileManager, FormFileManager);
+  // Application.CreateForm(TFormControlForms, FormControlForms);
   // Application.CreateForm(TFormLogs, FormLogs);
   // Application.CreateForm(TFormProcessManager, FormProcessManager);
   Application.Run;

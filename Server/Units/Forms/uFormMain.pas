@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {                                                                              }
@@ -100,6 +100,7 @@ type
     N5: TMenuItem;
     ransfers1: TMenuItem;
     Logs1: TMenuItem;
+    ControlForms1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -126,6 +127,8 @@ type
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure Logs1Click(Sender: TObject);
+    procedure FileManager1Click(Sender: TObject);
+    procedure ControlForms1Click(Sender: TObject);
   private
     FServer : TOptixServerThread;
 
@@ -147,6 +150,7 @@ type
     function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
+    procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TClass);
   public
     {@M}
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
@@ -161,7 +165,8 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants,
      Optix.InformationGathering.Process, uFormAbout, uFormProcessManager,
-     Optix.Thread, uFormLogs, Optix.Func.LogNotifier;
+     Optix.Thread, uFormLogs, Optix.Func.LogNotifier, uFormFileManager,
+     uFormControlForms;
 
 {$R *.dfm}
 
@@ -231,6 +236,11 @@ end;
 function TFormMain.ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
 begin
   result := GetControlForm(pNode, AClass) <> nil;
+end;
+
+procedure TFormMain.ControlForms1Click(Sender: TObject);
+begin
+  CreateOrOpenControlForm(VST.FocusedNode, TFormControlForms);
 end;
 
 procedure TFormMain.SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand);
@@ -305,19 +315,37 @@ begin
   end;
 end;
 
-procedure TFormMain.Logs1Click(Sender: TObject);
+procedure TFormMain.CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TClass);
 begin
-  if VST.FocusedNode = nil then
+  if not Assigned(pNode) then
     Exit();
 
-  var AForm := GetControlForm(VST.FocusedNode, TFormLogs);
+  var AForm := GetControlForm(pNode, AFormClass);
 
   // Should always exists
-  if not Assigned(AForm) then
-    Exit();
+  if not Assigned(AForm) then begin
+    var pData := PTreeData(pNode.GetData);
 
-  ///
-  AForm.Show();
+    if AFormClass = TFormProcessManager then
+      AForm := TFormProcessManager.Create(
+        self,
+        pData^.ToString,
+        pData^.SessionInformation.Architecture,
+        pData^.SessionInformation.WindowsArchitecture
+      );
+
+    ///
+    if Assigned(AForm) then
+      pData^.Forms.Add(AForm);
+  end;
+
+  if Assigned(AForm) then
+    AForm.Show();
+end;
+
+procedure TFormMain.Logs1Click(Sender: TObject);
+begin
+  CreateOrOpenControlForm(VST.FocusedNode, TFormLogs);
 end;
 
 function TFormMain.GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
@@ -357,9 +385,13 @@ begin
   pData^.SessionInformation := ASessionInformation;
   pData^.SpawnDate := Now;
 
-  // Create mandatory windows
-  var AForm := TFormLogs.Create(self, pData^.ToString);
-  pData^.Forms.Add(AForm);
+  // Create not mandatory windows
+
+  // ---------------------------------------------------------------------------
+  pData^.Forms.Add(TFormLogs.Create(self, pData^.ToString));
+  // ---------------------------------------------------------------------------
+  pData^.Forms.Add(TFormControlForms.Create(self, pData^.ToString, pData));
+  // ---------------------------------------------------------------------------
 
   ///
   VST.Refresh();
@@ -531,35 +563,18 @@ procedure TFormMain.PopupMenuPopup(Sender: TObject);
 begin
   TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
 
-  self.erminate1.Visible       := VST.FocusedNode <> nil;
-  self.ProcessManager1.Visible := self.erminate1.Visible;
-  self.Logs1.Visible           := self.erminate1.Visible;
+  var AVisible := VST.FocusedNode <> nil;
+
+  self.erminate1.Visible       := AVisible;
+  self.ProcessManager1.Visible := AVisible;
+  self.Logs1.Visible           := AVisible;
+  self.FileManager1.Visible    := AVisible;
+  self.ControlForms1.Visible   := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
 begin
-  if VST.FocusedNode = nil then
-    Exit();
-
-  var AForm := GetControlForm(VST.FocusedNode, TFormProcessManager);
-
-  if not Assigned(AForm) then begin
-    var pData := PTreeData(VST.FocusedNode.GetData);
-    ///
-
-    AForm := TFormProcessManager.Create(
-      self,
-      pData^.ToString,
-      pData^.SessionInformation.Architecture,
-      pData^.SessionInformation.WindowsArchitecture
-    );
-
-    ///
-    pData^.Forms.Add(AForm);
-  end;
-
-  ///
-  AForm.Show();
+  CreateOrOpenControlForm(VST.FocusedNode, TFormProcessManager);
 end;
 
 procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
@@ -636,6 +651,24 @@ end;
 procedure TFormMain.erminate1Click(Sender: TObject);
 begin
   SendCommand(VST.FocusedNode, TOptixCommandTerminate.Create());
+end;
+
+procedure TFormMain.FileManager1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if not Assigned(pData^.Forms) then
+    Exit();
+
+  var AForm := TFormFileManager.Create(self, pData^.ToString);
+
+  ///
+  pData^.Forms.Add(AForm);
+
+  ///
+  AForm.Show();
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);

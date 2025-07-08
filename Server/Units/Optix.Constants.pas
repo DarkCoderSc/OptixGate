@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {                                                                              }
@@ -49,28 +49,38 @@ uses VCL.Graphics, Winapi.Windows;
 
 const
  (* IMAGES *)
- IMAGE_USER           = 0;
- IMAGE_USER_ADMIN     = 1;
- IMAGE_USER_ELEVATED  = 2;
- IMAGE_USER_SYSTEM    = 3;
- IMAGE_PROCESS_SELF   = 6;
- IMAGE_PROCESS        = 7;
- IMAGE_PROCESS_X86_32 = 8;
- IMAGE_PROCESS_X86_64 = 9;
- IMAGE_EXCEPTION      = 10;
+ IMAGE_USER                = 0;
+ IMAGE_USER_ADMIN          = 1;
+ IMAGE_USER_ELEVATED       = 2;
+ IMAGE_USER_SYSTEM         = 3;
+ IMAGE_PROCESS_SELF        = 6;
+ IMAGE_PROCESS             = 7;
+ IMAGE_PROCESS_X86_32      = 8;
+ IMAGE_PROCESS_X86_64      = 9;
+ IMAGE_EXCEPTION           = 10;
+ IMAGE_FORM_CONTROL        = 11;
+ IMAGE_FORM_CONTROL_ACTIVE = 12;
+ IMAGE_FORM_CONTROL_DATA   = 13;
 
 var
  (* COLORS *)
- COLOR_USER_ELEVATED : TColor;
- COLOR_USER_SYSTEM   : TColor;
+ COLOR_LIST_BLUE     : TColor;
+ COLOR_LIST_PURPLE   : TColor;
  COLOR_LIST_LIMY     : TColor;
  COLOR_LIST_RED      : TColor;
+
+ COLOR_USER_ELEVATED : TColor;
+ COLOR_USER_SYSTEM   : TColor;
 
 implementation
 
 initialization
-  COLOR_USER_ELEVATED := RGB(234, 249, 254);
-  COLOR_USER_SYSTEM   := RGB(242, 228, 247);
+  COLOR_LIST_BLUE     := RGB(234, 249, 254);
+  COLOR_USER_ELEVATED := COLOR_LIST_BLUE;
+
+  COLOR_LIST_PURPLE   := RGB(242, 228, 247);
+  COLOR_USER_SYSTEM   := COLOR_LIST_PURPLE;
+
   COLOR_LIST_LIMY     := RGB(220, 254, 215);
   COLOR_LIST_RED      := RGB(254, 220, 225);
 

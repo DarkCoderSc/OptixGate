@@ -41,41 +41,27 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Response;
+unit uFormFileManager;
 
 interface
 
-uses System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject,
-     Optix.Protocol.Packet;
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__;
 
 type
-  TOptixResponse = class(TOptixPacket)
-  protected
-    procedure Refresh(); virtual;
+  TFormFileManager = class(TBaseFormControl)
+  private
+    { Private declarations }
   public
-    {@C}
-    constructor Create(); override;
+    { Public declarations }
   end;
+
+var
+  FormFileManager: TFormFileManager;
 
 implementation
 
-uses Optix.InformationGathering.Helper, Winapi.Windows;
-
-(* TOptixResponse *)
-
-{ TOptixResponse.Create }
-constructor TOptixResponse.Create();
-begin
-  inherited;
-  ///
-
-  Refresh();
-end;
-
-{ TOptixResponse.Refresh }
-procedure TOptixResponse.Refresh();
-begin
-  ///
-end;
+{$R *.dfm}
 
 end.

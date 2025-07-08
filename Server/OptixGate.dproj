@@ -188,6 +188,12 @@
         <DCCReference Include="Units\Forms\uFormLogs.pas">
             <Form>FormLogs</Form>
         </DCCReference>
+        <DCCReference Include="Units\Forms\uFormFileManager.pas">
+            <Form>FormFileManager</Form>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\uFormControlForms.pas">
+            <Form>FormControlForms</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

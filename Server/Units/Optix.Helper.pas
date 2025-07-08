@@ -11,7 +11,7 @@
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {    I dedicate this work to my daughter & wife                                }
@@ -82,7 +82,7 @@ begin
       ASeconds
     ])
   else if ASeconds >= 0 then
-    result := Format('%d seconds.', [ASeconds]);
+    result := Format('%d seconds ago.', [ASeconds]);
 end;
 
 { _.ElapsedTime }

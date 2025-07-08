@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
 {                                                                              }
@@ -429,6 +429,9 @@ end;
 
 procedure TFormProcessManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
+  inherited;
+  ///
+
   var AOptixPacket : TOptixPacket := nil;
   try
     // -------------------------------------------------------------------------

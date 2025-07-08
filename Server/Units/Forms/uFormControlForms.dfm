@@ -1,9 +1,9 @@
-object FormLogs: TFormLogs
+object FormControlForms: TFormControlForms
   Left = 0
   Top = 0
-  Caption = 'Session Logs'
-  ClientHeight = 344
-  ClientWidth = 577
+  Caption = 'Control Forms'
+  ClientHeight = 272
+  ClientWidth = 383
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,12 +11,14 @@ object FormLogs: TFormLogs
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
+  OnClose = FormClose
+  OnShow = FormShow
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 577
-    Height = 344
+    Width = 383
+    Height = 272
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -28,39 +30,81 @@ object FormLogs: TFormLogs
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
+    Header.MainColumn = 1
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
     Images = FormMain.VirtualImageList
+    PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseExplorerTheme]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
     OnFocusChanged = VSTFocusChanged
+    OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitWidth = 421
+    ExplicitHeight = 315
     Columns = <
       item
         Position = 0
-        Text = 'Message'
-        Width = 250
+        Text = 'Title'
+        Width = 190
       end
       item
         Position = 1
-        Text = 'Context'
+        Text = 'Class'
         Width = 110
       end
       item
         Position = 2
-        Text = 'Kind'
-        Width = 80
+        Text = 'State'
+        Width = 100
       end
       item
         Position = 3
-        Text = 'When'
-        Width = 120
+        Text = 'Created Date'
+        Width = 130
+      end
+      item
+        Position = 4
+        Text = 'Last Received Data'
+        Width = 130
+      end
+      item
+        Position = 5
+        Text = 'Extended Information'
+        Width = 250
+      end
+      item
+        Position = 6
+        Text = 'GUID'
+        Width = 100
       end>
+  end
+  object PopupMenu: TPopupMenu
+    OnChange = PopupMenuChange
+    Left = 160
+    Top = 96
+    object Refresh1: TMenuItem
+      Caption = 'Refresh'
+      OnClick = Refresh1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object Purge1: TMenuItem
+      Caption = 'Purge'
+      OnClick = Purge1Click
+    end
+  end
+  object TimerRefresh: TTimer
+    Enabled = False
+    OnTimer = TimerRefreshTimer
+    Left = 256
+    Top = 96
   end
 end
