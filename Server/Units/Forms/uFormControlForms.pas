@@ -58,10 +58,11 @@ uses
 
 type
   TTreeData = record
-    Title           : String;
-    ClassName       : String;
-    FormInformation : TFormControlInformation;
-    Cycle           : UInt64;
+    Title              : String;
+    ClassName          : String;
+    ContextDescription : String;
+    FormInformation    : TFormControlInformation;
+    Cycle              : UInt64;
   end;
   PTreeData = ^TTreeData;
 
@@ -72,6 +73,8 @@ type
     TimerRefresh: TTimer;
     N1: TMenuItem;
     Purge1: TMenuItem;
+    Show1: TMenuItem;
+    N2: TMenuItem;
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -93,6 +96,7 @@ type
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: TImageIndex);
+    procedure Show1Click(Sender: TObject);
   private
     FCycle      : UInt64;
     FClientData : Pointer;
@@ -100,6 +104,8 @@ type
     {@M}
     procedure Refresh(const AStartRefreshTimer : Boolean = False);
     function GetNodeByGUID(const AGUID : TGUID) : PVirtualNode;
+    function GetFormByGUID(const AGUID : TGUID) : TBaseFormControl;
+    function GetSelectedNodeGUID() : TGUID;
   public
     {@C}
     constructor Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer);
@@ -110,7 +116,8 @@ var
 
 implementation
 
-uses uFormMain, Optix.Helper, Generics.Collections, Optix.Constants;
+uses uFormMain, Optix.Helper, Generics.Collections, Optix.Constants,
+     Optix.VCL.Helper;
 
 {$R *.dfm}
 
@@ -139,15 +146,22 @@ begin
   self.Purge1.Visible := VST.FocusedNode <> nil;
 end;
 
-procedure TFormControlForms.Purge1Click(Sender: TObject);
+function TFormControlForms.GetSelectedNodeGUID() : TGUID;
 begin
-  if Application.MessageBox(
-    'Purging this control form will permanently remove the form instance and all' +
-    ' associated data, including possible cached data. Do you want to continue?',
-    'Purge Window',
-    MB_ICONQUESTION + MB_YESNO
-  ) = ID_NO then
+  result := TGUID.Empty;
+  ///
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+
+  if not Assigned(pData^.FormInformation) then
     Exit();
+
+  result := pData^.FormInformation.GUID;
+end;
+
+function TFormControlForms.GetFormByGUID(const AGUID : TGUID) : TBaseFormControl;
+begin
+  result := nil;
   ///
 
   var pNodeClientData := uFormMain.PTreeData(FClientData);
@@ -167,11 +181,38 @@ begin
       continue;
       ///
 
-    pNodeClientData.Forms.Remove(AForm);
+    result := AForm;
 
     ///
     break;
   end;
+end;
+
+procedure TFormControlForms.Purge1Click(Sender: TObject);
+begin
+  var ATargetGUID := GetSelectedNodeGUID();
+  if ATargetGUID.IsEmpty then
+    Exit();
+  ///
+
+  if Application.MessageBox(
+    'Purging this control form will permanently remove the form instance and all' +
+    ' associated data, including possible cached data. Do you want to continue?',
+    'Purge Window',
+    MB_ICONQUESTION + MB_YESNO
+  ) = ID_NO then
+    Exit();
+  ///
+
+  var pNodeClientData := uFormMain.PTreeData(FClientData);
+  ///
+
+  if not Assigned(pNodeClientData^.Forms) then
+    Exit();
+
+  var AForm := GetFormByGUID(ATargetGUID);
+  if Assigned(AForm) then
+    pNodeClientData.Forms.Remove(AForm);
 
   ///
   Refresh();
@@ -232,6 +273,7 @@ begin
       end;
 
       pData^.FormInformation.Assign(AForm.FormInformation);
+      pData^.ContextDescription := AForm.ContextInformation;
 
       ///
       pData^.Cycle := FCycle;
@@ -266,6 +308,18 @@ begin
   Refresh();
 end;
 
+procedure TFormControlForms.Show1Click(Sender: TObject);
+begin
+  var ATargetGUID := GetSelectedNodeGUID();
+  if ATargetGUID.IsEmpty then
+    Exit();
+  ///
+
+  var AForm := GetFormByGUID(ATargetGUID);
+  if Assigned(AForm) then
+    TOptixVCLHelper.ShowForm(AForm);
+end;
+
 procedure TFormControlForms.TimerRefreshTimer(Sender: TObject);
 begin
   Refresh();
@@ -281,10 +335,18 @@ begin
 
   var AColor := clNone;
 
+  // Priority:
+  //  - Unseen Data
+  //  - Focused Form
+  //  - Closed Form
+
   if pData^.FormInformation.HasUnseenData then
     AColor := COLOR_LIST_BLUE
   else if pData^.FormInformation.HasFocus then
-    AColor := COLOR_LIST_LIMY;
+    AColor := COLOR_LIST_LIMY
+  else if pData^.FormInformation.State = fcsClosed then
+    AColor := COLOR_LIST_GRAY;
+
 
   if AColor <> clNone then begin
     TargetCanvas.Brush.Color := AColor;
@@ -331,6 +393,8 @@ begin
         ImageIndex := IMAGE_FORM_CONTROL_DATA
       else if pData^.FormInformation.HasFocus then
         ImageIndex := IMAGE_FORM_CONTROL_ACTIVE
+      else if pData^.FormInformation.State = fcsClosed then
+        ImageIndex := IMAGE_FORM_CONTROL_CLOSED
       else
         ImageIndex := IMAGE_FORM_CONTROL;
     end;
@@ -366,7 +430,7 @@ begin
           Now
         );
     end;
-    5 : CellText := '';
+    5 : CellText := pData^.ContextDescription;
     6 : CellText := pData^.FormInformation.GUID.ToString;
   end;
 

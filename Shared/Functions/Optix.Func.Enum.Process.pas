@@ -45,12 +45,12 @@ unit Optix.Func.Enum.Process;
 
 interface
 
-uses Optix.Func.Response, Optix.Interfaces, XSuperObject, System.Classes,
-     Generics.Collections, Optix.WinApiEx, Optix.InformationGathering.Process,
-     Optix.Types, Optix.Protocol.Packet;
+uses Optix.Func.Response, XSuperObject, System.Classes, Generics.Collections,
+     Optix.WinApiEx, Optix.Process.Helper, Optix.Types,
+     Optix.Protocol.Packet, Optix.Classes;
 
 type
-  TProcessInformation = class(TInterfacedPersistent, IOptixSerializable)
+  TProcessInformation = class(TEnumerableItem)
   private
     FName             : String;
     FImagePath        : String;
@@ -72,16 +72,14 @@ type
     function CheckIfSystemUser() : Boolean;
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@M}
-    function Serialize() : ISuperObject; virtual;
+    function Serialize() : ISuperObject; override;
     procedure Assign(ASource : TPersistent); override;
 
     {@C}
-    constructor Create(const ASerializedObject : ISuperObject = nil); overload;
     constructor Create(const pProcessInformation : PSystemProcessInformation); overload;
-    constructor Create(const ASource : TProcessInformation); overload;
 
     {@G}
     property Name             : String          read FName;
@@ -140,8 +138,9 @@ begin
     Exit();
   ///
 
-  // TODO: One day, optimized Deserialization / Serializaion using RTTI. But must
-  // be carefully tested to ensure it works as expected for common data formats.
+  inherited;
+  ///
+
   FName             := ASerializedObject.S['Name'];
   FImagePath        := ASerializedObject.S['ImagePath'];
   FId               := ASerializedObject.I['Id'];
@@ -161,7 +160,7 @@ end;
 { TProcessInformation.Serialize }
 function TProcessInformation.Serialize() : ISuperObject;
 begin
-  result := TSuperObject.Create();
+  result := inherited;
   ///
 
   result.S['Name']             := FName;
@@ -209,23 +208,6 @@ begin
 end;
 
 { TProcessInformation.Create }
-constructor TProcessInformation.Create(const ASerializedObject : ISuperObject = nil);
-begin
-  inherited Create();
-  ///
-
-  if Assigned(ASerializedObject) then
-    DeSerialize(ASerializedObject);
-end;
-
-{ TProcessInformation.Create }
-constructor TProcessInformation.Create(const ASource : TProcessInformation);
-begin
-  if Assigned(ASource) then
-    Assign(ASource);
-end;
-
-{ TProcessInformation.Create }
 constructor TProcessInformation.Create(const pProcessInformation : PSystemProcessInformation);
 begin
   inherited Create();
@@ -239,15 +221,15 @@ begin
 
   FName := String(pProcessInformation^.ModuleName.Buffer);
 
-  FImagePath := TProcessInformationHelper.TryGetProcessImagePath(FId);
+  FImagePath := TProcessHelper.TryGetProcessImagePath(FId);
   FParentId   := pProcessInformation^.InheritedFromProcessId;
-  FElevated   := TProcessInformationHelper.TryIsElevatedByProcessId(FId);
+  FElevated   := TProcessHelper.TryIsElevatedByProcessId(FId);
 
   FUsername := '';
   FDomain   := '';
   FUserSid  := '';
 
-  if TProcessInformationHelper.TryGetProcessUserInformation(FId, FUsername, FDomain) then begin
+  if TProcessHelper.TryGetProcessUserInformation(FId, FUsername, FDomain) then begin
     FUserSid := TOptixInformationGathering.GetUserSidByType(FUsername);
   end;
 
@@ -257,9 +239,9 @@ begin
 
   FCurrentProcessId := GetCurrentProcessId();
 
-  FIsWow64Process := TProcessInformationHelper.TryIsWow64Process(FId);
+  FIsWow64Process := TProcessHelper.TryIsWow64Process(FId);
 
-  FCommandLine := TProcessInformationHelper.TryGetProcessCommandLine(FId);
+  FCommandLine := TProcessHelper.TryGetProcessCommandLine(FId);
 end;
 
 (* TProcessList *)

@@ -25,13 +25,14 @@ object FormLogs: TFormLogs
     BackGroundImageTransparent = True
     BorderStyle = bsNone
     Color = clWhite
+    Colors.UnfocusedColor = clWindowText
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
     Images = FormMain.VirtualImageList
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseExplorerTheme]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange

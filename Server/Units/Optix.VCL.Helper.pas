@@ -22,7 +22,7 @@ unit Optix.VCL.Helper;
 
 interface
 
-uses VCL.Menus, VirtualTrees, VirtualTrees.Types;
+uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms;
 
 type
   TOptixVCLHelper = class
@@ -31,10 +31,7 @@ type
       class procedure UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean); static;
       class procedure HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
       class procedure ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
-      class procedure ShowForm(const AForm : TForm); static; // Use Winja code to do that propertly
-                                                             // Use ShowForm (custom) everytime we need to show a control form
-                                                             // Implement show form in Control Forms list
-                                                             // Also implement in Control Forms Row the extended information (process = number of enumerated process)
+      class procedure ShowForm(const AForm : TForm); static;
   end;
 
   TOptixVirtualTreesHelper = class
@@ -43,6 +40,8 @@ type
   end;
 
 implementation
+
+uses Winapi.Windows, Winapi.Messages;
 
 (* TOptixVirtualTreesHelper *)
 
@@ -84,6 +83,22 @@ end;
 class procedure TOptixVCLHelper.ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
 begin
   UpdatePopupMenuRootItemsVisibility(APopupMenu, True);
+end;
+
+{ TOptixVCLHelper.ShowForm }
+class procedure TOptixVCLHelper.ShowForm(const AForm : TForm);
+begin
+  if not Assigned(AForm) then
+    Exit();
+  ///
+
+  if IsIconic(AForm.Handle) then begin
+    if Application.MainForm.Handle = AForm.Handle then
+      SendMessage(AForm.Handle, WM_SYSCOMMAND, SC_RESTORE, 0)
+    else
+      ShowWindow(AForm.Handle, SW_RESTORE);
+  end else
+    AForm.Show();
 end;
 
 end.

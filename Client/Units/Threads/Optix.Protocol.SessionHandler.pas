@@ -64,7 +64,7 @@ implementation
 
 uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
      Optix.Func.Commands, Optix.Func.Enum.Process, Optix.Actions.Process,
-     Optix.Func.LogNotifier;
+     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem;
 
 { TOptixSessionHandlerThread.EstablishedConnection }
 procedure TOptixSessionHandlerThread.EstablishedConnection();
@@ -112,9 +112,11 @@ begin
 
         TProcessActions.TerminateProcess(TOptixKillProcess(AOptixPacket).ProcessId);
 
-        // Telling, everything is okay!
-        AddPacket(AOptixPacket);
-      end;
+        AddPacket(AOptixPacket); // Success notification
+      end
+      // -----------------------------------------------------------------------
+      else if AClassName = TOptixRefreshDrives.ClassName then
+        AddPacket(TDriveList.Create(AWindowGUID));
       // -----------------------------------------------------------------------
 
       // ... //

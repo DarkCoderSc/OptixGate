@@ -41,71 +41,114 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Commands;
+unit Optix.FileSystem.Helper;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
-     XSuperObject, Optix.Protocol.Packet;
+uses System.Classes;
 
 type
-  TOptixCommand = class(TOptixPacket);
+  TDriveType = (
+    dtUnknown,
+    dtNoRootDir,
+    dtRemovable,
+    dtFixed,
+    dtRemote,
+    dtCDROM,
+    dtRAMDisk
+  );
 
-  // Simple Commands
-  TOptixCommandTerminate = class(TOptixCommand);
-  TOptixRefreshProcess   = class(TOptixCommand);
-  TOptixRefreshDrives    = class(TOptixCommand);
-
-  // Parameterized Commands
-  TOptixKillProcess = class(TOptixCommand)
-  private
-    FProcessId : Cardinal;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  TFileSystemHelper = class
   public
-    {@C}
-    constructor Create(const AProcessId : Cardinal) overload;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@G}
-    property ProcessId : Cardinal read FProcessId;
+    class function GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean; static;
+    class function TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
   end;
+
+  function DriveTypeToString(const AValue : TDriveType) : String;
 
 implementation
 
-(* TOptixKillProcess *)
+uses Winapi.Windows, System.Sysutils;
 
-{ TOptixKillProcess.Create }
-constructor TOptixKillProcess.Create(const AProcessId : Cardinal);
+{ _.ElevatedStatusToString }
+function DriveTypeToString(const AValue : TDriveType) : String;
 begin
-  inherited Create();
+  result := 'Unknown';
   ///
 
-  FProcessId := AProcessId;
+  case AValue of
+    dtUnknown   : result := 'Unknown';
+    dtNoRootDir : result := 'No Root Dir';
+    dtRemovable : result := 'Removable';
+    dtFixed     : result := 'Fixed';
+    dtRemote    : result := 'Network';
+    dtCDROM     : result := 'CD-ROM';
+    dtRAMDisk   : result := 'RAM Disk';
+  end;
 end;
 
-{ TOptixKillProcess.Serialize }
-function TOptixKillProcess.Serialize() : ISuperObject;
+{ TFileSystemHelper.GetDriveInformation }
+class function TFileSystemHelper.GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
 begin
-  result := inherited;
-  ///
+  var AOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+  try
+    ADriveLetter := IncludeTrailingPathDelimiter(ExtractFileDrive(ADriveLetter));
+    ///
 
-  result.I['ProcessId'] := FProcessId;
+    var ADummy        : DWORD;
+    var ABufferName   : array[0..MAX_PATH-1] of WideChar;
+    var ABufferFormat : array[0..MAX_PATH-1] of WideChar;
+
+    FillChar(ABufferName, MAX_PATH, #0);
+    FillChar(ABufferFormat, MAX_PATH, #0);
+
+    result := GetVolumeInformation(
+                                    PWideChar(ADriveLetter),
+                                    ABufferName,
+                                    MAX_PATH,
+                                    nil,
+                                    ADummy,
+                                    ADummy,
+                                    ABufferFormat,
+                                    MAX_PATH
+    );
+
+    {
+      Conv to String
+    }
+    AName   := String(ABufferName);
+    AFormat := String(ABufferFormat);
+
+    {
+      Get Drive Type
+    }
+    case GetDriveType(PWideChar(ADriveLetter)) of
+      1 : ADriveType := dtNoRootDir; // DRIVE_NO_ROOT_DIR
+      2 : ADriveType := dtRemovable; // DRIVE_REMOVABLE
+      3 : ADriveType := dtFixed;     // DRIVE_FIXED
+      4 : ADriveType := dtRemote;    // DRIVE_REMOTE
+      5 : ADriveType := dtCDROM;     // DRIVE_CDROM
+      6 : ADriveType := dtRAMDisk;   // DRIVE_RAMDISK
+      else
+        ADriveType := dtUnknown;
+    end;
+  finally
+    SetErrorMode(AOldErrorMode);
+  end;
 end;
 
-{ TOptixKillProcess.DeSerialize }
-procedure TOptixKillProcess.DeSerialize(const ASerializedObject : ISuperObject);
+{ TFileSystemHelper.TryGetDriveInformation }
+class function TFileSystemHelper.TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
 begin
-  inherited;
+  AName      := '';
+  AFormat    := '';
+  ADriveType := dtUnknown;
   ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
-
-  FProcessId := ASerializedObject.I['ProcessId'];
+  try
+    result := GetDriveInformation(ADriveLetter, AName, AFormat, ADriveType);
+  except
+    result := False;
+  end;
 end;
 
 end.

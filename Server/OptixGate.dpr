@@ -45,12 +45,15 @@ program OptixGate;
 
 uses
   Vcl.Forms,
+  Vcl.Themes,
+  Vcl.Styles,
+  XSuperObject in '..\Shared\XSuperObject.pas',
   Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
   Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas' {* External Libraries *},
+  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas' {* External Libraries *},
-  Optix.Thread in '..\Shared\Optix.Thread.pas' {* Server Units *},
+  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
+  Optix.Thread in '..\Shared\Optix.Thread.pas',
   Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
@@ -60,27 +63,28 @@ uses
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
+  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
+  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
+  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
+  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
+  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
+  Optix.Classes in '..\Shared\Optix.Classes.pas',
   Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
+  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
-  Vcl.Themes,
-  Vcl.Styles,
   Optix.Constants in 'Units\Optix.Constants.pas',
   uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout},
   uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
   uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs},
   uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
   uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms};
 
 {$R *.res}
+{$R data.res}
 
 begin
   IsMultiThread := True;

@@ -41,71 +41,64 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Commands;
+unit Optix.Classes;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
-     XSuperObject, Optix.Protocol.Packet;
+uses System.Classes, Optix.Interfaces, XSuperObject;
 
 type
-  TOptixCommand = class(TOptixPacket);
-
-  // Simple Commands
-  TOptixCommandTerminate = class(TOptixCommand);
-  TOptixRefreshProcess   = class(TOptixCommand);
-  TOptixRefreshDrives    = class(TOptixCommand);
-
-  // Parameterized Commands
-  TOptixKillProcess = class(TOptixCommand)
-  private
-    FProcessId : Cardinal;
+  TEnumerableItem = class(TInterfacedPersistent, IOptixSerializable)
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
   public
-    {@C}
-    constructor Create(const AProcessId : Cardinal) overload;
+    constructor Create(const ASerializedObject : ISuperObject = nil); overload;
+    constructor Create(const ASource : TPersistent); overload;
 
     {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@G}
-    property ProcessId : Cardinal read FProcessId;
+    function Serialize() : ISuperObject; virtual;
   end;
 
 implementation
 
-(* TOptixKillProcess *)
+(* TEnumerableItem *)
 
-{ TOptixKillProcess.Create }
-constructor TOptixKillProcess.Create(const AProcessId : Cardinal);
+{ TEnumerableItem.DeSerialize }
+procedure TEnumerableItem.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  if not Assigned(ASerializedObject) then
+    Exit();
+  ///
+
+end;
+
+{ TEnumerableItem.Serialize }
+function TEnumerableItem.Serialize() : ISuperObject;
+begin
+  result := TSuperObject.Create();
+  ///
+
+  // TODO: One day, optimized Deserialization / Serializaion using RTTI. But must
+  // be carefully tested to ensure it works as expected for common data formats.
+end;
+
+{ TEnumerableItem.Create }
+constructor TEnumerableItem.Create(const ASerializedObject : ISuperObject = nil);
 begin
   inherited Create();
   ///
 
-  FProcessId := AProcessId;
+  if Assigned(ASerializedObject) then
+    DeSerialize(ASerializedObject);
 end;
 
-{ TOptixKillProcess.Serialize }
-function TOptixKillProcess.Serialize() : ISuperObject;
+{ TEnumerableItem.Create }
+constructor TEnumerableItem.Create(const ASource : TPersistent);
 begin
-  result := inherited;
-  ///
-
-  result.I['ProcessId'] := FProcessId;
+  if Assigned(ASource) then
+    Assign(ASource);
 end;
 
-{ TOptixKillProcess.DeSerialize }
-procedure TOptixKillProcess.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
-
-  FProcessId := ASerializedObject.I['ProcessId'];
-end;
 
 end.

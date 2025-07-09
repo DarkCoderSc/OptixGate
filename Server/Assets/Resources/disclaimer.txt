@@ -1,0 +1,11 @@
+This software is provided for educational purposes and general informational use only. While it may be applicable in real-world scenarios and can be used in legally compliant contexts, the software is provided "as is" without any warranties, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.
+
+The developer makes no representations or guarantees regarding the accuracy, reliability, suitability, or effectiveness of the software when used in any specific application or environment, including but not limited to professional, commercial, or legal contexts.
+
+By using this software, you acknowledge and agree that:
+
+- You are solely responsible for how the software is used and for ensuring its suitability for your specific needs.
+- You assume all risks associated with its use, including any direct, indirect, incidental, or consequential damages that may result.
+- The developer shall not be held liable for any loss, damage, or legal claims arising from your use or misuse of the software, whether in an educational, personal, or professional capacity.
+
+Use of this software constitutes acceptance of this disclaimer. If you do not agree to these terms, you should not use the software.

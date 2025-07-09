@@ -90,7 +90,8 @@ var
 
 implementation
 
-uses Optix.Helper, Optix.Protocol.Packet, Optix.Constants, uFormMain;
+uses Optix.Helper, Optix.Protocol.Packet, Optix.Constants, uFormMain,
+     Optix.VCL.Helper;
 
 {$R *.dfm}
 
@@ -135,8 +136,7 @@ begin
   end;
 
   ///
-  if self.Visible = False then
-    self.Show();
+  TOptixVCLHelper.ShowForm(self);
 end;
 
 procedure TFormLogs.VSTBeforeCellPaint(Sender: TBaseVirtualTree;

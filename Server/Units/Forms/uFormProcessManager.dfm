@@ -25,6 +25,7 @@ object FormProcessManager: TFormProcessManager
     BackGroundImageTransparent = True
     BorderStyle = bsNone
     Color = clWhite
+    Colors.UnfocusedColor = clWindowText
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
@@ -32,7 +33,7 @@ object FormProcessManager: TFormProcessManager
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseExplorerTheme]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange

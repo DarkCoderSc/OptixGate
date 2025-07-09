@@ -61,6 +61,14 @@ const
  IMAGE_FORM_CONTROL        = 11;
  IMAGE_FORM_CONTROL_ACTIVE = 12;
  IMAGE_FORM_CONTROL_DATA   = 13;
+ IMAGE_FORM_CONTROL_CLOSED = 14;
+ IMAGE_DRIVE               = 15;
+ IMAGE_DRIVE_USB           = 16;
+ IMAGE_DRIVE_HARDWARE      = 17;
+ IMAGE_DRIVE_NO_ROOT       = 18;
+ IMAGE_DRIVE_NETWORK       = 19;
+ IMAGE_DRIVE_UNKNOWN       = 20;
+ IMAGE_DRIVE_CD            = 21;
 
 var
  (* COLORS *)
@@ -68,6 +76,7 @@ var
  COLOR_LIST_PURPLE   : TColor;
  COLOR_LIST_LIMY     : TColor;
  COLOR_LIST_RED      : TColor;
+ COLOR_LIST_GRAY     : TColor;
 
  COLOR_USER_ELEVATED : TColor;
  COLOR_USER_SYSTEM   : TColor;
@@ -83,5 +92,7 @@ initialization
 
   COLOR_LIST_LIMY     := RGB(220, 254, 215);
   COLOR_LIST_RED      := RGB(254, 220, 225);
+
+  COLOR_LIST_GRAY     := RGB(250, 250, 250);
 
 end.

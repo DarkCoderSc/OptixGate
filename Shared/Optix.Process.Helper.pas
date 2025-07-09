@@ -41,7 +41,7 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.InformationGathering.Process;
+unit Optix.Process.Helper;
 
 interface
 
@@ -54,7 +54,7 @@ type
     esElevated
   );
 
-  TProcessInformationHelper = class
+  TProcessHelper = class
   public
     {@M}
     class function IsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus; static;
@@ -91,10 +91,10 @@ begin
   end;
 end;
 
-(* TProcessInformationHelper *)
+(* TProcessHelper *)
 
-{ TProcessInformationHelper.IsElevated }
-class function TProcessInformationHelper.IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
+{ TProcessHelper.IsElevated }
+class function TProcessHelper.IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
 var AToken        : THandle;
     ATokenInfo    : TTokenElevation;
     AReturnLength : DWORD;
@@ -121,8 +121,8 @@ begin
     result := esLimited;
 end;
 
-{ TProcessInformationHelper.TryGetIsElevated }
-class function TProcessInformationHelper.TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
+{ TProcessHelper.TryGetIsElevated }
+class function TProcessHelper.TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
 begin
   result := esUnknown;
   try
@@ -134,8 +134,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.IsElevatedByProcessId }
-class function TProcessInformationHelper.IsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
+{ TProcessHelper.IsElevatedByProcessId }
+class function TProcessHelper.IsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
 begin
   var hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessId);
   if hProcess = 0 then
@@ -147,8 +147,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.TryIsElevatedByProcessId }
-class function TProcessInformationHelper.TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
+{ TProcessHelper.TryIsElevatedByProcessId }
+class function TProcessHelper.TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
 begin
   try
     result := IsElevatedByProcessId(AProcessId);
@@ -157,8 +157,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.GetProcessUserInformation }
-class procedure TProcessInformationHelper.GetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String);
+{ TProcessHelper.GetProcessUserInformation }
+class procedure TProcessHelper.GetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String);
 begin
   AUserName    := '';
   ADomain      := '';
@@ -254,8 +254,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.TryGetProcessUserInformation }
-class function TProcessInformationHelper.TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean;
+{ TProcessHelper.TryGetProcessUserInformation }
+class function TProcessHelper.TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean;
 begin
   try
     GetProcessUserInformation(AProcessId, AUsername, ADomain);
@@ -267,8 +267,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.GetProcessImagePath }
-class function TProcessInformationHelper.GetProcessImagePath(const AProcessID : Cardinal) : String;
+{ TProcessHelper.GetProcessImagePath }
+class function TProcessHelper.GetProcessImagePath(const AProcessID : Cardinal) : String;
 begin
   result := '';
   ///
@@ -296,8 +296,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.TryGetProcessImagePath }
-class function TProcessInformationHelper.TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String;
+{ TProcessHelper.TryGetProcessImagePath }
+class function TProcessHelper.TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String;
 begin
   try
     result := GetProcessImagePath(AProcessId);
@@ -306,8 +306,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.IsWow64Process }
-class function TProcessInformationHelper.IsWow64Process(const AProcessId : Cardinal) : Boolean;
+{ TProcessHelper.IsWow64Process }
+class function TProcessHelper.IsWow64Process(const AProcessId : Cardinal) : Boolean;
 begin
   result := False;
   ///
@@ -328,8 +328,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.TryIsWow64Process }
-class function TProcessInformationHelper.TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult;
+{ TProcessHelper.TryIsWow64Process }
+class function TProcessHelper.TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult;
 begin
   try
     result := CastResult(IsWow64Process(AProcessId))
@@ -338,8 +338,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.GetProcessCommandLine }
-class function TProcessInformationHelper.GetProcessCommandLine(const AProcessId : Cardinal) : String;
+{ TProcessHelper.GetProcessCommandLine }
+class function TProcessHelper.GetProcessCommandLine(const AProcessId : Cardinal) : String;
 begin
   var hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, AProcessId);
   if hProcess = 0 then
@@ -390,8 +390,8 @@ begin
   end;
 end;
 
-{ TProcessInformationHelper.TryGetProcessCommandLine }
-class function TProcessInformationHelper.TryGetProcessCommandLine(const AProcessId : Cardinal) : String;
+{ TProcessHelper.TryGetProcessCommandLine }
+class function TProcessHelper.TryGetProcessCommandLine(const AProcessId : Cardinal) : String;
 begin
   try
     result := GetProcessCommandLine(AProcessId);

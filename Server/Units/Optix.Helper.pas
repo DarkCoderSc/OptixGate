@@ -38,9 +38,53 @@ function ElapsedDateTime(const AFirstDateTime, ASecondDateTime : TDateTime) : St
 
 function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;
 
+function ReadResourceString(const AResourceName : String) : String;
+function TryReadResourceString(const AResourceName : String) : String;
+function FormatFileSize(const ASize : Int64) : string;
+
 implementation
 
 uses Winapi.Windows;
+
+{ _.FormatFileSize }
+function FormatFileSize(const ASize : Int64) : string;
+const AByteDescription : array[0..9-1] of string = (
+  'Bytes', 'KiB', 'MB', 'GiB', 'TB',
+  'PB', 'EB', 'ZB', 'YB'
+);
+begin
+  var ACount := 0;
+
+  while ASize > Power(1024, ACount +1) do
+    Inc(ACount);
+
+  ///
+  result := Format('%s %s', [
+    FormatFloat('###0.00', ASize / Power(1024, ACount)),
+    AByteDescription[ACount]]
+  );
+end;
+
+{ _.ReadResourceString }
+function ReadResourceString(const AResourceName : String) : String;
+begin
+  var AResourceStream := TResourceStream.Create(hInstance, AResourceName, RT_RCDATA);
+  try
+    SetString(result, PAnsiChar(AResourceStream.Memory), AResourceStream.Size);
+  finally
+    FreeAndNil(AResourceStream);
+  end;
+end;
+
+{ _.TryReadResourceString }
+function TryReadResourceString(const AResourceName : String) : String;
+begin
+  try
+    result := ReadResourceString(AResourceName);
+  except
+    result := '';
+  end;
+end;
 
 { _.DefaultIfEmpty }
 function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;

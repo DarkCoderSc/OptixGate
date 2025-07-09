@@ -2,8 +2,8 @@ object FormFileManager: TFormFileManager
   Left = 0
   Top = 0
   Caption = 'File Manager'
-  ClientHeight = 441
-  ClientWidth = 624
+  ClientHeight = 370
+  ClientWidth = 477
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,5 +11,99 @@ object FormFileManager: TFormFileManager
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
+  OnShow = FormShow
   TextHeight = 15
+  object VST: TVirtualStringTree
+    Left = 0
+    Top = 0
+    Width = 477
+    Height = 347
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Align = alClient
+    BackGroundImageTransparent = True
+    BorderStyle = bsNone
+    Color = clWhite
+    Colors.UnfocusedColor = clWindowText
+    DefaultNodeHeight = 19
+    Header.AutoSizeIndex = -1
+    Header.DefaultHeight = 25
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Images = FormMain.VirtualImageList
+    PopupMenu = PopupMenu
+    StateImages = FormMain.VirtualImageList
+    TabOrder = 0
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnChange = VSTChange
+    OnFocusChanged = VSTFocusChanged
+    OnFreeNode = VSTFreeNode
+    OnGetText = VSTGetText
+    OnGetImageIndex = VSTGetImageIndex
+    OnGetNodeDataSize = VSTGetNodeDataSize
+    Touch.InteractiveGestures = [igPan, igPressAndTap]
+    Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitHeight = 370
+    Columns = <
+      item
+        Position = 0
+        Text = 'Name'
+        Width = 120
+      end
+      item
+        Position = 1
+        Text = 'Type'
+        Width = 100
+      end
+      item
+        Position = 2
+        Text = 'Size'
+        Width = 100
+      end
+      item
+        Position = 3
+        Text = 'DACL (SSDL)'
+        Width = 200
+      end
+      item
+        Position = 4
+        Text = 'Creation Date'
+        Width = 120
+      end
+      item
+        Position = 5
+        Text = 'Last Modified'
+        Width = 120
+      end
+      item
+        Position = 6
+        Text = 'Last Access'
+        Width = 120
+      end>
+  end
+  object EditPath: TEdit
+    Left = 0
+    Top = 347
+    Width = 477
+    Height = 23
+    Align = alBottom
+    ReadOnly = True
+    TabOrder = 1
+    ExplicitLeft = 192
+    ExplicitTop = 88
+    ExplicitWidth = 121
+  end
+  object PopupMenu: TPopupMenu
+    Left = 240
+    Top = 128
+    object RefreshDrives1: TMenuItem
+      Caption = 'Refresh Drives'
+      OnClick = RefreshDrives1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+  end
 end

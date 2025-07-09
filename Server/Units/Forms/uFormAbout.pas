@@ -56,11 +56,14 @@ type
     LabelName: TLabel;
     LabelDarkCoderSc: TLabel;
     ButtonClose: TButton;
-    LabelDisclaimer: TLabel;
+    Disclaimer: TRichEdit;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
+    FFirstShow : Boolean;
+
     {@M}
     procedure DoResize();
   public
@@ -72,7 +75,7 @@ var
 
 implementation
 
-uses uFormMain;
+uses uFormMain, Optix.Helper;
 
 {$R *.dfm}
 
@@ -92,17 +95,19 @@ begin
   LabelDarkCoderSc.Top  := LabelName.Top + LabelName.Height + self.ScaleValue(4);
   LabelDarkCoderSc.Left := (ClientWidth div 2) - (labelDarkCoderSc.Width div 2);
 
-  LabelDisclaimer.Top   := labelDarkCoderSc.Top + labelDarkCoderSc.Height + self.ScaleValue(8);
-  LabelDisclaimer.Left  := self.ScaleValue(8);
-  LabelDisclaimer.Width := ClientWidth - (LabelDisclaimer.Left * 2);
+  Disclaimer.Top   := labelDarkCoderSc.Top + labelDarkCoderSc.Height + self.ScaleValue(8);
+  Disclaimer.Left  := self.ScaleValue(8);
+  Disclaimer.Width := ClientWidth - (Disclaimer.Left * 2);
 
-  self.LabelDisclaimer.AutoSize := False;
-  self.LabelDisclaimer.AutoSize := True;
-
-  ButtonClose.Top  := LabelDisclaimer.Top + LabelDisclaimer.Height + self.ScaleValue(8);
+  ButtonClose.Top  := Disclaimer.Top + Disclaimer.Height + self.ScaleValue(8);
   ButtonClose.Left := (ClientWidth div 2) - (ButtonClose.Width div 2);
 
   ClientHeight := ButtonClose.Top + ButtonClose.Height + self.ScaleValue(8);
+end;
+
+procedure TFormAbout.FormCreate(Sender: TObject);
+begin
+  FFirstShow := True;
 end;
 
 procedure TFormAbout.FormResize(Sender: TObject);
@@ -112,6 +117,13 @@ end;
 
 procedure TFormAbout.FormShow(Sender: TObject);
 begin
+  if FFirstShow then begin
+    Disclaimer.Text := TryReadResourceString('DISCLAIMER');
+
+    ///
+    FFirstShow := False;
+  end;
+
   DoResize();
 end;
 

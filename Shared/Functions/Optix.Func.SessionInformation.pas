@@ -47,7 +47,7 @@ interface
 
 uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
      XSuperObject, Optix.Func.Response, Optix.InformationGathering.Helper,
-     Optix.InformationGathering.Process, Optix.WinApiEx;
+     Optix.Process.Helper, Optix.WinApiEx;
 
 type
   TOptixSessionInformation = class(TOptixResponse)
@@ -109,7 +109,7 @@ begin
   FUserName            := TOptixInformationGathering.TryGetUserName();
   FUserSid             := TOptixInformationGathering.TryGetCurrentUserSid();
   FComputer            := TOptixInformationGathering.TryGetComputerName();
-  FElevatedStatus      := TProcessInformationHelper.IsElevated();
+  FElevatedStatus      := TProcessHelper.IsElevated();
   FLangroup            := TOptixInformationGathering.GetLangroup;
   FDomainName          := TOptixInformationGathering.GetDomainName;
   FIsInAdminGroup      := TOptixInformationGathering.TryIsCurrentUserInAdminGroup();

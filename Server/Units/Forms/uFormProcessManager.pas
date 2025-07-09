@@ -115,6 +115,9 @@ type
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
     procedure RemoveProcess(const AProcessId : Cardinal);
     procedure RefreshCaption(); override;
+  protected
+    {@M}
+    function GetContextDescription() : String; override;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
@@ -129,10 +132,22 @@ var
 implementation
 
 uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Types,
-     Optix.InformationGathering.Process, Optix.Constants,
+     Optix.Process.Helper, Optix.Constants,
      VirtualTrees.Types, Optix.VCL.Helper, Optix.Protocol.Packet;
 
 {$R *.dfm}
+
+function TFormProcessManager.GetContextDescription() : String;
+begin
+  result := inherited;
+  ///
+
+  var ACount := VST.RootNodeCount;
+  if ACount > 0 then
+    result := Format('%d process in list.', [ACount])
+  else
+    result := 'Process list empty.';
+end;
 
 procedure TFormProcessManager.RefreshCaption();
 begin

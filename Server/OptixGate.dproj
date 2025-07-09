@@ -127,18 +127,13 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\Shared\XSuperObject.pas"/>
         <DCCReference Include="..\Shared\Optix.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas">
-            <Form>* External Libraries *</Form>
-        </DCCReference>
+        <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Exceptions.pas"/>
-        <DCCReference Include="..\Shared\Optix.Interfaces.pas">
-            <Form>* External Libraries *</Form>
-        </DCCReference>
-        <DCCReference Include="..\Shared\Optix.Thread.pas">
-            <Form>* Server Units *</Form>
-        </DCCReference>
+        <DCCReference Include="..\Shared\Optix.Interfaces.pas"/>
+        <DCCReference Include="..\Shared\Optix.Thread.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas">
             <Form>,
   Optix.Func.SessionInformation in &apos;..\Shared\Functions\Optix.Func.SessionInformation.pas&apos;,
@@ -165,15 +160,18 @@
         <DCCReference Include="..\Shared\XSuperJSON.pas"/>
         <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
-        <DCCReference Include="..\Shared\Optix.InformationGathering.Process.pas"/>
+        <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
+        <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
+        <DCCReference Include="..\Shared\Optix.Classes.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Network.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
-        <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
         <DCCReference Include="Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
-        <DCCReference Include="..\Shared\XSuperObject.pas"/>
+        <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
         <DCCReference Include="Units\Forms\uFormMain.pas">
             <Form>FormMain</Form>
         </DCCReference>
@@ -184,7 +182,6 @@
         <DCCReference Include="Units\Forms\uFormProcessManager.pas">
             <Form>FormProcessManager</Form>
         </DCCReference>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
         <DCCReference Include="Units\Forms\uFormLogs.pas">
             <Form>FormLogs</Form>
         </DCCReference>

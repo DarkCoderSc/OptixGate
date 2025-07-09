@@ -44,6 +44,7 @@
 {
   TODO:
     - Column Sorting
+    - Protocol Version Checking
 }
 
 unit uFormMain;
@@ -164,7 +165,7 @@ var
 implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants,
-     Optix.InformationGathering.Process, uFormAbout, uFormProcessManager,
+     Optix.Process.Helper, uFormAbout, uFormProcessManager,
      Optix.Thread, uFormLogs, Optix.Func.LogNotifier, uFormFileManager,
      uFormControlForms;
 
@@ -340,7 +341,7 @@ begin
   end;
 
   if Assigned(AForm) then
-    AForm.Show();
+    TOptixVCLHelper.ShowForm(AForm);
 end;
 
 procedure TFormMain.Logs1Click(Sender: TObject);
@@ -668,7 +669,7 @@ begin
   pData^.Forms.Add(AForm);
 
   ///
-  AForm.Show();
+  TOptixVCLHelper.ShowForm(AForm);
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);

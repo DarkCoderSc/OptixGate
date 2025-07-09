@@ -2,8 +2,8 @@ object FormControlForms: TFormControlForms
   Left = 0
   Top = 0
   Caption = 'Control Forms'
-  ClientHeight = 272
-  ClientWidth = 383
+  ClientHeight = 271
+  ClientWidth = 455
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,8 +17,8 @@ object FormControlForms: TFormControlForms
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 383
-    Height = 272
+    Width = 455
+    Height = 271
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -27,6 +27,7 @@ object FormControlForms: TFormControlForms
     BackGroundImageTransparent = True
     BorderStyle = bsNone
     Color = clWhite
+    Colors.UnfocusedColor = clWindowText
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
@@ -35,7 +36,7 @@ object FormControlForms: TFormControlForms
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseExplorerTheme]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
@@ -46,8 +47,6 @@ object FormControlForms: TFormControlForms
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 421
-    ExplicitHeight = 315
     Columns = <
       item
         Position = 0
@@ -92,6 +91,13 @@ object FormControlForms: TFormControlForms
     object Refresh1: TMenuItem
       Caption = 'Refresh'
       OnClick = Refresh1Click
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Show1: TMenuItem
+      Caption = 'Show'
+      OnClick = Show1Click
     end
     object N1: TMenuItem
       Caption = '-'

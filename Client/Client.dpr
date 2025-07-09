@@ -61,7 +61,7 @@ uses
   Optix.Thread in '..\Shared\Optix.Thread.pas',
   Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
+  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
@@ -72,7 +72,10 @@ uses
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
   Optix.Types in '..\Shared\Optix.Types.pas',
   Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas';
+  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
+  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
+  Optix.Classes in '..\Shared\Optix.Classes.pas',
+  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas';
 
 begin
   IsMultiThread := True;

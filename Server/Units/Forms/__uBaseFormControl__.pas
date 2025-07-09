@@ -97,6 +97,8 @@ type
 
     {@M}
     procedure SendCommand(const ACommand : TOptixCommand);
+    function GetContextDescription() : String; virtual;
+    procedure RefreshCaption(); virtual;
 
     procedure CreateParams(var Params: TCreateParams); override;
 
@@ -105,8 +107,6 @@ type
     procedure CMActivate(var AMessage: TCMActivate); message CM_ACTIVATE;
     procedure CMDeactivate(var AMessage: TCMDeactivate); message CM_DEACTIVATE;
     procedure WMWindowPosChanging(var AMessage: TWMWindowPosChanging); message WM_WINDOWPOSCHANGING;
-
-    procedure RefreshCaption(); virtual;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual;
@@ -117,9 +117,10 @@ type
     destructor Destroy(); override;
 
     {@G}
-    property GUID            : TGUID                   read GetGUID;
-    property SpecialForm     : Boolean                 read FSpecialForm;
-    property FormInformation : TFormControlInformation read FFormInformation;
+    property GUID               : TGUID                   read GetGUID;
+    property SpecialForm        : Boolean                 read FSpecialForm;
+    property FormInformation    : TFormControlInformation read FFormInformation;
+    property ContextInformation : String                  read GetContextDescription;
   end;
 
   function FormControlStateToString(const AValue : TFormControlState) : String;
@@ -194,6 +195,12 @@ begin
 end;
 
 (* TBaseFormControl *)
+
+function TBaseFormControl.GetContextDescription() : String;
+begin
+  result := '';
+  ///
+end;
 
 { TBaseFormControl.CreateParams }
 procedure TBaseFormControl.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
