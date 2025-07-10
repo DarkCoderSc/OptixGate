@@ -44,6 +44,7 @@
 {
   TODO:
     - Column Sorting
+    - Lock GUI during refresh (Folders), Unlock if : Refresh Success / Refresh Error
 }
 
 unit uFormFileManager;
@@ -92,7 +93,12 @@ type
     procedure VSTDblClick(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1,
       Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+      TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
+    FFirstShow : Boolean;
+
     {@M}
     procedure RefreshDrives(const AList : TDriveList);
     procedure RefreshFiles(const AList : TFileList);
@@ -125,6 +131,8 @@ begin
   inherited;
   ///
 
+  FFirstShow := True;
+
   SetDisplayMode(dmDrives);
 end;
 
@@ -137,6 +145,7 @@ begin
   EditPath.Clear();
 
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'DACL (SSDL)', AMode = dmFiles);
+  TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Access Rights', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Creation Date', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Last Modified', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Last Access', AMode = dmFiles);
@@ -144,17 +153,46 @@ end;
 
 procedure TFormFileManager.FormShow(Sender: TObject);
 begin
-  RefreshDrives1Click(RefreshDrives1);
+  if FFirstShow then begin
+    RefreshDrives1Click(RefreshDrives1);
+
+    FFirstShow := False;
+  end;
 end;
 
 function TFormFileManager.GetContextDescription() : String;
 begin
+  var ANodeCount := VST.RootNodeCount;
   ///
+
+  if not EditPath.Visible and (ANodeCount > 0) then
+    result := Format('%d drives enumerated.', [ANodeCount])
+  else if ANodeCount > 0 then
+    result := Format('%s', [EditPath.Text])
 end;
 
 procedure TFormFileManager.RefreshDrives1Click(Sender: TObject);
 begin
   SendCommand(TOptixRefreshDrives.Create());
+end;
+
+procedure TFormFileManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+  TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+  var AColor := clNone;
+
+  if Assigned(pData^.FileInformation) then begin
+    if faWrite in pData^.FileInformation.Access then
+      AColor := COLOR_LIST_BLUE;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
+  end;
 end;
 
 procedure TFormFileManager.VSTChange(Sender: TBaseVirtualTree;
@@ -342,14 +380,22 @@ begin
 
       1 : begin
         if pData^.FileInformation.IsDirectory then
-          CellText := 'Directory';
+          CellText := 'Directory'
+        else
+          CellText := pData^.FileInformation.TypeDescription;
       end;
 
-      2 : ;
+      2 : CellText := FormatFileSize(pData^.FileInformation.Size);
       3 : CellText := FileAccessAttributesToString(pData^.FileInformation.Access);
       4 : CellText := pData^.FileInformation.ACL_SSDL;
-      5 : ;
-      6 : ;
+    end;
+
+    if pData^.FileInformation.DateAreValid then begin
+      case column of
+        5 : CellText := DateTimeToStr(pData^.FileInformation.CreatedDate);
+        6 : CellText := DateTimeToStr(pData^.FileInformation.LastModifiedDate);
+        7 : CellText := DateTimeToStr(pData^.FileInformation.LastAccessDate);
+      End;
     end;
   end;
   // ---------------------------------------------------------------------------

@@ -97,6 +97,7 @@ type
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: TImageIndex);
     procedure Show1Click(Sender: TObject);
+    procedure VSTDblClick(Sender: TObject);
   private
     FCycle      : UInt64;
     FClientData : Pointer;
@@ -358,6 +359,11 @@ procedure TFormControlForms.VSTChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormControlForms.VSTDblClick(Sender: TObject);
+begin
+  Show1Click(Show1);
 end;
 
 procedure TFormControlForms.VSTFocusChanged(Sender: TBaseVirtualTree;

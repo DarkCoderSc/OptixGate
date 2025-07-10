@@ -75,6 +75,11 @@ type
     class function GetCurrentUserFileAccess(const AFileName : String) : TFileAccessAttributes; overload; static;
     class procedure TryGetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean); overload; static;
     class function TryGetCurrentUserFileAccess(const AFileName : String) : TFileAccessAttributes; overload; static;
+    class function GetFileSize(const AFileName : String) : Int64; static;
+    class function TryGetFileSize(const AFileName : String) : Int64; static;
+    class function GetFileTypeDescription(const AFileName: String): String; static;
+    class procedure GetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime); static;
+    class function TryGetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean; static;
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
@@ -82,8 +87,8 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Winapi.AccCtrl, Winapi.AclAPI,
-     Optix.Exceptions, Optix.WinApiEx;
+uses System.SysUtils, Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows,
+     Optix.Exceptions, Optix.WinApiEx, Winapi.ShellAPI, Optix.System.Helper;
 
 (* Local *)
 
@@ -195,10 +200,14 @@ begin
   var ptrSecurityDescriptor : PSecurityDescriptor := nil;
   var pFileACL_SSDL : LPWSTR := nil;
   try
+    var ASecurityInformation := OWNER_SECURITY_INFORMATION or 
+                                GROUP_SECURITY_INFORMATION or 
+                                DACL_SECURITY_INFORMATION;
+    
     var AResult := GetNamedSecurityInfoW(
       PWideChar(AFileName),
       SE_FILE_OBJECT,
-      DACL_SECURITY_INFORMATION,
+      ASecurityInformation,
       nil,
       nil,
       nil,
@@ -211,7 +220,7 @@ begin
     if not ConvertSecurityDescriptorToStringSecurityDescriptorW(
       ptrSecurityDescriptor,
       SDDL_REVISION_1,
-      DACL_SECURITY_INFORMATION,
+      ASecurityInformation,
       pFileACL_SSDL,
       nil
     ) then
@@ -238,5 +247,215 @@ begin
   end;
 end;
 
+{ TFileSystemHelper.GetCurrentUserFileAccess }
+class procedure TFileSystemHelper.GetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean);
+var AMapping              : TGenericMapping;
+    ptrSecurityDescriptor : PSecurityDescriptor;
+    hToken                : THandle;
+
+  function AccessCheck(ADesiredAccess : DWORD) : Boolean;
+  begin
+    MapGenericMask(ADesiredAccess, AMapping);
+
+    var APrivilegeSet : TPrivilegeSet;
+    var APrivilegeSetSize := DWORD(SizeOf(TPrivilegeSet));
+
+    var AGrantedAccess := DWORD(0);
+    var AStatus : BOOL;
+
+    if not Winapi.Windows.AccessCheck(
+      ptrSecurityDescriptor,
+      hToken,
+      ADesiredAccess,
+      AMapping,
+      APrivilegeSet,
+      APrivilegeSetSize,
+      AGrantedAccess,
+      AStatus
+    ) then 
+      result := False
+    else
+      result := AStatus;
+  end;
+
+begin
+  var AImpersonated := False;
+  
+  ptrSecurityDescriptor := nil;  
+  hToken := 0;
+  ///
+
+  AMapping.GenericRead    := FILE_GENERIC_READ;
+  AMapping.GenericWrite   := FILE_GENERIC_WRITE;
+  AMapping.GenericExecute := FILE_GENERIC_EXECUTE;
+  AMapping.GenericAll     := FILE_ALL_ACCESS;
+  try
+    AImpersonated := ImpersonateSelf(SecurityImpersonation);
+    
+    if not OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, False, hToken) then
+      raise EWindowsException.Create('OpenProcessToken');
+    ///
+
+    var AResult := GetNamedSecurityInfoW(
+      PWideChar(AFileName),
+      SE_FILE_OBJECT,
+      (
+        OWNER_SECURITY_INFORMATION or 
+        GROUP_SECURITY_INFORMATION or 
+        DACL_SECURITY_INFORMATION
+      ),
+      nil,
+      nil,
+      nil,
+      nil,
+      @ptrSecurityDescriptor
+    );
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('GetNamedSecurityInfoW');
+
+    ///
+    if AccessCheck(FILE_ALL_ACCESS) then begin
+      ARead    := True;
+      AWrite   := True;
+      AExecute := True;
+    end else begin
+      ARead    := AccessCheck(FILE_GENERIC_READ);
+      AWrite   := AccessCheck(FILE_GENERIC_WRITE);
+      AExecute := AccessCheck(FILE_GENERIC_EXECUTE);
+    end;
+  finally
+    if Assigned(ptrSecurityDescriptor) then
+      LocalFree(ptrSecurityDescriptor);
+
+    if hToken <> 0 then
+      CloseHandle(hToken);
+
+    if AImpersonated then
+      RevertToSelf();
+  end;
+end;
+
+{ TFileSystemHelper.GetCurrentUserFileAccess }
+class function TFileSystemHelper.GetCurrentUserFileAccess(const AFileName : String) : TFileAccessAttributes;
+begin
+  var ARead, AWrite, AExecute : Boolean;
+
+  result := [];
+
+  GetCurrentUserFileAccess(AFileName, ARead, AWrite, AExecute);
+
+  if ARead then
+    Include(result, faRead);
+
+  if AWrite then
+    Include(result, faWrite);
+
+  if AExecute then
+    Include(result, faExecute);
+end;
+
+{ TFileSystemHelper.TryGetCurrentUserFileAccess }
+class procedure TFileSystemHelper.TryGetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean);
+begin
+  try
+    GetCurrentUserFileAccess(AFileName, ARead, AWrite, AExecute);
+  except
+    ARead    := False;
+    AWrite   := False;
+    AExecute := False;
+  end;
+end;
+
+{ TFileSystemHelper.TryGetCurrentUserFileAccess }
+class function TFileSystemHelper.TryGetCurrentUserFileAccess(const AFileName : String) : TFileAccessAttributes;
+begin
+  try
+    result := GetCurrentUserFileAccess(AFileName);
+  except
+    result := [];
+  end;
+end;
+
+{ TFileSystemHelper.GetFileSize }
+class function TFileSystemHelper.GetFileSize(const AFileName : String) : Int64;
+begin
+  var AFileInfo : TWin32FileAttributeData;
+
+  if NOT GetFileAttributesEx(PWideChar(AFileName), GetFileExInfoStandard, @AFileInfo) then
+    raise EWindowsException.Create('GetFileAttributesEx');
+
+  ///
+  result := Int64(AFileInfo.nFileSizeLow) or Int64(AFileInfo.nFileSizeHigh shl 32);
+end;
+
+{ TFileSystemHelper.GetFileSize }
+class function TFileSystemHelper.TryGetFileSize(const AFileName : String) : Int64; 
+begin
+  try
+    result := GetFileSize(AFileName);
+  except
+    result := 0;
+  end;
+end;
+
+{ TFileSystemHelper.GetFileTypeDescription }
+class function TFileSystemHelper.GetFileTypeDescription(const AFileName: String): String;
+begin
+  var AShFileInfo: TSHFileInfoW;
+  
+  ZeroMemory(@AShFileInfo, SizeOf(TSHFileInfoW));
+  
+  if SHGetFileInfoW(
+    PWideChar(AFileName),
+    0,
+    AShFileInfo,
+    SizeOf(TSHFileInfoW),
+    SHGFI_TYPENAME or SHGFI_USEFILEATTRIBUTES
+  ) <> 0 then
+    result := AShFileInfo.szTypeName
+  else
+    result := '';
+end;
+
+{ TFileSystem.Helper.GetFileTime }
+class procedure TFileSystemHelper.GetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime);
+begin
+  var hFile := CreateFileW(
+    PWideChar(AFileName),
+    GENERIC_READ,
+    FILE_SHARE_READ or FILE_SHARE_WRITE or FILE_SHARE_DELETE,
+    nil,
+    OPEN_EXISTING,
+    FILE_FLAG_BACKUP_SEMANTICS,
+    0
+  );
+  if hFile = INVALID_HANDLE_VALUE then
+    raise EWindowsException.Create('GetFileTime');
+  try
+    var AFtCreate, AFtLastAccess, AFtLastModified : TFileTime;
+    
+    if not Winapi.Windows.GetFileTime(hFile, @AFtCreate, @AFtLastAccess, @AFtLastModified) then
+      raise EWindowsException.Create('GetFileTime');
+
+    ACreate       := TSystemHelper.TryFileTimeToDateTime(AFtCreate);
+    ALastModified := TSystemHelper.TryFileTimeToDateTime(AFtLastModified);
+    ALastAccess   := TSystemHelper.TryFileTimeToDateTime(AFtLastAccess);
+  finally
+    CloseHandle(hFile);
+  end;
+end;
+
+{ TFileSystem.Helper.TryGetFileTime }
+class function TFileSystemHelper.TryGetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean;
+begin
+  try
+    GetFileTime(AFileName, ACreate, ALastModified, ALastAccess);
+
+    ///
+    result := True;
+  except
+    result := False;
+  end;
+end;
 
 end.

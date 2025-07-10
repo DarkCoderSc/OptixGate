@@ -107,10 +107,16 @@ type
   // Files ---------------------------------------------------------------------
   TFileInformation = class(TEnumerableItem)
   protected
-    FName        : String;
-    FIsDirectory : Boolean;
-    FACL_SSDL    : String;
-    FAccess      : TFileAccessAttributes;
+    FName             : String;
+    FIsDirectory      : Boolean;
+    FACL_SSDL         : String;
+    FAccess           : TFileAccessAttributes;
+    FTypeDescription  : String;
+    FSize             : Int64;
+    FDateAreValid     : Boolean;
+    FCreatedDate      : TDateTime;
+    FLastModifiedDate : TDateTime;
+    FLastAccessDate   : TDateTime;
 
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
@@ -123,10 +129,16 @@ type
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Name        : String                read FName;
-    property IsDirectory : Boolean               read FIsDirectory;
-    property ACL_SSDL    : String                read FACL_SSDL;
-    property Access      : TFileAccessAttributes read FAccess;
+    property Name             : String                read FName;
+    property IsDirectory      : Boolean               read FIsDirectory;
+    property ACL_SSDL         : String                read FACL_SSDL;
+    property Access           : TFileAccessAttributes read FAccess;
+    property TypeDescription  : String                read FTypeDescription;
+    property Size             : Int64                 read FSize;
+    property DateAreValid     : Boolean               read FDateAreValid;
+    property CreatedDate      : TDateTime             read FCreatedDate;
+    property LastModifiedDate : TDateTime             read FLastModifiedDate;
+    property LastAccessDate   : TDateTime             read FLastAccessDate;
   end;
 
   TFileList = class(TOptixPacket)
@@ -351,6 +363,13 @@ begin
   FIsDirectory := ASerializedObject.B['IsDirectory'];
   FACL_SSDL    := ASerializedObject.S['ACL_SSDL'];
 
+  FTypeDescription  := ASerializedObject.S['TypeDescription'];
+  FSize             := ASerializedObject.I['Size'];
+  FDateAreValid     := ASerializedObject.B['DateAreValid'];
+  FCreatedDate      := ASerializedObject.D['CreatedDate'];
+  FLastModifiedDate := ASerializedObject.D['LastModifiedDate'];
+  FLastAccessDate   := ASerializedObject.D['LastAccessDate'];
+
   // Access (TODO: SetToString?)
   FAccess := [];
   if ASerializedObject.B['AccessRead'] then
@@ -373,6 +392,13 @@ begin
   result.B['IsDirectory'] := FIsDirectory;
   result.S['ACL_SSDL']    := FACL_SSDL;
 
+  result.S['TypeDescription']  := FTypeDescription;
+  result.I['Size']             := FSize;
+  result.B['DateAreValid']     := FDateAreValid;
+  result.D['CreatedDate']      := FCreatedDate;
+  result.D['LastModifiedDate'] := FLastModifiedDate;
+  result.D['LastAccessDate']   := FLastAccessDate;
+
   // Access (TODO: StringToSet?)
   result.B['AccessRead']    := faRead in FAccess;
   result.B['AccessWrite']   := faWrite in FAccess;
@@ -383,10 +409,16 @@ end;
 procedure TFileInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TFileInformation then begin
-    FName        := TFileInformation(ASource).FName;
-    FIsDirectory := TFileInformation(ASource).FIsDirectory;
-    FACL_SSDL    := TFileInformation(ASource).FACL_SSDL;
-    FAccess      := TFileInformation(ASource).FAccess;
+    FName             := TFileInformation(ASource).FName;
+    FIsDirectory      := TFileInformation(ASource).FIsDirectory;
+    FACL_SSDL         := TFileInformation(ASource).FACL_SSDL;
+    FAccess           := TFileInformation(ASource).FAccess;
+    FTypeDescription  := TFileInformation(ASource).FTypeDescription;
+    FSize             := TFileInformation(ASource).FSize;
+    FDateAreValid     := TFileInformation(ASource).FDateAreValid;
+    FCreatedDate      := TFileInformation(ASource).FCreatedDate;
+    FLastModifiedDate := TFileInformation(ASource).FLastModifiedDate;
+    FLastAccessDate   := TFileInformation(ASource).FLastAccessDate;
   end else
     inherited;
 end;
@@ -397,10 +429,19 @@ begin
   inherited Create();
   ///
 
-  FName        := ExtractFileName(AFilePath);
-  FIsDirectory := AIsDirectory;
-  FACL_SSDL    := TFileSystemHelper.TryGetFileACLString(AFilePath);
-  FAccess      := TFileSystemHelper.TryGetCurrentUserFileAccess(AFilePath);
+  FName            := ExtractFileName(AFilePath);
+  FIsDirectory     := AIsDirectory;
+  FACL_SSDL        := TFileSystemHelper.TryGetFileACLString(AFilePath);
+  FAccess          := TFileSystemHelper.TryGetCurrentUserFileAccess(AFilePath);
+  FDateAreValid    := TFileSystemHelper.TryGetFileTime(AFilePath, FCreatedDate, FLastModifiedDate, FLastAccessDate);
+
+  if not FIsDirectory then begin
+    FTypeDescription := TFileSystemHelper.GetFileTypeDescription(AFilePath);
+    FSize            := TFileSystemHelper.TryGetFileSize(AFilePath);
+  end else begin
+    FTypeDescription := '';
+    FSize            := 0;
+  end;
 end;
 
 (* TFileList *)

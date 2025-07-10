@@ -37,6 +37,7 @@ object FormFileManager: TFormFileManager
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
     OnDblClick = VSTDblClick
@@ -76,17 +77,17 @@ object FormFileManager: TFormFileManager
       item
         Position = 5
         Text = 'Creation Date'
-        Width = 120
+        Width = 150
       end
       item
         Position = 6
         Text = 'Last Modified'
-        Width = 120
+        Width = 150
       end
       item
         Position = 7
         Text = 'Last Access'
-        Width = 120
+        Width = 150
       end>
   end
   object EditPath: TEdit
