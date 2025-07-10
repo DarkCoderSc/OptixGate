@@ -37,11 +37,13 @@ type
   TOptixVirtualTreesHelper = class
     public
       class function GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64; static;
+      class function GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer; static;
+      class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean); static;
   end;
 
 implementation
 
-uses Winapi.Windows, Winapi.Messages;
+uses Winapi.Windows, Winapi.Messages, System.SysUtils;
 
 (* TOptixVirtualTreesHelper *)
 
@@ -58,6 +60,41 @@ begin
     if vsVisible in pNode.States then
       Inc(result);
   end;
+end;
+
+{ TOptixVirtualTreesHelper.GetColumnIndexByName }
+class function TOptixVirtualTreesHelper.GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer;
+begin
+  result := -1;
+  ///
+
+  if not Assigned(AVST) then
+    Exit();
+
+  for var AIndex := 0 to AVST.Header.Columns.Count -1 do begin
+    if String.Compare(AName, AVST.Header.Columns.Items[AIndex].Text, True) = 0 then begin
+      result := AIndex;
+
+      ///
+      break;
+    end;
+  end;
+end;
+
+{ TOptixVirtualTreesHelper.UpdateColumnVisibility }
+class procedure TOptixVirtualTreesHelper.UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean);
+begin
+  var AColumnIndex := GetColumnIndexByName(AVST, AName);
+  if AColumnIndex = -1 then
+    Exit();
+  ///
+
+  var AColumn := AVST.Header.Columns.Items[AColumnIndex];
+
+  if AVisible then
+    AColumn.Options := AColumn.Options + [coVisible]
+  else
+    AColumn.Options := AColumn.Options - [coVisible];
 end;
 
 (* TOptixVCLHelper *)

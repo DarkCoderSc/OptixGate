@@ -30,14 +30,16 @@ object FormFileManager: TFormFileManager
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
-    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-    Images = FormMain.VirtualImageList
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Images = FormMain.ImageSystem
     PopupMenu = PopupMenu
     StateImages = FormMain.VirtualImageList
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnChange = VSTChange
+    OnCompareNodes = VSTCompareNodes
+    OnDblClick = VSTDblClick
     OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
@@ -45,12 +47,11 @@ object FormFileManager: TFormFileManager
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitHeight = 370
     Columns = <
       item
         Position = 0
         Text = 'Name'
-        Width = 120
+        Width = 150
       end
       item
         Position = 1
@@ -64,21 +65,26 @@ object FormFileManager: TFormFileManager
       end
       item
         Position = 3
+        Text = 'Access Rights'
+        Width = 100
+      end
+      item
+        Position = 4
         Text = 'DACL (SSDL)'
         Width = 200
       end
       item
-        Position = 4
+        Position = 5
         Text = 'Creation Date'
         Width = 120
       end
       item
-        Position = 5
+        Position = 6
         Text = 'Last Modified'
         Width = 120
       end
       item
-        Position = 6
+        Position = 7
         Text = 'Last Access'
         Width = 120
       end>
@@ -91,9 +97,8 @@ object FormFileManager: TFormFileManager
     Align = alBottom
     ReadOnly = True
     TabOrder = 1
-    ExplicitLeft = 192
-    ExplicitTop = 88
-    ExplicitWidth = 121
+    ExplicitTop = 315
+    ExplicitWidth = 467
   end
   object PopupMenu: TPopupMenu
     Left = 240

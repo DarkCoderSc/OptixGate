@@ -22,11 +22,8 @@ unit Optix.Helper;
 
 interface
 
-uses System.Classes,
-     System.SysUtils,
-     System.DateUtils,
-     System.Math,
-     System.TimeSpan;
+uses System.Classes, System.SysUtils, System.DateUtils, System.Math,
+     System.TimeSpan, Winapi.ShellAPI, VCL.Controls;
 
 // Format Utilities
 function FormatInt(const AInteger : Integer) : String;
@@ -42,9 +39,85 @@ function ReadResourceString(const AResourceName : String) : String;
 function TryReadResourceString(const AResourceName : String) : String;
 function FormatFileSize(const ASize : Int64) : string;
 
+procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo; const ALargeIcon : Boolean = False);
+function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = False) : Integer;
+function SystemFolderIcon(APath : String = '') : Integer;
+function GetWindowsDirectory() : string;
+
 implementation
 
-uses Winapi.Windows;
+uses Winapi.Windows, System.IOUtils;
+
+{ _.GetWindowsDirectory }
+function GetWindowsDirectory() : string;
+begin
+  SetLength(result, MAX_PATH);
+
+  var ALen := WinAPI.Windows.GetWindowsDirectory(@result[1], MAX_PATH);
+
+  SetLength(result, ALen);
+  if ALen > MAX_PATH then
+    WinAPI.Windows.GetWindowsDirectory(@result[1], ALen);
+
+  ///
+  result := IncludeTrailingPathDelimiter(result);
+end;
+
+{ _.InitializeSystemIcons }
+procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo; const ALargeIcon : Boolean = False);
+var AFlags : Integer;
+begin
+  ZeroMemory(@AFileInfo, SizeOf(TSHFileInfo));
+  ///
+
+  if ALargeIcon then
+    AFlags := SHGFI_LARGEICON
+  else
+    AFlags := SHGFI_SMALLICON;
+
+  AImages.Handle := SHGetFileInfo(
+                                    PChar(TPath.GetPathRoot(GetWindowsDirectory())),
+                                    0,
+                                    AFileInfo,
+                                    SizeOf(AFileInfo),
+                                    AFlags or (SHGFI_SYSICONINDEX)
+  );
+end;
+
+{ _.SystemFileIcon }
+function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = False) : Integer;
+var AFileInfo : TSHFileInfo;
+begin
+  ZeroMemory(@AFileInfo, sizeof(AFileInfo));
+  ///
+
+  AExtensionMode := AFileName.IsEmpty or (not FileExists(AFileName));
+
+  var AFlags := SHGFI_SMALLICON or SHGFI_SYSICONINDEX;
+  if AExtensionMode then
+    AFlags := AFlags or SHGFI_USEFILEATTRIBUTES;
+
+  SHGetFileInfo(PWideChar(AFileName), 0, AFileInfo, SizeOf(AFileInfo), AFlags);
+
+  Result := AFileInfo.iIcon;
+end;
+
+{ _.SystemFolderIcon }
+function SystemFolderIcon(APath : String = '') : Integer;
+var AFileInfo : TSHFileInfo;
+begin
+  ZeroMemory(@AFileInfo, sizeof(AFileInfo));
+  ///
+
+  if APath = '' then
+    APath := GetWindowsDirectory();
+
+  var AFlags := SHGFI_SYSICONINDEX;
+
+  SHGetFileInfo(PChar(APath), 0, AFileInfo, SizeOf(AFileInfo), AFlags);
+
+  Result := AFileInfo.iIcon;
+end;
 
 { _.FormatFileSize }
 function FormatFileSize(const ASize : Int64) : string;

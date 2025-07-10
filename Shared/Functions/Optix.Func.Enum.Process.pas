@@ -45,9 +45,8 @@ unit Optix.Func.Enum.Process;
 
 interface
 
-uses Optix.Func.Response, XSuperObject, System.Classes, Generics.Collections,
-     Optix.WinApiEx, Optix.Process.Helper, Optix.Types,
-     Optix.Protocol.Packet, Optix.Classes;
+uses Optix.Protocol.Packet, XSuperObject, System.Classes, Generics.Collections,
+     Optix.WinApiEx, Optix.Process.Helper, Optix.Types, Optix.Classes;
 
 type
   TProcessInformation = class(TEnumerableItem)
@@ -99,12 +98,12 @@ type
     property CommandLine      : String          read FCommandLine;
   end;
 
-  TProcessList = class(TOptixResponse)
+  TProcessList = class(TOptixPacket)
   private
     FList : TObjectList<TProcessInformation>;
   protected
     {@M}
-    procedure Refresh(); override;
+    procedure Refresh();
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
     procedure BeforeCreate(); override;
   public
@@ -112,6 +111,7 @@ type
     function Serialize() : ISuperObject; override;
 
     {@C}
+    constructor Create(const AWindowGUID : TGUID); override;
     destructor Destroy(); override;
 
     {@G}
@@ -319,6 +319,15 @@ begin
   ///
 
   FList := TObjectList<TProcessInformation>.Create(True);
+end;
+
+{ TProcessList.Create }
+constructor TProcessList.Create(const AWindowGUID : TGUID);
+begin
+  inherited;
+  ///
+
+  self.Refresh();
 end;
 
 { TProcessList.Destroy }

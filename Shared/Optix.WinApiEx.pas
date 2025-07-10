@@ -268,6 +268,30 @@ const
 
   PROCESSOR_ARCHITECTURE_ARM64 = 12;
 
+  SDDL_REVISION_1 = 1;
+
+  FILE_GENERIC_READ = STANDARD_RIGHTS_READ or
+                      FILE_READ_DATA or
+                      FILE_READ_ATTRIBUTES or
+                      FILE_READ_EA or
+                      SYNCHRONIZE;
+
+  FILE_GENERIC_WRITE = STANDARD_RIGHTS_WRITE or
+                       FILE_WRITE_DATA or
+                       FILE_WRITE_ATTRIBUTES or
+                       FILE_WRITE_EA or
+                       FILE_APPEND_DATA or
+                       SYNCHRONIZE;
+
+  FILE_GENERIC_EXECUTE = STANDARD_RIGHTS_EXECUTE or
+                         FILE_READ_ATTRIBUTES or
+                         FILE_EXECUTE or
+                         SYNCHRONIZE;
+
+  FILE_ALL_ACCESS = STANDARD_RIGHTS_REQUIRED or
+                    SYNCHRONIZE or
+                    $1FF;
+
 //------------------------------------------------------------------------------
 
 (* Netapi32.dll *)
@@ -278,13 +302,13 @@ function DsGetDcNameW(
   SiteName             : LPCWSTR;
   Flags                : ULONG;
   out DomainControllerInfo : PDomainControllerInfo
-) : NET_API_STATUS; stdcall; external 'Netapi32.dll' Name 'DsGetDcNameW';
+) : NET_API_STATUS; stdcall; external 'Netapi32.dll';
 
 function NetWkstaGetInfo(
   servername : LPWSTR;
   level      : DWORD;
   out bufptr : Pointer
-) : NET_API_STATUS; stdcall; external 'Netapi32.dll' Name 'NetWkstaGetInfo';
+) : NET_API_STATUS; stdcall; external 'Netapi32.dll';
 
 function NetApiBufferFree(
   Buffer : Pointer
@@ -298,6 +322,14 @@ function CheckTokenMembership(
   var IsMember : Boolean
 ): BOOL; stdcall; external 'Advapi32.dll';
 
+function ConvertSecurityDescriptorToStringSecurityDescriptorW(
+  SecurityDescriptor           : PSecurityDescriptor;
+  RequestedStringSDRevision    : DWORD;
+  SecurityInformation          : SECURITY_INFORMATION;
+  var StringSecurityDescriptor : LPWSTR;
+  StringSecurityDescriptorLen  : PULONG
+): BOOL; stdcall; external 'Advapi32.dll';
+
 (* NTDLL.dll *)
 
 function NtQuerySystemInformation(
@@ -307,13 +339,6 @@ function NtQuerySystemInformation(
   var ReturnLength        : DWORD
 ) : Cardinal; stdcall; external 'NTDLL.DLL';
 
-function QueryFullProcessImageNameW(
-  hProcess   : THandle;
-  dwFlags    : DWORD;
-  lpExeName  : PWideChar;
-  var dwSize : DWORD
-): BOOL; stdcall; external kernel32 name 'QueryFullProcessImageNameW';
-
 function NtQueryInformationProcess(
   ProcessHandle            : THandle;
   ProcessInformationClass  : TProcessInformationClass;
@@ -321,6 +346,15 @@ function NtQueryInformationProcess(
   ProcessInformationLength : ULONG;
   var ReturnLength         : ULONG
 ) : NTSTATUS; stdcall; external 'NTDLL.DLL';
+
+(* Kernel32.dll *)
+
+function QueryFullProcessImageNameW(
+  hProcess   : THandle;
+  dwFlags    : DWORD;
+  lpExeName  : PWideChar;
+  var dwSize : DWORD
+): BOOL; stdcall; external 'Kernel32.dll';
 
 //------------------------------------------------------------------------------
 

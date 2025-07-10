@@ -48,7 +48,6 @@ object FormMain: TFormMain
     OnInitNode = VSTInitNode
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitTop = -5
     Columns = <
       item
         Position = 0
@@ -7404,5 +7403,11 @@ object FormMain: TFormMain
     ImageCollection = ImageCollection
     Left = 248
     Top = 80
+  end
+  object ImageSystem: TImageList
+    ColorDepth = cd32Bit
+    DrawingStyle = dsTransparent
+    Left = 328
+    Top = 168
   end
 end

@@ -94,7 +94,6 @@
         <DCCReference Include="..\Shared\Optix.Sockets.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Exceptions.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Response.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
         <DCCReference Include="..\Shared\Optix.Interfaces.pas"/>
         <DCCReference Include="..\Shared\Optix.Thread.pas"/>

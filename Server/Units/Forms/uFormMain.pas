@@ -59,7 +59,8 @@ uses
   Winapi.Winsock2, Vcl.ComCtrls, XSuperObject, Optix.Func.SessionInformation,
   Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands,
   Vcl.BaseImageCollection, Vcl.ImageCollection, System.ImageList, Vcl.ImgList,
-  Vcl.VirtualImageList, Vcl.StdCtrls, __uBaseFormControl__, Generics.Collections;
+  Vcl.VirtualImageList, Vcl.StdCtrls, __uBaseFormControl__, Generics.Collections,
+  Winapi.ShellAPI;
 
 type
   TTreeData = record
@@ -102,6 +103,7 @@ type
     ransfers1: TMenuItem;
     Logs1: TMenuItem;
     ControlForms1: TMenuItem;
+    ImageSystem: TImageList;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -131,7 +133,8 @@ type
     procedure FileManager1Click(Sender: TObject);
     procedure ControlForms1Click(Sender: TObject);
   private
-    FServer : TOptixServerThread;
+    FServer   : TOptixServerThread;
+    FFileInfo : TSHFileInfo;
 
     {@M}
     procedure OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
@@ -681,6 +684,9 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FServer := nil;
+
+  InitializeSystemIcons(ImageSystem, FFileInfo);
+  ///
 
   ///
   UpdateStatus();

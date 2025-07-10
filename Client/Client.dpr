@@ -55,7 +55,6 @@ uses
   Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
   Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',

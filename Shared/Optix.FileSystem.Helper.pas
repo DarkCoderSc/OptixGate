@@ -58,17 +58,34 @@ type
     dtRAMDisk
   );
 
+  TFileAccess = (
+    faRead,
+    faWrite,
+    faExecute
+  );
+  TFileAccessAttributes = set of TFileAccess;
+
   TFileSystemHelper = class
   public
     class function GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean; static;
-    class function TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
+    class function TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean; static;
+    class function GetFileACLString(const AFileName : String) : String; static;
+    class function TryGetFileACLString(const AFileName : String) : String; static;
+    class procedure GetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean); overload; static;
+    class function GetCurrentUserFileAccess(const AFileName : String) : TFileAccessAttributes; overload; static;
+    class procedure TryGetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean); overload; static;
+    class function TryGetCurrentUserFileAccess(const AFileName : String) : TFileAccessAttributes; overload; static;
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
+  function FileAccessAttributesToString(const AValue : TFileAccessAttributes) : String;
 
 implementation
 
-uses Winapi.Windows, System.Sysutils;
+uses System.SysUtils, Winapi.Windows, Winapi.AccCtrl, Winapi.AclAPI,
+     Optix.Exceptions, Optix.WinApiEx;
+
+(* Local *)
 
 { _.ElevatedStatusToString }
 function DriveTypeToString(const AValue : TDriveType) : String;
@@ -86,6 +103,27 @@ begin
     dtRAMDisk   : result := 'RAM Disk';
   end;
 end;
+
+{ _.FileAccessAttributesToString }
+function FileAccessAttributesToString(const AValue : TFileAccessAttributes) : String;
+begin
+  result := '';
+  ///
+
+  if faRead in AValue then
+    result := 'R';
+
+  if faWrite in AValue then
+    result := result + 'W';
+
+  if faExecute in AValue then
+    result := result + 'E';
+
+  if String.IsNullOrEmpty(result) then
+    result := 'No Access';
+end;
+
+(* TFileSystemHelper *)
 
 { TFileSystemHelper.GetDriveInformation }
 class function TFileSystemHelper.GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
@@ -150,5 +188,55 @@ begin
     result := False;
   end;
 end;
+
+{ TFileSystemHelper.GetFileACLString }
+class function TFileSystemHelper.GetFileACLString(const AFileName : String) : String;
+begin
+  var ptrSecurityDescriptor : PSecurityDescriptor := nil;
+  var pFileACL_SSDL : LPWSTR := nil;
+  try
+    var AResult := GetNamedSecurityInfoW(
+      PWideChar(AFileName),
+      SE_FILE_OBJECT,
+      DACL_SECURITY_INFORMATION,
+      nil,
+      nil,
+      nil,
+      nil,
+      @ptrSecurityDescriptor
+    );
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('GetNamedSecurityInfoW');
+
+    if not ConvertSecurityDescriptorToStringSecurityDescriptorW(
+      ptrSecurityDescriptor,
+      SDDL_REVISION_1,
+      DACL_SECURITY_INFORMATION,
+      pFileACL_SSDL,
+      nil
+    ) then
+      raise EWindowsException.Create('ConvertSecurityDescriptorToStringSecurityDescriptorW');
+
+    ///
+    result := string(pFileACL_SSDL);
+  finally
+    if Assigned(pFileACL_SSDL) then
+      LocalFree(pFileACL_SSDL);
+
+    if Assigned(ptrSecurityDescriptor) then
+      LocalFree(ptrSecurityDescriptor);
+  end;
+end;
+
+{ TFileSystemHelper.TryGetFileACLString }
+class function TFileSystemHelper.TryGetFileACLString(const AFileName : String) : String;
+begin
+  try
+    result := GetFileACLString(AFileName);
+  except
+    result := '';
+  end;
+end;
+
 
 end.

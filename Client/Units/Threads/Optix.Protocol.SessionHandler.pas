@@ -116,7 +116,13 @@ begin
       end
       // -----------------------------------------------------------------------
       else if AClassName = TOptixRefreshDrives.ClassName then
-        AddPacket(TDriveList.Create(AWindowGUID));
+        AddPacket(TDriveList.Create(AWindowGUID))
+      // -----------------------------------------------------------------------
+      else if AClassName = TOptixRefreshFiles.ClassName then begin
+        AOptixPacket := TOptixRefreshFiles.Create(ASerializedPacket);
+
+        AddPacket(TFileList.Create(AWindowGUID, TOptixRefreshFiles(AOptixPacket).Path));
+      end;
       // -----------------------------------------------------------------------
 
       // ... //

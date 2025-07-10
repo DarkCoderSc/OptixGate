@@ -46,11 +46,11 @@ unit Optix.Func.SessionInformation;
 interface
 
 uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
-     XSuperObject, Optix.Func.Response, Optix.InformationGathering.Helper,
+     XSuperObject, Optix.Protocol.Packet, Optix.InformationGathering.Helper,
      Optix.Process.Helper, Optix.WinApiEx;
 
 type
-  TOptixSessionInformation = class(TOptixResponse)
+  TOptixSessionInformation = class(TOptixPacket)
   private
     FWindowsVersion      : String;
     FUsername            : String;
@@ -71,9 +71,12 @@ type
     function CheckIfSystemUser() : Boolean;
   protected
     {@M}
-    procedure Refresh(); override;
+    procedure Refresh();
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
+    {@C}
+    constructor Create(); override;
+
     {@M}
     function Serialize() : ISuperObject; override;
     procedure Assign(ASource : TPersistent); override;
@@ -114,6 +117,15 @@ begin
   FDomainName          := TOptixInformationGathering.GetDomainName;
   FIsInAdminGroup      := TOptixInformationGathering.TryIsCurrentUserInAdminGroup();
   FWindowsArchitecture := TOptixInformationGathering.GetWindowsArchitecture();
+end;
+
+{ TOptixSessionInformation.Create }
+constructor TOptixSessionInformation.Create();
+begin
+  inherited;
+  ///
+
+  Refresh();
 end;
 
 { TOptixSessionInformation.Serialize }

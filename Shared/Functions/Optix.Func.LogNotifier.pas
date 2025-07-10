@@ -45,7 +45,7 @@ unit Optix.Func.LogNotifier;
 
 interface
 
-uses Optix.Func.Response, System.SysUtils, XSuperObject;
+uses Optix.Protocol.Packet, System.SysUtils, XSuperObject;
 
 type
   TLogKind = (
@@ -54,7 +54,7 @@ type
     (* ... *)
   );
 
-  TLogNotifier = class(TOptixResponse)
+  TLogNotifier = class(TOptixPacket)
   private
     FMessage    : String;
     FContext    : String;

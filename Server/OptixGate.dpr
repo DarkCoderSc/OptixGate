@@ -57,7 +57,6 @@ uses
   Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
   Optix.Types in '..\Shared\Optix.Types.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',

@@ -45,7 +45,7 @@ unit Optix.Func.Enum.FileSystem;
 
 interface
 
-uses Optix.Func.Response, Generics.Collections, XSuperObject, System.Classes,
+uses Optix.Protocol.Packet, Generics.Collections, XSuperObject, System.Classes,
      Optix.Classes, Optix.FileSystem.Helper;
 
 type
@@ -84,16 +84,17 @@ type
     property UsedPercentage : Byte       read GetUsedPercentage;
   end;
 
-  TDriveList = class(TOptixResponse)
+  TDriveList = class(TOptixPacket)
   private
     FList : TObjectList<TDriveInformation>;
   protected
     {@M}
-    procedure Refresh(); override;
+    procedure Refresh();
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
     procedure BeforeCreate(); override;
   public
     {@C}
+    constructor Create(const AWindowGUID : TGUID); override;
     destructor Destroy(); override;
 
     {@M}
@@ -106,39 +107,55 @@ type
   // Files ---------------------------------------------------------------------
   TFileInformation = class(TEnumerableItem)
   protected
+    FName        : String;
+    FIsDirectory : Boolean;
+    FACL_SSDL    : String;
+    FAccess      : TFileAccessAttributes;
+
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
-    constructor Create(); overload;
+    constructor Create(const AFilePath : String; const AIsDirectory : Boolean); overload;
 
     {@M}
     function Serialize() : ISuperObject; override;
     procedure Assign(ASource : TPersistent); override;
+
+    {@G}
+    property Name        : String                read FName;
+    property IsDirectory : Boolean               read FIsDirectory;
+    property ACL_SSDL    : String                read FACL_SSDL;
+    property Access      : TFileAccessAttributes read FAccess;
   end;
 
-  TFileList = class(TOptixResponse)
+  TFileList = class(TOptixPacket)
   private
-    FList : TObjectList<TFileInformation>;
+    FPath   : String;
+    FIsRoot : Boolean;
+    FList   : TObjectList<TFileInformation>;
   protected
     {@M}
-    procedure Refresh(); override;
+    procedure Refresh();
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
     procedure BeforeCreate(); override;
   public
     {@C}
+    constructor Create(const AWindowGUID : TGUID; const APath : String); overload;
     destructor Destroy(); override;
 
     {@M}
     function Serialize() : ISuperObject; override;
 
     {@G}
-    property List : TObjectList<TFileInformation> read FList;
+    property List   : TObjectList<TFileInformation> read FList;
+    property Path   : String                        read FPath;
+    property IsRoot : Boolean                       read FIsRoot;
   end;
 
 implementation
 
-uses System.SysUtils, Winapi.Windows;
+uses System.SysUtils, Winapi.Windows, Optix.Exceptions;
 
 //------------------------------------------------------------------------------
 //
@@ -241,6 +258,15 @@ begin
   FList := TObjectList<TDriveInformation>.Create(True);
 end;
 
+{ TDriveList.Create }
+constructor TDriveList.Create(const AWindowGUID : TGUID);
+begin
+  inherited;
+  ///
+
+  self.Refresh();
+end;
+
 { TDriveList.Destroy }
 destructor TDriveList.Destroy();
 begin
@@ -321,6 +347,20 @@ begin
     Exit();
   ///
 
+  FName        := ASerializedObject.S['Name'];
+  FIsDirectory := ASerializedObject.B['IsDirectory'];
+  FACL_SSDL    := ASerializedObject.S['ACL_SSDL'];
+
+  // Access (TODO: SetToString?)
+  FAccess := [];
+  if ASerializedObject.B['AccessRead'] then
+    Include(FAccess, faRead);
+
+  if ASerializedObject.B['AccessWrite'] then
+    Include(FAccess, faWrite);
+
+  if ASerializedObject.B['AccessExecute'] then
+    Include(FAccess, faExecute);
 end;
 
 { TFileInformation.Serialize }
@@ -329,23 +369,38 @@ begin
   result := TSuperObject.Create();
   ///
 
+  result.S['Name']        := FName;
+  result.B['IsDirectory'] := FIsDirectory;
+  result.S['ACL_SSDL']    := FACL_SSDL;
+
+  // Access (TODO: StringToSet?)
+  result.B['AccessRead']    := faRead in FAccess;
+  result.B['AccessWrite']   := faWrite in FAccess;
+  result.B['AccessExecute'] := faExecute in FAccess;
 end;
 
 { TFileInformation.Assign }
 procedure TFileInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TFileInformation then begin
-
+    FName        := TFileInformation(ASource).FName;
+    FIsDirectory := TFileInformation(ASource).FIsDirectory;
+    FACL_SSDL    := TFileInformation(ASource).FACL_SSDL;
+    FAccess      := TFileInformation(ASource).FAccess;
   end else
     inherited;
 end;
 
 { TFileInformation.Create }
-constructor TFileInformation.Create();
+constructor TFileInformation.Create(const AFilePath : String; const AIsDirectory : Boolean);
 begin
   inherited Create();
   ///
 
+  FName        := ExtractFileName(AFilePath);
+  FIsDirectory := AIsDirectory;
+  FACL_SSDL    := TFileSystemHelper.TryGetFileACLString(AFilePath);
+  FAccess      := TFileSystemHelper.TryGetCurrentUserFileAccess(AFilePath);
 end;
 
 (* TFileList *)
@@ -356,7 +411,22 @@ begin
   inherited;
   ///
 
+  FIsRoot := False;
+  FPath   := '';
+
   FList := TObjectList<TFileInformation>.Create(True);
+end;
+
+{ TFileList.Create }
+constructor TFileList.Create(const AWindowGUID : TGUID; const APath : String);
+begin
+  inherited Create(AWindowGUID);
+  ///
+
+  FPath := IncludeTrailingPathDelimiter(APath);
+
+  ///
+  self.Refresh();
 end;
 
 { TFileList.Destroy }
@@ -375,6 +445,37 @@ begin
   FList.Clear();
   ///
 
+  if String.IsNullOrEmpty(FPath) then
+    Exit();
+
+  var ASearchParameter := Format('%s*.*', [FPath]);
+
+  var AWin32FindData : TWin32FindDataW;
+
+  var hSearch := FindFirstFileW(PWideChar(ASearchParameter), AWin32FindData);
+  if hSearch = INVALID_HANDLE_VALUE then
+    raise EWindowsException.Create('FindFirstFileW')
+  else if hSearch = ERROR_FILE_NOT_FOUND then
+    raise Exception.Create(Format('No files found so far in the directory: `%s`', [FPath]));
+  try
+    var FIsRoot := True;
+    repeat
+      var AFileName := String(AWin32FindData.cFileName);
+      if AFileName = '.' then
+        continue;
+      ///
+
+      if AFileName = '..' then
+        FIsRoot := False;
+
+      if (AWin32FindData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY) then begin
+        FList.Add(TFileInformation.Create(FPath + AFileName, True))
+      end else
+        FList.Add(TFileInformation.Create(FPath + AFileName, False));
+    until FindNextFileW(hSearch, AWin32FindData) = False;
+  finally
+    FindClose(hSearch);
+  end;
 end;
 
 { TFileList.DeSerialize }
@@ -387,6 +488,9 @@ begin
 
   for var I := 0 to ASerializedObject.A['List'].Length -1 do
     FList.Add(TFileInformation.Create(ASerializedObject.A['List'].O[I]));
+
+  FPath   := ASerializedObject.S['Path'];
+  FIsRoot := ASerializedObject.B['IsRoot'];
 end;
 
 { TFileList.Serialize }
@@ -401,7 +505,9 @@ begin
     AJsonArray.Add(AItem.Serialize);
 
   ///
-  result.A['List'] := AJsonArray;
+  result.A['List']   := AJsonArray;
+  result.S['Path']   := FPath;
+  result.B['IsRoot'] := FIsRoot;
 end;
 
 end.

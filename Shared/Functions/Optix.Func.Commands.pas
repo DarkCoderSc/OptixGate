@@ -74,9 +74,26 @@ type
     property ProcessId : Cardinal read FProcessId;
   end;
 
+  TOptixRefreshFiles = class(TOptixCommand)
+  private
+    FPath : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@C}
+    constructor Create(const APath : String) overload;
+
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property Path : String read FPath;
+  end;
+
 implementation
 
-(* TOptixKillProcess *)
+(* TOptixKillProcess **********************************************************)
 
 { TOptixKillProcess.Create }
 constructor TOptixKillProcess.Create(const AProcessId : Cardinal);
@@ -106,6 +123,38 @@ begin
     Exit();
 
   FProcessId := ASerializedObject.I['ProcessId'];
+end;
+
+(* TOptixRefreshFiles **********************************************************)
+
+{ TOptixRefreshFiles.Create }
+constructor TOptixRefreshFiles.Create(const APath : String);
+begin
+  inherited Create();
+  ///
+
+  FPath := APath;
+end;
+
+{ TOptixRefreshFiles.Serialize }
+function TOptixRefreshFiles.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['Path'] := FPath;
+end;
+
+{ TOptixRefreshFiles.DeSerialize }
+procedure TOptixRefreshFiles.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FPath := ASerializedObject.S['Path'];
 end;
 
 end.
