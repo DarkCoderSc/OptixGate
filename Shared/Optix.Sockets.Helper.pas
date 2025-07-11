@@ -61,15 +61,15 @@ type
     {@M}
     procedure CheckSocket();
     function IsDataAvailable(): Boolean;
-
-    procedure Send(const buf; len : Integer);
-    procedure Recv(var buf; len : Integer);
   protected
     {@M}
     procedure CreateSocket();
   public
     {@M}
     procedure Close(); overload;
+
+    procedure Send(const buf; len : Integer);
+    procedure Recv(var buf; len : Integer);
 
     procedure SendBuffer(const pValue : Pointer; const ABufferSize : UInt64);
     procedure ReceiveBuffer(var pBuffer : Pointer; var ABufferSize : UInt64);

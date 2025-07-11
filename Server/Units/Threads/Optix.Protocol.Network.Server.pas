@@ -47,7 +47,7 @@ interface
 
 uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject,
      Generics.Collections, Optix.Sockets.Helper, Optix.Thread,
-     Optix.Protocol.SessionHandler;
+     Optix.Protocol.SessionHandler, Optix.Protocol.Preflight;
 
 type
   TOptixServerThread = class;
@@ -96,7 +96,7 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils;
+uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions;
 
 (* TOptixServerThread *)
 
@@ -120,14 +120,44 @@ begin
           AClient := FServer.AcceptClient();
           ///
 
+          // Preflight packet
+          var APreflight : TOptixPreflightRequest;
+          AClient.Recv(APreflight, SizeOf(TOptixPreflightRequest));
+          if APreflight.ProtocolVersion <> OPTIX_PROTOCOL_VERSION then
+            raise EOptixPreflightException.Create(Format('Client:[%s] / Server:[%s] version mismatch.', [
+              APreflight.ProtocolVersion,
+              OPTIX_PROTOCOL_VERSION
+            ]));
+
+          if APreflight.ClientKind = ckUndefined then
+            raise EOptixPreflightException.Create('Client kind is undefined.');
+
           // Ensure clients dies when server dies.
           if not FClientSockets.Contains(AClient.Socket) then
             FClientSockets.Add(AClient.Socket);
 
-          var ASessionHandler := TOptixSessionHandlerThread.Create(AClient);
-          ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
-          ASessionHandler.OnReceivePacket := OnReceivePacket;
-          ASessionHandler.Start();
+          if APreflight.ClientKind = ckHandler then begin
+            // Main Handler ----------------------------------------------------
+            var ASessionHandler := TOptixSessionHandlerThread.Create(AClient);
+
+            ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
+            ASessionHandler.OnReceivePacket := OnReceivePacket;
+            ASessionHandler.Start();
+            // -----------------------------------------------------------------
+          end else begin
+            // TODO: @Synchronize check preflight SessionId to register new worker
+            // thread, if success, dispatch worker thread, otherwise terminate
+            // connection.
+            // Use a new event like "FOnRegisterWorker")
+
+            case APreflight.ClientKind of
+              // File Transfer (in-out) ----------------------------------------
+              ckFileTransfer : begin
+
+              end;
+              // ---------------------------------------------------------------
+            end;
+          end;
         except
           if Assigned(AClient) then
             FreeAndNil(AClient);

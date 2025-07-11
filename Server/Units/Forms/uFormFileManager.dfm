@@ -102,14 +102,19 @@ object FormFileManager: TFormFileManager
     ExplicitWidth = 467
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 240
     Top = 128
-    object RefreshDrives1: TMenuItem
-      Caption = 'Refresh Drives'
-      OnClick = RefreshDrives1Click
+    object Refresh1: TMenuItem
+      Caption = 'Refresh'
+      OnClick = Refresh1Click
     end
     object N1: TMenuItem
       Caption = '-'
+    end
+    object ShowDrives1: TMenuItem
+      Caption = 'Show Drives (Home)'
+      OnClick = ShowDrives1Click
     end
   end
 end

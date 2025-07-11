@@ -75,9 +75,10 @@ type
     VST: TVirtualStringTree;
     EditPath: TEdit;
     PopupMenu: TPopupMenu;
-    RefreshDrives1: TMenuItem;
+    ShowDrives1: TMenuItem;
     N1: TMenuItem;
-    procedure RefreshDrives1Click(Sender: TObject);
+    Refresh1: TMenuItem;
+    procedure ShowDrives1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -96,14 +97,18 @@ type
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure Refresh1Click(Sender: TObject);
+    procedure PopupMenuPopup(Sender: TObject);
   private
     FFirstShow : Boolean;
 
     {@M}
-    procedure RefreshDrives(const AList : TDriveList);
-    procedure RefreshFiles(const AList : TFileList);
+    procedure DisplayDrives(const AList : TDriveList);
+    procedure DisplayFiles(const AList : TFileList);
     procedure SetDisplayMode(const AMode : TDisplayMode);
     procedure BrowsePath(const APath : string);
+    procedure RefreshDrives();
+    procedure RefreshFiles();
   protected
     {@M}
     function GetContextDescription() : String; override;
@@ -125,6 +130,16 @@ uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper,
      System.IOUtils;
 
 {$R *.dfm}
+
+procedure TFormFileManager.RefreshDrives();
+begin
+  SendCommand(TOptixRefreshDrives.Create());
+end;
+
+procedure TFormFileManager.RefreshFiles();
+begin
+  BrowsePath(EditPath.Text);
+end;
 
 constructor TFormFileManager.Create(AOwner : TComponent);
 begin
@@ -154,7 +169,8 @@ end;
 procedure TFormFileManager.FormShow(Sender: TObject);
 begin
   if FFirstShow then begin
-    RefreshDrives1Click(RefreshDrives1);
+    RefreshDrives();
+    ///
 
     FFirstShow := False;
   end;
@@ -171,9 +187,14 @@ begin
     result := Format('%s', [EditPath.Text])
 end;
 
-procedure TFormFileManager.RefreshDrives1Click(Sender: TObject);
+procedure TFormFileManager.PopupMenuPopup(Sender: TObject);
 begin
-  SendCommand(TOptixRefreshDrives.Create());
+  self.ShowDrives1.Visible := EditPath.Visible;
+end;
+
+procedure TFormFileManager.ShowDrives1Click(Sender: TObject);
+begin
+  RefreshDrives();
 end;
 
 procedure TFormFileManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
@@ -183,7 +204,7 @@ begin
   var pData := PTreeData(Node.GetData);
   var AColor := clNone;
 
-  if Assigned(pData^.FileInformation) then begin
+  if Assigned(pData^.FileInformation) and (pData^.FileInformation.Name <> '..') then begin
     if faWrite in pData^.FileInformation.Access then
       AColor := COLOR_LIST_BLUE;
   end;
@@ -375,27 +396,32 @@ begin
   // ---------------------------------------------------------------------------
   end else if Assigned(pData^.FileInformation) then begin
     // Files -------------------------------------------------------------------
-    case Column of
-      0 : CellText := pData^.FileInformation.Name;
+    if (pData^.FileInformation.Name = '..') then begin
+      if Column = 0 then
+        CellText := '< .. >';
+    end else begin
+      case Column of
+        0 : CellText := pData^.FileInformation.Name;
 
-      1 : begin
-        if pData^.FileInformation.IsDirectory then
-          CellText := 'Directory'
-        else
-          CellText := pData^.FileInformation.TypeDescription;
+        1 : begin
+          if pData^.FileInformation.IsDirectory then
+            CellText := 'Directory'
+          else
+            CellText := pData^.FileInformation.TypeDescription;
+        end;
+
+        2 : CellText := FormatFileSize(pData^.FileInformation.Size);
+        3 : CellText := FileAccessAttributesToString(pData^.FileInformation.Access);
+        4 : CellText := pData^.FileInformation.ACL_SSDL;
       end;
 
-      2 : CellText := FormatFileSize(pData^.FileInformation.Size);
-      3 : CellText := FileAccessAttributesToString(pData^.FileInformation.Access);
-      4 : CellText := pData^.FileInformation.ACL_SSDL;
-    end;
-
-    if pData^.FileInformation.DateAreValid then begin
-      case column of
-        5 : CellText := DateTimeToStr(pData^.FileInformation.CreatedDate);
-        6 : CellText := DateTimeToStr(pData^.FileInformation.LastModifiedDate);
-        7 : CellText := DateTimeToStr(pData^.FileInformation.LastAccessDate);
-      End;
+      if pData^.FileInformation.DateAreValid then begin
+        case column of
+          5 : CellText := DateTimeToStr(pData^.FileInformation.CreatedDate);
+          6 : CellText := DateTimeToStr(pData^.FileInformation.LastModifiedDate);
+          7 : CellText := DateTimeToStr(pData^.FileInformation.LastAccessDate);
+        End;
+      end;
     end;
   end;
   // ---------------------------------------------------------------------------
@@ -415,13 +441,13 @@ begin
     if AClassName = TDriveList.ClassName then begin
       AOptixPacket := TDriveList.Create(ASerializedPacket);
 
-      RefreshDrives(TDriveList(AOptixPacket));
+      DisplayDrives(TDriveList(AOptixPacket));
     end
     // -------------------------------------------------------------------------
     else if AClassName = TFileList.ClassName then begin
       AOptixPacket := TFileList.Create(ASerializedPacket);
 
-      RefreshFiles(TFileList(AOptixPacket));
+      DisplayFiles(TFileList(AOptixPacket));
     end;
     // -------------------------------------------------------------------------
   finally
@@ -430,7 +456,15 @@ begin
   end;
 end;
 
-procedure TFormFileManager.RefreshDrives(const AList : TDriveList);
+procedure TFormFileManager.Refresh1Click(Sender: TObject);
+begin
+  if EditPath.Visible then
+    RefreshFiles()
+  else
+    RefreshDrives();
+end;
+
+procedure TFormFileManager.DisplayDrives(const AList : TDriveList);
 begin
   SetDisplayMode(dmDrives);
   ///
@@ -455,7 +489,7 @@ begin
   end;
 end;
 
-procedure TFormFileManager.RefreshFiles(const AList : TFileList);
+procedure TFormFileManager.DisplayFiles(const AList : TFileList);
 begin
   SetDisplayMode(dmFiles);
   ///

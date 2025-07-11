@@ -91,6 +91,28 @@ type
     property Path : String read FPath;
   end;
 
+  TOptixTransfer = class(TOptixCommand)
+  private
+    FTransferId : TGUID;
+
+    // FFilePath in TOptixDownloadFile -> File to download (Client)
+    // FFilePath in TOptixUploadFile   -> Uploaded destination file path (Client)
+    FFilePath   : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property TransferId : TGUID  read FTransferId;
+    property FilePath   : String read FFilePath;
+  end;
+
+  TOptixDownloadFile = class(TOptixTransfer);
+  TOptixUploadFile = class(TOptixTransfer);
+
 implementation
 
 (* TOptixKillProcess **********************************************************)
@@ -155,6 +177,31 @@ begin
     Exit();
 
   FPath := ASerializedObject.S['Path'];
+end;
+
+(* TOptixTransfer *************************************************************)
+
+{ TOptixTransfer.Serialize }
+function TOptixTransfer.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['TransferId'] := FTransferId.ToString();
+  result.S['FilePath']   := FFilePath;
+end;
+
+{ TOptixTransfer.DeSerialize }
+procedure TOptixTransfer.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
+  FFilePath   := ASerializedObject.S['FilePath'];
 end;
 
 end.

@@ -68,6 +68,8 @@ uses
   Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
   Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
   Optix.Classes in '..\Shared\Optix.Classes.pas',
+  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
+  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
   Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',

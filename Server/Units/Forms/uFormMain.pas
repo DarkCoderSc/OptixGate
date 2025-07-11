@@ -44,7 +44,6 @@
 {
   TODO:
     - Column Sorting
-    - Protocol Version Checking
 }
 
 unit uFormMain;

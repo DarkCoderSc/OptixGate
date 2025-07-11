@@ -165,6 +165,8 @@
         <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Optix.Classes.pas"/>
+        <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
+        <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Network.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>

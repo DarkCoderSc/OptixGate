@@ -46,7 +46,7 @@ unit Optix.Protocol.SessionHandler;
 interface
 
 uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     XSuperObject;
+     XSuperObject, Optix.Protocol.Preflight;
 
 type
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
@@ -56,8 +56,6 @@ type
     {@M}
     procedure EstablishedConnection(); override;
     procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
-  public
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
   end;
 
 implementation
@@ -69,12 +67,6 @@ uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
 { TOptixSessionHandlerThread.EstablishedConnection }
 procedure TOptixSessionHandlerThread.EstablishedConnection();
 begin
-//  var APacket := TOptixSessionInformation.Create();
-//  try
-//    FClient.SendPacket(APacket);
-//  finally
-//    FreeAndNil(APacket);
-//  end;
   self.AddPacket(TOptixSessionInformation.Create());
 end;
 
@@ -134,14 +126,6 @@ begin
     if not AHandleMemory and Assigned(AOptixPacket) then
       FreeAndNil(AOptixPacket);
   end;
-end;
-
-{ TOptixSessionHandlerThread.Create }
-constructor TOptixSessionHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
-begin
-  inherited Create(ARemoteAddress, ARemotePort);
-  ///
-
 end;
 
 end.

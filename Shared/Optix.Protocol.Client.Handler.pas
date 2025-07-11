@@ -49,7 +49,7 @@ interface
 
 uses Optix.Protocol.Sockets.Client, Optix.Protocol.Packet, Generics.Collections,
      Optix.Sockets.Helper, System.SysUtils, XSuperObject,
-     Winapi.Windows;
+     Winapi.Windows, Optix.Protocol.Preflight;
 
 type
   TOptixClientHandlerThread = class(TOptixClientThread)
@@ -65,7 +65,7 @@ type
     procedure PacketReceived(const ASerializedPacket : ISuperObject); virtual; abstract;
   public
     {$IFDEF CLIENT}
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
+    constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind); overload;
     {$ENDIF}
 
     {$IFDEF SERVER}
@@ -159,9 +159,9 @@ end;
 
 { TOptixClientHandlerThread.Create }
 {$IFDEF CLIENT}
-constructor TOptixClientHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
+constructor TOptixClientHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind);
 begin
-  inherited Create(ARemoteAddress, ARemotePort);
+  inherited;
   ///
 
   Initialize();
@@ -183,6 +183,8 @@ destructor TOptixClientHandlerThread.Destroy();
 begin
   if Assigned(FPacketQueue) then begin
     FPacketQueue.DoShutDown();
+
+    // TODO: Free un-poped resources
 
     ///
     FreeAndNil(FPacketQueue);

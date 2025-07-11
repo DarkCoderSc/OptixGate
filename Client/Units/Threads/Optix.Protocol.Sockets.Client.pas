@@ -46,7 +46,7 @@ unit Optix.Protocol.Sockets.Client;
 interface
 
 uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs,
-     Generics.Collections;
+     Generics.Collections, Optix.Protocol.Preflight;
 
 type
   TOptixClientThread = class(TOptixThread)
@@ -57,6 +57,8 @@ type
 
     FRemoteAddress : String;
     FRemotePort    : Word;
+
+    FClientKind    : TClientKind;
 
     {@M}
     procedure SetRetry(const AValue : Boolean);
@@ -74,7 +76,7 @@ type
     constructor Create(); overload;
   public
     {@C}
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload;
+    constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind); overload; virtual;
 
     destructor Destroy(); override;
 
@@ -102,13 +104,14 @@ begin
 end;
 
 { TOptixClientThread.Create }
-constructor TOptixClientThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
+constructor TOptixClientThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind);
 begin
   self.Create();
   ///
 
   FRemoteAddress := ARemoteAddress;
   FRemotePort    := ARemotePort;
+  FClientKind    := AClientKind;
 end;
 
 { TOptixClientThread.Destroy }
@@ -133,6 +136,11 @@ begin
       try
         FClient.Connect();
         ///
+
+        // Preflight Request
+        var APreflight : TOptixPreflightRequest;
+        APreflight.ClientKind := FClientKind;
+        FClient.Send(APreflight, SizeOf(TOptixPreflightRequest));
 
         self.ClientExecute();
       Except
