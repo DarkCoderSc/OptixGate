@@ -45,15 +45,27 @@ unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
-uses System.Classes, System.SysUtils, Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer;
+uses System.Classes, System.SysUtils, Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer,
+     Generics.Collections;
 
 type
   TOnRequestTransferTask = procedure(Sender : TObject; const ATransferId : TGUID; var ATask : TOptixTransferTask) of object;
+  TOnTransferError       = procedure(Sender : TObject; const ATransferId : TGUID; const AReason : String) of object;
+  TOnTransferBegins      = procedure(Sender : TObject; const ATransferId : TGUID; const AFileSize : Int64) of object;
+  TOnTransferUpdate      = procedure(Sender : TObject; const ATransferId : TGUID; const AWorkCount : Int64) of object;
+  TOnTransferEnds        = procedure(Sender : TObject; const ATransferId : TGUID) of object;
 
   TOptixFileTransferWorker = class(TOptixClientThread)
   private
     FSessionId             : TGUID;
     FOnRequestTransferTask : TOnRequestTransferTask;
+    FOnTransferError       : TOnTransferError;
+    FOnTransferBegins      : TOnTransferBegins;
+    FOnTransferUpdate      : TOnTransferUpdate;
+    FOnTransferEnds        : TOnTransferEnds;
+
+    {@M}
+    procedure UpdateAllTasks(const ATasks : TObjectDictionary<TGUID, TOptixTransferTask>);
   protected
     {@M}
     procedure ClientExecute(); override;
@@ -61,11 +73,15 @@ type
   public
     {@G/S}
     property OnRequestTransferTask : TOnRequestTransferTask read FOnRequestTransferTask write FOnRequestTransferTask;
+    property OnTransferError       : TOnTransferError       read FOnTransferError       write FOnTransferError;
+    property OnTransferBegins      : TOnTransferBegins      read FOnTransferBegins      write FOnTransferBegins;
+    property OnTransferUpdate      : TOnTransferUpdate      read FOnTransferUpdate      write FOnTransferUpdate;
+    property OnTransferEnds        : TOnTransferEnds        read FOnTransferEnds        write FOnTransferEnds;
   end;
 
 implementation
 
-uses Winapi.Windows, Generics.Collections;
+uses Winapi.Windows, Optix.Exceptions, System.Diagnostics;
 
 { TOptixFileTransferWorker.Initialize }
 procedure TOptixFileTransferWorker.Initialize();
@@ -74,16 +90,53 @@ begin
   ///
 
   FOnRequestTransferTask := nil;
+  FOnTransferError       := nil;
+  FOnTransferBegins      := nil;
+  FOnTransferUpdate      := nil;
+  FOnTransferEnds        := nil;
+end;
+
+{ TOptixFileTransferWorker.UpdateAllTasks }
+procedure TOptixFileTransferWorker.UpdateAllTasks(const ATasks : TObjectDictionary<TGUID, TOptixTransferTask>);
+begin
+  if not Assigned(ATasks) or not Assigned(FOnTransferUpdate) then
+    Exit();
+  ///
+
+  var ATask : TOptixTransferTask;
+
+  for var ATransferId in ATasks.Keys do begin
+    if not ATasks.TryGetValue(ATransferId, ATask) then
+      continue;
+    ///
+
+    Synchronize(procedure begin
+      FOnTransferUpdate(self, ATransferId, ATask.WorkCount);
+    end);
+  end;
 end;
 
 { TOptixFileTransferWorker.ClientExecute }
 procedure TOptixFileTransferWorker.ClientExecute();
+
+  { _.SendAcknowledgement }
+  procedure SendAcknowledgement(const AValue : Boolean);
+  begin
+    if Assigned(FClient) then
+      FClient.Send(AValue, SizeOf(Boolean));
+  end;
+
 begin
   var ATasks := TObjectDictionary<TGUID, TOptixTransferTask>.Create([doOwnsValues]);
   var ATask : TOptixTransferTask;
   var ABuffer : array[0..FILE_CHUNK_SIZE-1] of byte;
+  var AStopWatch := TStopwatch.StartNew;
   try
-    if not Assigned(FOnRequestTransferTask) then
+    if not Assigned(FOnRequestTransferTask) or
+       not Assigned(FOnTransferError) or
+       not Assigned(FOnTransferBegins) or
+       not Assigned(FOnTransferUpdate) or
+       not Assigned(FOnTransferEnds) then
       Exit();
 
     while not Terminated do begin
@@ -100,35 +153,73 @@ begin
           FOnRequestTransferTask(self, ATransferId, ATask);
         end);
 
-        if ATask = nil then
+        // Transfer does not exists, is not expected or is in error (locally)
+        if ATask = nil then begin
+          SendAcknowledgement(False);
+
           continue;
-
-        // Step 1) Synchronize File Sizes
-        if ATask is TOptixDownloadTask then begin
-          var AFileSize : Int64;
-
-          FClient.Recv(AFileSize, SizeOf(Int64));
-
-          ///
-          TOptixDownloadTask(ATask).FileSize := AFileSize;
-        end else if ATask is TOptixUploadTask then begin
-          if TOptixUploadTask(ATask).State = otsBegin then
-            FClient.Send(TOptixUploadTask(ATask).FileSize, SizeOf(Int64));
         end;
 
         ///
         ATasks.Add(ATransferId, ATask);
       end;
 
-      // Step 2) Upload / Download Chunks
-      if ATask is TOptixDownloadTask then
-        TOptixDownloadTask(ATask).DownloadChunk(FClient)
-      else if ATask is TOptixUploadTask then
-        TOptixUploadTask(ATask).UploadChunk(FClient);
+      SendAcknowledgement(True);
+
+      // Step 1) Synchronize File Sizes
+      if ATask.State = otsBegin then begin
+        if ATask is TOptixDownloadTask then begin
+          var AFileSize : Int64;
+
+          FClient.Recv(AFileSize, SizeOf(Int64));
+
+          ///
+          TOptixDownloadTask(ATask).SetFileSize(AFileSize);
+        end else if ATask is TOptixUploadTask then
+          if TOptixUploadTask(ATask).State = otsBegin then
+            FClient.Send(TOptixUploadTask(ATask).FileSize, SizeOf(Int64));
+
+        ///
+        Synchronize(procedure begin
+          FOnTransferBegins(self, ATransferId, ATask.FileSize);
+        end);
+      end;
+
+      try
+        // Step 2) Upload / Download Chunks
+        if ATask is TOptixDownloadTask then
+          TOptixDownloadTask(ATask).DownloadChunk(FClient)
+        else if ATask is TOptixUploadTask then
+          TOptixUploadTask(ATask).UploadChunk(FClient);
+      except
+        on E : EWindowsException do begin
+          Synchronize(procedure begin
+            FOnTransferError(self, ATransferId, E.Message);
+          end);
+
+          ///
+          ATasks.Remove(ATransferId);
+        end;
+      end;
+
+      // Update GUI (Progress) every 1s
+      if AStopwatch.ElapsedMilliseconds >= 1000 then begin
+        UpdateAllTasks(ATasks);
+
+        ///
+        AStopwatch.Reset();
+        AStopwatch.Start();
+      end;
 
       ///
-      if ATask.State = otsEnd then
+      if (ATask.State = otsEnd) or ATask.IsEmpty then begin
+        Synchronize(procedure begin
+          FOnTransferEnds(self, ATransferId);
+        end);
+
+        ///
         ATasks.Remove(ATransferId);
+      end;
     end;
   finally
     FreeAndNil(ATasks);

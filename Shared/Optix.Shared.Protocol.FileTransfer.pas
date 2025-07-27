@@ -59,19 +59,22 @@ type
   TOptixTransferState = (
     otsBegin,
     otsProgress,
-    otsEnd
+    otsEnd,
+    otsError
   );
 
   TOptixTransferTask = class
   private
     FFileHandle : THandle;
-    FFileSize   : Int64;
     FWorkCount  : Int64;
     FBuffer     : array[0..FILE_CHUNK_SIZE-1] of byte;
+    FIsEmpty    : Boolean;
 
     {@M}
     function GetState() : TOptixTransferState;
   protected
+    FFileSize : Int64;
+
     {@M}
     procedure IncWorkCount(const AValue : UInt64);
   public
@@ -82,18 +85,18 @@ type
     {@G}
     property WorkCount : Int64               read FWorkCount;
     property State     : TOptixTransferState read GetState;
+    property FileSize  : Int64               read FFileSize;
+    property IsEmpty   : Boolean             read FIsEmpty;
   end;
 
   TOptixDownloadTask = class(TOptixTransferTask)
   public
     {@M}
     procedure DownloadChunk(const AClient : TClientSocket);
+    procedure SetFileSize(const AValue : Int64);
 
     {@C}
     constructor Create(const AFilePath : String); override;
-
-    {@G/S}
-    property FileSize : Int64 read FFileSize write FFileSize;
   end;
 
   TOptixUploadTask = class(TOptixTransferTask)
@@ -103,9 +106,6 @@ type
 
     {@C}
     constructor Create(const AFilePath : String); override;
-
-    {@G}
-    property FileSize : Int64 read FFileSize;
   end;
 
 implementation
@@ -123,6 +123,7 @@ begin
   FFileHandle := INVALID_HANDLE_VALUE;
   FFileSize   := 0;
   FWorkCount  := 0;
+  FIsEmpty    := False;
 end;
 
 { TOptixTransferTask.Destroy }
@@ -178,6 +179,15 @@ begin
   IncWorkCount(ABufferSize);
 end;
 
+{ TOptixDownloadTask.SetFileSize }
+procedure TOptixDownloadTask.SetFileSize(const AValue : Int64);
+begin
+  FIsEmpty := AValue = 0;
+
+  ///
+  FFileSize := AValue;
+end;
+
 { TOptixDownloadTask.WriteChunk }
 constructor TOptixDownloadTask.Create(const AFilePath : String);
 begin
@@ -222,6 +232,8 @@ begin
 
   if not GetFileSizeEx(FFileHandle, FFileSize) then
     raise EWindowsException.Create(Format('GetFileSizeEx->[%s]', [AFilePath]));
+
+  FIsEmpty := FFileSize = 0;
 end;
 
 end.

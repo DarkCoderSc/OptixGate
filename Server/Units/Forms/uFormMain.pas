@@ -678,6 +678,10 @@ begin
         var AForm := TFormTransfers(GetControlForm(pNode, TFormTransfers));
         if Assigned(AWorker) then begin
           TOptixFileTransferWorker(AWorker).OnRequestTransferTask := AForm.OnRequestTransferTask;
+          TOptixFileTransferWorker(AWorker).OnTransferError       := AForm.OnTransferError;
+          TOptixFileTransferWorker(AWorker).OnTransferBegins      := AForm.OnTransferBegins;
+          TOptixFileTransferWorker(AWorker).OnTransferUpdate      := AForm.OnTransferUpdate;
+          TOptixFileTransferWorker(AWorker).OnTransferEnds        := AForm.OnTransferEnds;
         end;
       // Unknown -------------------------------------------------------------------------------------------------------
       end else
@@ -775,5 +779,9 @@ procedure TFormMain.TimerRefreshTimer(Sender: TObject);
 begin
   VST.Refresh();
 end;
+
+- TODO
+- Handle file transfer exception (special exception that hit transfer list)
+- Review threading pooling, use more classical approach
 
 end.

@@ -96,6 +96,9 @@ begin
       var ATransfer : TOptixTransfer := nil;
       ///
 
+      if AStopwatch.IsRunning then
+        AStopwatch.Stop();
+
       // Polling Transfer Request --------------------------------------------------------------------------------------
       while (FTransferQueue.PopItem(ATransfer) = TWaitResult.wrSignaled) do begin
         if Terminated then
@@ -120,7 +123,7 @@ begin
           ///
           ATasks.Add(ATransfer, ATask);
         except
-          on E : EWindowsException do begin
+          on E : Exception do begin
             FreeAndNil(ATransfer);
 
             // Send exception
@@ -132,7 +135,8 @@ begin
 
       // Process Transfer ----------------------------------------------------------------------------------------------
       if ATasks.Count > 0 then begin
-        AStopwatch.StartNew;
+        AStopwatch.Reset();
+        AStopwatch.Start();
         ///
 
         while not Terminated do begin
@@ -142,16 +146,21 @@ begin
               break;
             ///
 
-            var ATask : TOptixTransferTask;
+            var ATask : TOptixTransferTask := nil;
 
             if not ATasks.TryGetValue(ATransfer, ATask) or (ATask.State = otsEnd) then
               continue;
 
             FClient.Send(ATransfer.TransferId, SizeOf(TGUID));
 
-            implémenter coté serveur + gérer exception ("special exception transfer")
             var ASuccess : Boolean;
             FClient.Recv(ASuccess, SizeOf(Boolean));
+            if not ASuccess then begin
+              ATerminatedTransfers.Add(ATransfer);
+
+              ///
+              continue;
+            end;
 
             try
               if ATask is TOptixUploadTask then begin
@@ -166,7 +175,7 @@ begin
 
                   FClient.Recv(AFileSize, SizeOf(Int64));
 
-                  TOptixDownloadTask(ATask).FileSize := AFileSize;
+                  TOptixDownloadTask(ATask).SetFileSize(AFileSize);
                 end;
                 ///
 
@@ -182,7 +191,7 @@ begin
             end;
 
             ///
-            if ATask.State = otsEnd then
+            if (ATask.State = otsEnd) or ATask.IsEmpty then
               ATerminatedTransfers.Add(ATransfer);
           end;
 

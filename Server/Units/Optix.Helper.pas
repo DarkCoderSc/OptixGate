@@ -91,7 +91,8 @@ begin
   ZeroMemory(@AFileInfo, sizeof(AFileInfo));
   ///
 
-  AExtensionMode := AFileName.IsEmpty or (not FileExists(AFileName));
+  if not AExtensionMode then
+    AExtensionMode := not FileExists(AFileName);
 
   var AFlags := SHGFI_SMALLICON or SHGFI_SYSICONINDEX;
   if AExtensionMode then
