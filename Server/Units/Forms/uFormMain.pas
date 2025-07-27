@@ -44,6 +44,7 @@
 {
   TODO:
     - Column Sorting
+    - Improve OOP (Better visibility logic between parent-child)
 }
 
 unit uFormMain;
@@ -51,15 +52,12 @@ unit uFormMain;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Optix.Protocol.Network.Server, Optix.Sockets.Helper,
-  Winapi.Winsock2, Vcl.ComCtrls, XSuperObject, Optix.Func.SessionInformation,
-  Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands,
-  Vcl.BaseImageCollection, Vcl.ImageCollection, System.ImageList, Vcl.ImgList,
-  Vcl.VirtualImageList, Vcl.StdCtrls, __uBaseFormControl__, Generics.Collections,
-  Winapi.ShellAPI;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, Vcl.Menus, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
+  VirtualTrees, Optix.Protocol.Server, Optix.Sockets.Helper, Winapi.Winsock2, Vcl.ComCtrls, XSuperObject,
+  Optix.Func.SessionInformation, Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands,
+  Vcl.BaseImageCollection, Vcl.ImageCollection, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList, Vcl.StdCtrls,
+  __uBaseFormControl__, Generics.Collections, Winapi.ShellAPI, Optix.Thread, Optix.Protocol.Preflight;
 
 type
   TTreeData = record
@@ -67,6 +65,7 @@ type
     SessionInformation : TOptixSessionInformation;
     SpawnDate          : TDateTime;
     Forms              : TObjectList<TBaseFormControl>;
+    Workers            : TObjectList<TOptixThread>;
 
     ///
     function ToString: String;
@@ -99,7 +98,7 @@ type
     ImageCollection: TImageCollection;
     VirtualImageList: TVirtualImageList;
     N5: TMenuItem;
-    ransfers1: TMenuItem;
+    transfers1: TMenuItem;
     Logs1: TMenuItem;
     ControlForms1: TMenuItem;
     ImageSystem: TImageList;
@@ -131,6 +130,7 @@ type
     procedure Logs1Click(Sender: TObject);
     procedure FileManager1Click(Sender: TObject);
     procedure ControlForms1Click(Sender: TObject);
+    procedure transfers1Click(Sender: TObject);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
@@ -143,6 +143,8 @@ type
     procedure OnSessionConnected(const pData : PTreeData);
     procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
     procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
+
+    procedure OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const ASessionId  : TGUID; const AWorkerKind : TClientKind);
 
     procedure UpdateStatus(const ACaption : String = '');
 
@@ -166,10 +168,9 @@ var
 
 implementation
 
-uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants,
-     Optix.Process.Helper, uFormAbout, uFormProcessManager,
-     Optix.Thread, uFormLogs, Optix.Func.LogNotifier, uFormFileManager,
-     uFormControlForms;
+uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
+     uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
+     Optix.Protocol.Worker.FileTransfer;
 
 {$R *.dfm}
 
@@ -390,11 +391,13 @@ begin
 
   // Create not mandatory windows
 
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
   pData^.Forms.Add(TFormLogs.Create(self, pData^.ToString));
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
   pData^.Forms.Add(TFormControlForms.Create(self, pData^.ToString, pData));
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
+  pData^.Forms.Add(TFormTransfers.Create(self, pData^.ToString));
+  // -------------------------------------------------------------------------------------------------------------------
 
   ///
   VST.Refresh();
@@ -455,6 +458,14 @@ begin
 
   if Assigned(pData^.Forms) then
     FreeAndNil(pData^.Forms);
+
+  if Assigned(pData^.Workers) then begin
+    for var AWorker in pData^.Workers do
+      TOptixThread.TerminateInstance(AWorker);
+
+    ///
+    FreeAndNil(pData^.Workers);
+  end;
 end;
 
 procedure TFormMain.VSTGetImageIndex(Sender: TBaseVirtualTree;
@@ -524,6 +535,7 @@ procedure TFormMain.VSTInitNode(Sender: TBaseVirtualTree; ParentNode,
 begin
   var pData := PTreeData(Node.GetData);
   pData^.Forms := TObjectList<TBaseFormControl>.Create(True);
+  pData^.Workers := TObjectList<TOptixThread>.Create(False);
 end;
 
 procedure TFormMain.OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
@@ -573,11 +585,17 @@ begin
   self.Logs1.Visible           := AVisible;
   self.FileManager1.Visible    := AVisible;
   self.ControlForms1.Visible   := AVisible;
+  self.transfers1.Visible      := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
 begin
   CreateOrOpenControlForm(VST.FocusedNode, TFormProcessManager);
+end;
+
+procedure TFormMain.transfers1Click(Sender: TObject);
+begin
+  CreateOrOpenControlForm(VST.FocusedNode, TFormTransfers);
 end;
 
 procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
@@ -602,7 +620,7 @@ begin
   try
     try
       if AWindowGUID.IsEmpty then begin
-        { Responses ---------------------------------------------------------- }
+        { Responses -------------------------------------------------------------------------------------------------- }
         if AClassName = TOptixSessionInformation.ClassName then begin
           AOptixPacket := TOptixSessionInformation.Create(ASerializedPacket);
 
@@ -614,23 +632,23 @@ begin
             RegisterSession(Sender, TOptixSessionInformation(AOptixPacket));
           end;
         end
-        // ---------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
         else if (AClassName = TLogNotifier.ClassName) then begin
           var ALogsForm := GetControlForm(pNode, TFormLogs);
 
           if Assigned(ALogsForm) then
             ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
         end;
-        // ---------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
         // ... //
         // else if ...
         // ... //
       end else begin
-        { Windowed Responses ------------------------------------------------- }
+        { Windowed Responses ----------------------------------------------------------------------------------------- }
         var AControlForm := GetControlForm(pNode, AWindowGUID);
         if Assigned(AControlForm) then
           AControlForm.ReceivePacket(AClassName, ASerializedPacket);
-        // ---------------------------------------------------------------------
+        // -------------------------------------------------------------------------------------------------------------
       end;
     finally
       if not AHandleMemory and Assigned(AOptixPacket) then
@@ -638,6 +656,40 @@ begin
     end;
   except
     // TODO: log packet errors
+  end;
+end;
+
+procedure TFormMain.OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const ASessionId  : TGUID; const AWorkerKind : TClientKind);
+begin
+  var pNode := GetNodeBySessionId(ASessionId);
+  if not Assigned(pNode) then
+    FreeAndNil(AClient)
+  else begin
+    var pData := PTreeData(pNode.GetData);
+    ///
+
+    var AWorker : TOptixThread := nil;
+
+    case AWorkerKind of
+      // File Transfer Worker ------------------------------------------------------------------------------------------
+      ckFileTransfer : begin
+        AWorker := TOptixFileTransferWorker.Create(AClient);
+
+        var AForm := TFormTransfers(GetControlForm(pNode, TFormTransfers));
+        if Assigned(AWorker) then begin
+          TOptixFileTransferWorker(AWorker).OnRequestTransferTask := AForm.OnRequestTransferTask;
+        end;
+      // Unknown -------------------------------------------------------------------------------------------------------
+      end else
+        FreeAndNil(AClient);
+    end;
+
+    if Assigned(AWorker) then begin
+      pData^.Workers.Add(AWorker);
+
+      ///
+      AWorker.Start();
+    end;
   end;
 end;
 
@@ -676,8 +728,11 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  TOptixThread.TerminateWait(OPTIX_WATCHDOG); // This is important to gracefully
-                                              // terminate threads.
+  if Assigned(FServer) then
+    TOptixThread.TerminateWait(FServer);
+  ///
+
+  TOptixThread.TerminateWait(OPTIX_WATCHDOG);
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
@@ -708,6 +763,7 @@ begin
       FServer.OnServerStop        := OnServerStop;
       FServer.OnSessionDisconnect := OnSessionDisconnect;
       FServer.OnReceivePacket     := OnReceivePacket;
+      FServer.OnRegisterWorker    := OnRegisterWorker;
 
       ///
       FServer.Start();

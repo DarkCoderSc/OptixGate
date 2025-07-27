@@ -499,7 +499,7 @@ begin
   else if hSearch = ERROR_FILE_NOT_FOUND then
     raise Exception.Create(Format('No files found so far in the directory: `%s`', [FPath]));
   try
-    var FIsRoot := True;
+    FIsRoot := True;
     repeat
       var AFileName := String(AWin32FindData.cFileName);
       if AFileName = '.' then

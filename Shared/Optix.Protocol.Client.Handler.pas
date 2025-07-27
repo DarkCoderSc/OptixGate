@@ -45,9 +45,7 @@ unit Optix.Protocol.Client.Handler;
 
 interface
 
-{$I Optix.inc}
-
-uses Optix.Protocol.Sockets.Client, Optix.Protocol.Packet, Generics.Collections,
+uses Optix.Protocol.Client, Optix.Protocol.Packet, Generics.Collections,
      Optix.Sockets.Helper, System.SysUtils, XSuperObject,
      Winapi.Windows, Optix.Protocol.Preflight;
 
@@ -55,25 +53,13 @@ type
   TOptixClientHandlerThread = class(TOptixClientThread)
   private
     FPacketQueue : TThreadedQueue<TOptixPacket>;
-
-    {@M}
-    procedure Initialize();
   protected
-    {@C}
+    {@M}
+    procedure Initialize(); override;
+    procedure Finalize(); override;
     procedure ClientExecute(); override;
-    procedure EstablishedConnection(); virtual;
     procedure PacketReceived(const ASerializedPacket : ISuperObject); virtual; abstract;
   public
-    {$IFDEF CLIENT}
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind); overload;
-    {$ENDIF}
-
-    {$IFDEF SERVER}
-    constructor Create(const AClient : TClientSocket);
-    {$ENDIF}
-
-    destructor Destroy(); override;
-
     {@M}
     procedure AddPacket(const APacket : TOptixPacket);
   end;
@@ -81,12 +67,6 @@ type
 implementation
 
 uses Optix.Sockets.Exceptions, System.SyncObjs;
-
-{ TOptixClientHandlerThread.EstablishedConnection }
-procedure TOptixClientHandlerThread.EstablishedConnection();
-begin
-  ///
-end;
 
 { TOptixClientHandlerThread.ClientExecute }
 procedure TOptixClientHandlerThread.ClientExecute();
@@ -97,15 +77,13 @@ begin
     Exit();
   ///
 
-  EstablishedConnection();
-
   while not Terminated do begin
     APacket := nil;
     ///
 
-    //--------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------
     // Dispatch Outgoing Packets (Egress)
-    //--------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------
     while (FPacketQueue.PopItem(APacket) = TWaitResult.wrSignaled) do begin
       try
         if Terminated then
@@ -130,9 +108,9 @@ begin
       end;
     end;
 
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
     // Dispatch Incomming Packets (Ingress)
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
     try
       ASerializedPacket := nil;
 
@@ -154,33 +132,18 @@ end;
 { TOptixClientHandlerThread.Initialize }
 procedure TOptixClientHandlerThread.Initialize();
 begin
+  inherited;
+  ///
+
   FPacketQueue := TThreadedQueue<TOptixPacket>.Create(1024, INFINITE, 100);
 end;
 
-{ TOptixClientHandlerThread.Create }
-{$IFDEF CLIENT}
-constructor TOptixClientHandlerThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind);
+{ TOptixClientHandlerThread.Finalize }
+procedure TOptixClientHandlerThread.Finalize();
 begin
   inherited;
   ///
 
-  Initialize();
-end;
-{$ENDIF}
-
-{$IFDEF SERVER}
-constructor TOptixClientHandlerThread.Create(const AClient : TClientSocket);
-begin
-  inherited Create(AClient);
-  ///
-
-  Initialize();
-end;
-{$ENDIF}
-
-{ TOptixClientHandlerThread.ClientExecute }
-destructor TOptixClientHandlerThread.Destroy();
-begin
   if Assigned(FPacketQueue) then begin
     FPacketQueue.DoShutDown();
 
@@ -189,12 +152,9 @@ begin
     ///
     FreeAndNil(FPacketQueue);
   end;
-
-  ///
-  inherited Destroy();
 end;
 
-{ TOptixClientHandlerThread.ClientExecute }
+{ TOptixClientHandlerThread.AddPacket }
 procedure TOptixClientHandlerThread.AddPacket(const APacket : TOptixPacket);
 begin
   if not Assigned(APacket) then

@@ -62,10 +62,8 @@ type
     {@M}
     procedure ClientTerminate(); override;
     procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
+    procedure Initialize(); override;
   public
-    {@C}
-    constructor Create(const AClient : TClientSocket); overload;
-
     {@G/S}
     property OnSessionDisconnect : TOnSessionDisconnect read FOnSessionDisconnect write FOnSessionDisconnect;
     property OnReceivePacket     : TOnReceivePacket     read FOnReceivePacket     write FOnReceivePacket;
@@ -73,10 +71,10 @@ type
 
 implementation
 
-{ TOptixSessionHandlerThread.Create }
-constructor TOptixSessionHandlerThread.Create(const AClient : TClientSocket);
+{ TOptixSessionHandlerThread.Initialize }
+procedure TOptixSessionHandlerThread.Initialize();
 begin
-  inherited Create(AClient);
+  inherited;
   ///
 
   FOnSessionDisconnect := nil;

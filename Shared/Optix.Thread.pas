@@ -88,9 +88,12 @@ type
 
     {@M}
     class function IsThreadRunning(const AThread : TThread): Boolean; static;
+    class procedure Terminate(const AThread : TThread; const AWaitFor : Boolean = False); overload;
     class procedure TerminateWait(const AThread : TThread); static;
     class procedure SignalHiveAndWait(); static;
     class procedure PurgeDeadThreads(); static;
+    class function HasInstance(const AThread : TOptixThread; const ATryTerminate : Boolean = False) : Boolean; static;
+    class function TerminateInstance(const AThread : TOptixThread) : Boolean; static;
 
     {@S}
     property OnThreadExecute : TNotifyEvent write FOnThreadExecute;
@@ -149,6 +152,7 @@ begin
       FIntervalEvent.WaitFor(1000);
     end;
 
+    ///
     TOptixThread.SignalHiveAndWait();
   finally
     ExitThread(0); // !important
@@ -187,8 +191,8 @@ begin
   result := (AExitCode = STILL_ACTIVE);
 end;
 
-{ TOptixThread.TerminateWait }
-class procedure TOptixThread.TerminateWait(const AThread : TThread);
+{ TOptixThread.Terminate }
+class procedure TOptixThread.Terminate(const AThread : TThread; const AWaitFor : Boolean = False);
 begin
   if not Assigned(AThread) then
     Exit();
@@ -196,9 +200,15 @@ begin
   if TOptixThread.IsThreadRunning(AThread) then begin
     AThread.Terminate;
 
-    ///
-    AThread.WaitFor();
+    if AWaitFor then
+      AThread.WaitFor();
   end;
+end;
+
+{ TOptixThread.TerminateWait }
+class procedure TOptixThread.TerminateWait(const AThread : TThread);
+begin
+  Terminate(AThread, True);
 end;
 
 { TOptixThread.SignalHiveAndWait }
@@ -253,7 +263,40 @@ begin
     // Free Threads
     if Assigned(AThreadsToPurge) then
       FreeAndNil(AThreadsToPurge);
-  end;;
+  end;
+end;
+
+{ TOptixThread.HasInstance }
+class function TOptixThread.HasInstance(const AThread : TOptixThread; const ATryTerminate : Boolean = False) : Boolean;
+begin
+  result := False;
+  ///
+
+  if not Assigned(OPTIX_THREAD_HIVE) then
+    Exit();
+  ///
+
+  var AList := OPTIX_THREAD_HIVE.LockList();
+  try
+    for var ACandidate in AList do begin
+      if ACandidate = AThread then begin
+        result := True;
+
+        if ATryTerminate then
+          TOptixThread.Terminate(AThread);
+
+        break;
+      end;
+    end;
+  finally
+    OPTIX_THREAD_HIVE.UnlockList();
+  end;
+end;
+
+{ TOptixThread.TerminateInstance }
+class function TOptixThread.TerminateInstance(const AThread : TOptixThread) : Boolean;
+begin
+  result := HasInstance(AThread, True);
 end;
 
 { TOptixThread.IsRunning }

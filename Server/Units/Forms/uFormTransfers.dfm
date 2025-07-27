@@ -1,0 +1,80 @@
+object FormTransfers: TFormTransfers
+  Left = 0
+  Top = 0
+  Caption = 'Transfers'
+  ClientHeight = 269
+  ClientWidth = 630
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -12
+  Font.Name = 'Segoe UI'
+  Font.Style = []
+  Position = poMainFormCenter
+  TextHeight = 15
+  object VST: TVirtualStringTree
+    Left = 0
+    Top = 0
+    Width = 630
+    Height = 269
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    Align = alClient
+    BackGroundImageTransparent = True
+    BorderStyle = bsNone
+    Color = clWhite
+    Colors.UnfocusedColor = clWindowText
+    DefaultNodeHeight = 19
+    Header.AutoSizeIndex = -1
+    Header.DefaultHeight = 25
+    Header.MainColumn = 1
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Images = FormMain.VirtualImageList
+    PopupMenu = PopupMenu
+    TabOrder = 0
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnChange = VSTChange
+    OnFocusChanged = VSTFocusChanged
+    OnGetText = VSTGetText
+    OnGetNodeDataSize = VSTGetNodeDataSize
+    Touch.InteractiveGestures = [igPan, igPressAndTap]
+    Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitWidth = 659
+    ExplicitHeight = 467
+    Columns = <
+      item
+        Position = 0
+        Text = 'Source File'
+        Width = 200
+      end
+      item
+        Position = 1
+        Text = 'Destination File'
+        Width = 200
+      end
+      item
+        Position = 2
+        Text = 'Direction'
+        Width = 110
+      end>
+  end
+  object PopupMenu: TPopupMenu
+    Left = 232
+    Top = 104
+    object DownloadaFile1: TMenuItem
+      Caption = 'Download a File'
+      OnClick = DownloadaFile1Click
+    end
+    object UploadaFile1: TMenuItem
+      Caption = 'Upload a File'
+      OnClick = UploadaFile1Click
+    end
+  end
+  object OpenDialog: TOpenDialog
+    Left = 320
+    Top = 88
+  end
+end

@@ -80,6 +80,7 @@ type
     class function GetFileTypeDescription(const AFileName: String): String; static;
     class procedure GetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime); static;
     class function TryGetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean; static;
+    class function UniqueFileName(const AFileName : String) : String; static;
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
@@ -87,8 +88,8 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows,
-     Optix.Exceptions, Optix.WinApiEx, Winapi.ShellAPI, Optix.System.Helper;
+uses System.SysUtils, Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows, Optix.Exceptions, Optix.WinApiEx, Winapi.ShellAPI,
+     Optix.System.Helper, System.IOUtils;
 
 (* Local *)
 
@@ -456,6 +457,26 @@ begin
   except
     result := False;
   end;
+end;
+
+{ TFileSystemHelper.UniqueFileName }
+class function TFileSystemHelper.UniqueFileName(const AFileName : String) : String;
+begin
+  if not FileExists(AFileName) then
+    Exit(AFileName);
+
+  var i := 1;
+  repeat
+    result := Format('%s%s(%d)%s', [
+      IncludeTrailingPathDelimiter(ExtractFilePath(AFileName)),
+      TPath.GetFileNameWithoutExtension(AFileName),
+      i,
+      TPath.GetExtension(AFileName)
+    ]);
+
+    ///
+    Inc(i);
+  until (NOT FileExists(result));
 end;
 
 end.

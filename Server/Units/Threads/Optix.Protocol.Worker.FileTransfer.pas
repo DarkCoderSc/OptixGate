@@ -41,168 +41,98 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.Sockets.Client;
+unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
-uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs,
-     Generics.Collections, Optix.Protocol.Preflight;
+uses System.Classes, System.SysUtils, Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer;
 
 type
-  TOptixClientThread = class(TOptixThread)
+  TOnRequestTransferTask = procedure(Sender : TObject; const ATransferId : TGUID; var ATask : TOptixTransferTask) of object;
+
+  TOptixFileTransferWorker = class(TOptixClientThread)
   private
-    FRetry         : Boolean;
-    FRetryDelay    : Cardinal;
-    FRetryEvent    : TEvent;
-
-    FRemoteAddress : String;
-    FRemotePort    : Word;
-
-    FClientKind    : TClientKind;
-
-    {@M}
-    procedure SetRetry(const AValue : Boolean);
-    procedure SetRetryDelay(AValue : Cardinal);
+    FSessionId             : TGUID;
+    FOnRequestTransferTask : TOnRequestTransferTask;
   protected
-    FClient : TClientSocket;
-
     {@M}
-    procedure ThreadExecute(); override;
-    procedure TerminatedSet(); override;
-
-    procedure ClientExecute(); virtual; abstract;
-
-    {@C}
-    constructor Create(); overload;
+    procedure ClientExecute(); override;
+    procedure Initialize(); override;
   public
-    {@C}
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind); overload; virtual;
-
-    destructor Destroy(); override;
-
-    {@S}
-    property Retry      : Boolean  write SetRetry;
-    property RetryDelay : Cardinal write SetRetryDelay;
+    {@G/S}
+    property OnRequestTransferTask : TOnRequestTransferTask read FOnRequestTransferTask write FOnRequestTransferTask;
   end;
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions;
+uses Winapi.Windows, Generics.Collections;
 
-{ TOptixClientThread.Create }
-constructor TOptixClientThread.Create();
+{ TOptixFileTransferWorker.Initialize }
+procedure TOptixFileTransferWorker.Initialize();
 begin
-  inherited Create();
+  inherited;
   ///
 
-  FRetry             := False;
-  FRetryDelay        := 5000;
-  FRetryEvent        := nil;
-  FClient            := nil;
-  FRemoteAddress     := '';
-  FRemotePort        := 0;
+  FOnRequestTransferTask := nil;
 end;
 
-{ TOptixClientThread.Create }
-constructor TOptixClientThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AClientKind : TClientKind);
+{ TOptixFileTransferWorker.ClientExecute }
+procedure TOptixFileTransferWorker.ClientExecute();
 begin
-  self.Create();
-  ///
+  var ATasks := TObjectDictionary<TGUID, TOptixTransferTask>.Create([doOwnsValues]);
+  var ATask : TOptixTransferTask;
+  var ABuffer : array[0..FILE_CHUNK_SIZE-1] of byte;
+  try
+    if not Assigned(FOnRequestTransferTask) then
+      Exit();
 
-  FRemoteAddress := ARemoteAddress;
-  FRemotePort    := ARemotePort;
-  FClientKind    := AClientKind;
-end;
+    while not Terminated do begin
+      ATask := nil;
+      ///
 
-{ TOptixClientThread.Destroy }
-destructor TOptixClientThread.Destroy();
-begin
-  if Assigned(FRetryEvent) then
-    FreeAndNil(FRetryEvent);
+      var ATransferId : TGUID;
+      FClient.Recv(ATransferId, SizeOf(TGUID));
+      ///
 
-  if Assigned(FClient) then
-    FreeAndNil(FClient);
+      // Create / Register a new task
+      if not ATasks.TryGetValue(ATransferId, ATask) then begin
+        Synchronize(procedure begin
+          FOnRequestTransferTask(self, ATransferId, ATask);
+        end);
 
-  ///
-  inherited Destroy();
-end;
+        if ATask = nil then
+          continue;
 
-{ TOptixClientThread.ThreadExecute }
-procedure TOptixClientThread.ThreadExecute();
-begin
-  while not Terminated do begin
-    try
-      FClient := TClientSocket.Create(FRemoteAddress, FRemotePort);
-      try
-        FClient.Connect();
+        // Step 1) Synchronize File Sizes
+        if ATask is TOptixDownloadTask then begin
+          var AFileSize : Int64;
+
+          FClient.Recv(AFileSize, SizeOf(Int64));
+
+          ///
+          TOptixDownloadTask(ATask).FileSize := AFileSize;
+        end else if ATask is TOptixUploadTask then begin
+          if TOptixUploadTask(ATask).State = otsBegin then
+            FClient.Send(TOptixUploadTask(ATask).FileSize, SizeOf(Int64));
+        end;
+
         ///
-
-        // Preflight Request
-        var APreflight : TOptixPreflightRequest;
-        APreflight.ClientKind := FClientKind;
-        FClient.Send(APreflight, SizeOf(TOptixPreflightRequest));
-
-        self.ClientExecute();
-      Except
-        on E: ESocketException do begin
-          // TODO
-        end;
-
-        on E: Exception do begin
-          raise;
-        end;
+        ATasks.Add(ATransferId, ATask);
       end;
-    finally
-      if Assigned(FClient) then
-        FreeAndNil(FClient);
 
-      if Assigned(FRetryEvent) then
-        FRetryEvent.WaitFor(FRetryDelay);
+      // Step 2) Upload / Download Chunks
+      if ATask is TOptixDownloadTask then
+        TOptixDownloadTask(ATask).DownloadChunk(FClient)
+      else if ATask is TOptixUploadTask then
+        TOptixUploadTask(ATask).UploadChunk(FClient);
+
+      ///
+      if ATask.State = otsEnd then
+        ATasks.Remove(ATransferId);
     end;
-
-    if not FRetry then
-      break;
-  end; // (While not Terminated)
-end;
-
-{ TOptixClientThread.TerminatedSet }
-procedure TOptixClientThread.TerminatedSet();
-begin
-  inherited TerminatedSet();
-  ///
-
-  if Assigned(FRetryEvent) then
-    FRetryEvent.SetEvent();
-end;
-
-{ TOptixClientThread.SetRetry }
-procedure TOptixClientThread.SetRetry(const AValue: Boolean);
-begin
-  if AValue then
-    FRetryEvent := TEvent.Create(
-                                    nil,
-                                    True,
-                                    False,
-                                    TGUID.NewGuid.ToString()
-    )
-  else
-    if Assigned(FRetryEvent) then
-      FreeAndNil(FRetryEvent);
-
-
-  ///
-  FRetry := AValue;
-end;
-
-{ TOptixClientThread.SetRetryDelay }
-procedure TOptixClientThread.SetRetryDelay(AValue : Cardinal);
-begin
-  if AValue < 500 then
-    AValue := 500; // Minimum Value
-
-  ///
-  FRetryDelay := AValue;
+  finally
+    FreeAndNil(ATasks);
+  end;
 end;
 
 end.
-

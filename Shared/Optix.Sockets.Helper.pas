@@ -90,7 +90,7 @@ type
     procedure ReceivePacket(var APacketBody : ISuperObject; const ABlockUntilDataAvailable : Boolean = False);
 
     {@C}
-    constructor Create(APacketSize : Cardinal = 2048); virtual;
+    constructor Create(APacketSize : Cardinal = 8192); virtual;
     destructor Destroy(); override;
 
     {@G}
@@ -146,7 +146,7 @@ uses Optix.Sockets.Exceptions;
 (* TSocketBase *)
 
 { TSocketBase.Create }
-constructor TSocketBase.Create(APacketSize : Cardinal = 2048);
+constructor TSocketBase.Create(APacketSize : Cardinal = 8192);
 begin
   self.CreateSocket();
 

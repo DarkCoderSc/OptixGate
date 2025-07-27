@@ -105,13 +105,29 @@ type
     {@M}
     function Serialize() : ISuperObject; override;
 
+    {@C}
+    constructor Create(const AFilePath : String; const ATransferId : TGUID); overload;
+
     {@G}
     property TransferId : TGUID  read FTransferId;
     property FilePath   : String read FFilePath;
   end;
 
   TOptixDownloadFile = class(TOptixTransfer);
-  TOptixUploadFile = class(TOptixTransfer);
+
+  TOptixUploadFile = class(TOptixTransfer)
+  private
+    FFileSize : UInt64;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property FileSize : UInt64 read FFileSize;
+  end;
 
 implementation
 
@@ -181,6 +197,16 @@ end;
 
 (* TOptixTransfer *************************************************************)
 
+{ TOptixTransfer.Create }
+constructor TOptixTransfer.Create(const AFilePath : String; const ATransferId : TGUID);
+begin
+  inherited Create();
+  ///
+
+  FFilePath   := AFilePath;
+  FTransferId := ATransferId;
+end;
+
 { TOptixTransfer.Serialize }
 function TOptixTransfer.Serialize() : ISuperObject;
 begin
@@ -202,6 +228,29 @@ begin
 
   FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
   FFilePath   := ASerializedObject.S['FilePath'];
+end;
+
+(* TOptixUploadFile ***********************************************************)
+
+{ TOptixUploadFile.Serialize }
+function TOptixUploadFile.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.I['FileSize'] := FFileSize;
+end;
+
+{ TOptixUploadFile.DeSerialize }
+procedure TOptixUploadFile.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FFileSize := ASerializedObject.I['FileSize'];
 end;
 
 end.

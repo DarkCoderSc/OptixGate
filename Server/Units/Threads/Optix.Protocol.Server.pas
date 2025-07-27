@@ -41,36 +41,43 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.Network.Server;
+unit Optix.Protocol.Server;
 
 interface
 
-uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject,
-     Generics.Collections, Optix.Sockets.Helper, Optix.Thread,
-     Optix.Protocol.SessionHandler, Optix.Protocol.Preflight;
+uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject, Generics.Collections, Optix.Sockets.Helper,
+     Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight;
 
 type
   TOptixServerThread = class;
 
-  TOnServerStart = procedure(Sender : TOptixServerThread; const ASocketFd : TSocket) of object;
-  TOnServerStop  = procedure(Sender : TOptixServerThread) of object;
-  TOnServerError = procedure(Sender : TOptixServerThread; const AErrorMessage : String) of object;
+  TOnServerStart    = procedure(Sender : TOptixServerThread; const ASocketFd : TSocket) of object;
+  TOnServerStop     = procedure(Sender : TOptixServerThread) of object;
+  TOnServerError    = procedure(Sender : TOptixServerThread; const AErrorMessage : String) of object;
+
+  TOnRegisterWorker = procedure(
+    Sender            : TOptixServerThread;
+    const AClient     : TClientSocket;
+    const ASessionId  : TGUID;
+    const AWorkerKind : TClientKind
+  ) of object;
 
   (* TOptixServerThread *)
   TOptixServerThread = class(TOptixThread)
   private
-    FBindAddress          : String;
-    FBindPort             : Word;
-    FServer               : TServerSocket;
+    FBindAddress         : String;
+    FBindPort            : Word;
+    FServer              : TServerSocket;
 
-    FClientSockets        : TList<TSocket>;
+    FClientSockets       : TList<TSocket>;
 
-    FOnServerStart        : TOnServerStart;
-    FOnServerError        : TOnServerError;
-    FOnServerStop         : TOnServerStop;
+    FOnServerStart       : TOnServerStart;
+    FOnServerError       : TOnServerError;
+    FOnServerStop        : TOnServerStop;
 
-    FOnSessionDisconnect  : TOnSessionDisconnect;
-    FOnReceivePacket      : TOnReceivePacket;
+    FOnSessionDisconnect : TOnSessionDisconnect;
+    FOnReceivePacket     : TOnReceivePacket;
+    FOnRegisterWorker    : TOnRegisterWorker;
 
     {@M}
     procedure Close();
@@ -89,6 +96,7 @@ type
     property OnServerStop        : TOnServerStop        read FOnServerStop        write FOnServerStop;
     property OnSessionDisconnect : TOnSessionDisconnect read FOnSessionDisconnect write FOnSessionDisconnect;
     property OnReceivePacket     : TOnReceivePacket     read FOnReceivePacket     write FOnReceivePacket;
+    property OnRegisterWorker    : TOnRegisterWorker    read FOnRegisterWorker    write FOnRegisterWorker;
 
     {@G}
     property Port : Word read FBindPort;
@@ -96,7 +104,8 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions;
+uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions,
+     Optix.Protocol.Worker.FileTransfer, Optix.Protocol.Client;
 
 (* TOptixServerThread *)
 
@@ -137,27 +146,19 @@ begin
             FClientSockets.Add(AClient.Socket);
 
           if APreflight.ClientKind = ckHandler then begin
-            // Main Handler ----------------------------------------------------
+            // Main Handler --------------------------------------------------------------------------------------------
             var ASessionHandler := TOptixSessionHandlerThread.Create(AClient);
 
             ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
             ASessionHandler.OnReceivePacket := OnReceivePacket;
             ASessionHandler.Start();
-            // -----------------------------------------------------------------
-          end else begin
-            // TODO: @Synchronize check preflight SessionId to register new worker
-            // thread, if success, dispatch worker thread, otherwise terminate
-            // connection.
-            // Use a new event like "FOnRegisterWorker")
-
-            case APreflight.ClientKind of
-              // File Transfer (in-out) ----------------------------------------
-              ckFileTransfer : begin
-
-              end;
-              // ---------------------------------------------------------------
-            end;
-          end;
+            // ---------------------------------------------------------------------------------------------------------
+          end else if Assigned(FOnRegisterWorker) then
+            Synchronize(procedure begin
+              FOnRegisterWorker(self, AClient, APreflight.SessionId, APreflight.ClientKind);
+            end)
+          else
+            raise EOptixPreflightException.Create('Nothing to do with incomming client.');
         except
           if Assigned(AClient) then
             FreeAndNil(AClient);
@@ -212,6 +213,7 @@ begin
   FOnServerStop         := nil;
   FOnSessionDisconnect  := nil;
   FOnReceivePacket      := nil;
+  FOnRegisterWorker     := nil;
 
   FBindAddress := ABindAddress;
   FBindPort    := ABindPort;

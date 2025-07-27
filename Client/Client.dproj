@@ -103,7 +103,7 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Client.pas"/>
         <DCCReference Include="..\Shared\XSuperJSON.pas"/>
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
@@ -116,7 +116,8 @@
         <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.FileTransfer.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
+        <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

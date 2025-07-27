@@ -104,8 +104,6 @@ object FormMain: TFormMain
       item
         Width = 130
       end>
-    ExplicitTop = 304
-    ExplicitWidth = 521
   end
   object MainMenu: TMainMenu
     Left = 152
@@ -172,8 +170,9 @@ object FormMain: TFormMain
       Caption = 'Control Forms'
       OnClick = ControlForms1Click
     end
-    object ransfers1: TMenuItem
+    object transfers1: TMenuItem
       Caption = 'Transfers'
+      OnClick = transfers1Click
     end
     object Logs1: TMenuItem
       Caption = 'Logs'

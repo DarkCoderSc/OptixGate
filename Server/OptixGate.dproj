@@ -167,9 +167,11 @@
         <DCCReference Include="..\Shared\Optix.Classes.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.Network.Server.pas"/>
+        <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.Sockets.Client.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Client.pas"/>
         <DCCReference Include="Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
@@ -191,6 +193,9 @@
         </DCCReference>
         <DCCReference Include="Units\Forms\uFormControlForms.pas">
             <Form>FormControlForms</Form>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\uFormTransfers.pas">
+            <Form>FormTransfers</Form>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

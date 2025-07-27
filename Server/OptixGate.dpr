@@ -70,9 +70,11 @@ uses
   Optix.Classes in '..\Shared\Optix.Classes.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
+  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
+  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
+  Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
+  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
   __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
@@ -82,7 +84,8 @@ uses
   uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
   uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs},
   uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
-  uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms};
+  uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms},
+  uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers};
 
 {$R *.res}
 {$R data.res}
@@ -96,6 +99,7 @@ begin
   TStyleManager.TrySetStyle('Aqua Light Slate');
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
+  Application.CreateForm(TFormTransfers, FormTransfers);
   // Application.CreateForm(TFormFileManager, FormFileManager);
   // Application.CreateForm(TFormControlForms, FormControlForms);
   // Application.CreateForm(TFormLogs, FormLogs);

@@ -41,7 +41,7 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.Sockets.Client;
+unit Optix.Protocol.Client;
 
 interface
 
@@ -62,6 +62,9 @@ type
     procedure ThreadExecute(); override;
     procedure TerminatedSet(); override;
 
+    procedure Initialize(); virtual;
+    procedure Finalize(); virtual;
+
     procedure ClientExecute(); virtual; abstract;
     procedure ClientTerminate(); virtual;
   public
@@ -80,6 +83,18 @@ implementation
 
 uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions;
 
+{ TOptixClientThread.Initialize }
+procedure TOptixClientThread.Initialize();
+begin
+  ///
+end;
+
+{ TOptixClientThread.Finalize }
+procedure TOptixClientThread.Finalize();
+begin
+  ///
+end;
+
 { TOptixClientThread.Create }
 constructor TOptixClientThread.Create(const AClient : TClientSocket);
 begin
@@ -90,6 +105,9 @@ begin
   FPeerAddress := FClient.RemoteAddress;
 
   FOnClientDisconnect := nil;
+
+  ///
+  Initialize();
 end;
 
 { TOptixClientThread.Destroy }
@@ -97,6 +115,9 @@ destructor TOptixClientThread.Destroy();
 begin
   if Assigned(FClient) then
     FreeAndNil(FClient);
+
+  ///
+  Finalize();
 
   ///
   inherited Destroy();

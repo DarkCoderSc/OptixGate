@@ -69,7 +69,7 @@ uses
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
+  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
@@ -82,7 +82,8 @@ uses
   Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.FileTransfer in 'Units\Threads\Optix.Protocol.FileTransfer.pas';
+  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
+  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas';
 
 begin
   IsMultiThread := True;
@@ -101,7 +102,7 @@ begin
       TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
       TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
 
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801, ckHandler);
+      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
       ASessionHandler.Retry := True;
       ASessionHandler.RetryDelay := 1000;
       ASessionHandler.Start();

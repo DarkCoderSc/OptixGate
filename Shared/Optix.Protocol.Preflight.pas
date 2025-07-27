@@ -45,6 +45,8 @@ unit Optix.Protocol.Preflight;
 
 interface
 
+{$I Optix.inc}
+
 const OPTIX_PROTOCOL_VERSION = 'v1.0.0a1';
 
 type
@@ -57,20 +59,26 @@ type
   TOptixPreflightRequest = record
     ProtocolVersion : String[10];
     ClientKind      : TClientKind;
+    SessionId       : TGUID;
 
+    {$IFDEF CLIENT}
     {@O}
     class operator Initialize(out ADestRecord : TOptixPreflightRequest);
+    {$ENDIF}
   end;
 
 implementation
 
-uses System.SysUtils;
+{$IFDEF CLIENT}
+uses Optix.Protocol.Packet;
 
 { TOptixPreflightRequest.Initialize }
 class operator TOptixPreflightRequest.Initialize(out ADestRecord : TOptixPreflightRequest);
 begin
   ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;
-  ADestRecord.ClientKind := ckUndefined;
+  ADestRecord.ClientKind      := ckUndefined;
+  ADestRecord.SessionId       := SESSION_ID;
 end;
+{$ENDIF}
 
 end.
