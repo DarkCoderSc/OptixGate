@@ -45,8 +45,7 @@ unit Optix.Func.Commands;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
-     XSuperObject, Optix.Protocol.Packet;
+uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject, Optix.Protocol.Packet;
 
 type
   TOptixCommand = class(TOptixPacket);
@@ -131,7 +130,7 @@ type
 
 implementation
 
-(* TOptixKillProcess **********************************************************)
+(* TOptixKillProcess *)
 
 { TOptixKillProcess.Create }
 constructor TOptixKillProcess.Create(const AProcessId : Cardinal);
@@ -163,7 +162,7 @@ begin
   FProcessId := ASerializedObject.I['ProcessId'];
 end;
 
-(* TOptixRefreshFiles **********************************************************)
+(* TOptixRefreshFiles *)
 
 { TOptixRefreshFiles.Create }
 constructor TOptixRefreshFiles.Create(const APath : String);
@@ -195,7 +194,7 @@ begin
   FPath := ASerializedObject.S['Path'];
 end;
 
-(* TOptixTransfer *************************************************************)
+(* TOptixTransfer *)
 
 { TOptixTransfer.Create }
 constructor TOptixTransfer.Create(const AFilePath : String; const ATransferId : TGUID);
@@ -230,7 +229,7 @@ begin
   FFilePath   := ASerializedObject.S['FilePath'];
 end;
 
-(* TOptixUploadFile ***********************************************************)
+(* TOptixUploadFile *)
 
 { TOptixUploadFile.Serialize }
 function TOptixUploadFile.Serialize() : ISuperObject;

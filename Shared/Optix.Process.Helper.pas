@@ -45,7 +45,7 @@ unit Optix.Process.Helper;
 
 interface
 
-uses Winapi.Windows, System.Classes, Optix.WinApiEx, Optix.Types;
+uses Winapi.Windows, System.Classes, Optix.WinApiEx, Optix.Shared.Types;
 
 type
   TElevatedStatus = (
@@ -99,9 +99,6 @@ var AToken        : THandle;
     ATokenInfo    : TTokenElevation;
     AReturnLength : DWORD;
 begin
-  result := esUnknown;
-  ///
-
   if AProcessHandle = 0 then begin
     AProcessHandle := GetCurrentProcess();
     if AProcessHandle = 0 then
@@ -153,7 +150,7 @@ begin
   try
     result := IsElevatedByProcessId(AProcessId);
   except
-
+    result := esUnknown;
   end;
 end;
 
@@ -163,7 +160,7 @@ begin
   AUserName    := '';
   ADomain      := '';
 
-  var AFlags : Cardinal := 0;
+  var AFlags : Cardinal;
 
   if TOSVersion.Major < 6 then
     AFlags := PROCESS_QUERY_INFORMATION
@@ -309,9 +306,6 @@ end;
 { TProcessHelper.IsWow64Process }
 class function TProcessHelper.IsWow64Process(const AProcessId : Cardinal) : Boolean;
 begin
-  result := False;
-  ///
-
   var hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessId);
   if hProcess = 0 then
     raise EWindowsException.Create('OpenProcess');

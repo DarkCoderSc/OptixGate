@@ -41,7 +41,7 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Classes;
+unit Optix.Shared.Classes;
 
 interface
 

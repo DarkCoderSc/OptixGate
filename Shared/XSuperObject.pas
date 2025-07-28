@@ -27,8 +27,12 @@
   *)
 
   // Updated by Jean-Pierre LESUEUR to avoid having shitty Indy components embedded
+  // Also disabled warnings and hints
 
 unit XSuperObject;
+
+{$WARNINGS OFF}
+{$HINTS OFF}
 
 interface
 

@@ -116,5 +116,17 @@ object FormFileManager: TFormFileManager
       Caption = 'Show Drives (Home)'
       OnClick = ShowDrives1Click
     end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Options1: TMenuItem
+      Caption = 'Options'
+      object ColoredFoldersAccessView1: TMenuItem
+        AutoCheck = True
+        Caption = 'Colored Folders (Access View)'
+        Checked = True
+        OnClick = ColoredFoldersAccessView1Click
+      end
+    end
   end
 end

@@ -53,11 +53,12 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.Menus, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
+  Vcl.Forms, Vcl.Dialogs, Vcl.Menus, VirtualTrees.BaseAncestorVCL, VirtualTrees.AncestorVCL,
   VirtualTrees, Optix.Protocol.Server, Optix.Sockets.Helper, Winapi.Winsock2, Vcl.ComCtrls, XSuperObject,
   Optix.Func.SessionInformation, Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands,
   Vcl.BaseImageCollection, Vcl.ImageCollection, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList, Vcl.StdCtrls,
-  __uBaseFormControl__, Generics.Collections, Winapi.ShellAPI, Optix.Thread, Optix.Protocol.Preflight;
+  __uBaseFormControl__, Generics.Collections, Winapi.ShellAPI, Optix.Thread, Optix.Protocol.Preflight,
+  VirtualTrees.Types, VirtualTrees.BaseTree;
 
 type
   TTreeData = record
@@ -140,7 +141,6 @@ type
     procedure OnServerStop(Sender : TOptixServerThread);
     procedure OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
 
-    procedure OnSessionConnected(const pData : PTreeData);
     procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
     procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
 
@@ -151,13 +151,15 @@ type
     procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
     function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
     function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
-    function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
-    function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
-    function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
     procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TClass);
   public
     {@M}
+    function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
+    function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
+    function GetControlForm(const AControlForm : TBaseFormControl; const AClass : TClass) : TBaseFormControl; overload;
+    function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
+
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
@@ -237,6 +239,22 @@ begin
   end;
 end;
 
+function TFormMain.GetControlForm(const AControlForm : TBaseFormControl; const AClass : TClass) : TBaseFormControl;
+begin
+  result := nil;
+  ///
+
+  if not Assigned(AControlForm) then
+    Exit();
+
+  var pNode := GetNodeByControlForm(AControlForm);
+  if not Assigned(pNode) then
+    Exit();
+
+  ///
+  result := GetControlForm(pNode, AClass);
+end;
+
 function TFormMain.ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
 begin
   result := GetControlForm(pNode, AClass) <> nil;
@@ -297,11 +315,6 @@ end;
 procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
 begin
   SendCommand(GetNodeBySessionId(ASessionId), ACommand);
-end;
-
-procedure TFormMain.OnSessionConnected(const pData : PTreeData);
-begin
-  ///
 end;
 
 function TFormMain.GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
@@ -392,11 +405,11 @@ begin
   // Create not mandatory windows
 
   // -------------------------------------------------------------------------------------------------------------------
-  pData^.Forms.Add(TFormLogs.Create(self, pData^.ToString));
+  pData^.Forms.Add(TFormLogs.Create(self, pData^.ToString, True));
   // -------------------------------------------------------------------------------------------------------------------
   pData^.Forms.Add(TFormControlForms.Create(self, pData^.ToString, pData));
   // -------------------------------------------------------------------------------------------------------------------
-  pData^.Forms.Add(TFormTransfers.Create(self, pData^.ToString));
+  pData^.Forms.Add(TFormTransfers.Create(self, pData^.ToString, True));
   // -------------------------------------------------------------------------------------------------------------------
 
   ///
@@ -633,12 +646,12 @@ begin
           end;
         end
         // -------------------------------------------------------------------------------------------------------------
-        else if (AClassName = TLogNotifier.ClassName) then begin
+        else if (AClassName = TLogNotifier.ClassName) or (AClassName = TLogTransferException.ClassName) then begin
           var ALogsForm := GetControlForm(pNode, TFormLogs);
 
           if Assigned(ALogsForm) then
             ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
-        end;
+        end
         // -------------------------------------------------------------------------------------------------------------
         // ... //
         // else if ...
@@ -780,8 +793,6 @@ begin
   VST.Refresh();
 end;
 
-- TODO
-- Handle file transfer exception (special exception that hit transfer list)
-- Review threading pooling, use more classical approach
+
 
 end.

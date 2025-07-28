@@ -48,13 +48,14 @@ interface
 uses Winapi.Windows, Winapi.Winsock2, System.Classes, System.SysUtils,
      XSuperObject, Optix.Protocol.Packet;
 
+const PACKET_SIZE = 8192;
+
 type
   TClientSocket = class;
 
   TSocketBase = class
   private
     FSocket     : TSocket;
-    FPacketSize : Cardinal;
     FIdentifier : TGUID;
     FData       : Pointer;
 
@@ -90,7 +91,7 @@ type
     procedure ReceivePacket(var APacketBody : ISuperObject; const ABlockUntilDataAvailable : Boolean = False);
 
     {@C}
-    constructor Create(APacketSize : Cardinal = 8192); virtual;
+    constructor Create();
     destructor Destroy(); override;
 
     {@G}
@@ -146,19 +147,14 @@ uses Optix.Sockets.Exceptions;
 (* TSocketBase *)
 
 { TSocketBase.Create }
-constructor TSocketBase.Create(APacketSize : Cardinal = 8192);
+constructor TSocketBase.Create();
 begin
   self.CreateSocket();
-
-  if APacketSize < 1024 then
-    APacketSize := 1024;
+  ///
 
   FIdentifier := TGUID.NewGuid();
 
   FData := nil;
-
-  ///
-  FPacketSize := APacketSize;
 end;
 
 { TSocketBase.Destroy }
@@ -220,8 +216,8 @@ begin
   repeat
     AChunkSize := (ABufferSize - ABytesWritten);
 
-    if AChunkSize > FPacketSize then
-      AChunkSize := FPacketSize;
+    if AChunkSize > PACKET_SIZE then
+      AChunkSize := PACKET_SIZE;
 
     pOffset := PByte(NativeUInt(pValue) + ABytesWritten);
 
@@ -250,8 +246,8 @@ begin
   repeat
     AChunkSize := (ABufferSize - ABytesRead);
 
-    if AChunkSize >= FPacketSize then
-      AChunkSize := FPacketSize;
+    if AChunkSize >= PACKET_SIZE then
+      AChunkSize := PACKET_SIZE;
 
     Recv(PByte(NativeUInt(pBuffer) + ABytesRead)^, AChunkSize);
 
@@ -467,7 +463,7 @@ begin
     raise ESocketException.Create('getpeername');
 
   FRemotePort := ntohs(ASockAddr.sin_port);
-  FRemoteAddress := inet_ntoa(ASockAddr.sin_addr);
+  FRemoteAddress := string(inet_ntoa(ASockAddr.sin_addr));
 end;
 
 { TClientSocket.Connect }

@@ -69,6 +69,7 @@ type
     FWorkCount  : Int64;
     FBuffer     : array[0..FILE_CHUNK_SIZE-1] of byte;
     FIsEmpty    : Boolean;
+    FCanceled   : Boolean;
 
     {@M}
     function GetState() : TOptixTransferState;
@@ -87,6 +88,9 @@ type
     property State     : TOptixTransferState read GetState;
     property FileSize  : Int64               read FFileSize;
     property IsEmpty   : Boolean             read FIsEmpty;
+
+    {@G/S}
+    property Canceled  : Boolean  read FCanceled write FCanceled;
   end;
 
   TOptixDownloadTask = class(TOptixTransferTask)
@@ -124,6 +128,7 @@ begin
   FFileSize   := 0;
   FWorkCount  := 0;
   FIsEmpty    := False;
+  FCanceled   := False;
 end;
 
 { TOptixTransferTask.Destroy }
@@ -156,7 +161,9 @@ begin
   else if FWorkCount = FFileSize then
     result := otsEnd
   else if FWorkCount < FFileSize then
-    result := otsProgress;
+    result := otsProgress
+  else
+    result := otsError;
 end;
 
 (* TOptixDownloadTask *)
@@ -172,7 +179,7 @@ begin
 
   AClient.Recv(FBuffer, ABufferSize);
 
-  if not WriteFile(FFileHandle, FBuffer[0], ABufferSize, ABytesWritten, 0) then
+  if not WriteFile(FFileHandle, FBuffer[0], ABufferSize, ABytesWritten, nil) then
     Exit(); // TODO: raise exception and handle it
 
   ///
@@ -211,7 +218,7 @@ begin
   var ABytesRead : DWORD;
   var ABufferSize := min(FILE_CHUNK_SIZE, (FFileSize - FWorkCount));
 
-  if not ReadFile(FFileHandle, FBuffer[0], ABufferSize, ABytesRead, 0) then
+  if not ReadFile(FFileHandle, FBuffer[0], ABufferSize, ABytesRead, nil) then
     Exit(); // TODO: raise exception and handle it.
 
   AClient.Send(FBuffer[0], ABufferSize);

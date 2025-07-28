@@ -31,6 +31,7 @@ object FormTransfers: TFormTransfers
     Header.DefaultHeight = 25
     Header.MainColumn = 1
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Header.SortColumn = 0
     Images = FormMain.ImageSystem
     PopupMenu = PopupMenu
     StateImages = FormMain.VirtualImageList
@@ -46,7 +47,6 @@ object FormTransfers: TFormTransfers
     OnInitNode = VSTInitNode
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 630
     Columns = <
       item
         Position = 0
@@ -65,23 +65,29 @@ object FormTransfers: TFormTransfers
       end
       item
         Position = 3
+        Text = 'File Size'
+        Width = 100
+      end
+      item
+        Position = 4
         Text = 'State'
         Width = 90
       end
       item
-        Position = 4
+        Position = 5
         Text = 'Context'
         Width = 100
       end
       item
-        Position = 5
+        Position = 6
         Text = 'Description'
         Width = 250
       end>
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 232
-    Top = 104
+    Top = 96
     object DownloadaFile1: TMenuItem
       Caption = 'Download a File'
       OnClick = DownloadaFile1Click
@@ -89,6 +95,13 @@ object FormTransfers: TFormTransfers
     object UploadaFile1: TMenuItem
       Caption = 'Upload a File'
       OnClick = UploadaFile1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object CancelTransfer1: TMenuItem
+      Caption = 'Cancel Transfer'
+      OnClick = CancelTransfer1Click
     end
   end
   object OpenDialog: TOpenDialog

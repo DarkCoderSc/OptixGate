@@ -93,15 +93,12 @@ end;
 { TOptixInformationGathering.CurrentProcessArchitecture }
 class function TOptixInformationGathering.CurrentProcessArchitecture() : TProcessorArchitecture;
 begin
-  result := paUnknown;
-  ///
-
   {$IFDEF WIN32}
     result := pa86_32;
-  {$ENDIF}
-
-  {$IFDEF WIN64}
+  {$ELSE IF WIN64}
     result := pa86_64;
+  {$ELSE}
+    result := paUnknown;
   {$ENDIF}
 end;
 

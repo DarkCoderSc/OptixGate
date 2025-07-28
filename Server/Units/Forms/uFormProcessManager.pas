@@ -52,10 +52,10 @@ unit uFormProcessManager;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, XSuperObject, Optix.Func.Enum.Process, Optix.WinApiEx;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees.AncestorVCL, VirtualTrees, Vcl.Menus, XSuperObject, Optix.Func.Enum.Process, Optix.WinApiEx,
+  VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -114,16 +114,16 @@ type
     procedure ApplyFilterSettings();
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
     procedure RemoveProcess(const AProcessId : Cardinal);
-    procedure RefreshCaption(); override;
   protected
     {@M}
     function GetContextDescription() : String; override;
+    procedure RefreshCaption(); override;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); overload;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); virtual;
   end;
 
 var
@@ -131,9 +131,8 @@ var
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Types,
-     Optix.Process.Helper, Optix.Constants,
-     VirtualTrees.Types, Optix.VCL.Helper, Optix.Protocol.Packet;
+uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants,
+     Optix.VCL.Helper, Optix.Protocol.Packet;
 
 {$R *.dfm}
 

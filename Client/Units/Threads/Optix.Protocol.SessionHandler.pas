@@ -109,7 +109,8 @@ begin
   if ADoCreate then begin
     FFileTransferOrchestrator := TOptixFileTransferOrchestratorThread.Create(
       FClient.RemoteAddress,
-      FClient.RemotePort
+      FClient.RemotePort,
+      self
     );
 
     ///
@@ -132,7 +133,7 @@ begin
   inherited;
   ///
 
-  self.AddPacket(TOptixSessionInformation.Create());
+  AddPacket(TOptixSessionInformation.Create());
 end;
 
 { TOptixSessionHandlerThread.Disconnected }

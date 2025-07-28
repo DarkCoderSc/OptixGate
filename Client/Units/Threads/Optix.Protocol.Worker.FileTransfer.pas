@@ -45,11 +45,13 @@ unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
-uses System.Classes, Generics.Collections, Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands;
+uses System.Classes, Generics.Collections, Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands,
+     Optix.Protocol.Client.Handler;
 
 type
   TOptixFileTransferOrchestratorThread = class(TOptixClientThread)
   private
+    FHandler       : TOptixClientHandlerThread;
     FTransferQueue : TThreadedQueue<TOptixTransfer>;
   protected
     {@M}
@@ -60,12 +62,15 @@ type
   public
     {@M}
     procedure AddTransfer(const ATransfer : TOptixTransfer);
+
+    {@C}
+    constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AHandler : TOptixClientHandlerThread); overload;
   end;
 
 implementation
 
 uses System.SysUtils, System.SyncObjs, Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Protocol.Packet,
-     Optix.Shared.Protocol.FileTransfer;
+     Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Sockets.Exceptions;
 
 { TOptixFileTransferOrchestratorThread.AddTransfer }
 procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixTransfer);
@@ -105,7 +110,7 @@ begin
           break;
         ///
 
-        var ATask := nil;
+        var ATask : TOptixTransferTask;
         try
           // Server Req File Download
           if ATransfer is TOptixDownloadFile then
@@ -124,9 +129,10 @@ begin
           ATasks.Add(ATransfer, ATask);
         except
           on E : Exception do begin
-            FreeAndNil(ATransfer);
+            if Assigned(FHandler) then
+              FHandler.AddPacket(TLogTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Initialization'));
 
-            // Send exception
+            FreeAndNil(ATransfer);
 
             continue;
           end;
@@ -182,8 +188,12 @@ begin
                 TOptixDownloadTask(ATask).DownloadChunk(FClient);
               end;
             except
-              on E : EWindowsException do begin
-                // TODO Send exception
+              on E : ESocketException do
+                raise;
+
+              on E : Exception do begin
+                if Assigned(FHandler) then
+                  FHandler.AddPacket(TLogTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Progress'));
 
                 ///
                 ATerminatedTransfers.Add(ATransfer);
@@ -229,7 +239,17 @@ begin
   inherited;
   ///
 
+  FHandler := nil;
   FTransferQueue := TThreadedQueue<TOptixTransfer>.Create(1024, INFINITE, 100);
+end;
+
+{ TOptixFileTransferOrchestratorThread.Finalize }
+constructor TOptixFileTransferOrchestratorThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AHandler : TOptixClientHandlerThread);
+begin
+  inherited Create(ARemoteAddress, ARemotePort);
+  ///
+
+  FHandler := AHandler;
 end;
 
 { TOptixFileTransferOrchestratorThread.Finalize }

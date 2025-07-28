@@ -46,10 +46,9 @@ unit uFormLogs;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, XSuperObject,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Optix.Func.LogNotifier;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, XSuperObject, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees.AncestorVCL, VirtualTrees, Optix.Func.LogNotifier, VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -76,13 +75,11 @@ type
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
-    { Private declarations }
+    {@M}
+    procedure AddLog(const AMessage, AContext : String; const AKind : TLogKind);
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
-
-    {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String); override;
   end;
 
 var
@@ -90,17 +87,23 @@ var
 
 implementation
 
-uses Optix.Helper, Optix.Protocol.Packet, Optix.Constants, uFormMain,
-     Optix.VCL.Helper;
+uses Optix.Helper, Optix.Protocol.Packet, Optix.Constants, uFormMain, Optix.VCL.Helper, uFormTransfers;
 
 {$R *.dfm}
 
-constructor TFormLogs.Create(AOwner : TComponent; const AUserIdentifier : String);
+procedure TFormLogs.AddLog(const AMessage, AContext : String; const AKind : TLogKind);
 begin
-  inherited;
-  ///
+  var pNode := VST.AddChild(nil);
+  var pData := PTreeData(pNode.GetData);
 
-  FSpecialForm := True;
+  pData^.When       := Now;
+
+  pData^.LogMessage := AMessage;
+  pData^.Context    := AContext;
+  pData^.LogKind    := AKind;
+
+  ///
+  VST.Update();
 end;
 
 procedure TFormLogs.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
@@ -112,27 +115,28 @@ begin
     Exit();
   ///
 
-  VST.BeginUpdate();
+  var ALogNotifier : TLogNotifier := nil;
   try
-    // -------------------------------------------------------------------------
-    if AClassName = TLogNotifier.ClassName then begin
-      var ALogNotifier := TLogNotifier.Create(ASerializedPacket);
-      try
-        var pNode := VST.AddChild(nil);
-        var pData := PTreeData(pNode.GetData);
+    // -----------------------------------------------------------------------------------------------------------------
+    if (AClassName = TLogNotifier.ClassName) then
+      ALogNotifier := TLogNotifier.Create(ASerializedPacket)
+    // -----------------------------------------------------------------------------------------------------------------
+    else if (AClassName = TLogTransferException.ClassName) then begin
+      ALogNotifier := TLogTransferException.Create(ASerializedPacket);
 
-        pData^.When       := Now;
-
-        pData^.LogMessage := ALogNotifier.LogMessage;
-        pData^.Context    := ALogNotifier.Context;
-        pData^.LogKind    := lkException;
-      finally
-        FreeAndNil(AlogNotifier);
-      end;
+      // Notify concerned transfer
+      var ATransfersForm := TFormTransfers(FormMain.GetControlForm(self, TFormTransfers));
+      if Assigned(aTransfersForm) then
+        ATransfersForm.ApplyTransferException(TLogTransferException(ALogNotifier));
     end;
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
   finally
-    VST.EndUpdate();
+    if Assigned(ALogNotifier) then begin
+      AddLog(ALogNotifier.DetailedMessage, ALogNotifier.Context, ALogNotifier.Kind);
+
+      ///
+      FreeAndNil(ALogNotifier);
+    end;
   end;
 
   ///
@@ -179,8 +183,12 @@ begin
     Exit();
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected :
-      ImageIndex := IMAGE_EXCEPTION;
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
+      case pData^.LogKind of
+        lkException : ImageIndex := IMAGE_EXCEPTION;
+        // ... //
+      end;
+    end;
   end;
 end;
 

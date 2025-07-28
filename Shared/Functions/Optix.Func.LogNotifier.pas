@@ -61,6 +61,7 @@ type
     FKind       : TLogKind;
   protected
     {@M}
+    function GetDetailedMessage() : String; virtual;
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
@@ -70,9 +71,28 @@ type
     function Serialize() : ISuperObject; override;
 
     {@G}
-    property Kind       : TLogKind read FKind;
-    property LogMessage : String   read FMessage;
-    property Context    : String   read FContext;
+    property Kind            : TLogKind read FKind;
+    property LogMessage      : String   read FMessage;
+    property DetailedMessage : String   read GetDetailedMessage;
+    property Context         : String   read FContext;
+  end;
+
+  TLogTransferException = class(TLogNotifier)
+  private
+    FTransferId : TGUID;
+  protected
+    {@M}
+    function GetDetailedMessage() : String; override;
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@C}
+    constructor Create(const ATransferId : TGUID; const AMessage : String; const AContext : String = ''); overload;
+
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@}
+    property TransferId : TGUID read FTransferId;
   end;
 
   function LogKindToString(const AValue : TLogKind) : String;
@@ -103,14 +123,17 @@ begin
   result.S['Context'] := FContext;
 end;
 
+{ TLogNotifier.GetDetailedMessage }
+function TLogNotifier.GetDetailedMessage() : String;
+begin
+  result := FMessage;
+end;
+
 { TLogNotifier.DeSerialize }
 procedure TLogNotifier.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
 
   FKind    := TLogKind(ASerializedObject.I['Kind']);
   FMessage := ASerializedObject.S['Message'];
@@ -127,6 +150,44 @@ begin
     else
       result := 'Unknown';
   end;
+end;
+
+(* TLogTransferException *)
+
+{ TLogTransferException.Create }
+constructor TLogTransferException.Create(const ATransferId : TGUID; const AMessage : String; const AContext : String = '');
+begin
+  inherited Create(AMessage, AContext, TLogKind.lkException);
+  ///
+
+  FTransferId := ATransferId;
+end;
+
+{ TLogTransferException.GetDetailedMessage }
+function TLogTransferException.GetDetailedMessage() : String;
+begin
+  result := Format('Transfer Id:[%s] %s', [
+    FTransferId.ToString,
+    FMessage
+  ]);
+end;
+
+{ TLogTransferException.DeSerialize }
+procedure TLogTransferException.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
+end;
+
+{ TLogTransferException.Serialize }
+function TLogTransferException.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['TransferId'] := FTransferId.TOString();
 end;
 
 end.

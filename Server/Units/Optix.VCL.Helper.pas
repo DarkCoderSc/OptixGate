@@ -22,7 +22,7 @@ unit Optix.VCL.Helper;
 
 interface
 
-uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms;
+uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms, VirtualTrees.BaseTree;
 
 type
   TOptixVCLHelper = class

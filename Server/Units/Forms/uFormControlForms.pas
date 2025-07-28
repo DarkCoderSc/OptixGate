@@ -51,10 +51,9 @@ unit uFormControlForms;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Vcl.ExtCtrls;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees.AncestorVCL, VirtualTrees, Vcl.Menus, Vcl.ExtCtrls, VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -109,7 +108,7 @@ type
     function GetSelectedNodeGUID() : TGUID;
   public
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer);
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer); virtual;
   end;
 
 var
@@ -117,8 +116,7 @@ var
 
 implementation
 
-uses uFormMain, Optix.Helper, Generics.Collections, Optix.Constants,
-     Optix.VCL.Helper;
+uses uFormMain, Optix.Helper, Generics.Collections, Optix.Constants, Optix.VCL.Helper;
 
 {$R *.dfm}
 
@@ -221,11 +219,10 @@ end;
 
 constructor TFormControlForms.Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer);
 begin
-  inherited Create(AOwner, AUserIdentifier);
+  inherited Create(AOwner, AUserIdentifier, True);
   ///
 
   FClientData  := pClientData;
-  FSpecialForm := True;
   FCycle       := 0;
 end;
 

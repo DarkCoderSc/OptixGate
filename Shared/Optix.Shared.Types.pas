@@ -10,11 +10,34 @@
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
 {                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
 {                                                                              }
 {******************************************************************************}
 
@@ -22,155 +45,27 @@ unit Optix.Shared.Types;
 
 interface
 
-uses System.SysUtils, System.Classes, System.Hash, Winapi.Windows;
-
 type
-  TBeaconId  = record
-    Id         : TGUID;
-    ServerPort : Word;
+  TBoolResult = (brTrue, brFalse, brError);
 
-    {@C}
-    class function Create(const AId : TGUID; const AServerPort : Word): TBeaconId; static;
-
-    {@O}
-    class operator Equal(Left, Right: TBeaconId): Boolean; inline;
-    class operator NotEqual(Left, Right: TBeaconId): Boolean; inline;
-
-    {@M}
-    class function Empty: TBeaconId; static;
-    function ToString: String;
-    function IsEmpty: Boolean;
-  end;
-
-  ESessionFormatException = class(Exception);
-  ESessionLengthException = class(ESessionFormatException);
-  ESessionDataException = class(ESessionFormatException);
-
-  TSessionId = record
-  private
-    Data : array[0..64-1] of byte;
-  public
-    {@C}
-    class function Create(): TSessionId; overload; static;
-    class function Create(const ASessionString : String) : TSessionId; overload; static;
-
-    {@O}
-    class operator Equal(Left, Right: TSessionId): Boolean; inline;
-    class operator NotEqual(Left, Right: TSessionId): Boolean; inline;
-
-    {@M}
-    class function Empty: TSessionId; static;
-    function ToString: String;
-    function IsEmpty: Boolean;
-  end;
+function CastResult(const AValue : TBoolResult) : Boolean; overload;
+function CastResult(const AValue : Boolean) : TBoolResult; overload;
 
 implementation
 
-(* TBeaconId *)
-
-{ TBeaconId.Create }
-class function TBeaconId.Create(const AId : TGUID; const AServerPort : Word): TBeaconId;
+{ _.CastResult }
+function CastResult(const AValue : TBoolResult) : Boolean;
 begin
-  result.Id := AId;
-  result.ServerPort := AServerPort;
+  result := AValue = brTrue;
 end;
 
-{ TBeaconId.Equal }
-class operator TBeaconId.Equal(Left, Right: TBeaconId): Boolean;
+{ _.CastResult }
+function CastResult(const AValue : Boolean) : TBoolResult;
 begin
-  result := (Left.Id = Right.Id) and (Left.ServerPort = Right.ServerPort);
-end;
-
-{ TBeaconId.NotEqual }
-class operator TBeaconId.NotEqual(Left, Right: TBeaconId): Boolean;
-begin
-  result := not (Left = Right);
-end;
-
-{ TBeaconId.Empty }
-class function TBeaconId.Empty: TBeaconId;
-begin
-  result := TBeaconId.Create(TGUID.Empty, 0);
-end;
-
-{ TBeaconId.ToString }
-function TBeaconId.ToString: String;
-begin
-  result := Format('%s:{%d}', [Id.ToString, ServerPort]);
-end;
-
-{ TBeaconId.IsEmpty }
-function TBeaconId.IsEmpty: Boolean;
-begin
-  result := Id.IsEmpty;
-end;
-
-(* TSessionId *)
-
-{ TSessionId.Creatge }
-class function TSessionId.Create(): TSessionId;
-begin
-  // Instead of relying on `THash.GetRandomString()`, we could use OpenSSL to generate
-  // cryptographically secure random values; however, this is not necessary in
-  // this case, as generating non-cryptographically secure random data has no
-  // security implications for session id purpose and implementation.
-  var ACandidate := THashSHA2.GetHashBytes(
-    THash.GetRandomString(128),
-    THashSHA2.TSHA2Version.SHA512
-  );
-
-  CopyMemory(@result.Data[0], @ACandidate[0], Length(result.Data));
-end;
-
-{ TSessionId.Create }
-class function TSessionId.Create(const ASessionString : String) : TSessionId;
-begin
-  if Length(ASessionString) <> 128 then
-    raise ESessionLengthException.Create('The session string must be exactly 128 characters long.');
-
-  if HexToBin(PWideChar(ASessionString), result.Data, Length(result.Data)) <> Length(result.Data) then
-    raise ESessionDataException.Create('The session string must consist of a valid sequence of hexadecimal characters.');
-end;
-
-{ TSessionId.Equal }
-class operator TSessionId.Equal(Left, Right: TSessionId): Boolean;
-begin
-  result := CompareMem(@Left.Data[0], @Right.Data[0], Length(Left.Data));
-end;
-
-{ TSessionId.NotEqual }
-class operator TSessionId.NotEqual(Left, Right: TSessionId): Boolean;
-begin
-  result := not (Left = Right);
-end;
-
-{ TSessionId.ToString }
-function TSessionId.ToString: String;
-begin
-  SetLength(result, Length(Data) * 2);
-
-  BinToHex(Data, PWideChar(result), Length(Data));
-end;
-
-{ TSessionId.Empty }
-class function TSessionId.Empty: TSessionId;
-begin
-  ZeroMemory(@result.Data[0], Length(result.Data));
-end;
-
-{ TSessionId.IsEmpty }
-function TSessionId.IsEmpty: Boolean;
-begin
-  var AZeroBlock : array of byte;
-  SetLength(AZeroBlock, Length(Data));
-
-  // Although SetLength guarantees zero-initialized memory in modern Delphi versions,
-  // earlier versions did not provide this assurance. To maintain compatibility and
-  // ensure predictable behavior, I explicitly zero out the array using ZeroMemory
-  // or FillChar.
-  ZeroMemory(@AZeroBlock[0], Length(AZeroBlock));
-
-  result := CompareMem(@AZeroBlock[0], @Data[0], Length(Data));
+  if AValue then
+    result := brTrue
+  else
+    result := brFalse;
 end;
 
 end.

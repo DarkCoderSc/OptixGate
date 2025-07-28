@@ -108,11 +108,11 @@
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
         <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Types.pas"/>
+        <DCCReference Include="..\Shared\Optix.Shared.Types.pas"/>
         <DCCReference Include="Units\Actions\Optix.Actions.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
-        <DCCReference Include="..\Shared\Optix.Classes.pas"/>
+        <DCCReference Include="..\Shared\Optix.Shared.Classes.pas"/>
         <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>

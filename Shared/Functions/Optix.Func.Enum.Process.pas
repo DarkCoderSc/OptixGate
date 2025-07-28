@@ -45,8 +45,8 @@ unit Optix.Func.Enum.Process;
 
 interface
 
-uses Optix.Protocol.Packet, XSuperObject, System.Classes, Generics.Collections,
-     Optix.WinApiEx, Optix.Process.Helper, Optix.Types, Optix.Classes;
+uses Optix.Protocol.Packet, XSuperObject, System.Classes, Generics.Collections, Optix.WinApiEx, Optix.Process.Helper,
+     Optix.Shared.Types, Optix.Shared.Classes;
 
 type
   TProcessInformation = class(TEnumerableItem)

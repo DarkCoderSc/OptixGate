@@ -56,7 +56,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, Vcl.StdCtrls, Vcl.ExtCtrls, XSuperObject, Vcl.Menus,
-  Optix.Func.Enum.FileSystem;
+  Optix.Func.Enum.FileSystem, VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -78,6 +78,9 @@ type
     ShowDrives1: TMenuItem;
     N1: TMenuItem;
     Refresh1: TMenuItem;
+    N2: TMenuItem;
+    Options1: TMenuItem;
+    ColoredFoldersAccessView1: TMenuItem;
     procedure ShowDrives1Click(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -99,6 +102,7 @@ type
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure Refresh1Click(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
+    procedure ColoredFoldersAccessView1Click(Sender: TObject);
   private
     FFirstShow : Boolean;
 
@@ -117,7 +121,7 @@ type
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
 
     {@C}
-    constructor Create(AOwner : TComponent); override;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); override;
   end;
 
 var
@@ -141,7 +145,12 @@ begin
   BrowsePath(EditPath.Text);
 end;
 
-constructor TFormFileManager.Create(AOwner : TComponent);
+procedure TFormFileManager.ColoredFoldersAccessView1Click(Sender: TObject);
+begin
+  VST.Refresh();
+end;
+
+constructor TFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
 begin
   inherited;
   ///
@@ -201,19 +210,19 @@ procedure TFormFileManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
-  var pData := PTreeData(Node.GetData);
-  var AColor := clNone;
-
-  if Assigned(pData^.FileInformation) and (pData^.FileInformation.Name <> '..') then begin
-    if faWrite in pData^.FileInformation.Access then
-      AColor := COLOR_LIST_BLUE;
-  end;
-
-  if AColor <> clNone then begin
-    TargetCanvas.Brush.Color := AColor;
-
-    TargetCanvas.FillRect(CellRect);
-  end;
+//  var pData := PTreeData(Node.GetData);
+//  var AColor := clNone;
+//
+//  if Assigned(pData^.FileInformation) and (pData^.FileInformation.Name <> '..') then begin
+//    if faWrite in pData^.FileInformation.Access then
+//      AColor := COLOR_LIST_BLUE;
+//  end;
+//
+//  if AColor <> clNone then begin
+//    TargetCanvas.Brush.Color := AColor;
+//
+//    TargetCanvas.FillRect(CellRect);
+//  end;
 end;
 
 procedure TFormFileManager.VSTChange(Sender: TBaseVirtualTree;
@@ -341,9 +350,34 @@ begin
       dtCDROM     : ImageIndex := IMAGE_DRIVE_CD;
       dtRAMDisk   : ImageIndex := IMAGE_DRIVE_HARDWARE;
     end;
-  end else if Assigned(pData^.FileInformation) and
-  ((Kind = TVTImageKind.ikNormal) or (Kind = TVTImageKind.ikSelected)) then
-    ImageIndex := pData^.ImageIndex;
+  end else if Assigned(pData^.FileInformation) then begin
+    case Kind of
+      ikNormal, ikSelected: begin
+        if (pData^.FileInformation.IsDirectory and not ColoredFoldersAccessView1.Checked) or
+            not (pData^.FileInformation.IsDirectory) then
+          ImageIndex := pData^.ImageIndex;
+      end;
+
+      ikState : begin
+        if pData^.FileInformation.IsDirectory and ColoredFoldersAccessView1.Checked then begin
+          if (pData^.FileInformation.Name = '..') then
+            ImageIndex := IMAGE_FOLDER_PREV
+          else if (faRead in pData^.FileInformation.Access) and
+             (faWrite in pData^.FileInformation.Access) and
+             (faExecute in pData^.FileInformation.Access) then
+             ImageIndex := IMAGE_FOLDER_FULLACCESS
+          else if (faRead in pData^.FileInformation.Access) and (faExecute in pData^.FileInformation.Access) then
+            ImageIndex := IMAGE_FOLDER_NORMAL
+          else if (faRead in pData^.FileInformation.Access) then
+            ImageIndex := IMAGE_FOLDER_READONLY
+          else if (faWrite in pData^.FileInformation.Access) then
+            ImageIndex := IMAGE_FOLDER_WRITEONLY
+          else
+            ImageIndex := IMAGE_FOLDER_DENIED;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TFormFileManager.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -410,7 +444,10 @@ begin
             CellText := pData^.FileInformation.TypeDescription;
         end;
 
-        2 : CellText := FormatFileSize(pData^.FileInformation.Size);
+        2 : begin
+          if not pData^.FileInformation.IsDirectory then
+            CellText := FormatFileSize(pData^.FileInformation.Size);
+        end;
         3 : CellText := FileAccessAttributesToString(pData^.FileInformation.Access);
         4 : CellText := pData^.FileInformation.ACL_SSDL;
       end;

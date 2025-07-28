@@ -112,8 +112,7 @@ type
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual;
 
     {@C}
-    constructor Create(AOwner : TComponent); overload; override;
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String); overload; virtual;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); virtual;
     destructor Destroy(); override;
 
     {@G}
@@ -224,25 +223,14 @@ begin
 end;
 
 { TBaseFormControl.Create }
-constructor TBaseFormControl.Create(AOwner : TComponent);
+constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
 begin
-  FFormInformation := nil;
-  ///
-
-  inherited;
+  inherited Create(AOwner);
   ///
 
   FOriginalCaption := self.Caption; // Default
-  FSpecialForm     := False;
-
+  FSpecialForm     := ASpecialForm;
   FFormInformation := TFormControlInformation.Create();
-end;
-
-{ TBaseFormControl.Create }
-constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String);
-begin
-  Create(AOwner);
-  ///
 
   FFormInformation.UserIdentifier := AUserIdentifier;
 end;

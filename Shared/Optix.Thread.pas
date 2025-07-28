@@ -283,7 +283,7 @@ begin
         result := True;
 
         if ATryTerminate then
-          TOptixThread.Terminate(AThread);
+          TOptixThread.TerminateWait(AThread);
 
         break;
       end;

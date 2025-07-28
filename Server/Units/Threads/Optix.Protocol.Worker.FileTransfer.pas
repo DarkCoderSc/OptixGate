@@ -52,12 +52,11 @@ type
   TOnRequestTransferTask = procedure(Sender : TObject; const ATransferId : TGUID; var ATask : TOptixTransferTask) of object;
   TOnTransferError       = procedure(Sender : TObject; const ATransferId : TGUID; const AReason : String) of object;
   TOnTransferBegins      = procedure(Sender : TObject; const ATransferId : TGUID; const AFileSize : Int64) of object;
-  TOnTransferUpdate      = procedure(Sender : TObject; const ATransferId : TGUID; const AWorkCount : Int64) of object;
+  TOnTransferUpdate      = procedure(Sender : TObject; const ATransferId : TGUID; const AWorkCount : Int64; var ACanceled : Boolean) of object;
   TOnTransferEnds        = procedure(Sender : TObject; const ATransferId : TGUID) of object;
 
   TOptixFileTransferWorker = class(TOptixClientThread)
   private
-    FSessionId             : TGUID;
     FOnRequestTransferTask : TOnRequestTransferTask;
     FOnTransferError       : TOnTransferError;
     FOnTransferBegins      : TOnTransferBegins;
@@ -81,7 +80,7 @@ type
 
 implementation
 
-uses Winapi.Windows, Optix.Exceptions, System.Diagnostics;
+uses Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Sockets.Exceptions;
 
 { TOptixFileTransferWorker.Initialize }
 procedure TOptixFileTransferWorker.Initialize();
@@ -104,6 +103,7 @@ begin
   ///
 
   var ATask : TOptixTransferTask;
+  var ACanceled : Boolean;
 
   for var ATransferId in ATasks.Keys do begin
     if not ATasks.TryGetValue(ATransferId, ATask) then
@@ -111,8 +111,10 @@ begin
     ///
 
     Synchronize(procedure begin
-      FOnTransferUpdate(self, ATransferId, ATask.WorkCount);
+      FOnTransferUpdate(self, ATransferId, ATask.WorkCount, ACanceled);
     end);
+
+    ATask.Canceled := ACanceled;
   end;
 end;
 
@@ -129,7 +131,6 @@ procedure TOptixFileTransferWorker.ClientExecute();
 begin
   var ATasks := TObjectDictionary<TGUID, TOptixTransferTask>.Create([doOwnsValues]);
   var ATask : TOptixTransferTask;
-  var ABuffer : array[0..FILE_CHUNK_SIZE-1] of byte;
   var AStopWatch := TStopwatch.StartNew;
   try
     if not Assigned(FOnRequestTransferTask) or
@@ -192,7 +193,10 @@ begin
         else if ATask is TOptixUploadTask then
           TOptixUploadTask(ATask).UploadChunk(FClient);
       except
-        on E : EWindowsException do begin
+        on E : ESocketException do
+          raise;
+
+        on E : Exception do begin
           Synchronize(procedure begin
             FOnTransferError(self, ATransferId, E.Message);
           end);
@@ -212,7 +216,7 @@ begin
       end;
 
       ///
-      if (ATask.State = otsEnd) or ATask.IsEmpty then begin
+      if (ATask.State = otsEnd) or ATask.IsEmpty or ATask.Canceled then begin
         Synchronize(procedure begin
           FOnTransferEnds(self, ATransferId);
         end);

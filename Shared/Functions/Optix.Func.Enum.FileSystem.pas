@@ -46,7 +46,7 @@ unit Optix.Func.Enum.FileSystem;
 interface
 
 uses Optix.Protocol.Packet, Generics.Collections, XSuperObject, System.Classes,
-     Optix.Classes, Optix.FileSystem.Helper;
+     Optix.Shared.Classes, Optix.FileSystem.Helper;
 
 type
   // Drives --------------------------------------------------------------------
@@ -299,7 +299,7 @@ begin
   var ALogicalDrives := GetLogicalDrives();
 
   var AIndex := 0;
-  for var ALetter : String in ['a'..'z'] do begin
+  for var ALetter : Char in ['a'..'z'] do begin
     if (ALogicalDrives and (1 shl AIndex)) = 0 then begin
       Inc(AIndex);
 
@@ -310,7 +310,7 @@ begin
     ///
     Inc(AIndex);
 
-    var ADrive := Format('%s:', [ALetter.ToUpper]);
+    var ADrive := Format('%s:', [UpperCase(ALetter)]);
 
     FList.Add(TDriveInformation.Create(ADrive, AIndex));
   end;
