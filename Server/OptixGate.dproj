@@ -197,6 +197,10 @@
         <DCCReference Include="Units\Forms\uFormTransfers.pas">
             <Form>FormTransfers</Form>
         </DCCReference>
+        <DCCReference Include="Units\Forms\uFormDebugThreads.pas">
+            <Form>FormDebugThreads</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

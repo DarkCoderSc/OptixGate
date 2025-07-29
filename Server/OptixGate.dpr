@@ -85,7 +85,8 @@ uses
   uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs},
   uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
   uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms},
-  uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers};
+  uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers},
+  uFormDebugThreads in 'Units\Forms\uFormDebugThreads.pas' {FormDebugThreads};
 
 {$R *.res}
 {$R data.res}
@@ -100,6 +101,7 @@ begin
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormTransfers, FormTransfers);
+  Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   // Application.CreateForm(TFormFileManager, FormFileManager);
   // Application.CreateForm(TFormControlForms, FormControlForms);
   // Application.CreateForm(TFormLogs, FormLogs);

@@ -45,9 +45,8 @@ unit Optix.Protocol.Client.Handler;
 
 interface
 
-uses Optix.Protocol.Client, Optix.Protocol.Packet, Generics.Collections,
-     Optix.Sockets.Helper, System.SysUtils, XSuperObject,
-     Winapi.Windows, Optix.Protocol.Preflight;
+uses Optix.Protocol.Client, Optix.Protocol.Packet, Generics.Collections, Optix.Sockets.Helper, System.SysUtils,
+     XSuperObject, Winapi.Windows, Optix.Protocol.Preflight;
 
 type
   TOptixClientHandlerThread = class(TOptixClientThread)

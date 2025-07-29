@@ -151,6 +151,7 @@ begin
 
             ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
             ASessionHandler.OnReceivePacket := OnReceivePacket;
+
             ASessionHandler.Start();
             // ---------------------------------------------------------------------------------------------------------
           end else if Assigned(FOnRegisterWorker) then

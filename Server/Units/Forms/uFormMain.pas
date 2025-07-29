@@ -103,6 +103,9 @@ type
     Logs1: TMenuItem;
     ControlForms1: TMenuItem;
     ImageSystem: TImageList;
+    WMIConsole1: TMenuItem;
+    Debug1: TMenuItem;
+    hreads1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -132,11 +135,15 @@ type
     procedure FileManager1Click(Sender: TObject);
     procedure ControlForms1Click(Sender: TObject);
     procedure transfers1Click(Sender: TObject);
+    procedure hreads1Click(Sender: TObject);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
 
     {@M}
+    procedure StopServer();
+    procedure StartServer(const ABindAddress : String; const APort : Word);
+
     procedure OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
     procedure OnServerStop(Sender : TOptixServerThread);
     procedure OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
@@ -172,7 +179,7 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads;
 
 {$R *.dfm}
 
@@ -332,6 +339,11 @@ begin
   end;
 end;
 
+procedure TFormMain.hreads1Click(Sender: TObject);
+begin
+  FormDebugThreads.Show();
+end;
+
 procedure TFormMain.CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TClass);
 begin
   if not Assigned(pNode) then
@@ -472,9 +484,16 @@ begin
   if Assigned(pData^.Forms) then
     FreeAndNil(pData^.Forms);
 
+  if Assigned(pData^.Handler) then begin
+    TOptixThread.Terminate(pData^.Handler);
+
+    ///
+    pData^.Handler := nil;
+  end;
+
   if Assigned(pData^.Workers) then begin
     for var AWorker in pData^.Workers do
-      TOptixThread.TerminateInstance(AWorker);
+      TOptixThread.Terminate(AWorker);
 
     ///
     FreeAndNil(pData^.Workers);
@@ -566,7 +585,6 @@ begin
 
   FServer := nil;
 
-  ///
   VST.Clear();
 end;
 
@@ -745,16 +763,16 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  if Assigned(FServer) then
-    TOptixThread.TerminateWait(FServer);
-  ///
+  StopServer();
 
-  TOptixThread.TerminateWait(OPTIX_WATCHDOG);
+  ///
+  TOptixThread.SignalHiveAndFlush();
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FServer := nil;
+  ///
 
   InitializeSystemIcons(ImageSystem, FFileInfo);
   ///
@@ -763,28 +781,39 @@ begin
   UpdateStatus();
 end;
 
-procedure TFormMain.Start1Click(Sender: TObject);
+procedure TFormMain.StartServer(const ABindAddress : String; const APort : Word);
+begin
+  StopServer();
+  ///
+
+  FServer := TOptixServerThread.Create(ABindAddress, APort);
+
+  FServer.OnServerStart       := OnServerStart;
+  FServer.OnServerError       := OnServerError;
+  FServer.OnServerStop        := OnServerStop;
+  FServer.OnSessionDisconnect := OnSessionDisconnect;
+  FServer.OnReceivePacket     := OnReceivePacket;
+  FServer.OnRegisterWorker    := OnRegisterWorker;
+
+  ///
+  FServer.Start();
+end;
+
+procedure TFormMain.StopServer();
 begin
   if Assigned(FServer) then begin
-    FServer.Terminate;
-    ///
+    TOptixThread.TerminateWait(FServer);
 
+    ///
     FServer := nil;
   end;
+end;
 
+procedure TFormMain.Start1Click(Sender: TObject);
+begin
   case TMenuItem(Sender).Tag of
-    0 : begin
-      FServer := TOptixServerThread.Create('0.0.0.0', 2801);
-      FServer.OnServerStart       := OnServerStart;
-      FServer.OnServerError       := OnServerError;
-      FServer.OnServerStop        := OnServerStop;
-      FServer.OnSessionDisconnect := OnSessionDisconnect;
-      FServer.OnReceivePacket     := OnReceivePacket;
-      FServer.OnRegisterWorker    := OnRegisterWorker;
-
-      ///
-      FServer.Start();
-    end;
+    0 : StartServer('0.0.0.0', 2801);
+    1 : StopServer();
   end;
 end;
 
@@ -792,7 +821,5 @@ procedure TFormMain.TimerRefreshTimer(Sender: TObject);
 begin
   VST.Refresh();
 end;
-
-
 
 end.

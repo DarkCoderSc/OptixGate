@@ -108,8 +108,11 @@ begin
       ASessionHandler.Start();
 
       ///
-      ASessionHandler.WaitFor;
+      ASessionHandler.WaitFor();
     finally
+      TOptixThread.SignalHiveAndFlush();
+
+      ///
       CloseHandle(AMutex);
     end;
   except

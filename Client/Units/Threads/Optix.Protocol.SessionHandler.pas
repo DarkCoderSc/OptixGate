@@ -100,13 +100,7 @@ end;
 { TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread }
 procedure TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread();
 begin
-  var ADoCreate := True;
-  ///
-
-  if Assigned(FFileTransferOrchestrator) then
-    ADoCreate := not TOptixThread.HasInstance(FFileTransferOrchestrator);
-
-  if ADoCreate then begin
+  if not Assigned(FFileTransferOrchestrator) then begin
     FFileTransferOrchestrator := TOptixFileTransferOrchestratorThread.Create(
       FClient.RemoteAddress,
       FClient.RemotePort,
@@ -143,7 +137,7 @@ begin
   ///
 
   if Assigned(FFileTransferOrchestrator) then begin
-    TOptixThread.TerminateInstance(FFileTransferOrchestrator);
+    TOptixThread.TerminateWait(FFileTransferOrchestrator);
 
     ///
     FFileTransferOrchestrator := nil;
