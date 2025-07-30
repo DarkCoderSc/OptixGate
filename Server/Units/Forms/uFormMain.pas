@@ -106,6 +106,7 @@ type
     WMIConsole1: TMenuItem;
     Debug1: TMenuItem;
     hreads1: TMenuItem;
+    asks1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -136,6 +137,7 @@ type
     procedure ControlForms1Click(Sender: TObject);
     procedure transfers1Click(Sender: TObject);
     procedure hreads1Click(Sender: TObject);
+    procedure asks1Click(Sender: TObject);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
@@ -179,7 +181,7 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks;
 
 {$R *.dfm}
 
@@ -423,6 +425,8 @@ begin
   // -------------------------------------------------------------------------------------------------------------------
   pData^.Forms.Add(TFormTransfers.Create(self, pData^.ToString, True));
   // -------------------------------------------------------------------------------------------------------------------
+  pData^.Forms.Add(TFormTasks.Create(self, pData^.ToString, True));
+  // -------------------------------------------------------------------------------------------------------------------
 
   ///
   VST.Refresh();
@@ -485,7 +489,7 @@ begin
     FreeAndNil(pData^.Forms);
 
   if Assigned(pData^.Handler) then begin
-    TOptixThread.Terminate(pData^.Handler);
+    TOptixThread.TerminateInstance(pData^.Handler);
 
     ///
     pData^.Handler := nil;
@@ -493,7 +497,7 @@ begin
 
   if Assigned(pData^.Workers) then begin
     for var AWorker in pData^.Workers do
-      TOptixThread.Terminate(AWorker);
+      TOptixThread.TerminateInstance(AWorker);
 
     ///
     FreeAndNil(pData^.Workers);
@@ -611,12 +615,13 @@ begin
 
   var AVisible := VST.FocusedNode <> nil;
 
-  self.erminate1.Visible       := AVisible;
-  self.ProcessManager1.Visible := AVisible;
-  self.Logs1.Visible           := AVisible;
-  self.FileManager1.Visible    := AVisible;
-  self.ControlForms1.Visible   := AVisible;
-  self.transfers1.Visible      := AVisible;
+  erminate1.Visible       := AVisible;
+  ProcessManager1.Visible := AVisible;
+  Logs1.Visible           := AVisible;
+  FileManager1.Visible    := AVisible;
+  ControlForms1.Visible   := AVisible;
+  transfers1.Visible      := AVisible;
+  asks1.Visible           := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
@@ -731,6 +736,11 @@ end;
 procedure TFormMain.About1Click(Sender: TObject);
 begin
   FormAbout.ShowModal();
+end;
+
+procedure TFormMain.asks1Click(Sender: TObject);
+begin
+  CreateOrOpenControlForm(VST.FocusedNode, TFormTasks);
 end;
 
 procedure TFormMain.Close1Click(Sender: TObject);

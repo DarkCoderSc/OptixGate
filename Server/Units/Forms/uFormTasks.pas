@@ -41,84 +41,60 @@
 {                                                                              }
 {******************************************************************************}
 
-{
-  Long-term TODO's:
-    - Replace TGUID with more robust tokens (Random Sha-512 Tokens)
-}
+unit uFormTasks;
 
-program Client;
-
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
-
-{$R *.res}
+interface
 
 uses
-  System.SysUtils,
-  Winapi.Windows,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
-  Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
-  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
-  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
-  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas';
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
+  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees.AncestorVCL, VirtualTrees;
 
-begin
-  IsMultiThread := True;
-  try
-    var AUserUID := TOptixInformationGathering.GetUserUID();
+type
+  TTreeData = record
 
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
-
-      // Enable certain useful privileges (if possible)
-      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
-      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
-
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.RetryDelay := 1000;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor();
-    finally
-      TOptixThread.SignalHiveAndFlush();
-
-      ///
-      CloseHandle(AMutex);
-    end;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
   end;
+  PTreeData = ^TTreeData;
+
+  TFormTasks = class(TBaseFormControl)
+    VST: TVirtualStringTree;
+
+    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: string);
+    procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  FormTasks: TFormTasks;
+
+implementation
+
+{$R *.dfm}
+
+procedure TFormTasks.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormTasks.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+begin
+  TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormTasks.VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+begin
+  NodeDataSize := SizeOf(TTreeData);
+end;
+
+procedure TFormTasks.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType; var CellText: string);
+begin
+  ///
+end;
+
 end.

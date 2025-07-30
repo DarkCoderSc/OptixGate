@@ -61,13 +61,15 @@ type
 
     {@M}
     procedure CheckSocket();
-    function IsDataAvailable(): Boolean;
   protected
     {@M}
     procedure CreateSocket();
   public
     {@M}
     procedure Close(); overload;
+
+    function IsDataAvailable(): Boolean;
+    function IsSocketAlive() : Boolean;
 
     procedure Send(const buf; len : Integer);
     procedure Recv(var buf; len : Integer);
@@ -390,23 +392,53 @@ end;
 
 { TSocketBase.IsDataAvailable }
 function TSocketBase.IsDataAvailable(): Boolean;
-var AReadFd  : TFDSet;
-    ATimeVal : TTimeVal;
-    ARet     : Integer;
 begin
+  var AReadFd : TFDSet;
   FD_ZERO(AReadFd);
   _FD_SET(FSocket, AReadFd);
 
+  var ATimeVal : TTimeVal;
   ATimeVal.tv_sec  := 0;
   ATimeVal.tv_usec := 0;
 
   //
-  ARet := select(0, @AReadFd, nil, nil, @ATimeVal);
+  var ARet := select(0, @AReadFd, nil, nil, @ATimeVal);
   if ARet = SOCKET_ERROR then
     raise ESocketException.Create('select');
 
   ///
   result := (ARet > 0);
+end;
+
+{ TSocketBase.IsSocketAlive }
+function TSocketBase.IsSocketAlive() : Boolean;
+begin
+  var AReadFd : TFDSet;
+  FD_ZERO(AReadFd);
+  _FD_SET(FSocket, AReadFd);
+
+  var ATimeVal : TTimeVal;
+  ATimeVal.tv_sec  := 0;
+  ATimeVal.tv_usec := 0;
+
+  //
+  var ARet := select(0, @AReadFd, nil, nil, @ATimeVal);
+  if ARet = SOCKET_ERROR then
+    raise ESocketException.Create('select');
+
+  ///
+  if ARet = 0 then
+    result := True
+  else begin
+    var ADummyBuffer : array[0..0] of Byte;
+    ARet := Winapi.Winsock2.recv(FSocket, ADummyBuffer, 1, MSG_PEEK);
+    if ARet = 0 then
+      Result := False
+    else if ARet = SOCKET_ERROR then
+      Result := WSAGetLastError() = WSAEWOULDBLOCK
+    else
+      Result := True;
+  end;
 end;
 
 { TSocketBase.CreateSocket }

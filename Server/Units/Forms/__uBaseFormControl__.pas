@@ -233,6 +233,7 @@ begin
   FFormInformation := TFormControlInformation.Create();
 
   FFormInformation.UserIdentifier := AUserIdentifier;
+  FFormInformation.State := fcsClosed;
 end;
 
 { TBaseFormControl.Destroy }

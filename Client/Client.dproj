@@ -118,6 +118,8 @@
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
+        <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
+        <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

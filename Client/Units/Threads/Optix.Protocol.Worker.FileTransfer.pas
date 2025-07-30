@@ -98,6 +98,11 @@ begin
     ///
 
     while not Terminated do begin
+      // This call is used to detect a potential disconnection from the server and to exit the loop if necessary.
+      // It does not consume any network data; it serves solely as a network exit control mechanism.
+      if not FClient.IsSocketAlive() then
+        break;
+
       var ATransfer : TOptixTransfer := nil;
       ///
 

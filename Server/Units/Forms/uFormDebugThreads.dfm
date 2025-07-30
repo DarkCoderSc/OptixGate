@@ -33,9 +33,11 @@ object FormDebugThreads: TFormDebugThreads
     Header.DefaultHeight = 25
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
     Images = FormMain.VirtualImageList
+    PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
     OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
@@ -43,7 +45,6 @@ object FormDebugThreads: TFormDebugThreads
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 628
     Columns = <
       item
         Position = 0
@@ -76,5 +77,14 @@ object FormDebugThreads: TFormDebugThreads
     OnTimer = TimerRefreshTimer
     Left = 120
     Top = 120
+  end
+  object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
+    Left = 240
+    Top = 120
+    object Terminate1: TMenuItem
+      Caption = 'Terminate'
+      OnClick = Terminate1Click
+    end
   end
 end

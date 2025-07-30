@@ -61,7 +61,8 @@ type
     ClassName          : String;
     ContextDescription : String;
     FormInformation    : TFormControlInformation;
-    Cycle              : UInt64;
+    Special            : Boolean;
+    Tick               : UInt64;
   end;
   PTreeData = ^TTreeData;
 
@@ -98,7 +99,7 @@ type
     procedure Show1Click(Sender: TObject);
     procedure VSTDblClick(Sender: TObject);
   private
-    FCycle      : UInt64;
+    FTick       : UInt64;
     FClientData : Pointer;
 
     {@M}
@@ -142,7 +143,13 @@ end;
 procedure TFormControlForms.PopupMenuChange(Sender: TObject; Source: TMenuItem;
   Rebuild: Boolean);
 begin
-  self.Purge1.Visible := VST.FocusedNode <> nil;
+  var pNode := VST.FocusedNode;
+  var pData : PTreeData := nil;
+  if Assigned(pNode) then
+    pData := PTreeData(pNode.GetData);
+
+  ///
+  self.Purge1.Visible := Assigned(pData) and not pData^.Special;
 end;
 
 function TFormControlForms.GetSelectedNodeGUID() : TGUID;
@@ -223,7 +230,7 @@ begin
   ///
 
   FClientData  := pClientData;
-  FCycle       := 0;
+  FTick        := 0;
 end;
 
 procedure TFormControlForms.FormClose(Sender: TObject;
@@ -247,16 +254,12 @@ begin
     Exit();
   end;
 
-  Inc(FCycle);
+  Inc(FTick);
 
   VST.BeginUpdate();
   try
     // -- Create or update forms -- //
     for var AForm in pClientNodeData^.Forms do begin
-      if AForm.SpecialForm then
-        continue;
-      ///
-
       var pNode := GetNodeByGUID(AForm.FormInformation.GUID);
       if not Assigned(pNode) then
         pNode := VST.AddChild(nil);
@@ -265,16 +268,16 @@ begin
       if not Assigned(pData^.FormInformation) then begin
         pData^.FormInformation := TFormControlInformation.Create();
 
-        // Title & ClassName never changes
         pData^.Title := AForm.Caption;
         pData^.ClassName := AForm.ClassName;
+        pData^.Special := AForm.SpecialForm;
       end;
 
       pData^.FormInformation.Assign(AForm.FormInformation);
       pData^.ContextDescription := AForm.ContextInformation;
 
       ///
-      pData^.Cycle := FCycle;
+      pData^.Tick := FTick;
     end;
 
     var ANodeArray := TList<PVirtualNode>.Create();
@@ -282,7 +285,7 @@ begin
       // -- Delete disapeared forms -- //
       for var pNode in VST.Nodes do begin
         var pData := PTreeData(pNode.GetData);
-        if pData^.Cycle <> FCycle then
+        if pData^.Tick <> FTick then
           ANodeArray.Add(pNode);
       end;
     finally
@@ -400,6 +403,13 @@ begin
         ImageIndex := IMAGE_FORM_CONTROL_CLOSED
       else
         ImageIndex := IMAGE_FORM_CONTROL;
+    end;
+
+    TVTImageKind.ikState : begin
+      if pData^.Special then
+        ImageIndex := IMAGE_STAR_FILLED
+      else
+        ImageIndex := IMAGE_STAR_EMPTY;
     end;
   end;
 end;

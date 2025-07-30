@@ -87,11 +87,14 @@ const
  IMAGE_FOLDER_DENIED                = 34;
  IMAGE_FOLDER_PREV                  = 35;
  IMAGE_THREAD_RUNNING               = 36;
- IMAGE_THREAD_STOPPED               = 37;
- IMAGE_THREAD_SERVER                = 38;
- IMAGE_THREAD_HANDLER               = 39;
- IMAGE_THREAD_TRANSFER              = 40;
- IMAGE_THREAD_GENERIC               = 41;
+ IMAGE_THREAD_STOP_WAIT             = 37;
+ IMAGE_THREAD_STOPPED               = 38;
+ IMAGE_THREAD_SERVER                = 39;
+ IMAGE_THREAD_HANDLER               = 40;
+ IMAGE_THREAD_TRANSFER              = 41;
+ IMAGE_THREAD_GENERIC               = 42;
+ IMAGE_STAR_EMPTY                   = 43;
+ IMAGE_STAR_FILLED                  = 44;
 
 var
  (* COLORS *)

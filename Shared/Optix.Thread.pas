@@ -68,6 +68,7 @@ type
   (* TOptixThread *)
   TOptixThread = class(TThread)
   private
+    FGuid            : TGUID;
     FCreatedDate     : TDateTime;
     FOnThreadExecute : TNotifyEvent;
     FOnThreadEnd     : TNotifyEvent;
@@ -83,6 +84,8 @@ type
 
     {@M}
     class function IsThreadRunning(const AThread : TThread): Boolean; static;
+    class function HasRunningInstance(const AThread : TOptixThread; const ATryTerminate : Boolean = False) : Boolean; static;
+    class procedure TerminateInstance(const AThread : TOptixThread); static;
     class procedure Terminate(const AThread : TThread; const AWaitFor : Boolean = False); overload;
     class procedure TerminateWait(const AThread : TThread); static;
     class procedure SignalHiveAndFlush(); static;
@@ -93,6 +96,7 @@ type
     property OnThreadEnd     : TNotifyEvent write FOnThreadEnd;
 
     {@G}
+    property Guid        : TGUID     read FGUID;
     property Running     : Boolean   read IsRunning;
     property CreatedDate : TDateTime read FCreatedDate;
   end;
@@ -267,6 +271,53 @@ begin
   end;
 end;
 
+{ TOptixThread.HasRunningInstance }
+class function TOptixThread.HasRunningInstance(const AThread : TOptixThread; const ATryTerminate : Boolean = False) : Boolean;
+begin
+  result := False;
+  ///
+
+  if not Assigned(OPTIX_THREAD_HIVE) then
+    Exit();
+  ///
+
+  var AList := OPTIX_THREAD_HIVE.LockList();
+  try
+    for var ACandidate in AList do begin
+      if (ACandidate = AThread) and (AThread.Running) then begin
+        result := True;
+
+        ///
+        break;
+      end;
+    end;
+  finally
+    OPTIX_THREAD_HIVE.UnlockList();
+  end;
+end;
+
+{ TOptixThread.TerminateInstance }
+class procedure TOptixThread.TerminateInstance(const AThread : TOptixThread);
+begin
+  if not Assigned(OPTIX_THREAD_HIVE) then
+    Exit();
+  ///
+
+  var AList := OPTIX_THREAD_HIVE.LockList();
+  try
+    for var ACandidate in AList do begin
+      if ACandidate = AThread then begin
+        AThread.Terminate();
+
+        ///
+        break;
+      end;
+    end;
+  finally
+    OPTIX_THREAD_HIVE.UnlockList();
+  end;
+end;
+
 { TOptixThread.IsRunning }
 function TOptixThread.IsRunning() : Boolean;
 begin
@@ -308,6 +359,7 @@ begin
   self.Priority := tpNormal;
 
   FCreatedDate := Now;
+  FGuid := TGUID.NewGuid;
 
   FOnThreadExecute := nil;
   FOnThreadEnd     := nil;

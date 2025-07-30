@@ -54,7 +54,22 @@ uses
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
+  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas' {,
+  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
+  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
+  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
+  XSuperJSON in '..\Shared\XSuperJSON.pas',
+  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
+  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
+  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
+  Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
+  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
+  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
+  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
+  Optix.Helper in 'Units\Optix.Helper.pas',
+  Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
+  XSuperObject in '..\Shared\XSuperObject.pas',
+  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
@@ -86,7 +101,8 @@ uses
   uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
   uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms},
   uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers},
-  uFormDebugThreads in 'Units\Forms\uFormDebugThreads.pas' {FormDebugThreads};
+  uFormDebugThreads in 'Units\Forms\uFormDebugThreads.pas' {FormDebugThreads},
+  uFormTasks in 'Units\Forms\uFormTasks.pas' {FormTasks};
 
 {$R *.res}
 {$R data.res}
@@ -102,6 +118,7 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormTransfers, FormTransfers);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
+  Application.CreateForm(TFormTasks, FormTasks);
   // Application.CreateForm(TFormFileManager, FormFileManager);
   // Application.CreateForm(TFormControlForms, FormControlForms);
   // Application.CreateForm(TFormLogs, FormLogs);

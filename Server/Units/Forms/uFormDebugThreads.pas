@@ -48,21 +48,26 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.ExtCtrls, VirtualTrees.Types;
+  VirtualTrees, Vcl.ExtCtrls, VirtualTrees.Types, Vcl.Menus;
 
 type
   TTreeData = record
-    Id          : Cardinal;
-    ClassName   : String;
-    Priority    : TThreadPriority;
-    CreatedTime : String;
-    Running     : Boolean;
+    Guid         : TGUID;
+    Id           : Cardinal;
+    ClassName    : String;
+    Priority     : TThreadPriority;
+    CreatedTime  : TDateTime;
+    Running      : Boolean;
+    Tick         : UInt64;
+    TerminateReq : Boolean;
   end;
   PTreeData = ^TTreeData;
 
   TFormDebugThreads = class(TForm)
     VST: TVirtualStringTree;
     TimerRefresh: TTimer;
+    PopupMenu: TPopupMenu;
+    Terminate1: TMenuItem;
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
@@ -73,8 +78,16 @@ type
     procedure TimerRefreshTimer(Sender: TObject);
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: TImageIndex);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure Terminate1Click(Sender: TObject);
   private
-    { Private declarations }
+    {@M}
+    FRefreshTick : UInt64;
+
+    procedure RefreshThreads();
+    function GetNodeByGUID(const AGuid : TGUID) : PVirtualNode;
   public
     { Public declarations }
   end;
@@ -89,21 +102,37 @@ uses Optix.Thread, Optix.Constants, Optix.Helper, System.StrUtils, uFormMain, Op
 
 {$R *.dfm}
 
-procedure TFormDebugThreads.FormClose(Sender: TObject; var Action: TCloseAction);
+function TFormDebugThreads.GetNodeByGUID(const AGuid : TGUID) : PVirtualNode;
 begin
-  TimerRefresh.Enabled := False;
+  result := nil;
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+
+    if pData^.Guid = AGuid then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
 end;
 
-procedure TFormDebugThreads.FormShow(Sender: TObject);
+procedure TFormDebugThreads.PopupMenuPopup(Sender: TObject);
 begin
-  TimerRefresh.Enabled := True;
+  var pNode := VST.FocusedNode;
+  var pData : PTreeData := nil;
+  if Assigned(pNode) then
+    pData := pNode.GetData;
+
+  self.Terminate1.Visible := Assigned(pData) and (pData^.Running and not pData^.TerminateReq);
 end;
 
-procedure TFormDebugThreads.TimerRefreshTimer(Sender: TObject);
+procedure TFormDebugThreads.RefreshThreads();
 begin
   VST.BeginUpdate();
   try
-    VST.Clear();
+    Inc(FRefreshTick);
     ///
 
     var AList := OPTIX_THREAD_HIVE.LockList();
@@ -113,20 +142,97 @@ begin
           continue;
         ///
 
-        var pNode := VST.AddChild(nil);
+        var pNode := GetNodeByGUID(AThread.Guid);
+        var ACreated := False;
+
+        if not Assigned(pNode) then begin
+          pNode := VST.AddChild(nil);
+
+          ACreated := True;
+        end;
+
         var pData := PTreeData(pNode.GetData);
 
-        pData^.Id          := AThread.ThreadID;
-        pData^.ClassName   := AThread.ClassName;
-        pData^.Priority    := AThread.Priority;
-        pData^.CreatedTime := ElapsedDateTime(AThread.CreatedDate, Now);
-        pData^.Running     := AThread.Running;
+        if ACreated then begin
+          pData^.Guid         := AThread.Guid;
+          pData^.Id           := AThread.ThreadID;
+          pData^.ClassName    := AThread.ClassName;
+          pData^.CreatedTime  := AThread.CreatedDate;
+          pData^.TerminateReq := False;
+        end;
+
+        pData^.Priority := AThread.Priority;
+        pData^.Running  := AThread.Running;
+        pData^.Tick     := FRefreshTick;
+
+        if pData^.TerminateReq then
+          AThread.Terminate();
       end;
     finally
       OPTIX_THREAD_HIVE.UnlockList();
     end;
+
+    // Clean destroyed threads
+    for var pNode in VST.Nodes do begin
+      var pData := PTreeData(pNode.GetData);
+      if pData^.Tick <> FRefreshTick then
+        VST.DeleteNode(pNode);
+    end;
   finally
     VST.EndUpdate();
+  end;
+end;
+
+procedure TFormDebugThreads.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  TimerRefresh.Enabled := False;
+
+  ///
+  VST.Clear();
+end;
+
+procedure TFormDebugThreads.FormShow(Sender: TObject);
+begin
+  FRefreshTick := 0;
+  VST.Clear();
+  ///
+
+  RefreshThreads();
+
+  ///
+  TimerRefresh.Enabled := True;
+end;
+
+procedure TFormDebugThreads.Terminate1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+  ///
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if pData^.Running then
+    pData^.TerminateReq := True;
+end;
+
+procedure TFormDebugThreads.TimerRefreshTimer(Sender: TObject);
+begin
+  RefreshThreads();
+end;
+
+procedure TFormDebugThreads.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+
+  var AColor := clNone;
+
+  if not pData^.Running then
+    AColor := COLOR_LIST_GRAY;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
   end;
 end;
 
@@ -150,7 +256,9 @@ begin
 
   case Column of
     0 : begin
-      if pData^.Running then
+      if pData^.TerminateReq then
+        ImageIndex := IMAGE_THREAD_STOP_WAIT
+      else if pData^.Running then
         ImageIndex := IMAGE_THREAD_RUNNING
       else
         ImageIndex := IMAGE_THREAD_STOPPED;
@@ -186,8 +294,8 @@ begin
     0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
     1 : CellText := pData^.ClassName;
     2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
-    3 : CellText := ThreadPriorityToString(pData^.Priority);
-    4 : CellText := pData^.CreatedTime;
+    3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
+    4 : CellText := ThreadPriorityToString(pData^.Priority);
   end;
 
   ///

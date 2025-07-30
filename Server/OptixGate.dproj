@@ -201,6 +201,10 @@
             <Form>FormDebugThreads</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Units\Forms\uFormTasks.pas">
+            <Form>FormTasks</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
