@@ -104,6 +104,8 @@ object FormMain: TFormMain
       item
         Width = 130
       end>
+    ExplicitTop = 304
+    ExplicitWidth = 521
   end
   object MainMenu: TMainMenu
     Left = 152

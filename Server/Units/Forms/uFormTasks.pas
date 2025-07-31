@@ -48,11 +48,11 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL, VirtualTrees;
+  VirtualTrees.AncestorVCL, VirtualTrees, XSuperObject, Optix.Task;
 
 type
   TTreeData = record
-
+    TaskResult : TOptixTaskResult;
   end;
   PTreeData = ^TTreeData;
 
@@ -63,10 +63,15 @@ type
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
-    procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);  private
+    procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+    procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);  private
     { Private declarations }
+  private
+    {@M}
+    function GetNodeByTaskId(const ATaskId : TGUID) : PVirtualNode;
   public
-    { Public declarations }
+    {@M}
+    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
   end;
 
 var
@@ -74,7 +79,51 @@ var
 
 implementation
 
+uses Optix.Helper;
+
 {$R *.dfm}
+
+function TFormTasks.GetNodeByTaskId(const ATaskId : TGUID) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+
+    if Assigned(pData^.TaskResult) and (pData^.TaskResult.Id = ATaskId) then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
+end;
+
+procedure TFormTasks.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+begin
+  if not Assigned(ASerializedPacket) or (AClassName <> TOptixTaskResult.ClassName) then
+    Exit();
+  ///
+
+  var ATaskResult := TOptixTaskResult.Create(ASerializedPacket);
+  var pNode := GetNodeByTaskId(ATaskResult.Id);
+  var pData : PTreeData := nil;
+
+  if not Assigned(pNode) then begin
+    pNode := VST.AddChild(nil);
+    pData := pNode.GetData;
+    pData^.TaskResult := nil; // Ensure
+  end else
+    pData := pNode.GetData;
+
+  if Assigned(pData^.TaskResult) then
+    FreeAndNil(pData^.TaskResult);
+
+  pData^.TaskResult := ATaskResult;
+
+  ///
+  VST.Refresh();
+end;
 
 procedure TFormTasks.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
@@ -86,6 +135,14 @@ begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
+procedure TFormTasks.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  var pData := PTreeData(Node.GetData);
+
+  if Assigned(pData) and Assigned(pData^.TaskResult) then
+    FreeAndNil(pData^.TaskResult);
+end;
+
 procedure TFormTasks.VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
 begin
   NodeDataSize := SizeOf(TTreeData);
@@ -94,7 +151,18 @@ end;
 procedure TFormTasks.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
   TextType: TVSTTextType; var CellText: string);
 begin
+  var pData := PTreeData(Node.GetData);
+
+  CellText := '';
+
+  if Assigned(pData^.TaskResult) then begin
+    case Column of
+      0 : CellText := pData^.TaskResult.Id.ToString();
+    end;
+  end;
+
   ///
+  CellText := DefaultIfEmpty(CellText);
 end;
 
 end.

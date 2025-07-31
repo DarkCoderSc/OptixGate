@@ -116,6 +116,10 @@ object FormProcessManager: TFormProcessManager
       Caption = 'Kill Process'
       OnClick = KillProcess1Click
     end
+    object DumpProcess1: TMenuItem
+      Caption = 'Dump Process'
+      OnClick = DumpProcess1Click
+    end
     object N2: TMenuItem
       Caption = '-'
     end

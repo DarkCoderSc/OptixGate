@@ -45,12 +45,13 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
-uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet, XSuperObject, Optix.Protocol.Preflight,
-     Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands;
+uses System.Classes, Generics.Collections, XSuperObject, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
+     Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands, Optix.Task;
 
 type
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
   private
+    FTasks                    : TObjectList<TOptixTask>;
     FFileTransferOrchestrator : TOptixFileTransferOrchestratorThread;
 
     {@M}
@@ -60,8 +61,11 @@ type
     function InitializePreflightRequest() : TOptixPreflightRequest; override;
     procedure Initialize(); override;
     procedure Finalize(); override;
+    procedure PollActions(); override;
+    procedure PollTasks();
 
-    procedure RegisterNewFileTransfer(const ATransfer : TOptixTransfer);
+    procedure RegisterNewFileTransfer(const ATransfer : TOptixCommandTransfer);
+    procedure RegisterAndStartNewTask(const AOptixTask : TOptixTask);
 
     procedure Connected(); override;
     procedure Disconnected(); override;
@@ -71,7 +75,7 @@ type
 implementation
 
 uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils, Optix.Func.Enum.Process, Optix.Actions.Process,
-     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread;
+     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump;
 
 
 { TOptixSessionHandlerThread.Initialize }
@@ -81,6 +85,7 @@ begin
   ///
 
   FFileTransferOrchestrator := nil;
+  FTasks := TObjectList<TOptixTask>.Create();
 end;
 
 { TOptixSessionHandlerThread.Finalize }
@@ -89,12 +94,66 @@ begin
   inherited;
   ///
 
+  if Assigned(FTasks) then
+    FreeAndNil(FTasks);
 end;
 
 { TOptixSessionHandlerThread.InitializePreflightRequest }
 function TOptixSessionHandlerThread.InitializePreflightRequest() : TOptixPreflightRequest;
 begin
   result.ClientKind := ckHandler;
+end;
+
+{ TOptixSessionHandlerThread.PollTasks }
+procedure TOptixSessionHandlerThread.PollTasks();
+begin
+  if not Assigned(FTasks) or (FTasks.Count = 0) then
+    Exit();
+  ///
+
+  var ATasksToDelete := TList<TOptixTask>.Create();
+  try
+    for var ATestTask in FTasks do begin
+      if ATestTask.Completed then begin
+        allocconsole();
+        writeln(ATestTask.Result.AsJson(True));
+        writeln('----');
+
+        ///
+        ATasksToDelete.Add(ATestTask);
+      end;
+    end;
+
+    for var ATask in ATasksToDelete do
+      FTasks.Remove(ATask);
+  finally
+    FreeAndNil(ATasksToDelete);
+  end;
+end;
+
+{ TOptixSessionHandlerThread.PollActions }
+procedure TOptixSessionHandlerThread.PollActions();
+begin
+  // Tasks -------------------------------------------------------------------------------------------------------------
+  PollTasks();
+  // -------------------------------------------------------------------------------------------------------------------
+end;
+
+{ TOptixSessionHandlerThread.RegisterAndStartNewTask }
+procedure TOptixSessionHandlerThread.RegisterAndStartNewTask(const AOptixTask : TOptixTask);
+begin
+  if not Assigned(AOptixTask) or not Assigned(FTasks) then
+    Exit();
+  ///
+
+  var ATaskId := TGUID.NewGuid();
+
+  AddPacket(TOptixTaskResult.Create(ATaskId, AOptixTask.ClassName));
+
+  AOptixTask.Start(ATaskId);
+
+  ///
+  FTasks.Add(AOptixTask);
 end;
 
 { TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread }
@@ -113,7 +172,7 @@ begin
 end;
 
 { TOptixSessionHandlerThread.RegisterNewFileTransfer }
-procedure TOptixSessionHandlerThread.RegisterNewFileTransfer(const ATransfer : TOptixTransfer);
+procedure TOptixSessionHandlerThread.RegisterNewFileTransfer(const ATransfer : TOptixCommandTransfer);
 begin
   InitializeFileTransferOrchestratorThread();
   ///
@@ -167,34 +226,44 @@ begin
       if AClassName = TOptixCommandTerminate.ClassName then
         Terminate
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixRefreshProcess.ClassName then
+      else if AClassName = TOptixCommandRefreshProcess.ClassName then
         AddPacket(TProcessList.Create(AWindowGUID))
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixKillProcess.ClassName then begin
+      else if AClassName = TOptixCommandKillProcess.ClassName then begin
         AHandleMemory := True;
         ///
 
-        AOptixPacket := TOptixKillProcess.Create(ASerializedPacket);
+        AOptixPacket := TOptixCommandKillProcess.Create(ASerializedPacket);
 
-        TProcessActions.TerminateProcess(TOptixKillProcess(AOptixPacket).ProcessId);
+        TProcessActions.TerminateProcess(TOptixCommandKillProcess(AOptixPacket).ProcessId);
 
-        AddPacket(AOptixPacket); // Success notification
+        ///
+        AddPacket(AOptixPacket); // Callback
       end
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixRefreshDrives.ClassName then
+      else if AClassName = TOptixCommandRefreshDrives.ClassName then
         AddPacket(TDriveList.Create(AWindowGUID))
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixRefreshFiles.ClassName then begin
-        AOptixPacket := TOptixRefreshFiles.Create(ASerializedPacket);
+      else if AClassName = TOptixCommandRefreshFiles.ClassName then begin
+        AOptixPacket := TOptixCommandRefreshFiles.Create(ASerializedPacket);
 
-        AddPacket(TFileList.Create(AWindowGUID, TOptixRefreshFiles(AOptixPacket).Path));
+        AddPacket(TFileList.Create(AWindowGUID, TOptixCommandRefreshFiles(AOptixPacket).Path));
       end
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixDownloadFile.ClassName then
-        RegisterNewFileTransfer(TOptixDownloadFile.Create(ASerializedPacket))
+      else if AClassName = TOptixCommandDownloadFile.ClassName then
+        RegisterNewFileTransfer(TOptixCommandDownloadFile.Create(ASerializedPacket))
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixUploadFile.ClassName then
-        RegisterNewFileTransfer(TOptixUploadFile.Create(ASerializedPacket))
+      else if AClassName = TOptixCommandUploadFile.ClassName then
+        RegisterNewFileTransfer(TOptixCommandUploadFile.Create(ASerializedPacket))
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixCommandProcessDump.ClassName then begin
+        AHandleMemory := True;
+        ///
+
+        AOptixPacket := TOptixCommandProcessDump.Create(ASerializedPacket);
+
+        RegisterAndStartNewTask(TOptixProcessDumpTask.Create(TOptixCommandProcessDump(AOptixPacket)));
+      end;
       // ---------------------------------------------------------------------------------------------------------------
       // ... //
     except

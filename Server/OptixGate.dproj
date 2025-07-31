@@ -168,6 +168,8 @@
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
+        <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
+        <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
@@ -199,11 +201,9 @@
         </DCCReference>
         <DCCReference Include="Units\Forms\uFormDebugThreads.pas">
             <Form>FormDebugThreads</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Units\Forms\uFormTasks.pas">
             <Form>FormTasks</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

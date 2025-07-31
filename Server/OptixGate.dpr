@@ -54,22 +54,7 @@ uses
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas' {,
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
-  Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
-  Optix.Helper in 'Units\Optix.Helper.pas',
-  Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
+  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
@@ -86,6 +71,8 @@ uses
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
+  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
+  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
@@ -116,9 +103,9 @@ begin
   TStyleManager.TrySetStyle('Aqua Light Slate');
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
-  Application.CreateForm(TFormTransfers, FormTransfers);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
-  Application.CreateForm(TFormTasks, FormTasks);
+  // Application.CreateForm(TFormTransfers, FormTransfers);
+  // Application.CreateForm(TFormTasks, FormTasks);
   // Application.CreateForm(TFormFileManager, FormFileManager);
   // Application.CreateForm(TFormControlForms, FormControlForms);
   // Application.CreateForm(TFormLogs, FormLogs);

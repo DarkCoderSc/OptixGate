@@ -297,7 +297,7 @@ begin
   pData^.Context             := AContext;
   pData^.ImageIndex          := SystemFileIcon(ARemoteFilepath, True);
 
-  SendCommand(TOptixDownloadFile.Create(ARemoteFilePath, pData^.Id));
+  SendCommand(TOptixCommandDownloadFile.Create(ARemoteFilePath, pData^.Id));
 
   ///
   result := pData^.Id;
@@ -318,7 +318,7 @@ begin
   pData^.Context             := AContext;
   pData^.ImageIndex          := SystemFileIcon(ALocalFilePath);
 
-  SendCommand(TOptixUploadFile.Create(ARemoteFilePath, pData^.Id));
+  SendCommand(TOptixCommandUploadFile.Create(ARemoteFilePath, pData^.Id));
 
   ///
   result := pData^.Id;

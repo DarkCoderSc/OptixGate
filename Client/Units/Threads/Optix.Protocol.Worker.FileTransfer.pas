@@ -52,7 +52,7 @@ type
   TOptixFileTransferOrchestratorThread = class(TOptixClientThread)
   private
     FHandler       : TOptixClientHandlerThread;
-    FTransferQueue : TThreadedQueue<TOptixTransfer>;
+    FTransferQueue : TThreadedQueue<TOptixCommandTransfer>;
   protected
     {@M}
     function InitializePreflightRequest() : TOptixPreflightRequest; override;
@@ -61,7 +61,7 @@ type
     procedure Finalize(); override;
   public
     {@M}
-    procedure AddTransfer(const ATransfer : TOptixTransfer);
+    procedure AddTransfer(const ATransfer : TOptixCommandTransfer);
 
     {@C}
     constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AHandler : TOptixClientHandlerThread); overload;
@@ -73,7 +73,7 @@ uses System.SysUtils, System.SyncObjs, Winapi.Windows, Optix.Exceptions, System.
      Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Sockets.Exceptions;
 
 { TOptixFileTransferOrchestratorThread.AddTransfer }
-procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixTransfer);
+procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixCommandTransfer);
 begin
   if not Assigned(ATransfer) then
     Exit();
@@ -89,8 +89,8 @@ begin
     Exit();
   ///
 
-  var ATasks := TObjectDictionary<TOptixTransfer, TOptixTransferTask>.Create([doOwnsKeys, doOwnsValues]);
-  var ATerminatedTransfers := TList<TOptixTransfer>.Create();
+  var ATasks := TObjectDictionary<TOptixCommandTransfer, TOptixTransferTask>.Create([doOwnsKeys, doOwnsValues]);
+  var ATerminatedTransfers := TList<TOptixCommandTransfer>.Create();
   var AChunk : array[0..FILE_CHUNK_SIZE-1] of Byte;
   var AStopwatch : TStopwatch;
   try
@@ -103,7 +103,7 @@ begin
       if not FClient.IsSocketAlive() then
         break;
 
-      var ATransfer : TOptixTransfer := nil;
+      var ATransfer : TOptixCommandTransfer := nil;
       ///
 
       if AStopwatch.IsRunning then
@@ -118,10 +118,10 @@ begin
         var ATask : TOptixTransferTask;
         try
           // Server Req File Download
-          if ATransfer is TOptixDownloadFile then
+          if ATransfer is TOptixCommandDownloadFile then
             ATask := TOptixUploadTask.Create(ATransfer.FilePath)
           // Server Req File upload
-          else if ATransfer is TOptixUploadFile then
+          else if ATransfer is TOptixCommandUploadFile then
             ATask := TOptixDownloadTask.Create(ATransfer.FilePath)
           else begin
             // Should never happend
@@ -245,7 +245,7 @@ begin
   ///
 
   FHandler := nil;
-  FTransferQueue := TThreadedQueue<TOptixTransfer>.Create(1024, INFINITE, 100);
+  FTransferQueue := TThreadedQueue<TOptixCommandTransfer>.Create(1024, INFINITE, 100);
 end;
 
 { TOptixFileTransferOrchestratorThread.Finalize }
@@ -266,7 +266,7 @@ begin
   if Assigned(FTransferQueue) then begin
     FTransferQueue.DoShutDown();
 
-    var ATransfer : TOptixTransfer;
+    var ATransfer : TOptixCommandTransfer;
     while True do begin
       ATransfer := FTransferQueue.PopItem;
       if not Assigned(ATransfer) then

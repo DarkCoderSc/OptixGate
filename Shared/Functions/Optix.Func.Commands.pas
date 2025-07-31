@@ -52,11 +52,11 @@ type
 
   // Simple Commands
   TOptixCommandTerminate = class(TOptixCommand);
-  TOptixRefreshProcess   = class(TOptixCommand);
-  TOptixRefreshDrives    = class(TOptixCommand);
+  TOptixCommandRefreshProcess   = class(TOptixCommand);
+  TOptixCommandRefreshDrives    = class(TOptixCommand);
 
   // Parameterized Commands
-  TOptixKillProcess = class(TOptixCommand)
+  TOptixCommandProcess = class(TOptixCommand)
   private
     FProcessId : Cardinal;
   protected
@@ -73,7 +73,26 @@ type
     property ProcessId : Cardinal read FProcessId;
   end;
 
-  TOptixRefreshFiles = class(TOptixCommand)
+  TOptixCommandKillProcess = class(TOptixCommandProcess);
+
+  TOptixCommandProcessDump = class(TOptixCommandProcess)
+  private
+    FDestFilePath : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@C}
+    constructor Create(const AProcessId : Cardinal; const ADestFilePath : String); overload;
+
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property DestFilePath : String read FDestFilePath;
+  end;
+
+  TOptixCommandRefreshFiles = class(TOptixCommand)
   private
     FPath : String;
   protected
@@ -90,7 +109,7 @@ type
     property Path : String read FPath;
   end;
 
-  TOptixTransfer = class(TOptixCommand)
+  TOptixCommandTransfer = class(TOptixCommand)
   private
     FTransferId : TGUID;
 
@@ -112,9 +131,9 @@ type
     property FilePath   : String read FFilePath;
   end;
 
-  TOptixDownloadFile = class(TOptixTransfer);
+  TOptixCommandDownloadFile = class(TOptixCommandTransfer);
 
-  TOptixUploadFile = class(TOptixTransfer)
+  TOptixCommandUploadFile = class(TOptixCommandTransfer)
   private
     FFileSize : UInt64;
   protected
@@ -130,10 +149,10 @@ type
 
 implementation
 
-(* TOptixKillProcess *)
+(* TOptixCommandProcess *)
 
-{ TOptixKillProcess.Create }
-constructor TOptixKillProcess.Create(const AProcessId : Cardinal);
+{ TOptixCommandProcess.Create }
+constructor TOptixCommandProcess.Create(const AProcessId : Cardinal);
 begin
   inherited Create();
   ///
@@ -141,8 +160,8 @@ begin
   FProcessId := AProcessId;
 end;
 
-{ TOptixKillProcess.Serialize }
-function TOptixKillProcess.Serialize() : ISuperObject;
+{ TOptixCommandProcess.Serialize }
+function TOptixCommandProcess.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
@@ -150,8 +169,8 @@ begin
   result.I['ProcessId'] := FProcessId;
 end;
 
-{ TOptixKillProcess.DeSerialize }
-procedure TOptixKillProcess.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixCommandProcess.DeSerialize }
+procedure TOptixCommandProcess.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
@@ -162,10 +181,10 @@ begin
   FProcessId := ASerializedObject.I['ProcessId'];
 end;
 
-(* TOptixRefreshFiles *)
+(* TOptixCommandRefreshFiles *)
 
-{ TOptixRefreshFiles.Create }
-constructor TOptixRefreshFiles.Create(const APath : String);
+{ TOptixCommandRefreshFiles.Create }
+constructor TOptixCommandRefreshFiles.Create(const APath : String);
 begin
   inherited Create();
   ///
@@ -173,8 +192,8 @@ begin
   FPath := APath;
 end;
 
-{ TOptixRefreshFiles.Serialize }
-function TOptixRefreshFiles.Serialize() : ISuperObject;
+{ TOptixCommandRefreshFiles.Serialize }
+function TOptixCommandRefreshFiles.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
@@ -182,8 +201,8 @@ begin
   result.S['Path'] := FPath;
 end;
 
-{ TOptixRefreshFiles.DeSerialize }
-procedure TOptixRefreshFiles.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixCommandRefreshFiles.DeSerialize }
+procedure TOptixCommandRefreshFiles.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
@@ -194,10 +213,10 @@ begin
   FPath := ASerializedObject.S['Path'];
 end;
 
-(* TOptixTransfer *)
+(* TOptixCommandTransfer *)
 
-{ TOptixTransfer.Create }
-constructor TOptixTransfer.Create(const AFilePath : String; const ATransferId : TGUID);
+{ TOptixCommandTransfer.Create }
+constructor TOptixCommandTransfer.Create(const AFilePath : String; const ATransferId : TGUID);
 begin
   inherited Create();
   ///
@@ -206,8 +225,8 @@ begin
   FTransferId := ATransferId;
 end;
 
-{ TOptixTransfer.Serialize }
-function TOptixTransfer.Serialize() : ISuperObject;
+{ TOptixCommandTransfer.Serialize }
+function TOptixCommandTransfer.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
@@ -216,8 +235,8 @@ begin
   result.S['FilePath']   := FFilePath;
 end;
 
-{ TOptixTransfer.DeSerialize }
-procedure TOptixTransfer.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixCommandTransfer.DeSerialize }
+procedure TOptixCommandTransfer.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
@@ -229,10 +248,10 @@ begin
   FFilePath   := ASerializedObject.S['FilePath'];
 end;
 
-(* TOptixUploadFile *)
+(* TOptixCommandUploadFile *)
 
-{ TOptixUploadFile.Serialize }
-function TOptixUploadFile.Serialize() : ISuperObject;
+{ TOptixCommandUploadFile.Serialize }
+function TOptixCommandUploadFile.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
@@ -240,8 +259,8 @@ begin
   result.I['FileSize'] := FFileSize;
 end;
 
-{ TOptixUploadFile.DeSerialize }
-procedure TOptixUploadFile.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixCommandUploadFile.DeSerialize }
+procedure TOptixCommandUploadFile.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
@@ -250,6 +269,38 @@ begin
     Exit();
 
   FFileSize := ASerializedObject.I['FileSize'];
+end;
+
+(* TOptixCommandProcessDump *)
+
+{ TOptixCommandProcessDump.Create }
+constructor TOptixCommandProcessDump.Create(const AProcessId : Cardinal; const ADestFilePath : String);
+begin
+  inherited Create(AProcessId);
+  ///
+
+  FDestFilePath := ADestFilePath;
+end;
+
+{ TOptixCommandProcessDump.Serialize }
+function TOptixCommandProcessDump.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['DestFilePath'] := FDestFilePath;
+end;
+
+{ TOptixCommandProcessDump.DeSerialize }
+procedure TOptixCommandProcessDump.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if not Assigned(ASerializedObject) then
+    Exit();
+
+  FDestFilePath := ASerializedObject.S['DestFilePath'];
 end;
 
 end.

@@ -57,6 +57,7 @@ type
     procedure Initialize(); override;
     procedure Finalize(); override;
     procedure ClientExecute(); override;
+    procedure PollActions(); virtual;
     procedure PacketReceived(const ASerializedPacket : ISuperObject); virtual; abstract;
   public
     {@M}
@@ -66,6 +67,12 @@ type
 implementation
 
 uses Optix.Sockets.Exceptions, System.SyncObjs;
+
+{ TOptixClientHandlerThread.PollActions }
+procedure TOptixClientHandlerThread.PollActions();
+begin
+  ///
+end;
 
 { TOptixClientHandlerThread.ClientExecute }
 procedure TOptixClientHandlerThread.ClientExecute();
@@ -125,6 +132,11 @@ begin
         // Void
       end;
     end;
+
+    // -----------------------------------------------------------------------------------------------------------------
+    // Perform additional actions after each iterations
+    // -----------------------------------------------------------------------------------------------------------------
+    PollActions();
   end; // while not Terminated do begin
 end;
 
@@ -134,7 +146,7 @@ begin
   inherited;
   ///
 
-  FPacketQueue := TThreadedQueue<TOptixPacket>.Create(1024, INFINITE, 100);
+  FPacketQueue := TThreadedQueue<TOptixPacket>.Create(1024, INFINITE, 500);
 end;
 
 { TOptixClientHandlerThread.Finalize }

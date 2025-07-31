@@ -83,6 +83,7 @@ type
     KillProcess1: TMenuItem;
     N3: TMenuItem;
     Clear1: TMenuItem;
+    DumpProcess1: TMenuItem;
     procedure Refresh1Click(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -104,6 +105,7 @@ type
     procedure PopupMenuPopup(Sender: TObject);
     procedure KillProcess1Click(Sender: TObject);
     procedure Clear1Click(Sender: TObject);
+    procedure DumpProcess1Click(Sender: TObject);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
@@ -265,6 +267,11 @@ begin
   ApplyFilterSettings();
 end;
 
+procedure TFormProcessManager.DumpProcess1Click(Sender: TObject);
+begin
+  SendCommand(TOptixCommandProcessDump.Create(0, 'c:\temp\process_dump.dmp'));
+end;
+
 procedure TFormProcessManager.KillProcess1Click(Sender: TObject);
 begin
   if VST.FocusedNode = nil then
@@ -277,12 +284,13 @@ begin
     Exit();
 
   ///
-  SendCommand(TOptixKillProcess.Create(pData^.ProcessInformation.Id));
+  SendCommand(TOptixCommandKillProcess.Create(pData^.ProcessInformation.Id));
 end;
 
 procedure TFormProcessManager.PopupMenuPopup(Sender: TObject);
 begin
-  self.KillProcess1.Visible := VST.FocusedNode <> nil;
+  KillProcess1.Visible := VST.FocusedNode <> nil;
+  DumpProcess1.Visible := KillProcess1.Visible;
 end;
 
 procedure TFormProcessManager.Refresh(const AProcessList : TProcessList);
@@ -311,7 +319,7 @@ end;
 
 procedure TFormProcessManager.Refresh1Click(Sender: TObject);
 begin
-  SendCommand(TOptixRefreshProcess.Create());
+  SendCommand(TOptixCommandRefreshProcess.Create());
 end;
 
 procedure TFormProcessManager.UnreachableProcess1Click(Sender: TObject);
@@ -455,10 +463,10 @@ begin
       Refresh(TProcessList(AOptixPacket));
     end
     // -------------------------------------------------------------------------
-    else if AClassName = TOptixKillProcess.ClassName then begin
-      AOptixPacket := TOptixKillProcess.Create(ASerializedPacket);
+    else if AClassName = TOptixCommandKillProcess.ClassName then begin
+      AOptixPacket := TOptixCommandKillProcess.Create(ASerializedPacket);
 
-      RemoveProcess(TOptixKillProcess(AOptixPacket).ProcessId);
+      RemoveProcess(TOptixCommandKillProcess(AOptixPacket).ProcessId);
     end;
     // -------------------------------------------------------------------------
   finally

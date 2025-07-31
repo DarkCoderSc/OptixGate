@@ -137,7 +137,7 @@ uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper,
 
 procedure TFormFileManager.RefreshDrives();
 begin
-  SendCommand(TOptixRefreshDrives.Create());
+  SendCommand(TOptixCommandRefreshDrives.Create());
 end;
 
 procedure TFormFileManager.RefreshFiles();
@@ -286,7 +286,7 @@ end;
 
 procedure TFormFileManager.BrowsePath(const APath : string);
 begin
-  SendCommand(TOptixRefreshFiles.Create(APath));
+  SendCommand(TOptixCommandRefreshFiles.Create(APath));
 end;
 
 procedure TFormFileManager.VSTDblClick(Sender: TObject);

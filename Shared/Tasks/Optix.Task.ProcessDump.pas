@@ -45,13 +45,34 @@ unit Optix.Task.ProcessDump;
 
 interface
 
-uses Optix.Task;
+uses XSuperObject, Optix.Task;
 
 type
-  TOptixProcessDumpTask = class;
+  TOptixProcessDumpTask = class(TOptixTask)
+  private
+    {@M}
+    function TaskCode() : ISuperObject; override;
+  end;
 
   TOptixProcessDumpTaskResult = class(TOptixTaskResult);
 
 implementation
+
+uses Winapi.Windows;
+
+(* TOptixProcessDumpTask *)
+
+{ TOptixProcessDumpTask.TaskCode }
+function TOptixProcessDumpTask.TaskCode() : ISuperObject;
+begin
+  result := SO();
+  ///
+
+  sleep(5000);
+
+  result.S['hello, world'];
+end;
+
+(* TOptixProcessDumpTaskResult *)
 
 end.

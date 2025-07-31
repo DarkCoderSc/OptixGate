@@ -45,18 +45,190 @@ unit Optix.Task;
 
 interface
 
-uses Optix.Protocol.Packet;
+uses Generics.Collections, XSuperObject, System.Classes, System.Threading, Optix.Protocol.Packet, Optix.Func.Commands;
 
 type
+  TOptixTaskState = (
+    otsPending,
+    otsRunning,
+    otsFailed,
+    otsSuccess
+  );
+
   TOptixTaskResult = class(TOptixPacket)
   private
-
+    FId            : TGUID;
+    FTaskClassName : String;
+    FState         : TOptixTaskState;
+    FResult        : ISuperObject;
   protected
-
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
+    {@C}
+    constructor Create(const ATaskId : TGUID; const ATaskClassName : String); overload;
 
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property Id            : TGUID           read FId;
+    property TaskClassName : String          read FTaskClassName;
+    property State         : TOptixTaskState read FState;
+  end;
+
+  TOptixTask = class
+  private
+    FId      : TGUID;
+    FTask    : IFuture<ISuperObject>;
+    FCommand : TOptixCommand;
+
+    {@M}
+    function Execute() : ISuperObject;
+    function IsCompleted() : Boolean;
+    function GetResult() : ISuperObject;
+  protected
+    {@M}
+    function TaskCode() : ISuperObject; virtual; abstract;
+  public
+    {@C}
+    constructor Create(const ACommand : TOptixCommand);
+    destructor Destroy(); override;
+
+    {@M}
+    procedure Start(const AId : TGUID);
+
+    {@G}
+    property Completed : Boolean      read IsCompleted;
+    property Result    : ISuperObject read GetResult;
   end;
 
 implementation
+
+uses Winapi.Windows, System.SysUtils;
+
+(* TOptixTaskResult *)
+
+{ TOptixTaskResult.Create }
+constructor TOptixTaskResult.Create(const ATaskId : TGUID; const ATaskClassName : String);
+begin
+  inherited Create();
+  ///
+
+  FId            := ATaskId;
+  FTaskClassName := ATaskClassName;
+  FState         := otsPending;
+  FResult        := SO();
+end;
+
+{ TOptixTaskResult.DeSerialize }
+procedure TOptixTaskResult.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FId            := TGUID.Create(ASerializedObject.S['Id']);
+  FTaskClassName := ASerializedObject.S['TaskClassName'];
+  FState         := TOptixTaskState(ASerializedObject.I['State']);
+  FResult        := ASerializedObject.O['Result'];
+end;
+
+{ TOptixTaskResult.Serialize }
+function TOptixTaskResult.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['Id']            := FId.TOString();
+  result.S['TaskClassName'] := FTaskClassName;
+  result.I['State']         := Integer(FState);
+  result.O['result']        := FResult;
+end;
+
+(* TOptixTask *)
+
+{ TOptixTask.Execute }
+function TOptixTask.Execute() : ISuperObject;
+begin
+  result := SO();
+  ///
+
+  var ASuccess := True;
+  try
+    var AStartTick := GetTickCount64();
+    try
+      result.O['result'] := TaskCode();
+    finally
+      result.I['elapsed_time'] := GetTickCount64() - AStartTick;
+    end;
+  except
+    on E : Exception do begin
+      ASuccess := False;
+      ///
+
+      result.S['exception'] := E.Message;
+    end;
+  end;
+
+  ///
+  result.B['success'] := ASuccess;
+end;
+
+{ TOptixTask.IsCompleted }
+function TOptixTask.IsCompleted() : Boolean;
+begin
+  result := Assigned(FTask) and (FTask.Status in [TTaskStatus.Completed, TTaskStatus.Exception]);
+end;
+
+{ TOptixTask.Start }
+procedure TOptixTask.Start(const AId : TGUID);
+begin
+  FId := AId;
+  ///
+
+  if FTask = nil then
+    FTask := TTask.Future<ISuperObject>(
+      function : ISuperObject begin
+        result := Execute();
+      end
+    );
+end;
+
+{ TOptixTask.GetResult }
+function TOptixTask.GetResult() : ISuperObject;
+begin
+  result := nil;
+  ///
+
+  if IsCompleted() then
+    try
+      result := FTask.Value
+    except
+
+    end;
+end;
+
+{ TOptixTask.Create }
+constructor TOptixTask.Create(const ACommand : TOptixCommand);
+begin
+  inherited Create();
+  ///
+
+  FId      := TGUID.Empty;
+  FTask    := nil;
+  FCommand := FCommand;
+end;
+
+{ TOptixTask.Destroy }
+destructor TOptixTask.Destroy();
+begin
+  FTask := nil;
+
+  if Assigned(FCommand) then
+    FreeAndNil(FCommand);
+
+  ///
+  inherited Destroy();
+end;
 
 end.

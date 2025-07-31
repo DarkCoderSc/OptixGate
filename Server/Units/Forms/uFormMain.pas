@@ -181,7 +181,7 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task;
 
 {$R *.dfm}
 
@@ -671,10 +671,15 @@ begin
         // -------------------------------------------------------------------------------------------------------------
         else if (AClassName = TLogNotifier.ClassName) or (AClassName = TLogTransferException.ClassName) then begin
           var ALogsForm := GetControlForm(pNode, TFormLogs);
-
           if Assigned(ALogsForm) then
             ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
         end
+        // -------------------------------------------------------------------------------------------------------------
+        else if (AClassName = TOptixTaskResult.ClassName) then begin
+          var ATaskForm := GetControlForm(pNode, TFormTasks);
+          if Assigned(ATaskForm) then
+            ATaskForm.ReceivePacket(AClassName, ASerializedPacket);
+        end;
         // -------------------------------------------------------------------------------------------------------------
         // ... //
         // else if ...
