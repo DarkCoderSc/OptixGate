@@ -69,13 +69,14 @@ type
     class function TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult; static;
     class function GetProcessCommandLine(const AProcessId : Cardinal) : String; static;
     class function TryGetProcessCommandLine(const AProcessId : Cardinal) : String; static;
+    class function MiniDumpWriteDump(const ATargetProcessId : Cardinal; const ATypesValue : DWORD; AOutputFilePath : String = '') : String; static;
   end;
 
   function ElevatedStatusToString(const AValue : TElevatedStatus) : String;
 
 implementation
 
-uses Optix.Exceptions, System.SysUtils;
+uses Optix.Exceptions, System.SysUtils, System.IOUtils;
 
 (* Local *)
 
@@ -391,6 +392,34 @@ begin
     result := GetProcessCommandLine(AProcessId);
   except
     result := '';
+  end;
+end;
+
+{ TProcessHelper.MiniDumpWriteDump }
+class function TProcessHelper.MiniDumpWriteDump(const ATargetProcessId : Cardinal; const ATypesValue : DWORD; AOutputFilePath : String = '') : String;
+begin
+  if String.IsNullOrWhiteSpace(AOutputFilePath) then
+    AOutputFilePath := TPath.GetTempFileName();
+  ///
+
+  var hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, ATargetProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    var hFile := CreateFileW(PWideChar(AOutputFilePath), GENERIC_WRITE, 0, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+    if hFile = INVALID_HANDLE_VALUE then
+      raise EWindowsException.Create('CreateFileW');
+    try
+      if not Optix.WinApiEx.MiniDumpWriteDump(hProcess, ATargetProcessId, hFile, ATypesValue, nil, nil, nil) then
+        raise EWindowsException.Create('MiniDumpWriteDump', GetLastError() and $FFFF (* HRESULT *));
+
+      ///
+      result := AOutputFilePath;
+    finally
+      CloseHandle(hFile);
+    end;
+  finally
+    CloseHandle(hProcess);
   end;
 end;
 

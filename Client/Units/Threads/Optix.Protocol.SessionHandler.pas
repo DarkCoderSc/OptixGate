@@ -113,14 +113,17 @@ begin
 
   var ATasksToDelete := TList<TOptixTask>.Create();
   try
-    for var ATestTask in FTasks do begin
-      if ATestTask.Completed then begin
-        allocconsole();
-        writeln(ATestTask.Result.AsJson(True));
-        writeln('----');
+    for var ATask in FTasks do begin
+      if ATask.Completed then begin
+        AddPacket(TOptixTaskCallback.Create(ATask));
 
         ///
-        ATasksToDelete.Add(ATestTask);
+        ATasksToDelete.Add(ATask);
+      end else if not ATask.RunningAware and ATask.Running then begin
+        ATask.RunningAware := True;
+
+        ///
+        AddPacket(TOptixTaskCallback.Create(ATask));
       end;
     end;
 
@@ -148,9 +151,11 @@ begin
 
   var ATaskId := TGUID.NewGuid();
 
-  AddPacket(TOptixTaskResult.Create(ATaskId, AOptixTask.ClassName));
+  AOptixTask.SetTaskId(ATaskId);
 
-  AOptixTask.Start(ATaskId);
+  AddPacket(TOptixTaskCallback.Create(AOptixTask));
+
+  AOptixTask.Start();
 
   ///
   FTasks.Add(AOptixTask);

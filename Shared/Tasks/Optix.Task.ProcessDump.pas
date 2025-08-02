@@ -49,30 +49,96 @@ uses XSuperObject, Optix.Task;
 
 type
   TOptixProcessDumpTask = class(TOptixTask)
-  private
+  protected
     {@M}
-    function TaskCode() : ISuperObject; override;
+    function TaskCode() : TOptixTaskResult; override;
   end;
 
-  TOptixProcessDumpTaskResult = class(TOptixTaskResult);
+  TOptixProcessDumpTaskResult = class(TOptixTaskResult)
+  private
+    FOutputFilePath  : String;
+    FDumpedProcessId : Cardinal;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    function GetExtendedDescription() : String; override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@C}
+    constructor Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal); overload;
+
+    {@G}
+    property OutputFilePath  : String   read FOutputFilePath;
+    property DumpedProcessId : Cardinal read FDumpedProcessId;
+  end;
 
 implementation
 
-uses Winapi.Windows;
+uses System.SysUtils, Winapi.Windows, Optix.Func.Commands, Optix.Process.Helper;
 
 (* TOptixProcessDumpTask *)
 
 { TOptixProcessDumpTask.TaskCode }
-function TOptixProcessDumpTask.TaskCode() : ISuperObject;
+function TOptixProcessDumpTask.TaskCode() : TOptixTaskResult;
 begin
-  result := SO();
+  result := nil;
   ///
 
-  sleep(5000);
+  if not Assigned(FCommand) or (not (FCommand is TOptixCommandProcessDump)) then
+    Exit();
 
-  result.S['hello, world'];
+  var AOutputFilePath := TProcessHelper.MiniDumpWriteDump(
+    TOptixCommandProcessDump(FCommand).ProcessId,
+    TOptixCommandProcessDump(FCommand).TypesValue,
+    TOptixCommandProcessDump(FCommand).DestFilePath,
+  );
+
+  ///
+  result := TOptixProcessDumpTaskResult.Create(AOutputFilePath, TOptixCommandProcessDump(FCommand).ProcessId);
 end;
 
 (* TOptixProcessDumpTaskResult *)
+
+{ TOptixProcessDumpTaskResult.Create }
+constructor TOptixProcessDumpTaskResult.Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal);
+begin
+  inherited Create();
+  ///
+
+  FOutputFilePath  := AOutputFileName;
+  FDumpedProcessId := ADumpedProcessId;
+end;
+
+{ TOptixProcessDumpTaskResult.GetExtendedDescription }
+function TOptixProcessDumpTaskResult.GetExtendedDescription() : String;
+begin
+  result := Format('Process %d dumped in %d seconds to "%s"', [
+    FDumpedProcessId,
+    (TaskDuration div 1000),
+    FOutputFilePath
+  ]);
+end;
+
+{ TOptixProcessDumpTaskResult.DeSerialize }
+procedure TOptixProcessDumpTaskResult.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FOutputFilePath  := ASerializedObject.S['OutputFilePath'];
+  FDumpedProcessId := ASerializedObject.I['DumpedProcessId'];
+end;
+
+{ TOptixProcessDumpTaskResult.Serialize }
+function TOptixProcessDumpTaskResult.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['OutputFilePath']  := FOutputFilePath;
+  result.I['DumpedProcessId'] := FDumpedProcessId;
+end;
 
 end.

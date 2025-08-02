@@ -31,6 +31,7 @@ object FormTasks: TFormTasks
     Header.DefaultHeight = 25
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
     Images = FormMain.VirtualImageList
+    PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
@@ -38,11 +39,10 @@ object FormTasks: TFormTasks
     OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
+    OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 702
-    ExplicitHeight = 337
     Columns = <
       item
         Position = 0
@@ -61,13 +61,25 @@ object FormTasks: TFormTasks
       end
       item
         Position = 3
-        Text = 'Started'
+        Text = 'Created'
         Width = 100
       end
       item
         Position = 4
         Text = 'Ended'
         Width = 100
+      end
+      item
+        Position = 5
+        Text = 'Description'
+        Width = 300
       end>
+  end
+  object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
+    Left = 160
+    Top = 64
+    object Action1: TMenuItem
+    end
   end
 end

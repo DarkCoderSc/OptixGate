@@ -675,7 +675,7 @@ begin
             ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
         end
         // -------------------------------------------------------------------------------------------------------------
-        else if (AClassName = TOptixTaskResult.ClassName) then begin
+        else if (AClassName = TOptixTaskCallback.ClassName) then begin
           var ATaskForm := GetControlForm(pNode, TFormTasks);
           if Assigned(ATaskForm) then
             ATaskForm.ReceivePacket(AClassName, ASerializedPacket);

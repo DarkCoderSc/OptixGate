@@ -77,19 +77,23 @@ type
 
   TOptixCommandProcessDump = class(TOptixCommandProcess)
   private
+    FDestTempPath : Boolean;
     FDestFilePath : String;
+    FTypesValue   : DWORD;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
-    constructor Create(const AProcessId : Cardinal; const ADestFilePath : String); overload;
+    constructor Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD); overload;
 
     {@M}
     function Serialize() : ISuperObject; override;
 
     {@G}
-    property DestFilePath : String read FDestFilePath;
+    property DestTempPath : Boolean read FDestTempPath;
+    property DestFilePath : String  read FDestFilePath;
+    property TypesValue   : DWORD   read FTypesValue;
   end;
 
   TOptixCommandRefreshFiles = class(TOptixCommand)
@@ -274,12 +278,18 @@ end;
 (* TOptixCommandProcessDump *)
 
 { TOptixCommandProcessDump.Create }
-constructor TOptixCommandProcessDump.Create(const AProcessId : Cardinal; const ADestFilePath : String);
+constructor TOptixCommandProcessDump.Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD);
 begin
   inherited Create(AProcessId);
   ///
 
-  FDestFilePath := ADestFilePath;
+  FDestTempPath := String.IsNullOrWhiteSpace(ADestFilePath);
+  if not FDestTempPath then
+    FDestFilePath := ADestFilePath.Trim()
+  else
+    FDestFilePath := '';
+
+  FTypesValue := ATypesValue;
 end;
 
 { TOptixCommandProcessDump.Serialize }
@@ -288,7 +298,9 @@ begin
   result := inherited;
   ///
 
+  result.B['DestTempPath'] := FDestTempPath;
   result.S['DestFilePath'] := FDestFilePath;
+  result.I['TypesValue']   := FTypesValue;
 end;
 
 { TOptixCommandProcessDump.DeSerialize }
@@ -300,7 +312,9 @@ begin
   if not Assigned(ASerializedObject) then
     Exit();
 
+  FDestTempPath := ASerializedObject.B['DestTempPath'];
   FDestFilePath := ASerializedObject.S['DestFilePath'];
+  FTypesValue   := ASerializedObject.I['TypesValue'];
 end;
 
 end.

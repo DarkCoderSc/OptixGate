@@ -55,7 +55,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
   VirtualTrees.AncestorVCL, VirtualTrees, Vcl.Menus, XSuperObject, Optix.Func.Enum.Process, Optix.WinApiEx,
-  VirtualTrees.Types;
+  VirtualTrees.Types, uFormDumpProcess;
 
 type
   TTreeData = record
@@ -116,6 +116,7 @@ type
     procedure ApplyFilterSettings();
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
     procedure RemoveProcess(const AProcessId : Cardinal);
+    function GetImageIndex(const pData : PTreeData) : Integer;
   protected
     {@M}
     function GetContextDescription() : String; override;
@@ -269,7 +270,22 @@ end;
 
 procedure TFormProcessManager.DumpProcess1Click(Sender: TObject);
 begin
-  SendCommand(TOptixCommandProcessDump.Create(0, 'c:\temp\process_dump.dmp'));
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+
+  //SendCommand(TOptixCommandProcessDump.Create(0, 'c:\temp\process_dump.dmp'));
+
+  var ADialog := TFormDumpProcess.Create(
+    self,
+    pData^.ProcessInformation.Name,
+    pData^.ProcessInformation.Id,
+    FFormInformation.UserIdentifier,
+    GetImageIndex(pData)
+  );
+
+  RegisterNewDialogAndShow(ADialog);
 end;
 
 procedure TFormProcessManager.KillProcess1Click(Sender: TObject);
@@ -380,6 +396,28 @@ begin
     FreeAndNil(pData^.ProcessInformation);
 end;
 
+function TFormProcessManager.GetImageIndex(const pData : PTreeData) : Integer;
+begin
+  result := -1;
+  ///
+
+  if not Assigned(pData) then
+    Exit();
+
+  if pData^.ProcessInformation.IsCurrentProcess then
+    result := IMAGE_PROCESS_SELF
+  else begin
+    if (FRemoteProcessorArchitecture = pa86_64) and
+       (pData^.ProcessInformation.IsWow64Process <> brError) then begin
+      if pData^.ProcessInformation.IsWow64Process = brTrue then
+        result := IMAGE_PROCESS_X86_32
+      else
+        result := IMAGE_PROCESS_X86_64;
+    end else
+      result := IMAGE_PROCESS;
+  end;
+end;
+
 procedure TFormProcessManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
@@ -390,20 +428,7 @@ begin
   ///
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected: begin
-      if pData^.ProcessInformation.IsCurrentProcess then
-        ImageIndex := IMAGE_PROCESS_SELF
-      else begin
-        if (FRemoteProcessorArchitecture = pa86_64) and
-           (pData^.ProcessInformation.IsWow64Process <> brError) then begin
-          if pData^.ProcessInformation.IsWow64Process = brTrue then
-            ImageIndex := IMAGE_PROCESS_X86_32
-          else
-            ImageIndex := IMAGE_PROCESS_X86_64;
-        end else
-          ImageIndex := IMAGE_PROCESS;
-      end;
-    end;
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected : ImageIndex := GetImageIndex(pData);
   end;
 end;
 

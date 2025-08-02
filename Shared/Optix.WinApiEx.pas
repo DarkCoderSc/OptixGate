@@ -48,7 +48,7 @@ interface
 uses Winapi.Windows;
 
 type
-  //----------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
 
   TProcessorArchitecture = (
     paUnknown,
@@ -95,7 +95,7 @@ type
     // ...
   );
 
-  //----------------------------------------------------------------------------
+  //--------------------------------------------------------------------------------------------------------------------
 
   NET_API_STATUS = DWORD;
 
@@ -249,7 +249,44 @@ type
   TProcessBasicInformation = _PROCESS_BASIC_INFORMATION;
   PProcessBasicInformation = ^TProcessBasicInformation;
 
-//------------------------------------------------------------------------------
+  (* DbgHelp.dll *)
+  MINIDUMP_EXCEPTION_INFORMATION = record
+    ThreadId          : DWORD;
+    ExceptionPointers : PExceptionPointers;
+    ClientPointers    : BOOL;
+  end;
+  TMiniDumpExceptionInformation = MINIDUMP_EXCEPTION_INFORMATION;
+  PMiniDumpExceptionInformation = ^TMiniDumpExceptionInformation;
+
+  MINIDUMP_USER_STREAM = record
+    Type_      : ULONG;
+    BufferSize : ULONG;
+    Buffer     : Pointer;
+  end;
+  TMiniDumpUserStream = MINIDUMP_USER_STREAM;
+  PMiniDumpUserStream = ^TMiniDumpUserStream;
+
+  MINIDUMP_USER_STREAM_INFORMATION = record
+    UserStreamCount : ULONG;
+    UserStreamArray : PMiniDumpUserStream;
+  end;
+  TMiniDumpUserStreamInformation = MINIDUMP_USER_STREAM_INFORMATION;
+  PMiniDumpUserStreamInformation = ^TMiniDumpUserStreamInformation;
+
+  TMiniDumpCallbackRoutine = function(
+    CallbackParam      : Pointer;
+    CallbackInput      : Pointer;
+    var CallbackOutput : Pointer
+  ): BOOL; stdcall;
+
+  MINIDUMP_CALLBACK_INFORMATION = record
+    CallbackRoutine : TMiniDumpCallbackRoutine;
+    CallbackParam   : Pointer;
+  end;
+  TMiniDumpCallbackInformation = MINIDUMP_CALLBACK_INFORMATION;
+  PMiniDumpCallbackInformation = ^TMiniDumpCallbackInformation;
+
+//----------------------------------------------------------------------------------------------------------------------
 
 const
   NERR_Success = 0;
@@ -292,7 +329,37 @@ const
                     SYNCHRONIZE or
                     $1FF;
 
-//------------------------------------------------------------------------------
+  (* DbgHelp.DLL *)
+
+  MiniDumpNormal                          = $00000000;
+  MiniDumpWithDataSegs                    = $00000001;
+  MiniDumpWithFullMemory                  = $00000002;
+  MiniDumpWithHandleData                  = $00000004;
+  MiniDumpFilterMemory                    = $00000008;
+  MiniDumpScanMemory                      = $00000010;
+  MiniDumpWithUnloadedModules             = $00000020;
+  MiniDumpWithIndirectlyReferencedMemory  = $00000040;
+  MiniDumpFilterModulePaths               = $00000080;
+  MiniDumpWithProcessThreadData           = $00000100;
+  MiniDumpWithPrivateReadWriteMemory      = $00000200;
+  MiniDumpWithoutOptionalData             = $00000400;
+  MiniDumpWithFullMemoryInfo              = $00000800;
+  MiniDumpWithThreadInfo                  = $00001000;
+  MiniDumpWithCodeSegs                    = $00002000;
+  MiniDumpWithoutAuxiliaryState           = $00004000;
+  MiniDumpWithFullAuxiliaryState          = $00008000;
+  MiniDumpWithPrivateWriteCopyMemory      = $00010000;
+  MiniDumpIgnoreInaccessibleMemory        = $00020000;
+  MiniDumpWithTokenInformation            = $00040000;
+  MiniDumpWithModuleHeaders               = $00080000;
+  MiniDumpFilterTriage                    = $00100000;
+  MiniDumpWithAvxXStateContext            = $00200000;
+  MiniDumpWithIptTrace                    = $00400000;
+  MiniDumpScanInaccessiblePartialPages    = $00800000;
+  MiniDumpFilterWriteCombinedMemory       = $01000000;
+  MiniDumpValidTypeFlags                  = $01ffffff;
+
+//----------------------------------------------------------------------------------------------------------------------
 
 (* Netapi32.dll *)
 function DsGetDcNameW(
@@ -356,7 +423,18 @@ function QueryFullProcessImageNameW(
   var dwSize : DWORD
 ): BOOL; stdcall; external 'Kernel32.dll';
 
-//------------------------------------------------------------------------------
+(* DbgHelp.dll *)
+function MiniDumpWriteDump(
+  hProcess        : THandle;
+  ProcessId       : DWORD;
+  hFile           : THandle;
+  DumpType        : DWORD;
+  ExceptionParam  : PMiniDumpExceptionInformation;
+  UserStreamParam : PMiniDumpUserStreamInformation;
+  CallbackParam   : PMiniDumpCallbackInformation
+) : BOOL; stdcall; external 'DbgHelp.dll';
+
+//----------------------------------------------------------------------------------------------------------------------
 
 function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : String;
 

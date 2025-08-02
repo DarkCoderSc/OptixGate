@@ -104,8 +104,8 @@ type
     procedure VSTRefresh();
   public
     {@M}
-    function RequestFileDownload(const ARemoteFilePath, ALocalFilePath : String; const AContext : String = '') : TGUID;
-    function RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID;
+    function RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; override;
+    function RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID; override;
 
     procedure ApplyTransferException(const ATransferId : TGUID; const AReason : String); overload;
     procedure ApplyTransferException(const ALogTransferException : TLogTransferException); overload;
@@ -285,14 +285,23 @@ begin
   ApplyTransferException(ATransferId, AReason);
 end;
 
-function TFormTransfers.RequestFileDownload(const ARemoteFilePath, ALocalFilePath : String; const AContext : String = '') : TGUID;
+function TFormTransfers.RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
   var pNode := VST.AddChild(nil);
   var pData := PTreeData(pNode.GetData);
   ///
 
+  if String.IsNullOrWhiteSpace(ALocalFilePath) then begin
+    var ADirectory := '';
+
+    if not SelectDirectory('Select local destination', '', ADirectory) then
+      Exit();
+
+    ALocalFilePath := IncludeTrailingPathDelimiter(ADirectory) + TPath.GetFileName(ARemoteFilePath);
+  end;
+
   pData^.SourceFilePath      := ARemoteFilePath;
-  pData^.DestinationFilePath := ALocalFilePath;
+  pData^.DestinationFilePath := TFileSystemHelper.UniqueFileName(ALocalFilePath);
   pData^.Direction           := otdClientIsUploading;
   pData^.Context             := AContext;
   pData^.ImageIndex          := SystemFileIcon(ARemoteFilepath, True);
@@ -513,18 +522,8 @@ begin
 
   ARemoteFile := ARemoteFile.Trim();
 
-  var ADirectory : String;
-
-  if not SelectDirectory('Select local destination', '', ADirectory) then
-    Exit();
-
   ///
-  RequestFileDownload(
-    ARemoteFile,
-    TFileSystemHelper.UniqueFileName(
-      IncludeTrailingPathDelimiter(ADirectory) + TPath.GetFileName(ARemoteFile)
-    )
-  );
+  RequestFileDownload(ARemoteFile);
 end;
 
 end.

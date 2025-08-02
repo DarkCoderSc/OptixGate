@@ -205,6 +205,10 @@
         <DCCReference Include="Units\Forms\uFormTasks.pas">
             <Form>FormTasks</Form>
         </DCCReference>
+        <DCCReference Include="Units\Forms\Dialogs\uFormDumpProcess.pas">
+            <Form>FormDumpProcess</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

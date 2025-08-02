@@ -45,8 +45,7 @@ unit __uBaseFormControl__;
 
 interface
 
-uses VCL.Forms, VCL.Controls, System.Classes, Winapi.Messages, XSuperObject,
-     Optix.Func.Commands;
+uses VCL.Forms, VCL.Controls, System.Classes, Winapi.Messages, XSuperObject, Optix.Func.Commands, Generics.Collections;
 
 type
   TFormControlState = (fcsUnset, fcsVisible, fcsMinimized, fcsClosed);
@@ -87,18 +86,23 @@ type
 
   TBaseFormControl = class(TForm)
   private
-    FFormInformation  : TFormControlInformation;
     FOriginalCaption  : String;
+    FDialogs          : TObjectList<TForm>;
 
     {@M}
     function GetGUID() : TGUID;
   protected
-    FSpecialForm : Boolean;
+    FSpecialForm     : Boolean;
+    FFormInformation : TFormControlInformation;
 
     {@M}
-    procedure SendCommand(const ACommand : TOptixCommand);
     function GetContextDescription() : String; virtual;
     procedure RefreshCaption(); virtual;
+
+    procedure RegisterNewDialogAndShow(const ADialog : TForm);
+
+    function RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
+    function RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID; virtual;
 
     procedure CreateParams(var Params: TCreateParams); override;
 
@@ -109,6 +113,7 @@ type
     procedure WMWindowPosChanging(var AMessage: TWMWindowPosChanging); message WM_WINDOWPOSCHANGING;
   public
     {@M}
+    procedure SendCommand(const ACommand : TOptixCommand);
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual;
 
     {@C}
@@ -126,7 +131,7 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, uFormMain;
+uses System.SysUtils, Winapi.Windows, uFormMain, uFormTransfers;
 
 (* Local *)
 
@@ -195,6 +200,16 @@ end;
 
 (* TBaseFormControl *)
 
+procedure TBaseFormControl.RegisterNewDialogAndShow(const ADialog : TForm);
+begin
+  if Assigned(ADialog) and Assigned(FDialogs) then begin
+    FDialogs.Add(ADialog);
+
+    ///
+    ADialog.Show();
+  end;
+end;
+
 function TBaseFormControl.GetContextDescription() : String;
 begin
   result := '';
@@ -234,6 +249,8 @@ begin
 
   FFormInformation.UserIdentifier := AUserIdentifier;
   FFormInformation.State := fcsClosed;
+
+  FDialogs := TObjectList<TForm>.Create(True);
 end;
 
 { TBaseFormControl.Destroy }
@@ -241,6 +258,9 @@ destructor TBaseFormControl.Destroy();
 begin
   if Assigned(FFormInformation) then
     FreeAndNil(FFormInformation);
+
+  if Assigned(FDialogs) then
+    FreeAndNil(FDialogs);
 
   ///
   inherited;
@@ -253,6 +273,22 @@ begin
 
   ///
   FormMain.SendCommand(self, ACommand);
+end;
+
+{ TBaseFormControl.RequestFileDownload }
+function TBaseFormControl.RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
+begin
+  var AForm := FormMain.GetControlForm(self, TFormTransfers);
+  if Assigned(AForm) then
+    AForm.RequestFileDownload(ARemoteFilePath, ALocalFilePath, AContext);
+end;
+
+{ TBaseFormControl.RequestFileUpload }
+function TBaseFormControl.RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID;
+begin
+  var AForm := FormMain.GetControlForm(self, TFormTransfers);
+  if Assigned(AForm) then
+    AForm.RequestFileUpload(ALocalFilePath, ARemoteFilePath, AContext);
 end;
 
 { TBaseFormControl.CMVisibleChanged }
