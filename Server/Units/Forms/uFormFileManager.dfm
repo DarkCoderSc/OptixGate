@@ -15,9 +15,9 @@ object FormFileManager: TFormFileManager
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
-    Top = 0
+    Top = 57
     Width = 477
-    Height = 347
+    Height = 313
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -48,6 +48,7 @@ object FormFileManager: TFormFileManager
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitTop = 59
     Columns = <
       item
         Position = 0
@@ -91,42 +92,149 @@ object FormFileManager: TFormFileManager
       end>
   end
   object EditPath: TEdit
-    Left = 0
-    Top = 347
-    Width = 477
+    AlignWithMargins = True
+    Left = 4
+    Top = 30
+    Width = 469
     Height = 23
-    Align = alBottom
+    Margins.Left = 4
+    Margins.Top = 0
+    Margins.Right = 4
+    Margins.Bottom = 4
+    Align = alTop
     ReadOnly = True
     TabOrder = 1
-    ExplicitTop = 315
-    ExplicitWidth = 467
+  end
+  object PanelActions: TPanel
+    Left = 0
+    Top = 0
+    Width = 477
+    Height = 30
+    Margins.Left = 4
+    Margins.Top = 0
+    Margins.Right = 4
+    Margins.Bottom = 0
+    Align = alTop
+    BevelOuter = bvNone
+    TabOrder = 2
+    object ButtonHome: TSpeedButton
+      AlignWithMargins = True
+      Left = 2
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 51
+      ImageName = 'home'
+      Images = FormMain.VirtualImageList
+      OnClick = ButtonHomeClick
+      ExplicitLeft = 4
+      ExplicitTop = 2
+    end
+    object ButtonRefresh: TSpeedButton
+      AlignWithMargins = True
+      Left = 36
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 52
+      ImageName = 'symbol-refresh'
+      Images = FormMain.VirtualImageList
+      Visible = False
+      OnClick = ButtonRefreshClick
+      ExplicitLeft = 42
+      ExplicitTop = 2
+    end
+    object ButtonUpload: TSpeedButton
+      AlignWithMargins = True
+      Left = 70
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 50
+      ImageName = 'folder-open-filled-arrow-up-filled'
+      Images = FormMain.VirtualImageList
+      Visible = False
+      OnClick = ButtonUploadClick
+      ExplicitLeft = 118
+      ExplicitTop = 8
+    end
+    object ButtonOptions: TSpeedButton
+      AlignWithMargins = True
+      Left = 104
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 53
+      ImageName = 'gear-filled'
+      Images = FormMain.VirtualImageList
+      OnClick = ButtonOptionsClick
+      ExplicitTop = 2
+    end
+    object LabelAccess: TLabel
+      AlignWithMargins = True
+      Left = 448
+      Top = 10
+      Width = 21
+      Height = 20
+      Margins.Left = 8
+      Margins.Top = 10
+      Margins.Right = 8
+      Margins.Bottom = 0
+      Align = alRight
+      Caption = '___'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Courier New'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+      ExplicitLeft = 452
+      ExplicitTop = 6
+      ExplicitHeight = 24
+    end
   end
   object PopupMenu: TPopupMenu
     OnPopup = PopupMenuPopup
     Left = 240
     Top = 128
-    object Refresh1: TMenuItem
-      Caption = 'Refresh'
-      OnClick = Refresh1Click
+    object DownloadFile1: TMenuItem
+      Caption = 'Download File'
+      OnClick = DownloadFile1Click
     end
-    object N1: TMenuItem
-      Caption = '-'
+    object UploadToFolder1: TMenuItem
+      Caption = 'Upload To Folder'
+      OnClick = UploadToFolder1Click
     end
-    object ShowDrives1: TMenuItem
-      Caption = 'Show Drives (Home)'
-      OnClick = ShowDrives1Click
-    end
-    object N2: TMenuItem
-      Caption = '-'
-    end
-    object Options1: TMenuItem
-      Caption = 'Options'
-      object ColoredFoldersAccessView1: TMenuItem
-        AutoCheck = True
-        Caption = 'Colored Folders (Access View)'
-        Checked = True
-        OnClick = ColoredFoldersAccessView1Click
-      end
+  end
+  object PopupMenuOptions: TPopupMenu
+    Left = 104
+    Top = 136
+    object ColoredFoldersAccessView1: TMenuItem
+      AutoCheck = True
+      Caption = 'Colored Folders (Access View)'
+      Checked = True
+      OnClick = ColoredFoldersAccessView1Click
     end
   end
 end

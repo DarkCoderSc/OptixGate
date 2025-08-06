@@ -120,6 +120,7 @@
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
+        <DCCReference Include="Units\Actions\Optix.Actions.ProcessHandler.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

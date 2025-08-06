@@ -138,7 +138,16 @@ begin
     Exit();
   ///
 
-  RequestFileDownload(TOptixProcessDumpTaskResult(ACallBack.Result).OutputFilePath, '', 'Process Dump');
+  var ADirectory := '';
+
+  if not SelectDirectory('Select destination', '', ADirectory) then
+    Exit();
+
+  RequestFileDownload(
+    TOptixProcessDumpTaskResult(ACallBack.Result).OutputFilePath,
+    IncludeTrailingPathDelimiter(ADirectory) + TOptixProcessDumpTaskResult(ACallBack.Result).DisplayName + '.dmp',
+    'Process Dump'
+  );
 end;
 
 procedure TFormTasks.PopupMenuPopup(Sender: TObject);

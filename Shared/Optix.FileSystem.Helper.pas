@@ -84,12 +84,14 @@ type
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
-  function FileAccessAttributesToString(const AValue : TFileAccessAttributes) : String;
+  function AccessSetToString(const AValue : TFileAccessAttributes) : String;
+  function StringToAccessSet(const AValue : String) : TFileAccessAttributes;
+  function AccessSetToReadableString(const AValue : TFileAccessAttributes) : String;
 
 implementation
 
 uses System.SysUtils, Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows, Optix.Exceptions, Optix.WinApiEx, Winapi.ShellAPI,
-     Optix.System.Helper, System.IOUtils;
+     Optix.System.Helper, System.IOUtils, System.StrUtils;
 
 (* Local *)
 
@@ -110,22 +112,42 @@ begin
   end;
 end;
 
-{ _.FileAccessAttributesToString }
-function FileAccessAttributesToString(const AValue : TFileAccessAttributes) : String;
+{ _.AccessSetToString }
+function AccessSetToString(const AValue : TFileAccessAttributes) : String;
 begin
-  result := '';
+  SetLength(result, 3);
   ///
 
-  if faRead in AValue then
-    result := 'R';
+  result[1] := IfThen(faRead in AValue, 'R', '_')[1];
+  result[2] := IfThen(faWrite in AValue, 'W', '_')[1];
+  result[3] := IfThen(faExecute in AValue, 'E', '_')[1];
+end;
 
-  if faWrite in AValue then
-    result := result + 'W';
+{ _.StringToAccessSet }
+function StringToAccessSet(const AValue : String) : TFileAccessAttributes;
+begin
+  result := [];
+  ///
 
-  if faExecute in AValue then
-    result := result + 'E';
+  if Length(AValue) <> 3 then
+    Exit();
 
-  if String.IsNullOrEmpty(result) then
+  if Copy(AValue, 1, 1) = 'R' then
+    Include(result, faRead);
+
+  if Copy(AValue, 2, 1) = 'W' then
+    Include(result, faWrite);
+
+  if Copy(AValue, 3, 1) = 'E' then
+    Include(result, faExecute);
+end;
+
+{ _.FileAccessAttributesToString }
+function AccessSetToReadableString(const AValue : TFileAccessAttributes) : String;
+begin
+  if AValue <> [] then
+    result := AccessSetToString(AValue)
+  else
     result := 'No Access';
 end;
 

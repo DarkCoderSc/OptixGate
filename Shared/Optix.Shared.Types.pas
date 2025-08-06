@@ -46,7 +46,8 @@ unit Optix.Shared.Types;
 interface
 
 type
-  TBoolResult = (brTrue, brFalse, brError);
+  TBoolResult   = (brTrue, brFalse, brError);
+  TBoolNullable = (bnTrue, bnFalse, bnNull);
 
 function CastResult(const AValue : TBoolResult) : Boolean; overload;
 function CastResult(const AValue : Boolean) : TBoolResult; overload;

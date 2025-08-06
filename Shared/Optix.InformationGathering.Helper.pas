@@ -301,7 +301,8 @@ begin
   var A128BitHash := THashMD5.GetHashBytes(
     GetHardDriveSerial +                                  // Uniqueness in machine level
     GetCurrentUserSid +                                   // Uniqueness in user level
-    IntToStr(Cardinal(TProcessHelper.IsElevated()))       // Uniqueness in elevation level
+    IntToStr(Cardinal(TProcessHelper.IsElevated())) +     // Uniqueness in elevation level
+    IntToStr(Cardinal(CurrentProcessArchitecture()))      // Uniqueness in process architecture
   );
 
   Move(A128BitHash[0], result, SizeOf(TGUID));

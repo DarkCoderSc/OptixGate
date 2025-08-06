@@ -85,9 +85,64 @@ uses
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas';
+  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
+  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas';
 
 begin
+
+  // test
+  allocconsole();
+
+  var AHandler := TProcessHandler.Create('powershell.exe');
+
+  AHandler.Start(True);
+
+  var ATick := GetTickCount64();
+  while True do begin
+
+    var AChunk := AHandler.ReadAvailableOutput();
+    if not String.IsNullOrWhiteSpace(AChunk) then
+      WriteLn(AChunk);
+
+
+
+    sleep(100);
+
+    if GetTickCount64() - ATick > 1000 then
+      break;
+
+  end;
+
+  faire fonctionner le CTRL C
+
+  AHandler.WriteLn('ls');
+
+
+  ATick := GetTickCount64();
+  while True do begin
+
+    var AChunk := AHandler.ReadAvailableOutput();
+    if not String.IsNullOrWhiteSpace(AChunk) then
+      WriteLn(AChunk);
+
+
+
+    sleep(100);
+
+    if GetTickCount64() - ATick > 6000 then
+      break;
+
+  end;
+
+  FreeAndNil(AHandler);
+
+
+
+  Exit();
+
+  // end test
+
+
   IsMultiThread := True;
   try
     var AUserUID := TOptixInformationGathering.GetUserUID();

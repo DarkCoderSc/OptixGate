@@ -90,7 +90,9 @@ uses
   uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers},
   uFormDebugThreads in 'Units\Forms\uFormDebugThreads.pas' {FormDebugThreads},
   uFormTasks in 'Units\Forms\uFormTasks.pas' {FormTasks},
-  uFormDumpProcess in 'Units\Forms\Dialogs\uFormDumpProcess.pas' {FormDumpProcess};
+  uFormDumpProcess in 'Units\Forms\Dialogs\uFormDumpProcess.pas' {FormDumpProcess},
+  uFormRemoteShell in 'Units\Forms\uFormRemoteShell.pas' {FormRemoteShell},
+  uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame};
 
 {$R *.res}
 {$R data.res}
@@ -101,10 +103,11 @@ begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  TStyleManager.TrySetStyle('Aqua Light Slate');
+  TStyleManager.TrySetStyle('Glossy');
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
+  // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
   // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
   // Application.CreateForm(TFormTransfers, FormTransfers);
   // Application.CreateForm(TFormTasks, FormTasks);

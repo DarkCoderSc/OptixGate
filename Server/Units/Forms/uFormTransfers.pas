@@ -90,8 +90,6 @@ type
       var CellText: string);
     procedure DownloadaFile1Click(Sender: TObject);
     procedure UploadaFile1Click(Sender: TObject);
-    procedure VSTInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
-      var InitialStates: TVirtualNodeInitStates);
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: TImageIndex);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
@@ -100,12 +98,14 @@ type
     procedure CancelTransfer1Click(Sender: TObject);
   private
     {@M}
+    function RegisterNewTransfer(const ASourceFilePath, ADestinationFilePath : String; const ADirection : TOptixTransferDirection; const AContext : String = '') : TGUID;
+
     function GetNodeByTransferId(const ATransferId : TGUID) : PVirtualNode;
     procedure VSTRefresh();
   public
     {@M}
-    function RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; override;
-    function RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID; override;
+    function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; override;
+    function RequestFileUpload(ALocalFilePath : String; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; override;
 
     procedure ApplyTransferException(const ATransferId : TGUID; const AReason : String); overload;
     procedure ApplyTransferException(const ALogTransferException : TLogTransferException); overload;
@@ -247,6 +247,9 @@ begin
   ATask := nil;
   ///
 
+  if VST.IsUpdating then
+    Exit();
+
   var pNode := GetNodeByTransferId(ATransferId);
   if not Assigned(pNode) then
     Exit();
@@ -285,74 +288,87 @@ begin
   ApplyTransferException(ATransferId, AReason);
 end;
 
-function TFormTransfers.RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
+function TFormTransfers.RegisterNewTransfer(const ASourceFilePath, ADestinationFilePath : String; const ADirection : TOptixTransferDirection; const AContext : String = '') : TGUID;
+var pNode : PVirtualNode;
+    pData : PTreeData;
 begin
-  var pNode := VST.AddChild(nil);
-  var pData := PTreeData(pNode.GetData);
+  VST.BeginUpdate();
+  try
+    pNode := VST.AddChild(nil);
+    pData := pNode.GetData;
+
+    // Init
+    pData^.Id                  := TGUID.NewGuid;
+    pData^.State               := tsQueued;
+    pData^.FileSize            := 0;
+    pData^.WorkCount           := 0;
+
+    // Param
+    pData^.SourceFilePath      := ASourceFilePath.Trim();
+    pData^.DestinationFilePath := TFileSystemHelper.UniqueFileName(ADestinationFilePath.Trim());
+    pData^.Direction           := ADirection;
+    pData^.Context             := AContext;
+    pData^.ImageIndex          := SystemFileIcon(pData^.SourceFilePath, (ADirection = otdClientIsUploading));
+
+    ///
+    result := pData^.Id;
+  finally
+    VST.EndUpdate();
+  end;
+
   ///
+
+  if Assigned(pData) then
+    case ADirection of
+      otdClientIsUploading   : SendCommand(TOptixCommandDownloadFile.Create(pData^.SourceFilePath, pData^.Id));
+      otdClientIsDownloading : SendCommand(TOptixCommandUploadFile.Create(pData^.DestinationFilePath, pData^.Id));
+    end;
+end;
+
+function TFormTransfers.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
+begin
+  if String.IsNullOrWhiteSpace(ARemoteFilePath) then
+    if not InputQuery('Download File', 'Remote File Path', ARemoteFilePath) then
+      Exit();
 
   if String.IsNullOrWhiteSpace(ALocalFilePath) then begin
     var ADirectory := '';
 
-    if not SelectDirectory('Select local destination', '', ADirectory) then
+    if not SelectDirectory('Select Destination', '', ADirectory) then
       Exit();
 
     ALocalFilePath := IncludeTrailingPathDelimiter(ADirectory) + TPath.GetFileName(ARemoteFilePath);
   end;
 
-  pData^.SourceFilePath      := ARemoteFilePath;
-  pData^.DestinationFilePath := TFileSystemHelper.UniqueFileName(ALocalFilePath);
-  pData^.Direction           := otdClientIsUploading;
-  pData^.Context             := AContext;
-  pData^.ImageIndex          := SystemFileIcon(ARemoteFilepath, True);
-
-  SendCommand(TOptixCommandDownloadFile.Create(ARemoteFilePath, pData^.Id));
-
   ///
-  result := pData^.Id;
-
-  ///
-  VSTRefresh();
+  result := RegisterNewTransfer(ARemoteFilePath, ALocalFilePath, otdClientIsUploading, AContext);
 end;
 
-function TFormTransfers.RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID;
+function TFormTransfers.RequestFileUpload(ALocalFilePath : String; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
-  var pNode := VST.AddChild(nil);
-  var pData := PTreeData(pNode.GetData);
+  if String.IsNullOrWhiteSpace(ALocalFilePath) then begin
+    if not OpenDialog.Execute() then
+      Exit();
+
+    ///
+    ALocalFilePath := OpenDialog.FileName;
+  end;
+
+  if String.IsNullOrWhiteSpace(ARemoteFilePath) then begin
+    if not InputQuery('Upload File', 'Remote Destination (File or Folder "\")', ARemoteFilePath) then
+      Exit();
+  end;
+
+  if ARemoteFilePath.EndsWith('\') then
+    ARemoteFilePath := ARemoteFilePath.Trim() + TPath.GetFileName(OpenDialog.FileName);
+
   ///
-
-  pData^.SourceFilePath      := ALocalFilePath;
-  pData^.DestinationFilePath := ARemoteFilePath;
-  pData^.Direction           := otdClientIsDownloading;
-  pData^.Context             := AContext;
-  pData^.ImageIndex          := SystemFileIcon(ALocalFilePath);
-
-  SendCommand(TOptixCommandUploadFile.Create(ARemoteFilePath, pData^.Id));
-
-  ///
-  result := pData^.Id;
-
-  ///
-  VSTRefresh();
+  result := RegisterNewTransfer(ALocalFilePath, ARemoteFilePath, otdClientIsDownloading, AContext);
 end;
 
 procedure TFormTransfers.UploadaFile1Click(Sender: TObject);
 begin
-  if not OpenDialog.Execute() then
-    Exit();
-
-  var ARemoteFile : String;
-
-  if not InputQuery('Upload File', 'Remote Destination', ARemoteFile) then
-    Exit();
-
-  ARemoteFile := ARemoteFile.Trim();
-
-  if ARemoteFile.EndsWith('\') then
-    ARemoteFile := ARemoteFile + TPath.GetFileName(OpenDialog.FileName);
-
-  ///
-  RequestFileUpload(OpenDialog.FileName, ARemoteFile);
+  RequestFileUpload('');
 end;
 
 procedure TFormTransfers.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -476,21 +492,11 @@ begin
     end;
     5 : CellText := pData^.Context;
     6 : CellText := pData^.Description;
+    7 : CellText := pData^.Id.ToString();
   end;
 
   ///
   CellText := DefaultIfEmpty(CellText);
-end;
-
-procedure TFormTransfers.VSTInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode;
-  var InitialStates: TVirtualNodeInitStates);
-begin
-  var pData := PTreeData(Node.GetData);
-
-  pData^.Id        := TGUID.NewGuid;
-  pData^.State     := tsQueued;
-  pData^.FileSize  := 0;
-  pData^.WorkCount := 0;
 end;
 
 procedure TFormTransfers.CancelTransfer1Click(Sender: TObject);
@@ -515,15 +521,7 @@ end;
 
 procedure TFormTransfers.DownloadaFile1Click(Sender: TObject);
 begin
-  var ARemoteFile : String;
-
-  if not InputQuery('Download File', 'Remote File Path', ARemoteFile) then
-    Exit();
-
-  ARemoteFile := ARemoteFile.Trim();
-
-  ///
-  RequestFileDownload(ARemoteFile);
+  RequestFileDownload();
 end;
 
 end.

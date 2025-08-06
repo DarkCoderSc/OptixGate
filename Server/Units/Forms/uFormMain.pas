@@ -107,6 +107,7 @@ type
     Debug1: TMenuItem;
     hreads1: TMenuItem;
     asks1: TMenuItem;
+    ImageCollectionDark: TImageCollection;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -138,6 +139,7 @@ type
     procedure transfers1Click(Sender: TObject);
     procedure hreads1Click(Sender: TObject);
     procedure asks1Click(Sender: TObject);
+    procedure RemoteShell1Click(Sender: TObject);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
@@ -161,7 +163,8 @@ type
     function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
     function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
-    procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TClass);
+    procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
+    procedure CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
   public
     {@M}
     function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
@@ -181,7 +184,7 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell;
 
 {$R *.dfm}
 
@@ -346,7 +349,7 @@ begin
   FormDebugThreads.Show();
 end;
 
-procedure TFormMain.CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TClass);
+procedure TFormMain.CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
 begin
   if not Assigned(pNode) then
     Exit();
@@ -372,6 +375,22 @@ begin
 
   if Assigned(AForm) then
     TOptixVCLHelper.ShowForm(AForm);
+end;
+
+procedure TFormMain.CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
+begin
+  if pNode = nil then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  if not Assigned(pData^.Forms) then
+    Exit();
+
+  var AForm := AFormClass.Create(self, pData^.ToString);
+  pData^.Forms.Add(AForm);
+
+  ///
+  TOptixVCLHelper.ShowForm(AForm);
 end;
 
 procedure TFormMain.Logs1Click(Sender: TObject);
@@ -430,6 +449,11 @@ begin
 
   ///
   VST.Refresh();
+end;
+
+procedure TFormMain.RemoteShell1Click(Sender: TObject);
+begin
+  CreateNewControlForm(VST.FocusedNode, TFormRemoteShell);
 end;
 
 procedure TFormMain.UpdateStatus(const ACaption : String = '');
@@ -622,6 +646,7 @@ begin
   ControlForms1.Visible   := AVisible;
   transfers1.Visible      := AVisible;
   asks1.Visible           := AVisible;
+  RemoteShell1.Visible    := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
@@ -760,20 +785,7 @@ end;
 
 procedure TFormMain.FileManager1Click(Sender: TObject);
 begin
-  if VST.FocusedNode = nil then
-    Exit();
-
-  var pData := PTreeData(VST.FocusedNode.GetData);
-  if not Assigned(pData^.Forms) then
-    Exit();
-
-  var AForm := TFormFileManager.Create(self, pData^.ToString);
-
-  ///
-  pData^.Forms.Add(AForm);
-
-  ///
-  TOptixVCLHelper.ShowForm(AForm);
+  CreateNewControlForm(VST.FocusedNode, TFormFileManager);
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);

@@ -41,124 +41,53 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Task.ProcessDump;
+unit uFormRemoteShell;
 
 interface
 
-uses XSuperObject, Optix.Task;
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, uFrameRemoteShellInstance, Vcl.Menus;
 
 type
-  TOptixProcessDumpTask = class(TOptixTask)
-  protected
-    {@M}
-    function TaskCode() : TOptixTaskResult; override;
-  end;
-
-  TOptixProcessDumpTaskResult = class(TOptixTaskResult)
+  TFormRemoteShell = class(TBaseFormControl)
+    Pages: TPageControl;
+    MainMenu: TMainMenu;
+    File1: TMenuItem;
+    NewInstance1: TMenuItem;
+    procedure NewInstance1Click(Sender: TObject);
   private
-    FOutputFilePath    : String;
-    FDumpedProcessId   : Cardinal;
-    FDumpedProcessName : String;
-
     {@M}
-    function GetProcessDisplayName() : String;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-    function GetExtendedDescription() : String; override;
+    procedure NewShellInstance();
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@C}
-    constructor Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal); overload;
-
-    {@G}
-    property OutputFilePath    : String   read FOutputFilePath;
-    property DumpedProcessId   : Cardinal read FDumpedProcessId;
-    property DumpedProcessName : String   read FDumpedProcessName;
-    property Displayname       : String   read GetProcessDisplayName;
+    { Public declarations }
   end;
+
+var
+  FormRemoteShell: TFormRemoteShell;
 
 implementation
 
-uses System.SysUtils, System.IOUtils, Winapi.Windows, Optix.Func.Commands, Optix.Process.Helper;
+{$R *.dfm}
 
-(* TOptixProcessDumpTask *)
-
-{ TOptixProcessDumpTask.TaskCode }
-function TOptixProcessDumpTask.TaskCode() : TOptixTaskResult;
+procedure TFormRemoteShell.NewInstance1Click(Sender: TObject);
 begin
-  result := nil;
-  ///
-
-  if not Assigned(FCommand) or (not (FCommand is TOptixCommandProcessDump)) then
-    Exit();
-
-  var AOutputFilePath := TProcessHelper.MiniDumpWriteDump(
-    TOptixCommandProcessDump(FCommand).ProcessId,
-    TOptixCommandProcessDump(FCommand).TypesValue,
-    TOptixCommandProcessDump(FCommand).DestFilePath,
-  );
-
-  ///
-  result := TOptixProcessDumpTaskResult.Create(AOutputFilePath, TOptixCommandProcessDump(FCommand).ProcessId);
+  NewShellInstance();
 end;
 
-(* TOptixProcessDumpTaskResult *)
-
-{ TOptixProcessDumpTaskResult.Create }
-constructor TOptixProcessDumpTaskResult.Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal);
+procedure TFormRemoteShell.NewShellInstance();
 begin
-  inherited Create();
-  ///
+  var ATab := TTabSheet.Create(Pages);
+  ATab.PageControl := Pages;
 
-  FOutputFilePath    := AOutputFileName;
-  FDumpedProcessId   := ADumpedProcessId;
-  FDumpedProcessName := TPath.GetFileName(TProcessHelper.TryGetProcessImagePath(FDumpedProcessId));
-end;
+  var AFrame := TFrameRemoteShellInstance.Create(ATab);
+  AFrame.Parent := ATab;
 
-{ TOptixProcessDumpTaskResult.GetProcessDisplayName }
-function TOptixProcessDumpTaskResult.GetProcessDisplayName() : String;
-begin
-  if String.IsNullOrWhiteSpace(FDumpedProcessName) then
-    result := IntToStr(FDumpedProcessId)
-  else
-    result := Format('%d (%s)', [
-      FDumpedProcessId,
-      FDumpedProcessName
-    ]);
-end;
+  Pages.ActivePage := ATab;
 
-{ TOptixProcessDumpTaskResult.GetExtendedDescription }
-function TOptixProcessDumpTaskResult.GetExtendedDescription() : String;
-begin
-  result := Format('%s successfully dumped to "%s"', [
-    GetProcessDisplayName(),
-    FOutputFilePath
-  ]);
-end;
-
-{ TOptixProcessDumpTaskResult.DeSerialize }
-procedure TOptixProcessDumpTaskResult.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FOutputFilePath    := ASerializedObject.S['OutputFilePath'];
-  FDumpedProcessId   := ASerializedObject.I['DumpedProcessId'];
-  FDumpedProcessName := ASerializedObject.S['DumpedProcessName'];
-end;
-
-{ TOptixProcessDumpTaskResult.Serialize }
-function TOptixProcessDumpTaskResult.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['OutputFilePath']    := FOutputFilePath;
-  result.I['DumpedProcessId']   := FDumpedProcessId;
-  result.S['DumpedProcessName'] := FDumpedProcessName;
+  // Hacky method to fix annoying issue with Delphi HDPI designing...
+  AFrame.Shell.Font.Size   := 9;
+  AFrame.Command.Font.Size := 9;
 end;
 
 end.

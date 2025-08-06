@@ -104,8 +104,8 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions,
-     Optix.Protocol.Worker.FileTransfer, Optix.Protocol.Client;
+uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions, Optix.Protocol.Worker.FileTransfer,
+     Optix.Protocol.Client;
 
 (* TOptixServerThread *)
 

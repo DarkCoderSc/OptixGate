@@ -44,7 +44,6 @@ object FormTransfers: TFormTransfers
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
-    OnInitNode = VSTInitNode
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
@@ -81,6 +80,11 @@ object FormTransfers: TFormTransfers
       item
         Position = 6
         Text = 'Description'
+        Width = 250
+      end
+      item
+        Position = 7
+        Text = 'Id'
         Width = 250
       end>
   end

@@ -56,7 +56,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__,
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, Vcl.StdCtrls, Vcl.ExtCtrls, XSuperObject, Vcl.Menus,
-  Optix.Func.Enum.FileSystem, VirtualTrees.Types;
+  Optix.Func.Enum.FileSystem, VirtualTrees.Types, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Buttons;
 
 type
   TTreeData = record
@@ -75,13 +75,16 @@ type
     VST: TVirtualStringTree;
     EditPath: TEdit;
     PopupMenu: TPopupMenu;
-    ShowDrives1: TMenuItem;
-    N1: TMenuItem;
-    Refresh1: TMenuItem;
-    N2: TMenuItem;
-    Options1: TMenuItem;
+    DownloadFile1: TMenuItem;
+    UploadToFolder1: TMenuItem;
+    PanelActions: TPanel;
+    ButtonHome: TSpeedButton;
+    ButtonRefresh: TSpeedButton;
+    ButtonUpload: TSpeedButton;
+    ButtonOptions: TSpeedButton;
+    PopupMenuOptions: TPopupMenu;
     ColoredFoldersAccessView1: TMenuItem;
-    procedure ShowDrives1Click(Sender: TObject);
+    LabelAccess: TLabel;
     procedure FormShow(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -100,13 +103,20 @@ type
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
-    procedure Refresh1Click(Sender: TObject);
     procedure PopupMenuPopup(Sender: TObject);
     procedure ColoredFoldersAccessView1Click(Sender: TObject);
+    procedure DownloadFile1Click(Sender: TObject);
+    procedure ButtonHomeClick(Sender: TObject);
+    procedure ButtonRefreshClick(Sender: TObject);
+    procedure UploadToFolder1Click(Sender: TObject);
+    procedure ButtonOptionsClick(Sender: TObject);
+    procedure ButtonUploadClick(Sender: TObject);
   private
     FFirstShow : Boolean;
 
     {@M}
+    function CanNodeFileBeDownloaded(var pData : PTreeData) : Boolean;
+    function CanFileBeUploadedToNodeDirectory(var pData : PTreeData) : Boolean;
     procedure DisplayDrives(const AList : TDriveList);
     procedure DisplayFiles(const AList : TFileList);
     procedure SetDisplayMode(const AMode : TDisplayMode);
@@ -116,6 +126,9 @@ type
   protected
     {@M}
     function GetContextDescription() : String; override;
+
+    function RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID; overload;
+    function RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; overload;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
@@ -129,11 +142,20 @@ var
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper,
-     Optix.FileSystem.Helper, Optix.Constants, Optix.VCL.Helper,
-     System.IOUtils;
+uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper, Optix.FileSystem.Helper, Optix.Constants,
+     Optix.VCL.Helper, System.IOUtils;
 
 {$R *.dfm}
+
+function TFormFileManager.RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID;
+begin
+  inherited RequestFileDownload(ARemoteFilePath, ALocalFilePath, Format('File Manager (%s)', [EditPath.Text]));
+end;
+
+function TFormFileManager.RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
+begin
+  inherited RequestFileUpload(ALocalFilePath, ARemoteFilePath, Format('File Manager (%s)', [EditPath.Text]));
+end;
 
 procedure TFormFileManager.RefreshDrives();
 begin
@@ -168,11 +190,60 @@ begin
   EditPath.Visible := AMode = dmFiles;
   EditPath.Clear();
 
+  LabelAccess.Visible := AMode = dmFiles;
+
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'DACL (SSDL)', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Access Rights', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Creation Date', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Last Modified', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Last Access', AMode = dmFiles);
+
+  ButtonRefresh.Visible := AMode = dmFiles;
+  ButtonUpload.Visible  := AMode = dmFiles;
+end;
+
+procedure TFormFileManager.ButtonHomeClick(Sender: TObject);
+begin
+  RefreshDrives();
+end;
+
+procedure TFormFileManager.ButtonOptionsClick(Sender: TObject);
+begin
+  var APoint := self.ClientToScreen(
+    Point(
+      TSpeedButton(Sender).Left,
+      TSpeedButton(Sender).Top + TSpeedButton(Sender).Height
+    )
+  );
+
+  PopupMenuOptions.Popup(APoint.X, APoint.Y);
+end;
+
+procedure TFormFileManager.ButtonRefreshClick(Sender: TObject);
+begin
+  if EditPath.Visible then
+    RefreshFiles()
+  else
+    RefreshDrives();
+end;
+
+procedure TFormFileManager.ButtonUploadClick(Sender: TObject);
+begin
+  if EditPath.Visible then
+    RequestFileUpload('', IncludeTrailingPathDelimiter(EditPath.Text));
+end;
+
+procedure TFormFileManager.UploadToFolder1Click(Sender: TObject);
+begin
+  var pNode := VST.FocusedNode;
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  if not CanFileBeUploadedToNodeDirectory(pData) then
+    Exit();
+
+  RequestFileUpload('', IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(EditPath.Text) + pData^.FileInformation.Name));
 end;
 
 procedure TFormFileManager.FormShow(Sender: TObject);
@@ -196,14 +267,54 @@ begin
     result := Format('%s', [EditPath.Text])
 end;
 
-procedure TFormFileManager.PopupMenuPopup(Sender: TObject);
+function TFormFileManager.CanNodeFileBeDownloaded(var pData : PTreeData) : Boolean;
 begin
-  self.ShowDrives1.Visible := EditPath.Visible;
+  result := False;
+  ///
+
+  if not Assigned(pData) and Assigned(pData^.FileInformation) and (pData^.FileInformation.IsDirectory) then
+    Exit();
+
+  // ?? File is not empty
+  // ?? Client has read access
+  result := (pData^.FileInformation.Size > 0) and (faRead in pData^.FileInformation.Access);
 end;
 
-procedure TFormFileManager.ShowDrives1Click(Sender: TObject);
+function TFormFileManager.CanFileBeUploadedToNodeDirectory(var pData : PTreeData) : Boolean;
 begin
-  RefreshDrives();
+  result := False;
+  ///
+
+  if not Assigned(pData) and Assigned(pData^.FileInformation) then
+    Exit();
+
+  // ?? A folder
+  // ?? Client has write access
+  result := (pData^.FileInformation.IsDirectory) and (faWrite in pData^.FileInformation.Access);
+end;
+
+procedure TFormFileManager.PopupMenuPopup(Sender: TObject);
+begin
+  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  ///
+
+  if EditPath.Visible then begin
+    var pNode := VST.FocusedNode;
+    if Assigned(pNode) then begin
+      var pData := PTreeData(pNode.GetData());
+      ///
+
+      if Assigned(pData^.FileInformation) then begin
+        if pData^.FileInformation.IsDirectory then begin
+          UploadToFolder1.Visible := True;
+          UploadToFolder1.Enabled := CanFileBeUploadedToNodeDirectory(pData);
+        end else begin
+          DownloadFile1.Visible   := True;
+          DownloadFile1.Enabled   := CanNodeFileBeDownloaded(pData);
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TFormFileManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
@@ -448,7 +559,7 @@ begin
           if not pData^.FileInformation.IsDirectory then
             CellText := FormatFileSize(pData^.FileInformation.Size);
         end;
-        3 : CellText := FileAccessAttributesToString(pData^.FileInformation.Access);
+        3 : CellText := AccessSetToReadableString(pData^.FileInformation.Access);
         4 : CellText := pData^.FileInformation.ACL_SSDL;
       end;
 
@@ -493,14 +604,6 @@ begin
   end;
 end;
 
-procedure TFormFileManager.Refresh1Click(Sender: TObject);
-begin
-  if EditPath.Visible then
-    RefreshFiles()
-  else
-    RefreshDrives();
-end;
-
 procedure TFormFileManager.DisplayDrives(const AList : TDriveList);
 begin
   SetDisplayMode(dmDrives);
@@ -536,6 +639,9 @@ begin
   ///
 
   EditPath.Text := AList.Path;
+  LabelAccess.Caption := AccessSetToString(AList.Access);
+
+  ButtonUpload.Enabled := faWrite in AList.Access;
 
   VST.BeginUpdate();
   try
@@ -558,6 +664,20 @@ begin
 
     VST.EndUpdate();
   end;
+end;
+
+procedure TFormFileManager.DownloadFile1Click(Sender: TObject);
+begin
+  var pNode := VST.FocusedNode;
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  if not CanNodeFileBeDownloaded(pData) then
+    Exit();
+
+  ///
+  RequestFileDownload(IncludeTrailingPathDelimiter(EditPath.Text) + pData^.FileInformation.Name);
 end;
 
 end.

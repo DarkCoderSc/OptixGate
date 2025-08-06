@@ -329,6 +329,8 @@ const
                     SYNCHRONIZE or
                     $1FF;
 
+  CREATE_BREAKAWAY_FROM_JOB = $01000000;
+
   (* DbgHelp.DLL *)
 
   MiniDumpNormal                          = $00000000;

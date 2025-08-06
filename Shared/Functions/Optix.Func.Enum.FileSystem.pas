@@ -144,6 +144,7 @@ type
   TFileList = class(TOptixPacket)
   private
     FPath   : String;
+    FAccess : TFileAccessAttributes;
     FIsRoot : Boolean;
     FList   : TObjectList<TFileInformation>;
   protected
@@ -162,6 +163,7 @@ type
     {@G}
     property List   : TObjectList<TFileInformation> read FList;
     property Path   : String                        read FPath;
+    property Access : TFileAccessAttributes         read FAccess;
     property IsRoot : Boolean                       read FIsRoot;
   end;
 
@@ -359,27 +361,16 @@ begin
     Exit();
   ///
 
-  FName        := ASerializedObject.S['Name'];
-  FIsDirectory := ASerializedObject.B['IsDirectory'];
-  FACL_SSDL    := ASerializedObject.S['ACL_SSDL'];
-
+  FName             := ASerializedObject.S['Name'];
+  FIsDirectory      := ASerializedObject.B['IsDirectory'];
+  FACL_SSDL         := ASerializedObject.S['ACL_SSDL'];
   FTypeDescription  := ASerializedObject.S['TypeDescription'];
   FSize             := ASerializedObject.I['Size'];
   FDateAreValid     := ASerializedObject.B['DateAreValid'];
   FCreatedDate      := ASerializedObject.D['CreatedDate'];
   FLastModifiedDate := ASerializedObject.D['LastModifiedDate'];
   FLastAccessDate   := ASerializedObject.D['LastAccessDate'];
-
-  // Access (TODO: SetToString?)
-  FAccess := [];
-  if ASerializedObject.B['AccessRead'] then
-    Include(FAccess, faRead);
-
-  if ASerializedObject.B['AccessWrite'] then
-    Include(FAccess, faWrite);
-
-  if ASerializedObject.B['AccessExecute'] then
-    Include(FAccess, faExecute);
+  FAccess           := StringToAccessSet(ASerializedObject.S['Access']);
 end;
 
 { TFileInformation.Serialize }
@@ -388,21 +379,16 @@ begin
   result := TSuperObject.Create();
   ///
 
-  result.S['Name']        := FName;
-  result.B['IsDirectory'] := FIsDirectory;
-  result.S['ACL_SSDL']    := FACL_SSDL;
-
+  result.S['Name']             := FName;
+  result.B['IsDirectory']      := FIsDirectory;
+  result.S['ACL_SSDL']         := FACL_SSDL;
   result.S['TypeDescription']  := FTypeDescription;
   result.I['Size']             := FSize;
   result.B['DateAreValid']     := FDateAreValid;
   result.D['CreatedDate']      := FCreatedDate;
   result.D['LastModifiedDate'] := FLastModifiedDate;
   result.D['LastAccessDate']   := FLastAccessDate;
-
-  // Access (TODO: StringToSet?)
-  result.B['AccessRead']    := faRead in FAccess;
-  result.B['AccessWrite']   := faWrite in FAccess;
-  result.B['AccessExecute'] := faExecute in FAccess;
+  result.S['Access']           := AccessSetToString(FAccess);
 end;
 
 { TFileInformation.Assign }
@@ -465,6 +451,7 @@ begin
   ///
 
   FPath := IncludeTrailingPathDelimiter(APath);
+  FAccess := [];
 
   ///
   self.Refresh();
@@ -500,6 +487,7 @@ begin
     raise Exception.Create(Format('No files found so far in the directory: `%s`', [FPath]));
   try
     FIsRoot := True;
+    FAccess := TFileSystemHelper.TryGetCurrentUserFileAccess(FPath);
     repeat
       var AFileName := String(AWin32FindData.cFileName);
       if AFileName = '.' then
@@ -531,6 +519,7 @@ begin
     FList.Add(TFileInformation.Create(ASerializedObject.A['List'].O[I]));
 
   FPath   := ASerializedObject.S['Path'];
+  FAccess := StringToAccessSet(ASerializedObject.S['Access']);
   FIsRoot := ASerializedObject.B['IsRoot'];
 end;
 
@@ -548,6 +537,7 @@ begin
   ///
   result.A['List']   := AJsonArray;
   result.S['Path']   := FPath;
+  result.S['Access'] := AccessSetToString(FAccess);
   result.B['IsRoot'] := FIsRoot;
 end;
 

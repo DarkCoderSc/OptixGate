@@ -61,7 +61,6 @@ type
 
   TOptixTaskResult = class(TInterfacedPersistent, IOptixSerializable)
   private
-    FFailed           : Boolean;
     FSuccess          : Boolean;
     FExceptionMessage : String;
     FTaskDuration     : UInt64;
@@ -349,7 +348,6 @@ begin
   ///
 
   FSuccess          := False;
-  FFailed           := False;
   FExceptionMessage := '';
   FTaskDuration     := 0;
 end;
@@ -382,9 +380,21 @@ begin
   result := '';
   ///
 
-  if FSuccess then
-    result := GetExtendedDescription()
-  else if FFailed then
+  if FSuccess then begin
+    var AExtendedDescription := GetExtendedDescription();
+    var ATimingInformation := '';
+    if FTaskDuration > 1000 then
+      ATimingInformation := Format('Task completed in %d seconds.', [FTaskDuration div 1000]);
+    ///
+
+    if not String.IsNullOrWhiteSpace(AExtendedDescription) then
+      result := Format('%s (%s)', [
+        AExtendedDescription,
+        ATimingInformation
+      ])
+    else
+      result := ATimingInformation;
+  end else
     result := Format('Task Failed: %s', [FExceptionMessage]);
 end;
 
@@ -392,7 +402,6 @@ end;
 procedure TOptixTaskResult.TaskFailed(const AExceptionMessage : String);
 begin
   FSuccess          := False;
-  FFailed           := True;
   FExceptionMessage := AExceptionMessage;
 end;
 
@@ -400,7 +409,6 @@ end;
 procedure TOptixTaskResult.TaskSucceed();
 begin
   FSuccess          := True;
-  FFailed           := False;
   FExceptionMessage := '';
 end;
 

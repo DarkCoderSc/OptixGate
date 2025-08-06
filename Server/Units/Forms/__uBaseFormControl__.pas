@@ -101,8 +101,8 @@ type
 
     procedure RegisterNewDialogAndShow(const ADialog : TForm);
 
-    function RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
-    function RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID; virtual;
+    function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
+    function RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
 
     procedure CreateParams(var Params: TCreateParams); override;
 
@@ -126,6 +126,8 @@ type
     property FormInformation    : TFormControlInformation read FFormInformation;
     property ContextInformation : String                  read GetContextDescription;
   end;
+
+  TBaseFormControlClass = class of TBaseFormControl;
 
   function FormControlStateToString(const AValue : TFormControlState) : String;
 
@@ -276,7 +278,7 @@ begin
 end;
 
 { TBaseFormControl.RequestFileDownload }
-function TBaseFormControl.RequestFileDownload(const ARemoteFilePath : String; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
+function TBaseFormControl.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
   var AForm := FormMain.GetControlForm(self, TFormTransfers);
   if Assigned(AForm) then
@@ -284,7 +286,7 @@ begin
 end;
 
 { TBaseFormControl.RequestFileUpload }
-function TBaseFormControl.RequestFileUpload(const ALocalFilePath, ARemoteFilePath : String; const AContext : String = '') : TGUID;
+function TBaseFormControl.RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
   var AForm := FormMain.GetControlForm(self, TFormTransfers);
   if Assigned(AForm) then

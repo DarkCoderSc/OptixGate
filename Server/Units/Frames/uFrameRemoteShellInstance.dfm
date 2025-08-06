@@ -1,0 +1,84 @@
+object FrameRemoteShellInstance: TFrameRemoteShellInstance
+  Left = 0
+  Top = 0
+  Width = 816
+  Height = 417
+  Align = alClient
+  TabOrder = 0
+  object Shell: TRichEdit
+    AlignWithMargins = True
+    Left = 0
+    Top = 0
+    Width = 816
+    Height = 387
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Align = alClient
+    EnableURLs = True
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Courier New'
+    Font.Style = []
+    ParentFont = False
+    ReadOnly = True
+    ScrollBars = ssVertical
+    TabOrder = 0
+    ExplicitLeft = 3
+    ExplicitTop = 2
+    ExplicitWidth = 810
+    ExplicitHeight = 379
+  end
+  object PanelCommand: TPanel
+    AlignWithMargins = True
+    Left = 0
+    Top = 391
+    Width = 816
+    Height = 26
+    Margins.Left = 0
+    Margins.Top = 4
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Align = alBottom
+    BevelOuter = bvNone
+    TabOrder = 1
+    object Command: TRichEdit
+      Left = 0
+      Top = 0
+      Width = 756
+      Height = 26
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      Align = alClient
+      EnableURLs = True
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      ScrollBars = ssVertical
+      TabOrder = 0
+      ExplicitLeft = -4
+      ExplicitWidth = 748
+    end
+    object ButtonSend: TButton
+      AlignWithMargins = True
+      Left = 760
+      Top = 0
+      Width = 56
+      Height = 26
+      Margins.Left = 4
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alRight
+      Caption = '>'
+      TabOrder = 1
+    end
+  end
+end
