@@ -99,6 +99,10 @@ const
  IMAGE_TASK_RUNNING                 = 47;
  IMAGE_TASK_SUCCESS                 = 48;
  IMAGE_TASK_FAILED                  = 49;
+ IMAGE_LIGHTBULB_ON                 = 55;
+ IMAGE_LIGHTBULB_OFF                = 56;
+ IMAGE_SHELL_RUNNING                = IMAGE_LIGHTBULB_ON;
+ IMAGE_SHELL_CLOSED                 = IMAGE_LIGHTBULB_OFF;
 
 var
  (* COLORS *)
@@ -110,6 +114,10 @@ var
 
  COLOR_USER_ELEVATED : TColor;
  COLOR_USER_SYSTEM   : TColor;
+
+ COLOR_BG_WARNING     : TColor;
+ COLOR_BORDER_WARNING : TColor;
+ COLOR_FONT_WARNING   : TColor;
 
 implementation
 
@@ -137,6 +145,10 @@ initialization
   COLOR_LIST_RED       := RGB(90, 50, 60);
 
   COLOR_LIST_GRAY      := RGB(40, 40, 40);
+
+  COLOR_BG_WARNING     := RGB(243, 156, 18);
+  COLOR_BORDER_WARNING := RGB(190, 122, 14);
+  COLOR_FONT_WARNING   := clWhite;
 
 
 end.

@@ -52,8 +52,8 @@ type
 
   // Simple Commands
   TOptixCommandTerminate = class(TOptixCommand);
-  TOptixCommandRefreshProcess   = class(TOptixCommand);
-  TOptixCommandRefreshDrives    = class(TOptixCommand);
+  TOptixCommandRefreshProcess = class(TOptixCommand);
+  TOptixCommandRefreshDrives = class(TOptixCommand);
 
   // Parameterized Commands
   TOptixCommandProcess = class(TOptixCommand)
@@ -151,6 +151,45 @@ type
     property FileSize : UInt64 read FFileSize;
   end;
 
+  TOptixStartShellInstance = class(TOptixCommand);
+
+  TOptixShellInstance = class(TOptixCommand)
+  private
+    FInstanceId : TGUID;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@C}
+    constructor Create(const AInstanceId : TGUID); override;
+
+    {@G}
+    property InstanceId : TGUID read FInstanceId;
+  end;
+
+  TOptixTerminateShellInstance = class(TOptixShellInstance);
+  TOptixBreakShellInstance = class(TOptixShellInstance);
+
+  TOptixStdinShellInstance = class(TOptixShellInstance)
+  private
+    FCommandLine : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@C}
+    constructor Create(const AInstanceId : TGUID; const ACommandLine : String); overload;
+
+    {@G}
+    property CommandLine : String read FCommandLine;
+  end;
+
 implementation
 
 (* TOptixCommandProcess *)
@@ -178,9 +217,6 @@ procedure TOptixCommandProcess.DeSerialize(const ASerializedObject : ISuperObjec
 begin
   inherited;
   ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
 
   FProcessId := ASerializedObject.I['ProcessId'];
 end;
@@ -210,9 +246,6 @@ procedure TOptixCommandRefreshFiles.DeSerialize(const ASerializedObject : ISuper
 begin
   inherited;
   ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
 
   FPath := ASerializedObject.S['Path'];
 end;
@@ -245,9 +278,6 @@ begin
   inherited;
   ///
 
-  if not Assigned(ASerializedObject) then
-    Exit();
-
   FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
   FFilePath   := ASerializedObject.S['FilePath'];
 end;
@@ -268,9 +298,6 @@ procedure TOptixCommandUploadFile.DeSerialize(const ASerializedObject : ISuperOb
 begin
   inherited;
   ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
 
   FFileSize := ASerializedObject.I['FileSize'];
 end;
@@ -309,12 +336,67 @@ begin
   inherited;
   ///
 
-  if not Assigned(ASerializedObject) then
-    Exit();
-
   FDestTempPath := ASerializedObject.B['DestTempPath'];
   FDestFilePath := ASerializedObject.S['DestFilePath'];
   FTypesValue   := ASerializedObject.I['TypesValue'];
+end;
+
+(* TOptixShellInstance *)
+
+{ TOptixShellInstance.Serialize }
+function TOptixShellInstance.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['InstanceId'] := FInstanceId.ToString();
+end;
+
+{ TOptixShellInstance.DeSerialize }
+procedure TOptixShellInstance.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FInstanceId := TGUID.Create(ASerializedObject.S['InstanceId']);
+end;
+
+{ TOptixShellInstance.Create }
+constructor TOptixShellInstance.Create(const AInstanceId : TGUID);
+begin
+  inherited Create();
+  ///
+
+  FInstanceId := AInstanceId;
+end;
+
+(* TOptixStdinShellInstance *)
+
+{ TOptixStdinShellInstance.Create }
+constructor TOptixStdinShellInstance.Create(const AInstanceId : TGUID; const ACommandLine : String);
+begin
+  inherited Create(AInstanceId);
+  ///
+
+  FCommandLine := ACommandLine;
+end;
+
+{ TOptixStdinShellInstance.Serialize }
+function TOptixStdinShellInstance.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['CommandLine'] := FCommandLine;
+end;
+
+{ TOptixStdinShellInstance.DeSerialize }
+procedure TOptixStdinShellInstance.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FCommandLine := ASerializedObject.S['CommandLine'];
 end;
 
 end.

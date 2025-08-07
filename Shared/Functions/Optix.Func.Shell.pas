@@ -41,86 +41,65 @@
 {                                                                              }
 {******************************************************************************}
 
-{
-  Long-term TODO's:
-    - Replace TGUID with more robust tokens (Random Sha-512 Tokens)
-}
+unit Optix.Func.Shell;
 
-program Client;
+interface
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+uses System.Classes, System.SysUtils, XSuperObject, Optix.Protocol.Packet;
 
-{$R *.res}
+type
+  TOptixShellOutput = class(TOptixPacket)
+  private
+    FInstanceId : TGUID;
+    FOutput     : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
 
-uses
-  System.SysUtils,
-  Winapi.Windows,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
-  Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
-  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
-  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
-  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
-  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas';
+    {@C}
+    constructor Create(const AWindowGUID : TGUID; const AOutput : String; const AInstanceId : TGUID); overload;
 
-begin
-  IsMultiThread := True;
-  try
-    var AUserUID := TOptixInformationGathering.GetUserUID();
-
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
-
-      // Enable certain useful privileges (if possible)
-      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
-      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
-
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.RetryDelay := 1000;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor();
-    finally
-      TOptixThread.SignalHiveAndFlush();
-
-      ///
-      CloseHandle(AMutex);
-    end;
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+    {@G}
+    property InstanceId : TGUID  read FInstanceId;
+    property Output     : String read FOutput;
   end;
+
+implementation
+
+(* TOptixShellOutput *)
+
+{ TOptixShellOutput.Create }
+constructor TOptixShellOutput.Create(const AWindowGUID : TGUID; const AOutput : String; const AInstanceId : TGUID);
+begin
+  inherited Create(AWindowGUID);
+  ///
+
+  FOutput     := AOutput;
+  FInstanceId := AInstanceId;
+end;
+
+{ TOptixShellOutput.DeSerialize }
+procedure TOptixShellOutput.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FOutput     := ASerializedObject.S['Output'];
+  FInstanceId := TGUID.Create(ASerializedObject.S['InstanceId']);
+end;
+
+{ TOptixShellOutput.Serialize }
+function TOptixShellOutput.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['Output']     := FOutput;
+  result.S['InstanceId'] := FInstanceId.ToString();
+end;
+
+
 end.

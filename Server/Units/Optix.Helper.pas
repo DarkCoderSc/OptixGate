@@ -22,8 +22,7 @@ unit Optix.Helper;
 
 interface
 
-uses System.Classes, System.SysUtils, System.DateUtils, System.Math,
-     System.TimeSpan, Winapi.ShellAPI, VCL.Controls;
+uses System.Classes, System.SysUtils, System.DateUtils, System.Math, System.TimeSpan, Winapi.ShellAPI, VCL.Controls;
 
 // Format Utilities
 function FormatInt(const AInteger : Integer) : String;
@@ -44,9 +43,17 @@ function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = Fal
 function SystemFolderIcon(APath : String = '') : Integer;
 function GetWindowsDirectory() : string;
 
+procedure Open(const ACommand : String);
+
 implementation
 
 uses Winapi.Windows, System.IOUtils;
+
+{ _.Open }
+procedure Open(const ACommand : String);
+begin
+  ShellExecute(0, 'open', PWideChar(ACommand), nil, nil, SW_SHOW);
+end;
 
 { _.GetWindowsDirectory }
 function GetWindowsDirectory() : string;

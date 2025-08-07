@@ -5,80 +5,104 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
   Height = 417
   Align = alClient
   TabOrder = 0
-  object Shell: TRichEdit
-    AlignWithMargins = True
+  object OMultiPanel: TOMultiPanel
     Left = 0
     Top = 0
     Width = 816
-    Height = 387
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
+    Height = 417
+    PanelType = ptVertical
+    PanelCollection = <
+      item
+        Control = Shell
+        Position = 0.900000000000000000
+        Visible = True
+        Index = 0
+      end
+      item
+        Control = PanelCommand
+        Position = 1.000000000000000000
+        Visible = True
+        Index = 1
+      end>
+    MinPosition = 0.020000000000000000
     Align = alClient
-    EnableURLs = True
-    Font.Charset = ANSI_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Courier New'
-    Font.Style = []
-    ParentFont = False
-    ReadOnly = True
-    ScrollBars = ssVertical
     TabOrder = 0
-    ExplicitLeft = 3
-    ExplicitTop = 2
-    ExplicitWidth = 810
-    ExplicitHeight = 379
-  end
-  object PanelCommand: TPanel
-    AlignWithMargins = True
-    Left = 0
-    Top = 391
-    Width = 816
-    Height = 26
-    Margins.Left = 0
-    Margins.Top = 4
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Align = alBottom
-    BevelOuter = bvNone
-    TabOrder = 1
-    object Command: TRichEdit
+    object Shell: TRichEdit
+      AlignWithMargins = True
       Left = 0
       Top = 0
-      Width = 756
-      Height = 26
-      Margins.Left = 4
-      Margins.Top = 4
-      Margins.Right = 4
-      Margins.Bottom = 4
-      Align = alClient
-      EnableURLs = True
-      Font.Charset = ANSI_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -12
-      Font.Name = 'Segoe UI'
-      Font.Style = []
-      ParentFont = False
-      ScrollBars = ssVertical
-      TabOrder = 0
-      ExplicitLeft = -4
-      ExplicitWidth = 748
-    end
-    object ButtonSend: TButton
-      AlignWithMargins = True
-      Left = 760
-      Top = 0
-      Width = 56
-      Height = 26
-      Margins.Left = 4
+      Width = 816
+      Height = 375
+      Margins.Left = 0
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
-      Align = alRight
-      Caption = '>'
+      EnableURLs = True
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWhite
+      Font.Height = -12
+      Font.Name = 'Courier New'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      ScrollBars = ssVertical
+      TabOrder = 0
+      OnClick = ShellClick
+      OnLinkClick = ShellLinkClick
+    end
+    object PanelCommand: TPanel
+      AlignWithMargins = True
+      Left = 0
+      Top = 378
+      Width = 816
+      Height = 39
+      Margins.Left = 0
+      Margins.Top = 4
+      Margins.Right = 0
+      Margins.Bottom = 0
+      BevelOuter = bvNone
       TabOrder = 1
+      object Command: TRichEdit
+        Left = 0
+        Top = 0
+        Width = 756
+        Height = 39
+        Margins.Left = 4
+        Margins.Top = 4
+        Margins.Right = 4
+        Margins.Bottom = 4
+        Align = alClient
+        EnableURLs = True
+        Font.Charset = ANSI_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Segoe UI'
+        Font.Style = []
+        ParentFont = False
+        ScrollBars = ssVertical
+        TabOrder = 0
+        OnKeyUp = CommandKeyUp
+      end
+      object ButtonSend: TButton
+        AlignWithMargins = True
+        Left = 760
+        Top = 0
+        Width = 56
+        Height = 39
+        Margins.Left = 4
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alRight
+        Default = True
+        Enabled = False
+        ImageAlignment = iaCenter
+        ImageIndex = 54
+        ImageName = 'message'
+        Images = FormMain.VirtualImageList
+        TabOrder = 1
+        OnClick = ButtonSendClick
+      end
     end
   end
 end

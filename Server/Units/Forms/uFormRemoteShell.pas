@@ -47,7 +47,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, uFrameRemoteShellInstance, Vcl.Menus;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, uFrameRemoteShellInstance, Vcl.Menus,
+  XSuperObject;
 
 type
   TFormRemoteShell = class(TBaseFormControl)
@@ -55,12 +56,23 @@ type
     MainMenu: TMainMenu;
     File1: TMenuItem;
     NewInstance1: TMenuItem;
+    StatusBar: TStatusBar;
+    PopupTabs: TPopupMenu;
+    erminateInstance1: TMenuItem;
+    N1: TMenuItem;
+    CloseTabTerminate1: TMenuItem;
+    RenameTab1: TMenuItem;
     procedure NewInstance1Click(Sender: TObject);
+    procedure PagesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
   private
     {@M}
-    procedure NewShellInstance();
+    procedure RequestNewShellInstance();
+    function StartShellInstance(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
+    procedure CloseShellInstance(const AInstanceId : TGUID);
+    function GetFrameByInstanceId(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
   public
-    { Public declarations }
+    {@M}
+    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
   end;
 
 var
@@ -68,26 +80,144 @@ var
 
 implementation
 
+uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants;
+
 {$R *.dfm}
+
+function TFormRemoteShell.GetFrameByInstanceId(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
+begin
+  result := nil;
+  ///
+
+  for var I := 0 to Pages.PageCount -1 do begin
+    var ATab := Pages.Pages[I];
+    ///
+
+    if (ATab.Controls[0] is TFrameRemoteShellInstance) and
+       (TFrameRemoteShellInstance(ATab.Controls[0]).InstanceId = AInstanceId) then begin
+
+       result := TFrameRemoteShellInstance(ATab.Controls[0]);
+
+       ///
+       break;
+    end;
+  end;
+end;
+
+procedure TFormRemoteShell.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+begin
+  inherited;
+  ///
+
+  var AOptixPacket : TOptixPacket := nil;
+  try
+    // -----------------------------------------------------------------------------------------------------------------
+    if AClassName = TOptixShellOutput.ClassName then begin
+      AOptixPacket := TOptixShellOutput.Create(ASerializedPacket);
+
+      var AFrame := GetFrameByInstanceId(TOptixShellOutput(AOptixPacket).InstanceId);
+      if not Assigned(AFrame) then
+        AFrame := StartShellInstance(TOptixShellOutput(AOptixPacket).InstanceId);
+      ///
+
+      AFrame.AddOutput(TOptixShellOutput(AOptixPacket).Output);
+    end
+    // -----------------------------------------------------------------------------------------------------------------
+    else if AClassName = TOptixTerminateShellInstance.ClassName then begin
+      AOptixPacket := TOptixTerminateShellInstance.Create(ASerializedPacket);
+
+      CloseShellInstance(TOptixTerminateShellInstance(AOptixPacket).InstanceId);
+    end;
+    // -----------------------------------------------------------------------------------------------------------------
+  finally
+    if Assigned(AOptixPacket) then
+      FreeAndNil(AOptixPacket);
+  end;
+end;
 
 procedure TFormRemoteShell.NewInstance1Click(Sender: TObject);
 begin
-  NewShellInstance();
+  RequestNewShellInstance();
 end;
 
-procedure TFormRemoteShell.NewShellInstance();
+procedure TFormRemoteShell.PagesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+begin
+  var AIndex := TPageControl(Sender).IndexOfTabAt(MousePos.X, MousePos.y);
+  if (AIndex >= 0) and (AIndex <= (TPageControl(Sender).PageCount -1)) then begin
+    var ATab := TPageControl(Sender).Pages[AIndex];
+    if Assigned(ATab) then begin
+      var ATabBound := TPageControl(Sender).TabRect(AIndex);
+
+      var APoint := TPageControl(Sender).ClientToScreen(Point(ATabBound.Left, ATabBound.Bottom));
+
+      PopupTabs.Popup(APoint.X, APoint.Y);
+    end;
+  end;
+end;
+
+procedure TFormRemoteShell.RequestNewShellInstance();
+begin
+  SendCommand(TOptixStartShellInstance.Create());
+end;
+
+function TFormRemoteShell.StartShellInstance(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
+
+  function GenerateRandomTabName() : String;
+  begin
+    var I := 0;
+    while True do begin
+      Inc(I);
+      ///
+
+      var ACandidate := Format('Session #%d', [I]);
+
+      for var N := 0 to Pages.PageCount -1 do begin
+        var ATab := Pages.Pages[N];
+        ///
+
+        if String.Compare(ATab.Caption, ACandidate, True) = 0 then
+          break
+        else
+          Exit(ACandidate);
+      end;
+    end;
+  end;
+
 begin
   var ATab := TTabSheet.Create(Pages);
-  ATab.PageControl := Pages;
 
-  var AFrame := TFrameRemoteShellInstance.Create(ATab);
+  ATab.PageControl := Pages;
+  ATab.Caption     := GenerateRandomTabName();
+  ATab.ImageIndex  := IMAGE_SHELL_RUNNING;
+
+  var AFrame := TFrameRemoteShellInstance.Create(ATab, self, AInstanceId);
   AFrame.Parent := ATab;
 
+  result := AFrame;
+
   Pages.ActivePage := ATab;
+
+  AFrame.Command.SetFocus();
 
   // Hacky method to fix annoying issue with Delphi HDPI designing...
   AFrame.Shell.Font.Size   := 9;
   AFrame.Command.Font.Size := 9;
 end;
+
+procedure TFormRemoteShell.CloseShellInstance(const AInstanceId : TGUID);
+begin
+  var AFrame := GetFrameByInstanceId(AInstanceId);
+  if not Assigned(AFrame) and Assigned(AFrame.Owner) and (AFrame.Owner is TTabSheet) then
+    Exit();
+  ///
+
+  TTabSheet(AFrame.Owner).ImageIndex := IMAGE_SHELL_CLOSED;
+
+  AFrame.Close();
+end;
+
+- Faire le break (CTRL+C)
+- Coder les actions (Close Tab, Terminate (si pas deja), Rename Tab)
+- Finir le design du remote shell
 
 end.

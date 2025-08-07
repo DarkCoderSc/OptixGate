@@ -50,6 +50,9 @@ uses System.Classes, Winapi.Windows;
 type
   TProcessHandler = class
   private
+    FInstanceId         : TGUID;
+    FGroupId            : TGUID;
+
     FJobObject          : THandle;
     
     FPipeOutRead        : THandle;
@@ -69,7 +72,8 @@ type
     function GetAvailableOutputBytes() : DWORD;
   public
     {@C}
-    constructor Create(const ACommandLine : String);
+    constructor Create(const ACommandLine : String); overload;
+    constructor Create(const ACommandLine : String; const AGroupId : TGUID); overload;
     destructor Destroy(); override;
 
     {@M}
@@ -90,6 +94,8 @@ type
     property ShowWindow : Boolean read FShowWindow write FShowWindow;
 
     {@G}
+    property InstanceId  : TGUID   read FInstanceId;
+    property GroupId     : TGUID   read FGroupId;
     property CommandLine : String  read FCommandLine;
     property Active      : Boolean read IsActive;
   end;
@@ -105,10 +111,22 @@ begin
   ///
 
   FShowWindow := True;
+
+  FInstanceId := TGUID.NewGuid();
+  FGroupId := TGUID.Empty;
   
   Cleanup();
 
   FCommandLine := ACommandLine;
+end;
+
+{ TProcessHandler.Create }
+constructor TProcessHandler.Create(const ACommandLine : String; const AGroupId : TGUID);
+begin
+  Create(ACommandLine);
+  ///
+
+  FGroupId := AGroupId;
 end;
 
 { TProcessHandler.Destroy }
@@ -282,9 +300,6 @@ end;
 { TProcessHandler.WriteLn }
 procedure TProcessHandler.WriteLn(AStr : AnsiString = '');
 begin
-  AStr := AStr + #13#10;
-  ///
-  
   Write(@AStr[1], Length(AStr));
 end;
 
