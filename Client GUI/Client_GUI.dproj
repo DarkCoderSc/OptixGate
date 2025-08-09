@@ -1,15 +1,15 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{A5E90304-CC8B-4E79-BEA2-7122494D036C}</ProjectGuid>
+        <ProjectGuid>{D154DC3E-A07B-4D90-8D86-C7D3829D4E17}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectName Condition="'$(ProjectName)'==''">OptixGate</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">Client_GUI</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
-        <MainSource>OptixGate.dpr</MainSource>
+        <MainSource>Client_GUI.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -70,11 +70,11 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
-        <SanitizedProjectName>OptixGate</SanitizedProjectName>
-        <Custom_Styles>&quot;Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf&quot;;Glossy|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glossy.vsf</Custom_Styles>
+        <SanitizedProjectName>Client_GUI</SanitizedProjectName>
+        <Custom_Styles>Glossy|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glossy.vsf</Custom_Styles>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_UsePackage>vclwinx;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;FireDACCommonDriver;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;soapmidas;vclactnband;fmxFireDAC;dbexpress;DBXMySQLDriver;VclSmp;inet;vcltouch;fmxase;dbrtl;Skia.Package.FMX;fmxdae;FireDACMSAccDriver;CustomIPTransport;NeoFlatComponents;vcldsnap;DBXInterBaseDriver;IndySystem;Skia.Package.VCL;vcldb;VirtualTreesR;vclFireDAC;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;adortl;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;fmxobj;bindcompvclsmp;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vclwinx;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;FireDACCommonDriver;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;OMultiPanel_Design;bindcompvclwinx;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;soapmidas;vclactnband;fmxFireDAC;dbexpress;DBXMySQLDriver;VclSmp;inet;vcltouch;fmxase;dbrtl;Skia.Package.FMX;fmxdae;FireDACMSAccDriver;CustomIPTransport;NeoFlatComponents;vcldsnap;DBXInterBaseDriver;IndySystem;Skia.Package.VCL;vcldb;VirtualTreesR;OMultiPanel_Runtime;vclFireDAC;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;adortl;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;fmxobj;bindcompvclsmp;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -106,7 +106,6 @@
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <Icon_MainIcon>Assets\optix.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -127,99 +126,48 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\Shared\XSuperObject.pas"/>
+        <DCCReference Include="Units\Forms\uFormMain.pas">
+            <Form>FormMain</Form>
+        </DCCReference>
         <DCCReference Include="..\Shared\Optix.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Exceptions.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
         <DCCReference Include="..\Shared\Optix.Interfaces.pas"/>
         <DCCReference Include="..\Shared\Optix.Thread.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas">
-            <Form>,
-  Optix.Func.SessionInformation in &apos;..\Shared\Functions\Optix.Func.SessionInformation.pas&apos;,
-  Optix.Func.Commands in &apos;..\Shared\Functions\Optix.Func.Commands.pas&apos;,
-  Optix.Func.Response in &apos;..\Shared\Functions\Optix.Func.Response.pas&apos;,
-  XSuperJSON in &apos;..\Shared\XSuperJSON.pas&apos;,
-  Optix.InformationGathering.Helper in &apos;..\Shared\Optix.InformationGathering.Helper.pas&apos;,
-  Optix.WinApiEx in &apos;..\Shared\Optix.WinApiEx.pas&apos;,
-  Optix.InformationGathering.Process in &apos;..\Shared\Optix.InformationGathering.Process.pas&apos;,
-  Optix.Protocol.Network.Server in &apos;Units\Threads\Optix.Protocol.Network.Server.pas&apos;,
-  Optix.Protocol.SessionHandler in &apos;Units\Threads\Optix.Protocol.SessionHandler.pas&apos;,
-  Optix.Protocol.Sockets.Client in &apos;Units\Threads\Optix.Protocol.Sockets.Client.pas&apos;,
-  __uBaseFormControl__ in &apos;Units\Forms\__uBaseFormControl__.pas&apos;,
-  Optix.Helper in &apos;Units\Optix.Helper.pas&apos;,
-  Optix.VCL.Helper in &apos;Units\Optix.VCL.Helper.pas&apos;,
-  XSuperObject in &apos;..\Shared\XSuperObject.pas&apos;,
-  uFormMain in &apos;Units\Forms\uFormMain.pas&apos; {FormMain</Form>
-        </DCCReference>
+        <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas"/>
+        <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
+        <DCCReference Include="..\Client\Units\Threads\Optix.Protocol.SessionHandler.pas"/>
+        <DCCReference Include="..\Client\Units\Threads\Optix.Protocol.Client.pas"/>
+        <DCCReference Include="..\Shared\XSuperJSON.pas"/>
+        <DCCReference Include="..\Shared\XSuperObject.pas"/>
+        <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
         <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Types.pas"/>
-        <DCCReference Include="..\Shared\XSuperJSON.pas"/>
-        <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
-        <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
+        <DCCReference Include="..\Client\Units\Actions\Optix.Actions.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
-        <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Classes.pas"/>
+        <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
+        <DCCReference Include="..\Client\Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
+        <DCCReference Include="..\Client\Units\Actions\Optix.Actions.ProcessHandler.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
-        <DCCReference Include="Units\Threads\Optix.Protocol.Client.pas"/>
-        <DCCReference Include="Units\Optix.Helper.pas"/>
-        <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
-        <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
-        <DCCReference Include="Units\Forms\uFormMain.pas">
-            <Form>FormMain</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Optix.Constants.pas"/>
-        <DCCReference Include="Units\Forms\uFormAbout.pas">
-            <Form>FormAbout</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormProcessManager.pas">
-            <Form>FormProcessManager</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormLogs.pas">
-            <Form>FormLogs</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormFileManager.pas">
-            <Form>FormFileManager</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormControlForms.pas">
-            <Form>FormControlForms</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormTransfers.pas">
-            <Form>FormTransfers</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormDebugThreads.pas">
-            <Form>FormDebugThreads</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormTasks.pas">
-            <Form>FormTasks</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\Dialogs\uFormDumpProcess.pas">
-            <Form>FormDumpProcess</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormRemoteShell.pas">
-            <Form>FormRemoteShell</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Frames\uFrameRemoteShellInstance.pas">
-            <Form>FrameRemoteShellInstance</Form>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormListen.pas">
-            <Form>FormListen</Form>
+        <DCCReference Include="..\Server\Units\Optix.VCL.Helper.pas"/>
+        <DCCReference Include="..\Server\Units\Optix.Helper.pas"/>
+        <DCCReference Include="Units\Forms\uFormConnectToServer.pas">
+            <Form>FormConnectToServer</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="Units\Optix.Constants.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -238,7 +186,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">OptixGate.dpr</Source>
+                    <Source Name="MainSource">Client_GUI.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
@@ -246,9 +194,9 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
-                <DeployFile LocalName="Win32\Debug\OptixGate.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\Client_GUI.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>OptixGate.exe</RemoteName>
+                        <RemoteName>Client_GUI.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

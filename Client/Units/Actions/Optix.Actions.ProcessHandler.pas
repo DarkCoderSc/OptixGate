@@ -347,7 +347,7 @@ begin
     Exit();
   ///
 
-  case WaitForSingleObject(FProcessInformation.hProcess, 10) of
+  case WaitForSingleObject(FProcessInformation.hProcess, 0) of
     WAIT_OBJECT_0 : ;
 
     else

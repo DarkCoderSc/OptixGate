@@ -254,7 +254,8 @@ begin
   inherited Create(ARemoteAddress, ARemotePort);
   ///
 
-  FHandler := AHandler;
+  FHandler  := AHandler;
+  FClientId := AHandler.ClientId; // Same Group
 end;
 
 { TOptixFileTransferOrchestratorThread.Finalize }

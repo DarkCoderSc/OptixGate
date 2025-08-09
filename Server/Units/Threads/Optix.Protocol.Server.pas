@@ -147,7 +147,7 @@ begin
 
           if APreflight.ClientKind = ckHandler then begin
             // Main Handler --------------------------------------------------------------------------------------------
-            var ASessionHandler := TOptixSessionHandlerThread.Create(AClient);
+            var ASessionHandler := TOptixSessionHandlerThread.Create(AClient, APreflight.HandlerId);
 
             ASessionHandler.OnSessionDisconnect := OnSessionDisconnect;
             ASessionHandler.OnReceivePacket := OnReceivePacket;
@@ -156,7 +156,7 @@ begin
             // ---------------------------------------------------------------------------------------------------------
           end else if Assigned(FOnRegisterWorker) then
             Synchronize(procedure begin
-              FOnRegisterWorker(self, AClient, APreflight.SessionId, APreflight.ClientKind);
+              FOnRegisterWorker(self, AClient, APreflight.HandlerId, APreflight.ClientKind);
             end)
           else
             raise EOptixPreflightException.Create('Nothing to do with incomming client.');

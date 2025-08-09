@@ -41,131 +41,15 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFrameRemoteShellInstance;
+unit Optix.Constants;
 
 interface
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, __uBaseFormControl__, OMultiPanel;
-
-type
-  TFrameRemoteShellInstance = class(TFrame)
-    Shell: TRichEdit;
-    PanelCommand: TPanel;
-    Command: TRichEdit;
-    ButtonSend: TButton;
-    OMultiPanel: TOMultiPanel;
-    procedure ShellLinkClick(Sender: TCustomRichEdit; const URL: string; Button: TMouseButton);
-    procedure ButtonSendClick(Sender: TObject);
-    procedure CommandKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure CommandChange(Sender: TObject);
-  private
-    FClosed      : Boolean;
-    FInstanceId  : TGUID;
-    FControlForm : TBaseFormControl;
-
-    {@M}
-    procedure SendCommandLine();
-  public
-    {@M}
-    procedure AddOutput(const AOutput : String);
-    procedure Close();
-
-    {@C}
-    constructor Create(const AOwner : TComponent; const AControlForm : TBaseFormControl; const AInstanceId : TGUID); overload;
-    destructor Destroy(); override;
-
-    {@G}
-    property InstanceId : TGUID read FInstanceId;
-  end;
+const
+  IMAGE_CLIENT_WAIT      = 1;
+  IMAGE_CLIENT_CONNECTED = 2;
+  IMAGE_CLIENT_ERROR     = 4;
 
 implementation
-
-uses uFormMain, uFormRemoteShell, Optix.Func.Commands, Optix.Helper, Optix.Constants;
-
-{$R *.dfm}
-
-destructor TFrameRemoteShellInstance.Destroy();
-begin
-
-  ///
-  inherited Destroy();
-end;
-
-procedure TFrameRemoteShellInstance.Close();
-begin
-  FClosed            := True;
-  ButtonSend.Enabled := False;
-  Command.Enabled    := False;
-
-  Shell.SelAttributes.Color := COLOR_TEXT_WARNING;
-  Shell.SelText := #13#10 + 'Shell Instance Closed...';
-
-  Shell.Perform(WM_VSCROLL, SB_BOTTOM, 0);
-end;
-
-procedure TFrameRemoteShellInstance.SendCommandLine();
-begin
-  if not Assigned(FControlForm) or FClosed then
-    Exit();
-  ///
-
-  FControlForm.SendCommand(TOptixStdinShellInstance.Create(FInstanceId, Command.Text));
-
-  ///
-  Command.Clear();
-  ButtonSend.Enabled := False;
-end;
-
-procedure TFrameRemoteShellInstance.AddOutput(const AOutput : String);
-begin
-  Shell.SelStart := Length(Shell.Text);
-  Shell.SelLength := 0;
-
-  Shell.SelText := AOutput;
-
-  Shell.Perform(WM_VSCROLL, SB_BOTTOM, 0);
-end;
-
-procedure TFrameRemoteShellInstance.ButtonSendClick(Sender: TObject);
-begin
-  SendCommandLine();
-end;
-
-procedure TFrameRemoteShellInstance.CommandChange(Sender: TObject);
-begin
-  if FClosed then
-    Exit();
-  ///
-
-  ButtonSend.Enabled := Length(Trim(TRichEdit(Sender).Text)) > 0;
-end;
-
-procedure TFrameRemoteShellInstance.CommandKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  if (*((not (ssShift in Shift)) and *) (Key = 13) and ButtonSend.Enabled then
-    SendCommandLine();
-end;
-
-constructor TFrameRemoteShellInstance.Create(const AOwner : TComponent; const AControlForm : TBaseFormControl; const AInstanceId : TGUID);
-begin
-  inherited Create(AOwner);
-  ///
-
-  FControlForm := AControlForm;
-  FInstanceId  := AInstanceId;
-  FClosed      := False;
-end;
-
-procedure TFrameRemoteShellInstance.ShellLinkClick(Sender: TCustomRichEdit; const URL: string; Button: TMouseButton);
-begin
-  case Button of
-    TMouseButton.mbLeft : Open(Url);
-
-    TMouseButton.mbRight : ;
-    TMouseButton.mbMiddle : ;
-  end;
-end;
 
 end.

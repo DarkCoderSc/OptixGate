@@ -48,31 +48,51 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, uFrameRemoteShellInstance, Vcl.Menus,
-  XSuperObject;
+  XSuperObject, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, System.Actions, Vcl.ActnList;
 
 type
   TFormRemoteShell = class(TBaseFormControl)
     Pages: TPageControl;
-    MainMenu: TMainMenu;
-    File1: TMenuItem;
-    NewInstance1: TMenuItem;
-    StatusBar: TStatusBar;
     PopupTabs: TPopupMenu;
     erminateInstance1: TMenuItem;
     N1: TMenuItem;
     CloseTabTerminate1: TMenuItem;
     RenameTab1: TMenuItem;
-    procedure NewInstance1Click(Sender: TObject);
+    PanelActions: TPanel;
+    ButtonNewInstance: TSpeedButton;
+    ActionList: TActionList;
+    NewShellInstance1: TAction;
+    ButtonBreak: TSpeedButton;
+    BreakActiveShellInstance1: TAction;
     procedure PagesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+    procedure FormCreate(Sender: TObject);
+    procedure PopupTabsPopup(Sender: TObject);
+    procedure erminateInstance1Click(Sender: TObject);
+    procedure CloseTabTerminate1Click(Sender: TObject);
+    procedure RenameTab1Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure ButtonNewInstanceClick(Sender: TObject);
+    procedure NewShellInstance1Execute(Sender: TObject);
+    procedure ButtonBreakClick(Sender: TObject);
+    procedure BreakActiveShellInstance1Execute(Sender: TObject);
+    procedure PagesChange(Sender: TObject);
   private
+    FHitTab : TTabSheet;
+
     {@M}
     procedure RequestNewShellInstance();
+    function TabNameExists(const AName : String) : Boolean;
     function StartShellInstance(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
     procedure CloseShellInstance(const AInstanceId : TGUID);
     function GetFrameByInstanceId(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
+    function GetFrameByTab(const ATab : TTabSheet) : TFrameRemoteShellInstance;
+    procedure TerminateShellInstance(const ATab : TTabSheet);
+    procedure RefreshActionsButtons();
+    function IsActivePageShellInstanceActive() : Boolean;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure PurgeRequest(); override;
   end;
 
 var
@@ -80,9 +100,67 @@ var
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants;
+uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants, Optix.VCL.Helper;
 
 {$R *.dfm}
+
+function TFormRemoteShell.IsActivePageShellInstanceActive() : Boolean;
+begin
+  result := False;
+
+  if Pages.ActivePageIndex <= -1 then
+    Exit();
+
+  result := Pages.ActivePage.ImageIndex = -1;
+end;
+
+procedure TFormRemoteShell.RefreshActionsButtons();
+begin
+  ButtonBreak.Enabled := IsActivePageShellInstanceActive();
+end;
+
+procedure TFormRemoteShell.PurgeRequest();
+begin
+  for var I := 0 to Pages.PageCount -1 do
+    TerminateShellInstance(Pages.Pages[I]);
+end;
+
+procedure TFormRemoteShell.TerminateShellInstance(const ATab : TTabSheet);
+begin
+  if not Assigned(ATab) then
+    Exit();
+
+  var AFrame := GetFrameByTab(ATab);
+  if not Assigned(AFrame) then
+    Exit();
+
+  SendCommand(TOptixTerminateShellInstance.Create(AFrame.InstanceId));
+end;
+
+procedure TFormRemoteShell.CloseTabTerminate1Click(Sender: TObject);
+begin
+  TerminateShellInstance(FHitTab);
+
+  FreeAndNil(FHitTab);
+
+  RefreshActionsButtons();
+end;
+
+procedure TFormRemoteShell.erminateInstance1Click(Sender: TObject);
+begin
+  TerminateShellInstance(FHitTab);
+end;
+
+procedure TFormRemoteShell.FormCreate(Sender: TObject);
+begin
+  FHitTab := nil;
+  RefreshActionsButtons();
+end;
+
+procedure TFormRemoteShell.FormDestroy(Sender: TObject);
+begin
+  ///
+end;
 
 function TFormRemoteShell.GetFrameByInstanceId(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
 begin
@@ -102,6 +180,21 @@ begin
        break;
     end;
   end;
+end;
+
+function TFormRemoteShell.GetFrameByTab(const ATab : TTabSheet) : TFrameRemoteShellInstance;
+begin
+  result := nil;
+  if not Assigned(ATab) then
+    Exit();
+
+  if (ATab.Controls[0] is TFrameRemoteShellInstance) then
+    result := TFrameRemoteShellInstance(ATab.Controls[0]);
+end;
+
+procedure TFormRemoteShell.NewShellInstance1Execute(Sender: TObject);
+begin
+  ButtonNewInstanceClick(ButtonNewInstance);
 end;
 
 procedure TFormRemoteShell.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
@@ -135,13 +228,27 @@ begin
   end;
 end;
 
-procedure TFormRemoteShell.NewInstance1Click(Sender: TObject);
+procedure TFormRemoteShell.RenameTab1Click(Sender: TObject);
 begin
-  RequestNewShellInstance();
+  if not Assigned(FHitTab) then
+    Exit();
+
+  var ATabName : String := FHitTab.Caption;
+
+  if InputQuery('Rename Tab', 'Enter new name', ATabName) then
+    FHitTab.Caption := ATabName;
+end;
+
+procedure TFormRemoteShell.PagesChange(Sender: TObject);
+begin
+  RefreshActionsButtons();
 end;
 
 procedure TFormRemoteShell.PagesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
 begin
+  FHitTab := nil;
+  ///
+
   var AIndex := TPageControl(Sender).IndexOfTabAt(MousePos.X, MousePos.y);
   if (AIndex >= 0) and (AIndex <= (TPageControl(Sender).PageCount -1)) then begin
     var ATab := TPageControl(Sender).Pages[AIndex];
@@ -150,14 +257,51 @@ begin
 
       var APoint := TPageControl(Sender).ClientToScreen(Point(ATabBound.Left, ATabBound.Bottom));
 
+      FHitTab := ATab;
+
       PopupTabs.Popup(APoint.X, APoint.Y);
     end;
   end;
 end;
 
+procedure TFormRemoteShell.PopupTabsPopup(Sender: TObject);
+begin
+  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+
+  if not Assigned(FHitTab) then
+    Exit();
+
+//  var AFrame := GetFrameByTab(FHitTab);
+//  if not Assigned(AFrame) then
+//    Exit();
+
+  if FHitTab.ImageIndex = -1 then
+    erminateInstance1.Visible := True;
+
+  CloseTabTerminate1.Visible := True;
+  RenameTab1.Visible := True;
+end;
+
 procedure TFormRemoteShell.RequestNewShellInstance();
 begin
   SendCommand(TOptixStartShellInstance.Create());
+end;
+
+function TFormRemoteShell.TabNameExists(const AName : String) : Boolean;
+begin
+  result := False;
+  ///
+
+  for var N := 0 to Pages.PageCount -1 do begin
+    var ATab := Pages.Pages[N];
+    ///
+
+    if String.Compare(ATab.Caption, AName, True) = 0 then begin
+      result := True;
+
+      break;
+    end;
+  end;
 end;
 
 function TFormRemoteShell.StartShellInstance(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
@@ -170,16 +314,8 @@ function TFormRemoteShell.StartShellInstance(const AInstanceId : TGUID) : TFrame
       ///
 
       var ACandidate := Format('Session #%d', [I]);
-
-      for var N := 0 to Pages.PageCount -1 do begin
-        var ATab := Pages.Pages[N];
-        ///
-
-        if String.Compare(ATab.Caption, ACandidate, True) = 0 then
-          break
-        else
-          Exit(ACandidate);
-      end;
+      if not TabNameExists(ACandidate) then
+        Exit(ACandidate);
     end;
   end;
 
@@ -188,7 +324,7 @@ begin
 
   ATab.PageControl := Pages;
   ATab.Caption     := GenerateRandomTabName();
-  ATab.ImageIndex  := IMAGE_SHELL_RUNNING;
+  ATab.ImageIndex  := -1;
 
   var AFrame := TFrameRemoteShellInstance.Create(ATab, self, AInstanceId);
   AFrame.Parent := ATab;
@@ -202,22 +338,48 @@ begin
   // Hacky method to fix annoying issue with Delphi HDPI designing...
   AFrame.Shell.Font.Size   := 9;
   AFrame.Command.Font.Size := 9;
+
+  ///
+  RefreshActionsButtons();
+end;
+
+procedure TFormRemoteShell.BreakActiveShellInstance1Execute(Sender: TObject);
+begin
+  ButtonBreakClick(ButtonBreak);
+end;
+
+procedure TFormRemoteShell.ButtonBreakClick(Sender: TObject);
+begin
+  var ATab := Pages.ActivePage;
+
+  if ATab.ImageIndex <> -1 then
+    Exit();
+
+  var AFrame := GetFrameByTab(ATab);
+  if not Assigned(AFrame) then
+    Exit();
+
+  SendCommand(TOptixBreakShellInstance.Create(AFrame.InstanceId));
+end;
+
+procedure TFormRemoteShell.ButtonNewInstanceClick(Sender: TObject);
+begin
+  RequestNewShellInstance();
 end;
 
 procedure TFormRemoteShell.CloseShellInstance(const AInstanceId : TGUID);
 begin
   var AFrame := GetFrameByInstanceId(AInstanceId);
-  if not Assigned(AFrame) and Assigned(AFrame.Owner) and (AFrame.Owner is TTabSheet) then
+  if not Assigned(AFrame) or not Assigned(AFrame.Owner) or not (AFrame.Owner is TTabSheet) then
     Exit();
   ///
 
   TTabSheet(AFrame.Owner).ImageIndex := IMAGE_SHELL_CLOSED;
 
   AFrame.Close();
-end;
 
-- Faire le break (CTRL+C)
-- Coder les actions (Close Tab, Terminate (si pas deja), Rename Tab)
-- Finir le design du remote shell
+  ///
+  RefreshActionsButtons();
+end;
 
 end.

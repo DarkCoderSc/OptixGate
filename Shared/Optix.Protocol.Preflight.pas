@@ -60,6 +60,7 @@ type
     ProtocolVersion : String[10];
     ClientKind      : TClientKind;
     SessionId       : TGUID;
+    HandlerId       : TGUID;
 
     {$IFDEF CLIENT}
     {@O}
@@ -78,6 +79,7 @@ begin
   ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;
   ADestRecord.ClientKind      := ckUndefined;
   ADestRecord.SessionId       := SESSION_ID;
+  ADestRecord.HandlerId       := TGUID.Empty;
 end;
 {$ENDIF}
 

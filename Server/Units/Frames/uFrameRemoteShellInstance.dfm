@@ -14,7 +14,7 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
     PanelCollection = <
       item
         Control = Shell
-        Position = 0.900000000000000000
+        Position = 0.920000000000000000
         Visible = True
         Index = 0
       end
@@ -32,7 +32,7 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
       Left = 0
       Top = 0
       Width = 816
-      Height = 375
+      Height = 384
       Margins.Left = 0
       Margins.Top = 0
       Margins.Right = 0
@@ -47,15 +47,15 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
-      OnClick = ShellClick
+      StyleElements = [seClient, seBorder]
       OnLinkClick = ShellLinkClick
     end
     object PanelCommand: TPanel
       AlignWithMargins = True
       Left = 0
-      Top = 378
+      Top = 387
       Width = 816
-      Height = 39
+      Height = 30
       Margins.Left = 0
       Margins.Top = 4
       Margins.Right = 0
@@ -66,7 +66,7 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
         Left = 0
         Top = 0
         Width = 756
-        Height = 39
+        Height = 30
         Margins.Left = 4
         Margins.Top = 4
         Margins.Right = 4
@@ -81,14 +81,16 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
         ParentFont = False
         ScrollBars = ssVertical
         TabOrder = 0
+        OnChange = CommandChange
         OnKeyUp = CommandKeyUp
+        ExplicitHeight = 39
       end
       object ButtonSend: TButton
         AlignWithMargins = True
         Left = 760
         Top = 0
         Width = 56
-        Height = 39
+        Height = 30
         Margins.Left = 4
         Margins.Top = 0
         Margins.Right = 0
@@ -102,6 +104,7 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
         Images = FormMain.VirtualImageList
         TabOrder = 1
         OnClick = ButtonSendClick
+        ExplicitHeight = 39
       end
     end
   end

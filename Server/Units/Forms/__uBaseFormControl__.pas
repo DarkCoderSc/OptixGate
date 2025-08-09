@@ -115,6 +115,7 @@ type
     {@M}
     procedure SendCommand(const ACommand : TOptixCommand);
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual;
+    procedure PurgeRequest(); virtual;
 
     {@C}
     constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); virtual;
@@ -387,7 +388,12 @@ begin
     TWindowState.wsMinimized : FFormInformation.State := fcsMinimized;
     TWindowState.wsMaximized : ;
   end;
+end;
 
+{ TBaseFormControl.PurgeRequest }
+procedure TBaseFormControl.PurgeRequest();
+begin
+  ///
 end;
 
 end.

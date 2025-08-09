@@ -155,13 +155,15 @@ type
     procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
     procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
 
-    procedure OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const ASessionId  : TGUID; const AWorkerKind : TClientKind);
+    procedure OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const AHandlerId  : TGUID; const AWorkerKind : TClientKind);
 
     procedure UpdateStatus(const ACaption : String = '');
 
     procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
     function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
-    function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
+    // function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
+    function GetHandlerByHandlerId(const AHandlerId : TGUID) : TOptixSessionHandlerThread;
+    function GetNodeByHandlerId(const AHandlerId : TGUID) : PVirtualNode;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
     procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
     procedure CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
@@ -173,7 +175,7 @@ type
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
 
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
-    procedure SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand); overload;
+    // procedure SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
   end;
 
@@ -184,7 +186,7 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen;
 
 {$R *.dfm}
 
@@ -324,25 +326,25 @@ begin
   SendCommand(pNode, ACommand);
 end;
 
-procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
-begin
-  SendCommand(GetNodeBySessionId(ASessionId), ACommand);
-end;
+//procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
+//begin
+//  SendCommand(GetNodeBySessionId(ASessionId), ACommand);
+//end;
 
-function TFormMain.GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
-begin
-  result := nil;
-  ///
-
-  for var pNode in VST.Nodes do begin
-    var pData := PTreeData(pNode.GetData);
-    if Assigned(pData^.SessionInformation) and (pData^.SessionInformation.SessionId = ASessionId) then begin
-      result := pNode;
-
-      break;
-    end;
-  end;
-end;
+//function TFormMain.GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
+//begin
+//  result := nil;
+//  ///
+//
+//  for var pNode in VST.Nodes do begin
+//    var pData := PTreeData(pNode.GetData);
+//    if Assigned(pData^.SessionInformation) and (pData^.SessionInformation.SessionId = ASessionId) then begin
+//      result := pNode;
+//
+//      break;
+//    end;
+//  end;
+//end;
 
 procedure TFormMain.hreads1Click(Sender: TObject);
 begin
@@ -425,8 +427,8 @@ begin
   ///
 
   // Should never happend!
-  if GetNodeBySessionId(ASessionInformation.SessionId) <> nil then
-    Exit();
+  // if GetNodeBySessionId(ASessionInformation.SessionId) <> nil then
+  //  Exit();
 
   var pNode := VST.AddChild(nil);
   var pData := PTreeData(pNode.GetData);
@@ -675,7 +677,8 @@ begin
   var AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
   var ASessionId := TGUID.Create(ASerializedPacket.S['SessionId']);
 
-  var pNode := GetNodeBySessionId(ASessionId);
+  // var pNode := GetNodeBySessionId(ASessionId);
+  var pNode := GetNodeByHandler(Sender);
 
   var AOptixPacket : TOptixPacket := nil;
   try
@@ -725,9 +728,34 @@ begin
   end;
 end;
 
-procedure TFormMain.OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const ASessionId  : TGUID; const AWorkerKind : TClientKind);
+function TFormMain.GetHandlerByHandlerId(const AHandlerId : TGUID) : TOptixSessionHandlerThread;
 begin
-  var pNode := GetNodeBySessionId(ASessionId);
+  result := nil;
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+    if Assigned(pData^.Handler) and (pData^.Handler.HandlerId = AHandlerId) then begin
+      result := pData^.Handler;
+
+      break;
+    end;
+  end;
+end;
+
+function TFormMain.GetNodeByHandlerId(const AHandlerId : TGUID) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  var AHandler := GetHandlerByHandlerId(AHandlerId);
+  if Assigned(AHandler) then
+    result := GetNodeByHandler(AHandler);
+end;
+
+procedure TFormMain.OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const AHandlerId  : TGUID; const AWorkerKind : TClientKind);
+begin
+  var pNode := GetNodeByHandlerId(AHandlerId);
   if not Assigned(pNode) then
     FreeAndNil(AClient)
   else begin
@@ -839,7 +867,18 @@ end;
 procedure TFormMain.Start1Click(Sender: TObject);
 begin
   case TMenuItem(Sender).Tag of
-    0 : StartServer('0.0.0.0', 2801);
+    0 : begin
+      {$IFDEF DEBUG}
+      StartServer('0.0.0.0', 2801);
+      {$ELSE}
+      FormListen.ShowModal();
+      if FormListen.Canceled then
+        Exit();
+
+      StartServer(FormListen.EditServerBindAddress.Text, FormListen.SpinPort.Value);
+      {$ENDIF}
+    end;
+
     1 : StopServer();
   end;
 end;

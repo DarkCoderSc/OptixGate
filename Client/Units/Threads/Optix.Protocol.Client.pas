@@ -62,7 +62,8 @@ type
     procedure SetRetry(const AValue : Boolean);
     procedure SetRetryDelay(AValue : Cardinal);
   protected
-    FClient : TClientSocket;
+    FClientId : TGUID;
+    FClient   : TClientSocket;
 
     {@M}
     procedure ThreadExecute(); override;
@@ -86,6 +87,11 @@ type
     {@S}
     property Retry      : Boolean  write SetRetry;
     property RetryDelay : Cardinal write SetRetryDelay;
+
+    {@G}
+    property RemoteAddress : String read FRemoteAddress;
+    property RemotePort    : Word   read FRemotePort;
+    property ClientId      : TGUID  read FClientId;
   end;
 
 implementation
@@ -128,6 +134,7 @@ begin
   FClient        := nil;
   FRemoteAddress := ARemoteAddress;
   FRemotePort    := ARemotePort;
+  FClientId      := TGUID.NewGuid();
 
   ///
   Initialize();
@@ -161,6 +168,8 @@ begin
 
         // Preflight Request
         var APreflight := InitializePreflightRequest();
+        APreflight.HandlerId := FClientId;
+
         FClient.Send(APreflight, SizeOf(TOptixPreflightRequest));
 
         Connected();

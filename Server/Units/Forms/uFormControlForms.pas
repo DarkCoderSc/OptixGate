@@ -217,8 +217,11 @@ begin
     Exit();
 
   var AForm := GetFormByGUID(ATargetGUID);
-  if Assigned(AForm) then
+  if Assigned(AForm) then begin
+    AForm.PurgeRequest();
+
     pNodeClientData.Forms.Remove(AForm);
+  end;
 
   ///
   Refresh();

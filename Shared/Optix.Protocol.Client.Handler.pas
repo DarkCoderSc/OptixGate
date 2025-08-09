@@ -45,12 +45,18 @@ unit Optix.Protocol.Client.Handler;
 
 interface
 
+{$I Optix.inc }
+
 uses Optix.Protocol.Client, Optix.Protocol.Packet, Generics.Collections, Optix.Sockets.Helper, System.SysUtils,
      XSuperObject, Winapi.Windows, Optix.Protocol.Preflight;
 
 type
   TOptixClientHandlerThread = class(TOptixClientThread)
   private
+    {$IFDEF SERVER}
+    FHandlerId : TGUID;
+    {$ENDIF}
+
     FPacketQueue : TThreadedQueue<TOptixPacket>;
   protected
     {@M}
@@ -62,6 +68,14 @@ type
   public
     {@M}
     procedure AddPacket(const APacket : TOptixPacket);
+
+    {$IFDEF SERVER}
+    {@C}
+    constructor Create(const AClient : TClientSocket; const AHandlerId : TGUID); overload;
+
+    {@G}
+    property HandlerId : TGUID read FHandlerId;
+    {$ENDIF}
   end;
 
 implementation
@@ -174,5 +188,16 @@ begin
 
   FPacketQueue.PushItem(APacket);
 end;
+
+{$IFDEF SERVER}
+{ TOptixClientHandlerThread.Create }
+constructor TOptixClientHandlerThread.Create(const AClient : TClientSocket; const AHandlerId : TGUID);
+begin
+  inherited Create(AClient);
+  ///
+
+  FHandlerId := AHandlerId;
+end;
+{$ENDIF}
 
 end.
