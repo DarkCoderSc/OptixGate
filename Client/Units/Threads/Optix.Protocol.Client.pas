@@ -45,18 +45,30 @@ unit Optix.Protocol.Client;
 
 interface
 
+{$I Optix.Inc}
+
 uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs,
      Generics.Collections, Optix.Protocol.Preflight;
 
 type
+  {$IFDEF CLIENT_GUI}
+  TOptixClientThread = class;
+
+  TOnNetworkException = procedure(Sender : TOptixClientThread; const AErrorMessage : String) of object;
+  {$ENDIF}
+
   TOptixClientThread = class(TOptixThread)
   private
-    FRetry         : Boolean;
-    FRetryDelay    : Cardinal;
-    FRetryEvent    : TEvent;
+    FRetry              : Boolean;
+    FRetryDelay         : Cardinal;
+    FRetryEvent         : TEvent;
 
-    FRemoteAddress : String;
-    FRemotePort    : Word;
+    FRemoteAddress      : String;
+    FRemotePort         : Word;
+
+    {$IFDEF CLIENT_GUI}
+    FOnNetworkException : TOnNetworkException;
+    {$ENDIF}
 
     {@M}
     procedure SetRetry(const AValue : Boolean);
@@ -87,6 +99,10 @@ type
     {@S}
     property Retry      : Boolean  write SetRetry;
     property RetryDelay : Cardinal write SetRetryDelay;
+
+    {$IFDEF CLIENT_GUI}
+    property OnNetworkException : TOnNetworkException write FOnNetworkException;
+    {$ENDIF}
 
     {@G}
     property RemoteAddress : String read FRemoteAddress;
@@ -136,6 +152,10 @@ begin
   FRemotePort    := ARemotePort;
   FClientId      := TGUID.NewGuid();
 
+  {$IFDEF CLIENT_GUI}
+  FOnNetworkException := nil;
+  {$ENDIF}
+
   ///
   Initialize();
 end;
@@ -176,8 +196,20 @@ begin
 
         ClientExecute();
       except
-        on E: ESocketException do
+        on E: ESocketException do begin
           Disconnected();
+
+          {$IFDEF CLIENT_GUI}
+            if Assigned(FOnNetworkException) and not Terminated then
+              case e.WSALastError of
+                0, 10061 : ; // Ignore those error codes
+                else
+                  Synchronize(procedure begin
+                    FOnNetworkException(self, E.Message);
+                  end);
+              end;
+          {$ENDIF}
+        end;
 
         on E: Exception do begin
           raise;

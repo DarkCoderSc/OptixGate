@@ -45,6 +45,8 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
+{$I Optix.inc}
+
 uses System.Classes, Generics.Collections, XSuperObject, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
      Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands, Optix.Task,
      Optix.Actions.ProcessHandler;
@@ -55,11 +57,27 @@ type
     saTerminate
   );
 
+  {$IFDEF CLIENT_GUI}
+  TOptixSessionHandlerThread = class;
+
+  TOnSessionHandlerEvent = procedure(Sender : TOptixSessionHandlerThread) of object;
+
+  TOnConnectedToServer         = TOnSessionHandlerEvent;
+  TOnDisconnectedFromServer    = TOnSessionHandlerEvent;
+  TOnSessionHandlerDestroyed   = TOnSessionHandlerEvent;
+  {$ENDIF}
+
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
   private
     FTasks                    : TObjectList<TOptixTask>;
     FShellInstances           : TObjectList<TProcessHandler>;
     FFileTransferOrchestrator : TOptixFileTransferOrchestratorThread;
+
+    {$IFDEF CLIENT_GUI}
+    FOnConnectedToServer         : TOnConnectedToServer;
+    FOnDisconnectedFromServer    : TOnDisconnectedFromServer;
+    FOnSessionHandlerDestroyed   : TOnSessionHandlerDestroyed;
+    {$ENDIF}
 
     {@M}
     procedure InitializeFileTransferOrchestratorThread();
@@ -85,13 +103,18 @@ type
     procedure Connected(); override;
     procedure Disconnected(); override;
     procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
+  {$IFDEF CLIENT_GUI}
+  public
+    property OnConnectedToServer       : TOnConnectedToServer         write FOnConnectedToServer;
+    property OnDisconnectedFromServer  : TOnDisconnectedFromServer    write FOnDisconnectedFromServer;
+    property OnSessionHandlerDestroyed : TOnSessionHandlerDestroyed   write FOnSessionHandlerDestroyed;
+    {$ENDIF}
   end;
 
 implementation
 
 uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils, Optix.Func.Enum.Process, Optix.Actions.Process,
-     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump,
-     Optix.Func.Shell;
+     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump, Optix.Func.Shell;
 
 
 { TOptixSessionHandlerThread.Initialize }
@@ -103,6 +126,12 @@ begin
   FFileTransferOrchestrator := nil;
   FTasks := TObjectList<TOptixTask>.Create(True);
   FShellInstances := TObjectList<TProcessHandler>.Create(True);
+
+  {$IFDEF CLIENT_GUI}
+  FOnConnectedToServer         := nil;
+  FOnDisconnectedFromServer    := nil;
+  FOnSessionHandlerDestroyed := nil;
+  {$ENDIF}
 end;
 
 { TOptixSessionHandlerThread.Finalize }
@@ -110,6 +139,13 @@ procedure TOptixSessionHandlerThread.Finalize();
 begin
   inherited;
   ///
+
+  {$IFDEF CLIENT_GUI}
+  if Assigned(FOnSessionHandlerDestroyed) then
+    Synchronize(procedure begin
+      FOnSessionHandlerDestroyed(self);
+    end);
+  {$ENDIF}
 
   if Assigned(FTasks) then
     FreeAndNil(FTasks);
@@ -309,6 +345,13 @@ begin
   inherited;
   ///
 
+  {$IFDEF CLIENT_GUI}
+  if Assigned(FOnConnectedToServer) then
+    Synchronize(procedure begin
+      FOnConnectedToServer(self);
+    end);
+  {$ENDIF}
+
   AddPacket(TOptixSessionInformation.Create());
 end;
 
@@ -317,6 +360,13 @@ procedure TOptixSessionHandlerThread.Disconnected();
 begin
   inherited;
   ///
+
+  {$IFDEF CLIENT_GUI}
+  if Assigned(FOnDisconnectedFromServer) then
+    Synchronize(procedure begin
+      FOnDisconnectedFromServer(self);
+    end);
+  {$ENDIF}
 
   if TOptixThread.HasRunningInstance(FFileTransferOrchestrator) then begin
     TOptixThread.TerminateInstance(FFileTransferOrchestrator);

@@ -49,11 +49,18 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, Vcl.Menus, Optix.Protocol.SessionHandler, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList,
-  Vcl.BaseImageCollection, Vcl.ImageCollection;
+  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client;
 
 type
+  TClientStatus = (csDisconnected, csConnected, csOnError, csFree);
+
   TTreeData = record
-    Handler : TOptixSessionHandlerThread;
+    ServerAddress    : String; // Copy required (If Handler is Freed)
+    ServerPort       : Word;   // Copy required
+
+    Handler          : TOptixSessionHandlerThread;
+    Status           : TClientStatus;
+    ExtraDescription : String;
   end;
   PTreeData = ^TTreeData;
 
@@ -81,8 +88,18 @@ type
     procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure PopupMenuPopup(Sender: TObject);
     procedure RemoveClient1Click(Sender: TObject);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
-    { Private declarations }
+    {@M}
+    procedure OnConnectedToServer(Sender : TOptixSessionHandlerThread);
+    procedure OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
+    procedure OnSessionHandlerDestroyed(Sender : TOptixSessionHandlerThread);
+    procedure OnNetworkException(Sender : TOptixClientThread; const AErrorMessage : String);
+
+    procedure UpdateNodeStatus(const pNode : PVirtualNode; const ANewStatus : TClientStatus; const AExtraDescription : String = ''); overload;
+    procedure UpdateNodeStatus(const AHandler : TOptixSessionHandlerThread; const ANewStatus : TClientStatus; const AExtraDescription : String = ''); overload;
+    function GetNodeFromHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
   public
     { Public declarations }
   end;
@@ -92,9 +109,76 @@ var
 
 implementation
 
+- Ajouter about
+- Ajouter popupmenu -> reload (si free)
+- Ajouter à partir du code du server, le debug > Threads. adapter les constantes pour les images.
+
 uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants;
 
 {$R *.dfm}
+
+function TFormMain.GetNodeFromHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  if not Assigned(AHandler) then
+    Exit();
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+
+    if pData^.Handler = AHandler then begin
+      result := pNode;
+
+      break
+    end;
+  end;
+end;
+
+procedure TFormMain.UpdateNodeStatus(const pNode : PVirtualNode; const ANewStatus : TClientStatus; const AExtraDescription : String = '');
+begin
+  if not Assigned(pNode) then
+    Exit();
+  ///
+
+  var pData := pTreeData(pNode.GetData);
+  if pData^.Status = ANewStatus then
+    Exit();
+
+  VST.BeginUpdate();
+  try
+    pData^.Status := ANewStatus;
+    pData^.ExtraDescription := AExtraDescription;
+  finally
+    VST.EndUpdate();
+  end;
+end;
+
+procedure TFormMain.UpdateNodeStatus(const AHandler : TOptixSessionHandlerThread; const ANewStatus : TClientStatus; const AExtraDescription : String = '');
+begin
+  UpdateNodeStatus(GetNodeFromHandler(AHandler), ANewStatus, AExtraDescription);
+end;
+
+procedure TFormMain.OnConnectedToServer(Sender : TOptixSessionHandlerThread);
+begin
+  UpdateNodeStatus(Sender, csConnected);
+end;
+
+procedure TFormMain.OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
+begin
+  UpdateNodeStatus(Sender, csDisconnected);
+end;
+
+procedure TFormMain.OnSessionHandlerDestroyed(Sender : TOptixSessionHandlerThread);
+begin
+  UpdateNodeStatus(Sender, csFree);
+end;
+
+procedure TFormMain.OnNetworkException(Sender : TOptixClientThread; const AErrorMessage : String);
+begin
+  UpdateNodeStatus(TOptixSessionHandlerThread(Sender), csOnError, AErrorMessage);
+end;
 
 procedure TFormMain.Close1Click(Sender: TObject);
 begin
@@ -115,9 +199,21 @@ begin
       var pNode := VST.AddChild(nil);
       var pData := PTreeData(pNode.GetData);
 
-      pData^.Handler := TOptixSessionHandlerThread.Create(AForm.EditServerAddress.Text, AForm.SpinPort.Value);
+      pData^.Status := csDisconnected;
+      pData^.ExtraDescription := '';
+
+      pData^.ServerAddress := AForm.EditServerAddress.Text;
+      pData^.ServerPort    := AForm.SpinPort.Value;
+
+      pData^.Handler := TOptixSessionHandlerThread.Create(pData^.ServerAddress, pData^.ServerPort);
       pData^.Handler.Retry := True;
       pData^.Handler.RetryDelay := 1000;
+
+      pData^.Handler.OnConnectedToServer         := OnConnectedToServer;
+      pData^.Handler.OnDisconnectedFromServer    := OnDisconnectedFromServer;
+      pData^.Handler.OnSessionHandlerDestroyed   := OnSessionHandlerDestroyed;
+      pData^.Handler.OnNetworkException          := OnNetworkException;
+
       pData^.Handler.Start();
     finally
       VST.EndUpdate();
@@ -151,6 +247,24 @@ begin
   end;
 end;
 
+procedure TFormMain.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+
+  var AColor := clNone;
+
+  case pData^.Status of
+    csConnected : AColor := COLOR_LIST_LIMY;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
+  end;
+end;
+
 procedure TFormMain.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
@@ -176,7 +290,12 @@ begin
   if (Column <> 0) or ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) then
     Exit();
 
-  ImageIndex := IMAGE_CLIENT_WAIT;
+  case pData^.Status of
+    csDisconnected : ImageIndex := IMAGE_CLIENT_DISCONNECTED;
+    csConnected    : ImageIndex := IMAGE_CLIENT_CONNECTED;
+    csOnError      : ImageIndex := IMAGE_CLIENT_ERROR;
+    csFree         : ImageIndex := IMAGE_CLIENT_FREED;
+  end;
 end;
 
 procedure TFormMain.VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
@@ -188,16 +307,24 @@ procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Col
   TextType: TVSTTextType; var CellText: string);
 begin
   var pData := PTreeData(Node.GetData);
-  if not Assigned(pData^.Handler) then
-    Exit();
 
   CellText := '';
 
   case Column of
-    0 : CellText := pData^.Handler.RemoteAddress;
-    1 : CellText := IntToStr(pData^.Handler.RemotePort);
+    0 : CellText := pData^.ServerAddress;
+    1 : CellText := IntToStr(pData^.ServerPort);
+    2 : begin
+      case pData^.Status of
+        csDisconnected : CellText := 'Disconnected';
+        csConnected    : CellText := 'Connected';
+        csFree         : CellText := 'Free';
+        csOnError      : CellText := 'Error';
+      end;
+    end;
+    3 : CellText := pData^.ExtraDescription;
   end;
 
+  ///
   CellText := DefaultIfEmpty(CellText);
 end;
 

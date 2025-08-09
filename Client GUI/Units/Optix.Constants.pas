@@ -45,11 +45,20 @@ unit Optix.Constants;
 
 interface
 
+uses Winapi.Windows, VCL.Graphics;
+
 const
-  IMAGE_CLIENT_WAIT      = 1;
-  IMAGE_CLIENT_CONNECTED = 2;
-  IMAGE_CLIENT_ERROR     = 4;
+  IMAGE_CLIENT_DISCONNECTED = 1;
+  IMAGE_CLIENT_CONNECTED    = 2;
+  IMAGE_CLIENT_ERROR        = 3;
+  IMAGE_CLIENT_FREED        = 4;
+
+var
+  COLOR_LIST_LIMY : TColor;
 
 implementation
+
+initialization
+  COLOR_LIST_LIMY := RGB(40, 70, 40);
 
 end.

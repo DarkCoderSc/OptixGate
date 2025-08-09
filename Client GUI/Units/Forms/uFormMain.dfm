@@ -1,9 +1,9 @@
 object FormMain: TFormMain
   Left = 0
   Top = 0
-  Caption = 'Optix Gate - Client GUI'
-  ClientHeight = 329
-  ClientWidth = 442
+  Caption = 'Optix Gate - Client GUI (Mode)'
+  ClientHeight = 290
+  ClientWidth = 685
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,8 +17,8 @@ object FormMain: TFormMain
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 442
-    Height = 329
+    Width = 685
+    Height = 290
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -37,6 +37,7 @@ object FormMain: TFormMain
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
     OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
@@ -45,16 +46,28 @@ object FormMain: TFormMain
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitWidth = 442
+    ExplicitHeight = 329
     Columns = <
       item
         Position = 0
         Text = 'Server Address'
-        Width = 250
+        Width = 190
       end
       item
         Position = 1
         Text = 'Server Port'
-        Width = 110
+        Width = 100
+      end
+      item
+        Position = 2
+        Text = 'Status'
+        Width = 90
+      end
+      item
+        Position = 3
+        Text = 'Extra Description'
+        Width = 300
       end>
   end
   object MainMenu: TMainMenu
@@ -779,7 +792,7 @@ object FormMain: TFormMain
           end>
       end>
     Left = 224
-    Top = 152
+    Top = 128
   end
   object VirtualImageList: TVirtualImageList
     Images = <
