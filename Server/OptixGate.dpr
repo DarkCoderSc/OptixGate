@@ -74,6 +74,10 @@ uses
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
   Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
+  Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
+  Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
+  Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
+  Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
@@ -94,7 +98,8 @@ uses
   uFormDumpProcess in 'Units\Forms\Dialogs\uFormDumpProcess.pas' {FormDumpProcess},
   uFormRemoteShell in 'Units\Forms\uFormRemoteShell.pas' {FormRemoteShell},
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
-  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen};
+  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
+  uFormCertificatesStore in 'Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore};
 
 {$R *.res}
 {$R data.res}
@@ -110,6 +115,7 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormListen, FormListen);
+  Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
   // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
   // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
   // Application.CreateForm(TFormTransfers, FormTransfers);

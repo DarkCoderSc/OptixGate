@@ -41,33 +41,35 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Constants;
+unit uFormCertificatesStore;
 
 interface
 
-uses Winapi.Windows, VCL.Graphics;
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
+  VirtualTrees, Vcl.Menus;
 
-const
-  IMAGE_CLIENT_DISCONNECTED = 1;
-  IMAGE_CLIENT_CONNECTED    = 2;
-  IMAGE_CLIENT_ERROR        = 3;
-  IMAGE_CLIENT_FREED        = 4;
-  IMAGE_OPTIX_FACE          = 5;
-  IMAGE_THREAD_RUNNING      = 6;
-  IMAGE_THREAD_STOP_WAIT    = 7;
-  IMAGE_THREAD_STOPPED      = 8;
-  IMAGE_THREAD_HANDLER      = 0;
-  IMAGE_THREAD_TRANSFER     = 9;
-  IMAGE_THREAD_GENERIC      = 10;
+type
+  TFormCertificatesStore = class(TForm)
+    VST: TVirtualStringTree;
+    MainMenu: TMainMenu;
+    File1: TMenuItem;
+    GeneratenewCertificate1: TMenuItem;
+    ImportRecommended1: TMenuItem;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
 
 var
-  COLOR_LIST_LIMY : TColor;
-  COLOR_LIST_GRAY : TColor;
+  FormCertificatesStore: TFormCertificatesStore;
 
 implementation
 
-initialization
-  COLOR_LIST_LIMY := RGB(40, 70, 40);
-  COLOR_LIST_GRAY := RGB(40, 40, 40);
+{$R *.dfm}
+
+
 
 end.

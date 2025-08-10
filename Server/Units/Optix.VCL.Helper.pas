@@ -26,19 +26,19 @@ uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms, VirtualTrees.BaseTr
 
 type
   TOptixVCLHelper = class
-    public
-      { TPopupMenu }
-      class procedure UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean); static;
-      class procedure HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
-      class procedure ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
-      class procedure ShowForm(const AForm : TForm); static;
+  public
+    { TPopupMenu }
+    class procedure UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean); static;
+    class procedure HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
+    class procedure ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu); static;
+    class procedure ShowForm(const AForm : TForm); static;
   end;
 
   TOptixVirtualTreesHelper = class
-    public
-      class function GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64; static;
-      class function GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer; static;
-      class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean); static;
+  public
+    class function GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64; static;
+    class function GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer; static;
+    class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean); static;
   end;
 
 implementation

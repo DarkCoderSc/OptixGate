@@ -35,7 +35,7 @@ object FormDumpProcess: TFormDumpProcess
     Align = alTop
     Caption = 'Mini Dump Types'
     TabOrder = 0
-    ExplicitLeft = 3
+    ExplicitWidth = 522
     object PanelRightTypes: TPanel
       Left = 266
       Top = 17
@@ -44,9 +44,7 @@ object FormDumpProcess: TFormDumpProcess
       Align = alClient
       BevelOuter = bvNone
       TabOrder = 0
-      ExplicitLeft = 269
-      ExplicitTop = 10
-      ExplicitHeight = 286
+      ExplicitWidth = 254
       object CheckBoxMiniDumpWithThreadInfo: TCheckBox
         AlignWithMargins = True
         Left = 8
@@ -61,8 +59,7 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 0
-        ExplicitLeft = 11
-        ExplicitTop = 164
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithCodeSegs: TCheckBox
         AlignWithMargins = True
@@ -78,7 +75,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithCodeSegs'
         TabOrder = 1
-        ExplicitTop = 176
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithoutAuxiliaryState: TCheckBox
         AlignWithMargins = True
@@ -92,8 +89,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithoutAuxiliaryState'
         TabOrder = 2
-        ExplicitLeft = 32
-        ExplicitTop = 188
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithFullAuxiliaryState: TCheckBox
         AlignWithMargins = True
@@ -111,7 +107,7 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 3
-        ExplicitTop = 224
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithPrivateWriteCopyMemory: TCheckBox
         AlignWithMargins = True
@@ -127,7 +123,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithPrivateWriteCopyMemory'
         TabOrder = 4
-        ExplicitTop = 164
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpIgnoreInaccessibleMemory: TCheckBox
         AlignWithMargins = True
@@ -149,8 +145,7 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 5
-        ExplicitLeft = 11
-        ExplicitTop = 188
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithTokenInformation: TCheckBox
         AlignWithMargins = True
@@ -168,8 +163,7 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 6
-        ExplicitLeft = 11
-        ExplicitTop = 248
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithModuleHeaders: TCheckBox
         AlignWithMargins = True
@@ -183,8 +177,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithModuleHeaders'
         TabOrder = 7
-        ExplicitLeft = 40
-        ExplicitTop = 248
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpFilterTriage: TCheckBox
         AlignWithMargins = True
@@ -198,8 +191,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpFilterTriage'
         TabOrder = 8
-        ExplicitLeft = 32
-        ExplicitTop = 284
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithAvxXStateContext: TCheckBox
         AlignWithMargins = True
@@ -213,8 +205,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithAvxXStateContext'
         TabOrder = 9
-        ExplicitLeft = 11
-        ExplicitTop = 292
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpWithIptTrace: TCheckBox
         AlignWithMargins = True
@@ -228,8 +219,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithIptTrace'
         TabOrder = 10
-        ExplicitLeft = 11
-        ExplicitTop = 272
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpScanInaccessiblePartialPages: TCheckBox
         AlignWithMargins = True
@@ -243,8 +233,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpScanInaccessiblePartialPages'
         TabOrder = 11
-        ExplicitLeft = 11
-        ExplicitTop = 272
+        ExplicitWidth = 243
       end
       object CheckBoxMiniDumpValidTypeFlags: TCheckBox
         AlignWithMargins = True
@@ -258,7 +247,7 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpValidTypeFlags'
         TabOrder = 12
-        ExplicitTop = 316
+        ExplicitWidth = 243
       end
     end
     object PanelLeftTypes: TPanel
@@ -269,7 +258,6 @@ object FormDumpProcess: TFormDumpProcess
       Align = alLeft
       BevelOuter = bvNone
       TabOrder = 1
-      ExplicitHeight = 158
       object CheckBoxMiniDumpNormal: TCheckBox
         AlignWithMargins = True
         Left = 8
@@ -284,9 +272,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpNormal'
         TabOrder = 0
-        ExplicitLeft = 24
-        ExplicitTop = 56
-        ExplicitWidth = 97
       end
       object CheckBoxMiniDumpWithDataSegs: TCheckBox
         AlignWithMargins = True
@@ -302,9 +287,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithDataSegs'
         TabOrder = 1
-        ExplicitLeft = 5
-        ExplicitTop = 64
-        ExplicitWidth = 174
       end
       object CheckBoxMiniDumpWithFullMemory: TCheckBox
         AlignWithMargins = True
@@ -322,8 +304,6 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 2
-        ExplicitTop = 80
-        ExplicitWidth = 174
       end
       object CheckBoxMiniDumpWithHandleData: TCheckBox
         AlignWithMargins = True
@@ -341,8 +321,6 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 3
-        ExplicitTop = 88
-        ExplicitWidth = 174
       end
       object CheckBoxMiniDumpScanMemory: TCheckBox
         AlignWithMargins = True
@@ -358,8 +336,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpScanMemory'
         TabOrder = 4
-        ExplicitLeft = 5
-        ExplicitWidth = 174
       end
       object CheckBoxMiniDumpFilterMemory: TCheckBox
         AlignWithMargins = True
@@ -375,9 +351,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpFilterMemory'
         TabOrder = 5
-        ExplicitLeft = 5
-        ExplicitTop = 128
-        ExplicitWidth = 174
       end
       object CheckBoxMiniDumpWithUnloadedModules: TCheckBox
         AlignWithMargins = True
@@ -395,7 +368,6 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 6
-        ExplicitTop = 224
       end
       object CheckBoxMiniDumpWithIndirectlyReferencedMemory: TCheckBox
         AlignWithMargins = True
@@ -426,7 +398,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpFilterModulePaths'
         TabOrder = 8
-        ExplicitTop = 176
       end
       object CheckBoxMiniDumpWithProcessThreadData: TCheckBox
         AlignWithMargins = True
@@ -444,8 +415,6 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 9
-        ExplicitLeft = 24
-        ExplicitTop = 272
       end
       object CheckBoxMiniDumpWithPrivateReadWriteMemory: TCheckBox
         AlignWithMargins = True
@@ -461,8 +430,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithPrivateReadWriteMemory'
         TabOrder = 10
-        ExplicitLeft = 24
-        ExplicitTop = 272
       end
       object CheckBoxMiniDumpWithoutOptionalData: TCheckBox
         AlignWithMargins = True
@@ -478,7 +445,6 @@ object FormDumpProcess: TFormDumpProcess
         Align = alTop
         Caption = 'MiniDumpWithoutOptionalData'
         TabOrder = 11
-        ExplicitLeft = 24
       end
       object CheckBoxMiniDumpWithFullMemoryInfo: TCheckBox
         AlignWithMargins = True
@@ -494,7 +460,6 @@ object FormDumpProcess: TFormDumpProcess
         Checked = True
         State = cbChecked
         TabOrder = 12
-        ExplicitTop = 308
       end
     end
   end
@@ -511,13 +476,13 @@ object FormDumpProcess: TFormDumpProcess
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 8
+    ExplicitWidth = 522
     object Image: TVirtualImage
       Left = 0
       Top = 0
       Width = 32
       Height = 32
-      ImageCollection = FormMain.ImageCollection
+      ImageCollection = FormMain.ImageCollectionDark
       ImageWidth = 0
       ImageHeight = 0
       ImageIndex = -1
@@ -564,6 +529,7 @@ object FormDumpProcess: TFormDumpProcess
     Align = alTop
     Caption = 'Output File Path'
     TabOrder = 2
+    ExplicitWidth = 522
     object RadioTempFile: TRadioButton
       AlignWithMargins = True
       Left = 10
@@ -580,9 +546,7 @@ object FormDumpProcess: TFormDumpProcess
       TabOrder = 0
       TabStop = True
       OnClick = RadioTempFileClick
-      ExplicitLeft = 48
-      ExplicitTop = 32
-      ExplicitWidth = 113
+      ExplicitWidth = 502
     end
     object RadioCutomFileName: TRadioButton
       AlignWithMargins = True
@@ -598,7 +562,7 @@ object FormDumpProcess: TFormDumpProcess
       Caption = 'Custom File Path'
       TabOrder = 1
       OnClick = RadioCutomFileNameClick
-      ExplicitTop = 81
+      ExplicitWidth = 502
     end
     object EditCustomFilePath: TEdit
       AlignWithMargins = True
@@ -613,9 +577,7 @@ object FormDumpProcess: TFormDumpProcess
       Align = alTop
       Enabled = False
       TabOrder = 2
-      ExplicitLeft = 64
-      ExplicitTop = 72
-      ExplicitWidth = 121
+      ExplicitWidth = 485
     end
   end
   object ButtonCancel: TButton

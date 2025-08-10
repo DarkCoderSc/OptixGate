@@ -53,6 +53,7 @@ const
  IMAGE_USER_ADMIN                   = 1;
  IMAGE_USER_ELEVATED                = 2;
  IMAGE_USER_SYSTEM                  = 3;
+ IMAGE_OPTIX_FACE                   = 4;
  IMAGE_PROCESS_SELF                 = 7;
  IMAGE_PROCESS                      = 8;
  IMAGE_PROCESS_X86_32               = 9;

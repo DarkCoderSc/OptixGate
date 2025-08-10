@@ -47,8 +47,8 @@ interface
 
 {$I Optix.Inc}
 
-uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs,
-     Generics.Collections, Optix.Protocol.Preflight;
+uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs, Generics.Collections,
+     Optix.Protocol.Preflight;
 
 type
   {$IFDEF CLIENT_GUI}
@@ -200,14 +200,14 @@ begin
           Disconnected();
 
           {$IFDEF CLIENT_GUI}
-            if Assigned(FOnNetworkException) and not Terminated then
-              case e.WSALastError of
-                0, 10061 : ; // Ignore those error codes
-                else
-                  Synchronize(procedure begin
-                    FOnNetworkException(self, E.Message);
-                  end);
-              end;
+          if Assigned(FOnNetworkException) and not Terminated then
+            case e.WSALastError of
+              0, 10061 : ; // Ignore those error codes
+              else
+                Synchronize(procedure begin
+                  FOnNetworkException(self, E.Message);
+                end);
+            end;
           {$ENDIF}
         end;
 

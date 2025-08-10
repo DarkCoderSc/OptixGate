@@ -75,7 +75,7 @@ var
 
 implementation
 
-uses uFormMain, Optix.Helper;
+uses uFormMain, Optix.Helper, Optix.Constants;
 
 {$R *.dfm}
 
@@ -108,6 +108,8 @@ end;
 procedure TFormAbout.FormCreate(Sender: TObject);
 begin
   FFirstShow := True;
+
+  ImageLogo.ImageIndex := IMAGE_OPTIX_FACE;
 end;
 
 procedure TFormAbout.FormResize(Sender: TObject);

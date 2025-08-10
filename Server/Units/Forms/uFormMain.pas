@@ -96,7 +96,6 @@ type
     erminate1: TMenuItem;
     StatusBar: TStatusBar;
     TimerRefresh: TTimer;
-    ImageCollection: TImageCollection;
     VirtualImageList: TVirtualImageList;
     N5: TMenuItem;
     transfers1: TMenuItem;
@@ -108,6 +107,8 @@ type
     hreads1: TMenuItem;
     asks1: TMenuItem;
     ImageCollectionDark: TImageCollection;
+    Stores1: TMenuItem;
+    Certificates1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -140,6 +141,7 @@ type
     procedure hreads1Click(Sender: TObject);
     procedure asks1Click(Sender: TObject);
     procedure RemoteShell1Click(Sender: TObject);
+    procedure Certificates1Click(Sender: TObject);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
@@ -186,7 +188,8 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen,
+     uFormCertificatesStore;
 
 {$R *.dfm}
 
@@ -801,6 +804,11 @@ begin
   CreateOrOpenControlForm(VST.FocusedNode, TFormTasks);
 end;
 
+procedure TFormMain.Certificates1Click(Sender: TObject);
+begin
+  FormCertificatesStore.Show();
+end;
+
 procedure TFormMain.Close1Click(Sender: TObject);
 begin
   Application.Terminate;
@@ -831,6 +839,8 @@ begin
 
   InitializeSystemIcons(ImageSystem, FFileInfo);
   ///
+
+  Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
 
   ///
   UpdateStatus();

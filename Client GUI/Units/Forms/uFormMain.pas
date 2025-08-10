@@ -49,7 +49,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, Vcl.Menus, Optix.Protocol.SessionHandler, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList,
-  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client;
+  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client, System.Notification, Generics.Collections;
 
 type
   TClientStatus = (csDisconnected, csConnected, csOnError, csFree);
@@ -75,6 +75,12 @@ type
     VirtualImageList: TVirtualImageList;
     PopupMenu: TPopupMenu;
     RemoveClient1: TMenuItem;
+    about1: TMenuItem;
+    Debug1: TMenuItem;
+    hreads1: TMenuItem;
+    N2: TMenuItem;
+    Reload1: TMenuItem;
+    NotificationCenter: TNotificationCenter;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -90,8 +96,17 @@ type
     procedure RemoveClient1Click(Sender: TObject);
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure about1Click(Sender: TObject);
+    procedure hreads1Click(Sender: TObject);
+    procedure Reload1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
+    FNotifications : TList<TGUID>;
+
     {@M}
+    procedure AddClient(const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+
     procedure OnConnectedToServer(Sender : TOptixSessionHandlerThread);
     procedure OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
     procedure OnSessionHandlerDestroyed(Sender : TOptixSessionHandlerThread);
@@ -100,6 +115,8 @@ type
     procedure UpdateNodeStatus(const pNode : PVirtualNode; const ANewStatus : TClientStatus; const AExtraDescription : String = ''); overload;
     procedure UpdateNodeStatus(const AHandler : TOptixSessionHandlerThread; const ANewStatus : TClientStatus; const AExtraDescription : String = ''); overload;
     function GetNodeFromHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
+
+    function DisplayNotification(const ATitle, ABody : String) : TGUID;
   public
     { Public declarations }
   end;
@@ -109,13 +126,30 @@ var
 
 implementation
 
-- Ajouter about
-- Ajouter popupmenu -> reload (si free)
-- Ajouter à partir du code du server, le debug > Threads. adapter les constantes pour les images.
-
-uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants;
+uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants, uFormAbout, uFormDebugThreads;
 
 {$R *.dfm}
+
+function TFormMain.DisplayNotification(const ATitle, ABody : String) : TGUID;
+begin
+  var ANotification := NotificationCenter.CreateNotification();
+  try
+    var ANotificationId := TGUID.NewGuid();
+
+    ANotification.Name      := ANotificationId.ToString();
+    ANotification.Title     := ATitle;
+    ANotification.AlertBody := ABody;
+
+    NotificationCenter.PresentNotification(ANotification);
+
+    FNotifications.Add(ANotificationId);
+
+    ///
+    result := ANotificationId;
+  finally
+    FreeAndNil(ANotification);
+  end;
+end;
 
 function TFormMain.GetNodeFromHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
 begin
@@ -134,6 +168,11 @@ begin
       break
     end;
   end;
+end;
+
+procedure TFormMain.hreads1Click(Sender: TObject);
+begin
+  FormDebugThreads.Show();
 end;
 
 procedure TFormMain.UpdateNodeStatus(const pNode : PVirtualNode; const ANewStatus : TClientStatus; const AExtraDescription : String = '');
@@ -163,6 +202,19 @@ end;
 procedure TFormMain.OnConnectedToServer(Sender : TOptixSessionHandlerThread);
 begin
   UpdateNodeStatus(Sender, csConnected);
+  ///
+
+  FNotifications.Add(DisplayNotification(
+    'Connected',
+    Format(
+      'A client is connected to a remote server (%s:%d). If you were not aware of this connection or did not initiate ' +
+      'it, be aware that someone might have full control of your computer. You should immediately investigate for any ' +
+      'unexpected running processes.',
+       [
+          Sender.RemoteAddress,
+          Sender.RemotePort
+       ]
+    )));
 end;
 
 procedure TFormMain.OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
@@ -180,9 +232,48 @@ begin
   UpdateNodeStatus(TOptixSessionHandlerThread(Sender), csOnError, AErrorMessage);
 end;
 
+procedure TFormMain.about1Click(Sender: TObject);
+begin
+  FormAbout.ShowModal();
+end;
+
 procedure TFormMain.Close1Click(Sender: TObject);
 begin
   Close();
+end;
+
+procedure TFormMain.AddClient(const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+begin
+  VST.beginUpdate();
+  try
+    var pNode := PVirtualNode(nil);
+
+    if pExistingNode = nil then
+      pNode := VST.AddChild(nil)
+    else
+      pNode := pExistingNode;
+
+    var pData := PTreeData(pNode.GetData);
+
+    pData^.Status := csDisconnected;
+    pData^.ExtraDescription := '';
+
+    pData^.ServerAddress := AServerAddress;
+    pData^.ServerPort    := AServerPort;
+
+    pData^.Handler := TOptixSessionHandlerThread.Create(pData^.ServerAddress, pData^.ServerPort);
+    pData^.Handler.Retry := True;
+    pData^.Handler.RetryDelay := 1000;
+
+    pData^.Handler.OnConnectedToServer         := OnConnectedToServer;
+    pData^.Handler.OnDisconnectedFromServer    := OnDisconnectedFromServer;
+    pData^.Handler.OnSessionHandlerDestroyed   := OnSessionHandlerDestroyed;
+    pData^.Handler.OnNetworkException          := OnNetworkException;
+
+    pData^.Handler.Start();
+  finally
+    VST.EndUpdate();
+  end;
 end;
 
 procedure TFormMain.ConnecttoServer1Click(Sender: TObject);
@@ -194,30 +285,7 @@ begin
       Exit();
     ///
 
-    VST.beginUpdate();
-    try
-      var pNode := VST.AddChild(nil);
-      var pData := PTreeData(pNode.GetData);
-
-      pData^.Status := csDisconnected;
-      pData^.ExtraDescription := '';
-
-      pData^.ServerAddress := AForm.EditServerAddress.Text;
-      pData^.ServerPort    := AForm.SpinPort.Value;
-
-      pData^.Handler := TOptixSessionHandlerThread.Create(pData^.ServerAddress, pData^.ServerPort);
-      pData^.Handler.Retry := True;
-      pData^.Handler.RetryDelay := 1000;
-
-      pData^.Handler.OnConnectedToServer         := OnConnectedToServer;
-      pData^.Handler.OnDisconnectedFromServer    := OnDisconnectedFromServer;
-      pData^.Handler.OnSessionHandlerDestroyed   := OnSessionHandlerDestroyed;
-      pData^.Handler.OnNetworkException          := OnNetworkException;
-
-      pData^.Handler.Start();
-    finally
-      VST.EndUpdate();
-    end;
+    AddClient(AForm.EditServerAddress.Text, AForm.SpinPort.Value);
   finally
     FreeAndNil(AForm);
   end;
@@ -225,13 +293,50 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  VST.Clear();
+
+  NotificationCenter.CancelAll();
+
   ///
   TOptixThread.SignalHiveAndFlush();
+end;
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  FNotifications := TList<TGUID>.Create(); // Maybe, I will need that l8r
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+  if Assigned(FNotifications) then
+    FreeAndNil(FNotifications);
 end;
 
 procedure TFormMain.PopupMenuPopup(Sender: TObject);
 begin
   RemoveClient1.Visible :=  VST.FocusedNode <> nil;
+  Reload1.Visible := False;
+
+  var pNode := VST.FocusedNode;
+  var pData := PTreeData(nil);
+
+  if Assigned(pNode) then begin
+    pData := pNode.GetData;
+
+    if pData^.Status = csFree then
+      Reload1.Visible := True;
+  end;
+end;
+
+procedure TFormMain.Reload1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+
+  if pData^.Status = csFree then
+    AddClient(pData^.ServerAddress, pData^.ServerPort, VST.FocusedNode);
 end;
 
 procedure TFormMain.RemoveClient1Click(Sender: TObject);

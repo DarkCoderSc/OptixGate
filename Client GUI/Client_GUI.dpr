@@ -85,9 +85,12 @@ uses
   Optix.VCL.Helper in '..\Server\Units\Optix.VCL.Helper.pas',
   Optix.Helper in '..\Server\Units\Optix.Helper.pas',
   uFormConnectToServer in 'Units\Forms\uFormConnectToServer.pas' {FormConnectToServer},
+  uFormAbout in '..\Server\Units\Forms\uFormAbout.pas' {FormAbout},
+  uFormDebugThreads in '..\Server\Units\Forms\uFormDebugThreads.pas' {FormDebugThreads},
   Optix.Constants in 'Units\Optix.Constants.pas';
 
 {$R *.res}
+{$R ..\Server\data.res}
 
 begin
   IsMultiThread := True;
@@ -112,6 +115,8 @@ begin
     Application.MainFormOnTaskbar := True;
     TStyleManager.TrySetStyle('Glossy');
     Application.CreateForm(TFormMain, FormMain);
+    Application.CreateForm(TFormAbout, FormAbout);
+    Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   // Application.CreateForm(TFormConnectToServer, FormConnectToServer);
     Application.Run;
   finally

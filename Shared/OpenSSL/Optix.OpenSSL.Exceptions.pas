@@ -41,33 +41,67 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Constants;
+unit Optix.OpenSSL.Exceptions;
 
 interface
 
-uses Winapi.Windows, VCL.Graphics;
+uses System.SysUtils, Optix.Sockets.Exceptions;
 
-const
-  IMAGE_CLIENT_DISCONNECTED = 1;
-  IMAGE_CLIENT_CONNECTED    = 2;
-  IMAGE_CLIENT_ERROR        = 3;
-  IMAGE_CLIENT_FREED        = 4;
-  IMAGE_OPTIX_FACE          = 5;
-  IMAGE_THREAD_RUNNING      = 6;
-  IMAGE_THREAD_STOP_WAIT    = 7;
-  IMAGE_THREAD_STOPPED      = 8;
-  IMAGE_THREAD_HANDLER      = 0;
-  IMAGE_THREAD_TRANSFER     = 9;
-  IMAGE_THREAD_GENERIC      = 10;
+type
+  EOpenSSLSocketException = class(ESocketException);
 
-var
-  COLOR_LIST_LIMY : TColor;
-  COLOR_LIST_GRAY : TColor;
+  EOpenSSLBaseException = class(Exception)
+  private
+    FErrorCode   : Integer;
+    FErrorString : AnsiString;
+  public
+    {@C}
+    constructor Create(); overload;
+    constructor Create(pSSL : Pointer); overload;
+
+    {@G}
+    property ErrorCode   : Integer    read FErrorCode;
+    property ErrorString : AnsiString read FErrorString;
+  end;
+
+  EOpenSSLLibraryException = class(Exception);
 
 implementation
 
-initialization
-  COLOR_LIST_LIMY := RGB(40, 70, 40);
-  COLOR_LIST_GRAY := RGB(40, 40, 40);
+uses Winapi.Windows, Winapi.Winsock2, Optix.OpenSSL.Headers;
+
+(* EOpenSSLBaseException *)
+
+{ EOpenSSLBaseException.Create }
+constructor EOpenSSLBaseException.Create();
+var AFormatedMessage : String;
+begin
+  FErrorCode := ERR_get_error();
+
+  SetLength(FErrorString, 256);
+
+  ERR_error_string_n(FErrorCode, PAnsiChar(FErrorString), 256);
+
+  AFormatedMessage := Format('OpenSSL Error: last_error=[%d], error_str=[%s].', [
+      FErrorCode,
+      FErrorString
+  ]);
+
+  ///
+  inherited Create(AFormatedMessage);
+end;
+
+{ EOpenSSLBaseException.Create }
+constructor EOpenSSLBaseException.Create(pSSL : Pointer);
+begin
+  SSL_get_error(pSSL, FErrorCode);
+
+  FErrorString := 'Err';
+
+  var AFormatedMessage := Format('OpenSSL SSL Error: last_error=[%d], error_str=[%s].', [FErrorCode, FErrorString]);
+
+  ///
+  inherited Create(AFormatedMessage);
+end;
 
 end.

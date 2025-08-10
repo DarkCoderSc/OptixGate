@@ -41,33 +41,127 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Constants;
+unit Optix.OpenSSL.Context;
 
 interface
 
-uses Winapi.Windows, VCL.Graphics;
+uses System.Classes, System.SyncObjs, Optix.OpenSSL.Headers;
 
-const
-  IMAGE_CLIENT_DISCONNECTED = 1;
-  IMAGE_CLIENT_CONNECTED    = 2;
-  IMAGE_CLIENT_ERROR        = 3;
-  IMAGE_CLIENT_FREED        = 4;
-  IMAGE_OPTIX_FACE          = 5;
-  IMAGE_THREAD_RUNNING      = 6;
-  IMAGE_THREAD_STOP_WAIT    = 7;
-  IMAGE_THREAD_STOPPED      = 8;
-  IMAGE_THREAD_HANDLER      = 0;
-  IMAGE_THREAD_TRANSFER     = 9;
-  IMAGE_THREAD_GENERIC      = 10;
+type
+  TOpenSSLMethod = (
+    sslClient,
+    sslServer
+  );
 
-var
-  COLOR_LIST_LIMY : TColor;
-  COLOR_LIST_GRAY : TColor;
+  TOptixOpenSSLContext = class
+  private
+    FCertificateFile : String;
+    FContext         : Pointer;
+
+    {@M}
+    procedure CreateContext(const AOpenSSLMethod : TOpenSSLMethod);
+    procedure LoadCertificate(const ACertificateFile : String);
+  public
+    {@C}
+    constructor Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String);
+    destructor Destroy(); override;
+
+    {@G}
+    property Context : Pointer read FContext;
+  end;
+
+  var OPENSSL_VERIFY_CALLBACK_LOCK : TCriticalSection;
 
 implementation
 
+uses System.SysUtils, Optix.OpenSSL.Exceptions;
+
+(* Local *)
+
+{ _.OpenSSLVerifyCallback }
+function OpenSSLVerifyCallback(AOk: Integer; AContext: Pointer): Integer; cdecl;
+begin
+  OPENSSL_VERIFY_CALLBACK_LOCK.Acquire();
+  try
+    result := 1; // I will handle validation myself
+  finally
+    OPENSSL_VERIFY_CALLBACK_LOCK.Leave();
+  end;
+end;
+
+(* TOptixOpenSSLContext *)
+
+{ TOptixOpenSSLContext.CreateContext }
+procedure TOptixOpenSSLContext.CreateContext(const AOpenSSLMethod : TOpenSSLMethod);
+begin
+  var pOpenSSLMethod := nil;
+  case AOpenSSLMethod of
+    sslClient : pOpenSSLMethod := TLS_client_method;
+    sslServer : pOpenSSLMethod := TLS_server_method;
+  end;
+
+  FContext := SSL_CTX_new(pOpenSSLMethod);
+  if not Assigned(FContext) then
+    raise EOpenSSLBaseException.Create();
+
+  // You have no choice man!
+  var ACipherSuite := 'TLS_AES_256_GCM_SHA384';
+  if SSL_CTX_set_ciphersuites(FContext, PAnsiChar(ACipherSuite)) <> 1 then
+    raise EOpenSSLLibraryException.Create(Format('Missing cipher suite: "%s"', [ACipherSuite]));
+
+  SSL_CTX_set_verify(FContext, SSL_VERIFY_PEER or SSL_VERIFY_FAIL_IF_NO_PEER_CERT, @OpenSSLVerifyCallback);
+end;
+
+{ TOptixOpenSSLContext.LoadCertificate }
+procedure TOptixOpenSSLContext.LoadCertificate(const ACertificateFile : String);
+begin
+  if not Assigned(FContext) then
+    Exit();
+  ///
+
+  // Load Public Key
+  if SSL_CTX_use_certificate_file(FContext, PAnsiChar(ACertificateFile), SSL_FILETYPE_PEM) <> 1 then
+    raise EOpenSSLBaseException.Create();
+
+  // Load Private Key
+  if SSL_CTX_use_PrivateKey_file(FContext, PAnsiChar(ACertificateFile), SSL_FILETYPE_PEM) <> 1 then
+    raise EOpenSSLBaseException.Create();
+
+  // Check if key pair match
+  if SSL_CTX_check_private_key(FContext) <> 1 then
+    raise EOpenSSLBaseException.Create();
+end;
+
+{ TOptixOpenSSLContext.Create }
+constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String);
+begin
+  inherited Create();
+  ///
+
+  FContext := nil;
+
+  CreateContext(AOpenSSLMethod);
+  LoadCertificate(ACertificateFile);
+end;
+
+{ TOptixOpenSSLContext.Destroy }
+destructor TOptixOpenSSLContext.Destroy();
+begin
+  if Assigned(FContext) then begin
+    SSL_CTX_free(FContext);
+
+    FContext := nil;
+  end;
+
+  ///
+  inherited Destroy();
+end;
+
 initialization
-  COLOR_LIST_LIMY := RGB(40, 70, 40);
-  COLOR_LIST_GRAY := RGB(40, 40, 40);
+  OPENSSL_VERIFY_CALLBACK_LOCK := TCriticalSection.Create();
+
+finalization
+  if Assigned(OPENSSL_VERIFY_CALLBACK_LOCK) then
+    FreeAndNil(OPENSSL_VERIFY_CALLBACK_LOCK);
 
 end.

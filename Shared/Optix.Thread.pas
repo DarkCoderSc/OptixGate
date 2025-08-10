@@ -72,6 +72,7 @@ type
     FCreatedDate     : TDateTime;
     FOnThreadExecute : TNotifyEvent;
     FOnThreadEnd     : TNotifyEvent;
+    FStarted         : Boolean;
   protected
     {@M}
     procedure Execute(); override;
@@ -101,8 +102,8 @@ type
     property CreatedDate : TDateTime read FCreatedDate;
   end;
 
-  var OPTIX_THREAD_HIVE : TThreadList<TOptixThread>;
-      OPTIX_WATCHDOG    : TOptixThreadWatchDogThread;
+  var OPTIX_THREAD_HIVE : TThreadList<TOptixThread>  = nil;
+      OPTIX_WATCHDOG    : TOptixThreadWatchDogThread = nil;
 
   function ThreadPriorityToString(const AThreadPriority : TThreadPriority) : String;
 
@@ -233,20 +234,20 @@ begin
     for var AThread in AList do begin
       if not Assigned(AThread) then
         continue;
-      ///
-
-      TerminateWait(AThread);
 
       ///
+      AList.Remove(AThread);
       AThreadsToFlush.Add(AThread);
     end;
   finally
     OPTIX_THREAD_HIVE.UnlockList();
-
-    // Free Threads (:memory)
-    if Assigned(AThreadsToFlush) then
-      FreeAndNil(AThreadsToFlush);
   end;
+
+  for var AThread in AThreadsToFlush do
+    TerminateWait(AThread);
+
+  // Free Threads (:memory)
+  FreeAndNil(AThreadsToFlush);
 end;
 
 { TOptixThread.FlushDeadThreads }
@@ -260,14 +261,14 @@ begin
   var AList := OPTIX_THREAD_HIVE.LockList();
   try
     for var AThread in AList do
-      if Assigned(AThread) and (not AThread.Running) then
+      if Assigned(AThread) and ((not AThread.Running) and (AThread.Started)) then
         AThreadsToFlush.Add(AThread);
   finally
-    OPTIX_THREAD_HIVE.UnlockList();
-
     // Free Threads (:memory)
     if Assigned(AThreadsToFlush) then
       FreeAndNil(AThreadsToFlush);
+
+    OPTIX_THREAD_HIVE.UnlockList();
   end;
 end;
 
@@ -327,6 +328,7 @@ end;
 { TOptixThread.Execute }
 procedure TOptixThread.Execute();
 begin
+  FStarted := True;
   try
     if Assigned(FOnThreadExecute) then
       Synchronize(procedure begin
@@ -351,6 +353,8 @@ constructor TOptixThread.Create();
 begin
   inherited Create(True);
   ///
+
+  FStarted := False;
 
   if Assigned(OPTIX_THREAD_HIVE) then
     OPTIX_THREAD_HIVE.Add(self);

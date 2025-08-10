@@ -21,11 +21,10 @@ object FormAbout: TFormAbout
     Top = 8
     Width = 80
     Height = 80
-    ImageCollection = FormMain.ImageCollection
+    ImageCollection = FormMain.ImageCollectionDark
     ImageWidth = 0
     ImageHeight = 0
-    ImageIndex = 4
-    ImageName = 'optix'
+    ImageIndex = -1
   end
   object LabelName: TLabel
     Left = 152

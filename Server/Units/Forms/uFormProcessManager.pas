@@ -41,12 +41,6 @@
 {                                                                              }
 {******************************************************************************}
 
-{
-  TODO:
-    - Dump Process to File
-    - Column Sorting
-}
-
 unit uFormProcessManager;
 
 interface
@@ -106,6 +100,8 @@ type
     procedure KillProcess1Click(Sender: TObject);
     procedure Clear1Click(Sender: TObject);
     procedure DumpProcess1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
@@ -135,7 +131,7 @@ var
 implementation
 
 uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants,
-     Optix.VCL.Helper, Optix.Protocol.Packet;
+     Optix.VCL.Helper, Optix.Protocol.Packet, System.Math, System.DateUtils;
 
 {$R *.dfm}
 
@@ -378,6 +374,44 @@ procedure TFormProcessManager.VSTChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormProcessManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+  Column: TColumnIndex; var Result: Integer);
+
+  function GetElevationOrder(const AValue: TElevatedStatus): Integer;
+  begin
+    case AValue of
+      esElevated : result := 0;
+      esLimited  : result := 1;
+      else
+        result := 2;
+    end;
+  end;
+
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+
+  if not Assigned(pData1^.ProcessInformation) or not Assigned(pData2^.ProcessInformation) then
+    Exit();
+
+  case Column of
+    0  : Result := CompareText(pData1^.ProcessInformation.Name, pData2^.ProcessInformation.Name);
+    1  : Result := CompareValue(pData1^.ProcessInformation.id, pData2^.ProcessInformation.Id);
+    2  : Result := CompareValue(pData1^.ProcessInformation.ParentId, pData2^.ProcessInformation.ParentId);
+    3  : Result := CompareValue(pData1^.ProcessInformation.ThreadCount, pData2^.ProcessInformation.ThreadCount);
+    4  : Result := CompareText(pData1^.ProcessInformation.Username, pData2^.ProcessInformation.Username);
+    5  : Result := CompareText(pData1^.ProcessInformation.Domain, pData2^.ProcessInformation.Domain);
+    6  : Result := CompareValue(pData1^.ProcessInformation.SessionId, pData2^.ProcessInformation.SessionId);
+    7  : Result := CompareValue(
+                                  GetElevationOrder(pData1^.ProcessInformation.Elevated),
+                                  GetElevationOrder(pData2^.ProcessInformation.Elevated)
+                   );
+    8  : Result := CompareDate(pData1^.ProcessInformation.CreatedTime, pData2^.ProcessInformation.CreatedTime);
+    9  : Result := CompareText(pData1^.ProcessInformation.CommandLine, pData2^.ProcessInformation.CommandLine);
+    10 : Result := CompareText(pData1^.ProcessInformation.ImagePath, pData2^.ProcessInformation.ImagePath);
+  end;
 end;
 
 procedure TFormProcessManager.VSTFocusChanged(Sender: TBaseVirtualTree;

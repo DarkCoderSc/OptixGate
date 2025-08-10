@@ -45,6 +45,8 @@ unit uFormDebugThreads;
 
 interface
 
+{$I Optix.inc}
+
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
@@ -97,8 +99,8 @@ var
 
 implementation
 
-uses Optix.Thread, Optix.Constants, Optix.Helper, System.StrUtils, uFormMain, Optix.Protocol.Server,
-     Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer;
+uses Optix.Thread, Optix.Constants, Optix.Helper, System.StrUtils, uFormMain, Optix.Protocol.SessionHandler,
+     Optix.Protocol.Worker.FileTransfer {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
 
 {$R *.dfm}
 
@@ -265,11 +267,20 @@ begin
     end;
 
     1 : begin
+      {$IFDEF SERVER}
       if pData^.ClassName = TOptixServerThread.ClassName then
         ImageIndex := IMAGE_THREAD_SERVER
-      else if pData^.ClassName = TOptixSessionHandlerThread.ClassName then
+      else
+      {$ENDIF}
+      if pData^.ClassName = TOptixSessionHandlerThread.ClassName then
         ImageIndex := IMAGE_THREAD_HANDLER
-      else if pData^.ClassName = TOptixFileTransferWorker.ClassName then
+      else if
+      {$IFDEF SERVER}
+        pData^.ClassName = TOptixFileTransferWorker.ClassName
+      {$ELSE}
+        pData^.ClassName = TOptixFileTransferOrchestratorThread.ClassName
+      {$ENDIF}
+        then
         ImageIndex := IMAGE_THREAD_TRANSFER
       else
         ImageIndex := IMAGE_THREAD_GENERIC;
