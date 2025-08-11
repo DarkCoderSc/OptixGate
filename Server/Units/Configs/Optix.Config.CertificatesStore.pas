@@ -41,93 +41,96 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormListen;
+unit Optix.Config.CertificatesStore;
 
 interface
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+uses XSuperObject, Optix.Config.Helper, Optix.OpenSSL.Helper;
 
 type
-  TFormListen = class(TForm)
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
-    PanelClient: TPanel;
-    Label2: TLabel;
-    Label1: TLabel;
-    SpinPort: TSpinEdit;
-    EditServerBindAddress: TEdit;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
-    procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure FormResize(Sender: TObject);
+  // TODO: Create a custom iterator for..in
+  TOptixConfigCertificatesStore = class(TOptixConfigBase)
   private
-    FCanceled : Boolean;
-
     {@M}
-    procedure DoResize();
-  public
-    {@G}
-    property Canceled : Boolean read FCanceled;
-  end;
+    function GetCount() : Integer;
 
-var
-  FormListen: TFormListen;
+    function GetItem(AIndex: Integer): TX509Certificate;
+    procedure SetItem(AIndex: Integer; const AValue: TX509Certificate);
+  public
+    {@M}
+    procedure Add(const ACertificate : TX509Certificate);
+
+    {@G}
+    property Count : Integer read GetCount;
+    property Items[AIndex : Integer]: TX509Certificate read GetItem write SetItem; default;
+  end;
 
 implementation
 
-uses uFormMain;
+uses Winapi.Windows;
 
-{$R *.dfm}
-
-procedure TFormListen.DoResize();
+{ TOptixConfigCertificatesStore.GetCount }
+function TOptixConfigCertificatesStore.GetCount() : Integer;
 begin
-  ButtonConnect.Top := (PanelBottom.Height div 2) - (ButtonConnect.Height div 2);
-  ButtonCancel.Top  := ButtonConnect.Top;
+  result := 0;
+  ///
 
-  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
-  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
+ if not FJsonObject.Contains('Items') then
+  Exit();
+
+  result := FJsonObject.A['Items'].Length;
 end;
 
-procedure TFormListen.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+{ TOptixConfigCertificatesStore.GetItem }
+function TOptixConfigCertificatesStore.GetItem(AIndex: Integer): TX509Certificate;
 begin
-  case Key of
-    13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+  ZeroMemory(@result, SizeOf(TX509Certificate));
+  if not FJsonObject.Contains('Items') then
+    Exit();
+  ///
+
+  var AJsonArray := FJsonObject.A['Items'];
+
+  if (AIndex < 0) or (AIndex > AJsonArray.Length-1) then
+    Exit();
+
+  var ANode := AJsonArray.O[AIndex];
+  if not ANode.Contains('pubKey') or not ANode.Contains('privKey') then
+    Exit();
+  try
+    TOptixOpenSSLHelper.LoadCertificate(ANode.S['pubKey'], ANode.S['privKey'], result);
+  except
   end;
 end;
 
-procedure TFormListen.FormResize(Sender: TObject);
+{ TOptixConfigCertificatesStore.Add }
+procedure TOptixConfigCertificatesStore.Add(const ACertificate : TX509Certificate);
 begin
-  DoResize();
+  SetItem(-1, ACertificate);
 end;
 
-procedure TFormListen.FormCreate(Sender: TObject);
+{ TOptixConfigCertificatesStore.SetItem }
+procedure TOptixConfigCertificatesStore.SetItem(AIndex: Integer; const AValue: TX509Certificate);
 begin
-  FCanceled := False;
-end;
+  var AJsonArray  : ISuperArray;
 
-procedure TFormListen.FormShow(Sender: TObject);
-begin
-  DoResize();
-end;
+  if FJsonObject.Contains('Items') then
+    AJsonArray := FJsonObject.A['Items']
+  else
+    AJsonArray := SA();
 
-procedure TFormListen.ButtonCancelClick(Sender: TObject);
-begin
-  FCanceled := True;
+  var ANode := SO();
 
-  Close();
-end;
+  ANode.S['pubKey']  := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPublic);
+  ANode.S['privKey'] := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPrivate);
 
-procedure TFormListen.ButtonConnectClick(Sender: TObject);
-begin
-  Close();
+  if AIndex < 0 then
+    AJsonArray.Add(ANode)
+  else if (AIndex >= 0) and (AIndex <= AJsonArray.Length-1) then
+    AJsonArray.O[AIndex] := ANode;
+
+  ///
+  FJsonObject.A['Items'] := AJsonArray;
 end;
 
 end.

@@ -113,6 +113,9 @@ const SSL_FILETYPE_PEM                = 1;
       SSL_VERIFY_FAIL_IF_NO_PEER_CERT = $02;
       RSA_F4                          = $10001;
       MBSTRING_ASC                    = $1000 or 1;
+      NID_commonName                  = 13;
+      NID_countryName                 = 14;
+      NID_organizationName            = 17;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -160,10 +163,16 @@ function X509_gmtime_adj(s: Pointer; adj: clong): Pointer cdecl; external LIB_CR
 function X509_set_pubkey(x: Pointer; pkey: Pointer): Integer cdecl; external LIB_CRYPTO_DLL;
 function X509_get_subject_name(a: Pointer): Pointer cdecl; external LIB_CRYPTO_DLL;
 function X509_NAME_add_entry_by_txt(name: Pointer; const field: PAnsiChar; _type: Integer; const bytes: PAnsiChar; len, loc, _set: Integer): Integer cdecl; external LIB_CRYPTO_DLL;
+function X509_NAME_get_text_by_NID(name: Pointer; nid: Integer; buf: PAnsiChar; len: Integer): Integer; cdecl; external LIB_CRYPTO_DLL;
+function X509_NAME_get_index_by_NID(name: Pointer; const nid : Integer; lastpos : Integer) : Integer; cdecl; external LIB_CRYPTO_DLL;
 function X509_set_issuer_name(x: Pointer; name: Pointer): Integer cdecl; external LIB_CRYPTO_DLL;
 function X509_sign(x: Pointer; pkey: Pointer; const md: Pointer): Integer cdecl; external LIB_CRYPTO_DLL;
 procedure X509_free(x: Pointer) cdecl; external LIB_CRYPTO_DLL;
+function BIO_new_mem_buf(buf: Pointer; len: Integer): Pointer; cdecl; external LIB_CRYPTO_DLL;
 function BIO_new_file(const filename: PAnsiChar; const mode: PAnsiChar): Pointer cdecl; external LIB_CRYPTO_DLL;
+function BIO_new(bio_type: Pointer): Pointer; cdecl; external LIB_CRYPTO_DLL;
+function BIO_s_mem(): Pointer; cdecl; external LIB_CRYPTO_DLL;
+function BIO_ctrl(bp: Pointer; cmd: LongInt; larg: LongInt; parg: Pointer): LongInt; cdecl; external LIB_CRYPTO_DLL;
 function BIO_free(pBIO: Pointer): Integer cdecl; external LIB_CRYPTO_DLL;
 function PEM_write_bio_X509 (pBIO: Pointer; pX509: Pointer): Integer cdecl; external LIB_CRYPTO_DLL;
 function PEM_write_bio_PrivateKey(pBIO : Pointer; pKey : Pointer; const enc : Pointer; kstr :PAnsiChar; klen : Integer; cb : Pointer; u : Pointer) : Integer cdecl; external LIB_CRYPTO_DLL;
@@ -173,6 +182,18 @@ function X509_digest(const data: PX509; const _type: Pointer; md: PByte; var len
 
 //----------------------------------------------------------------------------------------------------------------------
 
+function BIO_get_mem_data(b: Pointer; var pp: PAnsiChar): LongInt;
+
 implementation
+
+(* MACROS *)
+
+{ MACRO.BIO_get_mem_data }
+function BIO_get_mem_data(b: Pointer; var pp: PAnsiChar): LongInt;
+begin
+  const BIO_CTRL_INFO = 3;
+
+  result := BIO_ctrl(b, BIO_CTRL_INFO, 0, @pp);
+end;
 
 end.

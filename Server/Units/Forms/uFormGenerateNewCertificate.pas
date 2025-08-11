@@ -41,7 +41,7 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormListen;
+unit uFormGenerateNewCertificate;
 
 interface
 
@@ -50,22 +50,24 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
 
 type
-  TFormListen = class(TForm)
+  TFormGenerateNewCertificate = class(TForm)
     PanelBottom: TPanel;
-    ButtonConnect: TButton;
+    ButtonGenerate: TButton;
     ButtonCancel: TButton;
     PanelClient: TPanel;
     Label2: TLabel;
-    Label1: TLabel;
-    SpinPort: TSpinEdit;
-    EditServerBindAddress: TEdit;
+    EditCN: TEdit;
     PanelLeft: TPanel;
     Image: TVirtualImage;
-    procedure ButtonConnectClick(Sender: TObject);
+    EditC: TEdit;
+    Label1: TLabel;
+    Label3: TLabel;
+    EditO: TEdit;
+    procedure ButtonGenerateClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
   private
     FCanceled : Boolean;
@@ -78,56 +80,58 @@ type
   end;
 
 var
-  FormListen: TFormListen;
+  FormGenerateNewCertificate: TFormGenerateNewCertificate;
 
 implementation
 
-uses uFormMain;
+uses uFormMain, Optix.Constants;
 
 {$R *.dfm}
 
-procedure TFormListen.DoResize();
-begin
-  ButtonConnect.Top := (PanelBottom.Height div 2) - (ButtonConnect.Height div 2);
-  ButtonCancel.Top  := ButtonConnect.Top;
-
-  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
-  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
-end;
-
-procedure TFormListen.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  case Key of
-    13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
-  end;
-end;
-
-procedure TFormListen.FormResize(Sender: TObject);
-begin
-  DoResize();
-end;
-
-procedure TFormListen.FormCreate(Sender: TObject);
-begin
-  FCanceled := False;
-end;
-
-procedure TFormListen.FormShow(Sender: TObject);
-begin
-  DoResize();
-end;
-
-procedure TFormListen.ButtonCancelClick(Sender: TObject);
+procedure TFormGenerateNewCertificate.ButtonCancelClick(Sender: TObject);
 begin
   FCanceled := True;
 
   Close();
 end;
 
-procedure TFormListen.ButtonConnectClick(Sender: TObject);
+procedure TFormGenerateNewCertificate.ButtonGenerateClick(Sender: TObject);
 begin
   Close();
+end;
+
+procedure TFormGenerateNewCertificate.DoResize();
+begin
+  ButtonGenerate.Top := (PanelBottom.Height div 2) - (ButtonGenerate.Height div 2);
+  ButtonCancel.Top  := ButtonGenerate.Top;
+
+  ButtonGenerate.Left := PanelBottom.Width - ButtonGenerate.Width - 8;
+  ButtonCancel.Left  := ButtonGenerate.Left - ButtonGenerate.Width - 8;
+end;
+
+procedure TFormGenerateNewCertificate.FormCreate(Sender: TObject);
+begin
+  FCanceled := False;
+
+  Image.ImageIndex := IMAGE_CERTIFICATE;
+end;
+
+procedure TFormGenerateNewCertificate.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    13 : ButtonGenerateClick(ButtonGenerate);
+    27 : ButtonCancelClick(ButtonCancel);
+  end;
+end;
+
+procedure TFormGenerateNewCertificate.FormResize(Sender: TObject);
+begin
+  DoResize();
+end;
+
+procedure TFormGenerateNewCertificate.FormShow(Sender: TObject);
+begin
+  DoResize();
 end;
 
 end.

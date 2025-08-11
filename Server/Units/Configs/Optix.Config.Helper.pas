@@ -41,93 +41,159 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormListen;
+unit Optix.Config.Helper;
 
 interface
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+{$I Optix.inc}
+
+uses System.Classes, Winapi.Windows, System.Win.Registry, XSuperObject, Optix.Interfaces;
 
 type
-  TFormListen = class(TForm)
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
-    PanelClient: TPanel;
-    Label2: TLabel;
-    Label1: TLabel;
-    SpinPort: TSpinEdit;
-    EditServerBindAddress: TEdit;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
-    procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure FormResize(Sender: TObject);
-  private
-    FCanceled : Boolean;
-
-    {@M}
-    procedure DoResize();
+  TOptixConfigBase = class
+  protected
+    FJsonObject : ISuperObject;
   public
-    {@G}
-    property Canceled : Boolean read FCanceled;
+    {@M}
+    procedure Clear();
+    function ToString() : String;
+
+    {@C}
+    constructor Create(const AJsonString : String = '');
   end;
 
-var
-  FormListen: TFormListen;
+  TOptixConfigHelper = class
+  private
+    FRegistry : TRegistry;
+    FKeyName  : String;
+
+    {@M}
+    procedure Open();
+  public
+    {@C}
+    constructor Create(const AKeyName : String; const AHive : HKEY);
+    destructor Destroy(); override;
+
+    {@}
+    procedure Write(const AName : String; const AConfig : TOptixConfigBase);
+    function Read(const AName : String) : TOptixConfigBase;
+  end;
+
+  {$IFDEF SERVER or CLIENT_GUI}
+  var CONFIG_HELPER : TOptixConfigHelper;
+  {$ENDIF}
 
 implementation
 
-uses uFormMain;
+uses System.SysUtils;
 
-{$R *.dfm}
+(* TOptixConfigBase *)
 
-procedure TFormListen.DoResize();
+{ TOptixConfigBase.Create }
+constructor TOptixConfigBase.Create(const AJsonString : String);
 begin
-  ButtonConnect.Top := (PanelBottom.Height div 2) - (ButtonConnect.Height div 2);
-  ButtonCancel.Top  := ButtonConnect.Top;
+  inherited Create();
+  ///
 
-  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
-  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
-end;
-
-procedure TFormListen.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  case Key of
-    13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+  try
+    FJsonObject := SO(AJsonString);
+  except
+    Clear();
   end;
 end;
 
-procedure TFormListen.FormResize(Sender: TObject);
+{ TOptixConfigBase.Clear }
+procedure TOptixConfigBase.Clear();
 begin
-  DoResize();
+  FJsonObject := SO();
 end;
 
-procedure TFormListen.FormCreate(Sender: TObject);
+{ TOptixConfigBase.ToString }
+function TOptixConfigBase.ToString() : String;
 begin
-  FCanceled := False;
+  result := FJsonObject.AsJson();
 end;
 
-procedure TFormListen.FormShow(Sender: TObject);
+(* TOptixConfigHelper *)
+
+{ TOptixConfigHelper.Create }
+constructor TOptixConfigHelper.Create(const AKeyName : String; const AHive : HKEY);
 begin
-  DoResize();
+  inherited Create();
+  ///
+
+  FRegistry := TRegistry.Create(KEY_ALL_ACCESS);
+  FRegistry.RootKey := AHive;
+
+  FKeyName := AKeyName;
+
+  Open();
 end;
 
-procedure TFormListen.ButtonCancelClick(Sender: TObject);
+{ TOptixConfigHelper.Destroy }
+destructor TOptixConfigHelper.Destroy();
 begin
-  FCanceled := True;
+  if Assigned(FRegistry) then
+    FreeAndNil(FRegistry);
 
-  Close();
+  ///
+  inherited Destroy();
 end;
 
-procedure TFormListen.ButtonConnectClick(Sender: TObject);
+{ TOptixConfigHelper.Open }
+procedure TOptixConfigHelper.Open();
 begin
-  Close();
+  var AKeyPath := 'Software\' + FKeyName;
+  ///
+
+  if String.Compare(FRegistry.CurrentPath, AKeyPath, True) <> 0 then
+    FRegistry.OpenKey(AKeyPath, True);
 end;
+
+procedure TOptixConfigHelper.Write(const AName : String; const AConfig : TOptixConfigBase);
+begin
+  if not Assigned(AConfig) then
+    Exit();
+  ///
+
+  Open();
+
+  FRegistry.WriteString(AName, AConfig.ToString());
+end;
+
+function TOptixConfigHelper.Read(const AName : String) : TOptixConfigBase;
+begin
+  Open();
+  try
+    if FRegistry.ValueExists(AName) then
+      result := TOptixConfigBase.Create(FRegistry.ReadString(AName));
+  except
+    result := nil;
+  end;
+end;
+
+{$IFDEF SERVER or CLIENT_GUI}
+initialization
+  var AKeyName : String;
+  var AHive    : HKEY;
+
+  {$IFDEF SERVER}
+    AKeyName := 'OptixGate';
+    AHive    := HKEY_CURRENT_USER;
+    {$ELSEIF CLIENT_GUI}
+      AKeyName := 'OptixGate_ClientGUI';
+    {$IFDEF DEBUG}
+      AHive := HKEY_CURRENT_USER;
+    {$ELSE}
+      AHive := HKEY_LOCAL_MACHINE;
+    {$ENDIF}
+  {$ENDIF}
+
+  CONFIG_HELPER := TOptixConfigHelper.Create(AKeyName, AHive);
+
+finalization
+  if Assigned(CONFIG_HELPER) then
+    FreeAndNil(CONFIG_HELPER);
+{$ENDIF}
 
 end.

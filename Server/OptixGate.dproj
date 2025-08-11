@@ -4,7 +4,7 @@
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">OptixGate</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -229,6 +229,11 @@
         <DCCReference Include="Units\Forms\uFormCertificatesStore.pas">
             <Form>FormCertificatesStore</Form>
         </DCCReference>
+        <DCCReference Include="Units\Forms\uFormGenerateNewCertificate.pas">
+            <Form>FormGenerateNewCertificate</Form>
+        </DCCReference>
+        <DCCReference Include="Units\Configs\Optix.Config.CertificatesStore.pas"/>
+        <DCCReference Include="Units\Configs\Optix.Config.Helper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

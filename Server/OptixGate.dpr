@@ -54,7 +54,22 @@ uses
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
+  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas' {,
+  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
+  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
+  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
+  XSuperJSON in '..\Shared\XSuperJSON.pas',
+  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
+  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
+  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
+  Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
+  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
+  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
+  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
+  Optix.Helper in 'Units\Optix.Helper.pas',
+  Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
+  XSuperObject in '..\Shared\XSuperObject.pas',
+  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
@@ -99,7 +114,10 @@ uses
   uFormRemoteShell in 'Units\Forms\uFormRemoteShell.pas' {FormRemoteShell},
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
   uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
-  uFormCertificatesStore in 'Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore};
+  uFormCertificatesStore in 'Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore},
+  uFormGenerateNewCertificate in 'Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate},
+  Optix.Config.CertificatesStore in 'Units\Configs\Optix.Config.CertificatesStore.pas',
+  Optix.Config.Helper in 'Units\Configs\Optix.Config.Helper.pas';
 
 {$R *.res}
 {$R data.res}
@@ -116,6 +134,7 @@ begin
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormListen, FormListen);
   Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
+  // Application.CreateForm(TFormGenerateNewCertificate, FormGenerateNewCertificate);
   // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
   // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
   // Application.CreateForm(TFormTransfers, FormTransfers);

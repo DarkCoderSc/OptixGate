@@ -1,10 +1,10 @@
-object FormListen: TFormListen
+object FormGenerateNewCertificate: TFormGenerateNewCertificate
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Listen'
-  ClientHeight = 140
-  ClientWidth = 298
+  Caption = 'Generate New Certificate'
+  ClientHeight = 194
+  ClientWidth = 400
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,6 +12,10 @@ object FormListen: TFormListen
   Font.Name = 'Segoe UI'
   Font.Style = []
   KeyPreview = True
+  Padding.Left = 8
+  Padding.Top = 8
+  Padding.Right = 8
+  Padding.Bottom = 8
   Position = poOwnerFormCenter
   OnCreate = FormCreate
   OnKeyUp = FormKeyUp
@@ -19,23 +23,23 @@ object FormListen: TFormListen
   OnShow = FormShow
   TextHeight = 15
   object PanelBottom: TPanel
-    Left = 0
-    Top = 99
-    Width = 298
+    Left = 8
+    Top = 145
+    Width = 384
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 67
-    ExplicitWidth = 288
-    object ButtonConnect: TButton
+    ExplicitTop = 113
+    ExplicitWidth = 374
+    object ButtonGenerate: TButton
       Left = 152
       Top = 6
       Width = 83
       Height = 25
-      Caption = 'Connect'
+      Caption = 'Generate'
       TabOrder = 0
-      OnClick = ButtonConnectClick
+      OnClick = ButtonGenerateClick
     end
     object ButtonCancel: TButton
       Left = 63
@@ -48,10 +52,10 @@ object FormListen: TFormListen
     end
   end
   object PanelClient: TPanel
-    Left = 50
-    Top = 0
-    Width = 248
-    Height = 99
+    Left = 58
+    Top = 8
+    Width = 334
+    Height = 137
     Align = alClient
     BevelOuter = bvNone
     Padding.Left = 8
@@ -59,61 +63,85 @@ object FormListen: TFormListen
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 1
-    ExplicitWidth = 238
-    ExplicitHeight = 67
+    ExplicitWidth = 324
+    ExplicitHeight = 105
     object Label2: TLabel
+      AlignWithMargins = True
       Left = 8
-      Top = 8
-      Width = 232
+      Top = 100
+      Width = 318
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
-      Caption = 'Bind Address :'
-      ExplicitWidth = 75
+      Caption = 'Common Name:'
+      ExplicitWidth = 89
     end
     object Label1: TLabel
+      Left = 8
+      Top = 8
+      Width = 318
+      Height = 15
+      Margins.Left = 0
+      Margins.Top = 8
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alTop
+      Caption = 'Country Name:'
+      ExplicitWidth = 81
+    end
+    object Label3: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 54
-      Width = 232
+      Width = 318
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
-      Caption = 'Server Port:'
-      ExplicitWidth = 60
+      Caption = 'Organization Name:'
+      ExplicitWidth = 106
     end
-    object SpinPort: TSpinEdit
+    object EditCN: TEdit
       Left = 8
-      Top = 69
-      Width = 232
-      Height = 24
+      Top = 115
+      Width = 318
+      Height = 23
       Align = alTop
-      MaxValue = 65535
-      MinValue = 0
       TabOrder = 0
-      Value = 2801
+      Text = 'localhost'
+      ExplicitWidth = 308
     end
-    object EditServerBindAddress: TEdit
+    object EditC: TEdit
       Left = 8
       Top = 23
-      Width = 232
+      Width = 318
       Height = 23
       Align = alTop
       TabOrder = 1
-      Text = '0.0.0.0'
+      Text = 'FR'
+      ExplicitWidth = 308
+    end
+    object EditO: TEdit
+      Left = 8
+      Top = 69
+      Width = 318
+      Height = 23
+      Align = alTop
+      TabOrder = 2
+      Text = 'DarkCoderSc'
+      ExplicitWidth = 308
     end
   end
   object PanelLeft: TPanel
-    Left = 0
-    Top = 0
+    Left = 8
+    Top = 8
     Width = 50
-    Height = 99
+    Height = 137
     Align = alLeft
     BevelOuter = bvNone
     Padding.Left = 8
@@ -121,19 +149,19 @@ object FormListen: TFormListen
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 2
-    ExplicitHeight = 67
+    ExplicitHeight = 105
     object Image: TVirtualImage
       Left = 8
       Top = 8
       Width = 34
-      Height = 83
+      Height = 121
       Align = alClient
       Center = True
       ImageCollection = FormMain.ImageCollectionDark
       ImageWidth = 0
       ImageHeight = 0
-      ImageIndex = 40
-      ImageName = 'servers-connection'
+      ImageIndex = 58
+      ImageName = 'application-certificate-filled'
       ExplicitWidth = 32
       ExplicitHeight = 32
     end

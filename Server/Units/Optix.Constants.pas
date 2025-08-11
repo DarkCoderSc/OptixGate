@@ -102,6 +102,7 @@ const
  IMAGE_TASK_FAILED                  = 49;
  IMAGE_RED_EXCLAMATION              = 55;
  IMAGE_SHELL_CLOSED                 = IMAGE_RED_EXCLAMATION;
+ IMAGE_CERTIFICATE                  = 58;
 
 var
  (* COLORS *)
