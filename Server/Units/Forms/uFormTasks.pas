@@ -48,7 +48,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL, VirtualTrees, XSuperObject, Optix.Task, Vcl.Menus;
+  VirtualTrees.AncestorVCL, VirtualTrees, XSuperObject, Optix.Task, Vcl.Menus, VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -183,7 +183,7 @@ begin
 
   var ATaskResult := TOptixTaskCallback.Create(ASerializedPacket);
   var pNode := GetNodeByTaskId(ATaskResult.Id);
-  var pData : PTreeData := nil;
+  var pData : PTreeData;
 
   if not Assigned(pNode) then begin
     pNode := VST.AddChild(nil);

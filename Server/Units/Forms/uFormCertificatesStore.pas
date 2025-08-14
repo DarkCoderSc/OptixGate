@@ -48,7 +48,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Optix.OpenSSL.Helper;
+  VirtualTrees, Vcl.Menus, Optix.OpenSSL.Helper, VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -61,7 +61,16 @@ type
     MainMenu: TMainMenu;
     File1: TMenuItem;
     GeneratenewCertificate1: TMenuItem;
-    ImportRecommended1: TMenuItem;
+    Import1: TMenuItem;
+    OD: TOpenDialog;
+    SD: TSaveDialog;
+    PopupMenu: TPopupMenu;
+    ExportCertificate1: TMenuItem;
+    ExportPublicKey1: TMenuItem;
+    ExportPrivateKey1: TMenuItem;
+    N1: TMenuItem;
+    N2: TMenuItem;
+    RemoveCertificate1: TMenuItem;
     procedure GeneratenewCertificate1Click(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -73,8 +82,16 @@ type
       var Ghosted: Boolean; var ImageIndex: TImageIndex);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure Import1Click(Sender: TObject);
+    function GetCertificateFromNode(const pNode : PVirtualNode) : PX509Certificate;
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure ExportPublicKey1Click(Sender: TObject);
+    procedure ExportCertificate1Click(Sender: TObject);
+    procedure ExportPrivateKey1Click(Sender: TObject);
+    procedure RemoveCertificate1Click(Sender: TObject);
   private
     {@M}
+    procedure ExportCertificate(const pNode : PVirtualNode; const AExportWhich : TOpenSSLCertificateKeyTypes = []);
     procedure RegisterCertificate(const ACertificate : TX509Certificate);
     procedure Save();
     procedure Load();
@@ -88,7 +105,7 @@ var
 implementation
 
 uses uFormGenerateNewCertificate, Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore,
-     Optix.Config.Helper;
+     Optix.Config.Helper, Optix.VCL.Helper, Optix.OpenSSL.Exceptions;
 
 {$R *.dfm}
 
@@ -134,6 +151,20 @@ begin
   end;
 end;
 
+procedure TFormCertificatesStore.PopupMenuPopup(Sender: TObject);
+begin
+  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+
+  var pCertificate := GetCertificateFromNode(VST.FocusedNode);
+  if not Assigned(pCertificate) then
+    Exit();
+
+  ExportCertificate1.Visible := Assigned(pCertificate);
+  ExportPublicKey1.Visible   := Assigned(pCertificate);
+  ExportPrivateKey1.Visible  := Assigned(pCertificate);
+  RemoveCertificate1.Visible := Assigned(pCertificate);
+end;
+
 procedure TFormCertificatesStore.RegisterCertificate(const ACertificate : TX509Certificate);
 begin
   VST.BeginUpdate();
@@ -145,6 +176,21 @@ begin
   finally
     VST.EndUpdate();
   end;
+end;
+
+procedure TFormCertificatesStore.RemoveCertificate1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+
+  if Application.MessageBox(
+    'This action will delete the certificate and its associated information. If you do not have any physical backups,' +
+    ' the certificate will be permanently lost. Are you sure?',
+    'Delete Certificate', MB_ICONQUESTION + MB_YESNO) = ID_NO then
+      Exit();
+
+  ///
+  VST.DeleteNode(VST.FocusedNode);
 end;
 
 procedure TFormCertificatesStore.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -167,8 +213,6 @@ end;
 procedure TFormCertificatesStore.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  var pData := PTreeData(Node.GetData);
-
   if Column <> 0 then
     Exit();
 
@@ -202,6 +246,56 @@ begin
 
   ///
   CellText := DefaultIfEmpty(CellText);
+end;
+
+function TFormCertificatesStore.GetCertificateFromNode(const pNode : PVirtualNode) : PX509Certificate;
+begin
+  result := nil;
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  if not Assigned(pData^.Certificate.pX509) or not Assigned(pData^.Certificate.pPrivKey) then
+    Exit();
+
+  ///
+  result := PX509Certificate(@pData^.Certificate);
+end;
+
+procedure TFormCertificatesStore.ExportCertificate(const pNode : PVirtualNode; const AExportWhich : TOpenSSLCertificateKeyTypes = []);
+begin
+  SD.FileName := '';
+
+  if ((AExportWhich = []) or ((cktPublic in AExportWhich) and (cktPrivate in AExportWhich))) then
+    SD.DefaultExt := 'pem'
+  else if cktPublic in AExportWhich then
+    SD.DefaultExt := 'pub'
+  else if cktPrivate in AExportWhich then
+    SD.DefaultExt := 'key';
+
+  if not SD.Execute() then
+    Exit();
+
+  var pCertificate := GetCertificateFromNode(pNode);
+  if not Assigned(pCertificate) then
+    Exit();
+
+  TOptixOpenSSLHelper.ExportCertificate(SD.FileName, pCertificate^, AExportWhich);
+end;
+
+procedure TFormCertificatesStore.ExportCertificate1Click(Sender: TObject);
+begin
+  ExportCertificate(VST.FocusedNode);
+end;
+
+procedure TFormCertificatesStore.ExportPrivateKey1Click(Sender: TObject);
+begin
+  ExportCertificate(VST.FocusedNode, [cktPrivate]);
+end;
+
+procedure TFormCertificatesStore.ExportPublicKey1Click(Sender: TObject);
+begin
+  ExportCertificate(VST.FocusedNode, [cktPublic]);
 end;
 
 procedure TFormCertificatesStore.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -248,6 +342,41 @@ begin
   finally
     FreeAndNil(AForm);
   end;
+end;
+
+procedure TFormCertificatesStore.Import1Click(Sender: TObject);
+
+  function GetErrorMessage(const AKeyName : String) : String;
+  begin
+    var ATemplate := 'Could not import the certificate. The %s key is either missing, corrupted, or in a format ' +
+                     'that does not match the expected file format (must contain both the private and public keys).';
+
+    result := Format(ATemplate, [AKeyName]);
+  end;
+
+begin
+  if not OD.Execute() then
+    Exit();
+  ///
+
+  var ACertificate : TX509Certificate;
+
+  var AErrorMessage := '';
+
+  try
+    TOptixOpenSSLHelper.ImportCertificate(OD.FileName, ACertificate);
+  except
+    on E : EOpenSSLPrivateKeyException do
+      AErrorMessage := GetErrorMessage('private');
+
+    on E : EOpenSSLPublicKeyException do
+      AErrorMessage := GetErrorMessage('public');
+  end;
+
+  if String.IsNullOrWhiteSpace(AErrorMessage) then
+    RegisterCertificate(ACertificate)
+  else
+    Application.MessageBox(PWideChar(AErrorMessage), 'Import Certificate', MB_ICONERROR);
 end;
 
 end.

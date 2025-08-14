@@ -45,11 +45,14 @@ unit uFormMain;
 
 interface
 
+{$I Optix.inc}
+
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   VirtualTrees, Vcl.Menus, Optix.Protocol.SessionHandler, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList,
-  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client, System.Notification, Generics.Collections;
+  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client, System.Notification, Generics.Collections,
+  VirtualTrees.Types, System.UITypes;
 
 type
   TClientStatus = (csDisconnected, csConnected, csOnError, csFree);
@@ -57,6 +60,11 @@ type
   TTreeData = record
     ServerAddress    : String; // Copy required (If Handler is Freed)
     ServerPort       : Word;   // Copy required
+
+    {$IFDEF USETLS}
+    PublicKey        : String; // Copy required
+    PrivateKey       : String; // Copy required
+    {$ENDIF}
 
     Handler          : TOptixSessionHandlerThread;
     Status           : TClientStatus;
@@ -71,7 +79,7 @@ type
     Close1: TMenuItem;
     ConnecttoServer1: TMenuItem;
     N1: TMenuItem;
-    ImageCollection: TImageCollection;
+    ImageCollectionDark: TImageCollection;
     VirtualImageList: TVirtualImageList;
     PopupMenu: TPopupMenu;
     RemoveClient1: TMenuItem;
@@ -81,6 +89,8 @@ type
     N2: TMenuItem;
     Reload1: TMenuItem;
     NotificationCenter: TNotificationCenter;
+    Stores1: TMenuItem;
+    Certificates1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -101,11 +111,12 @@ type
     procedure Reload1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure Certificates1Click(Sender: TObject);
   private
     FNotifications : TList<TGUID>;
 
     {@M}
-    procedure AddClient(const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+    procedure AddClient({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String;{$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
 
     procedure OnConnectedToServer(Sender : TOptixSessionHandlerThread);
     procedure OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
@@ -126,7 +137,8 @@ var
 
 implementation
 
-uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants, uFormAbout, uFormDebugThreads;
+uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants, uFormAbout, uFormDebugThreads,
+     Optix.Protocol.Preflight{$IFDEF USETLS}, uFormCertificatesStore, Optix.DebugCertificate{$ENDIF};
 
 {$R *.dfm}
 
@@ -237,16 +249,23 @@ begin
   FormAbout.ShowModal();
 end;
 
+procedure TFormMain.Certificates1Click(Sender: TObject);
+begin
+  {$IFDEF USETLS}
+  FormCertificatesStore.Show();
+  {$ENDIF}
+end;
+
 procedure TFormMain.Close1Click(Sender: TObject);
 begin
   Close();
 end;
 
-procedure TFormMain.AddClient(const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+procedure TFormMain.AddClient({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String;{$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
 begin
   VST.beginUpdate();
   try
-    var pNode := PVirtualNode(nil);
+    var pNode : PVirtualNode;
 
     if pExistingNode = nil then
       pNode := VST.AddChild(nil)
@@ -261,7 +280,12 @@ begin
     pData^.ServerAddress := AServerAddress;
     pData^.ServerPort    := AServerPort;
 
-    pData^.Handler := TOptixSessionHandlerThread.Create(pData^.ServerAddress, pData^.ServerPort);
+    {$IFDEF USETLS}
+    pData^.PublicKey     := APublicKey;
+    pData^.PrivateKey    := APrivateKey;
+    {$ENDIF}
+
+    pData^.Handler := TOptixSessionHandlerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}pData^.ServerAddress, pData^.ServerPort);
     pData^.Handler.Retry := True;
     pData^.Handler.RetryDelay := 1000;
 
@@ -278,17 +302,31 @@ end;
 
 procedure TFormMain.ConnecttoServer1Click(Sender: TObject);
 begin
-  var AForm := TFormConnectToServer.Create(self);
-  try
-    AForm.ShowModal();
-    if AForm.Canceled then
-      Exit();
-    ///
+  {$IFDEF DEBUG}
+    {$IFDEF USETLS}
+      var APublicKey  := '';
+      var APrivateKey := '';
 
-    AddClient(AForm.EditServerAddress.Text, AForm.SpinPort.Value);
-  finally
-    FreeAndNil(AForm);
-  end;
+      {$IFDEF DEBUG}
+      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
+      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
+      {$ENDIF}
+    {$ENDIF}
+
+    AddClient({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}'127.0.0.1', 2801);
+  {$ELSE}
+    var AForm := TFormConnectToServer.Create(self);
+    try
+      AForm.ShowModal();
+      if AForm.Canceled then
+        Exit();
+      ///
+
+      AddClient(AForm.EditServerAddress.Text, AForm.SpinPort.Value);
+    finally
+      FreeAndNil(AForm);
+    end;
+  {$ENDIF}
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -304,6 +342,8 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FNotifications := TList<TGUID>.Create(); // Maybe, I will need that l8r
+
+  Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
 end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
@@ -318,7 +358,7 @@ begin
   Reload1.Visible := False;
 
   var pNode := VST.FocusedNode;
-  var pData := PTreeData(nil);
+  var pData : PTreeData;
 
   if Assigned(pNode) then begin
     pData := pNode.GetData;
@@ -336,7 +376,7 @@ begin
   var pData := PTreeData(VST.FocusedNode.GetData);
 
   if pData^.Status = csFree then
-    AddClient(pData^.ServerAddress, pData^.ServerPort, VST.FocusedNode);
+    AddClient({$IFDEF USETLS}pData^.PublicKey, pData^.PrivateKey, {$ENDIF}pData^.ServerAddress, pData^.ServerPort, VST.FocusedNode);
 end;
 
 procedure TFormMain.RemoveClient1Click(Sender: TObject);

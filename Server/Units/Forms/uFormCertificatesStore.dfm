@@ -34,6 +34,7 @@ object FormCertificatesStore: TFormCertificatesStore
     Header.DefaultHeight = 25
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
     Images = FormMain.VirtualImageList
+    PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
@@ -76,9 +77,46 @@ object FormCertificatesStore: TFormCertificatesStore
         Caption = 'Generate New'
         OnClick = GeneratenewCertificate1Click
       end
-      object ImportRecommended1: TMenuItem
-        Caption = 'Import (Recommended)'
+      object Import1: TMenuItem
+        Caption = 'Import'
+        OnClick = Import1Click
       end
+    end
+  end
+  object OD: TOpenDialog
+    Left = 400
+    Top = 152
+  end
+  object SD: TSaveDialog
+    DefaultExt = 'pem'
+    Left = 496
+    Top = 152
+  end
+  object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
+    Left = 160
+    Top = 144
+    object ExportCertificate1: TMenuItem
+      Caption = 'Export Certificate'
+      OnClick = ExportCertificate1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object ExportPublicKey1: TMenuItem
+      Caption = 'Export Public Key'
+      OnClick = ExportPublicKey1Click
+    end
+    object ExportPrivateKey1: TMenuItem
+      Caption = 'Export Private Key'
+      OnClick = ExportPrivateKey1Click
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object RemoveCertificate1: TMenuItem
+      Caption = 'Remove Certificate'
+      OnClick = RemoveCertificate1Click
     end
   end
 end

@@ -45,6 +45,8 @@ unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
+{$I Optix.inc}
+
 uses System.Classes, System.SysUtils, Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer,
      Generics.Collections;
 
@@ -80,7 +82,8 @@ type
 
 implementation
 
-uses Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Sockets.Exceptions;
+uses Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Sockets.Exceptions
+     {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 
 { TOptixFileTransferWorker.Initialize }
 procedure TOptixFileTransferWorker.Initialize();
@@ -193,16 +196,17 @@ begin
         else if ATask is TOptixUploadTask then
           TOptixUploadTask(ATask).UploadChunk(FClient);
       except
-        on E : ESocketException do
-          raise;
-
         on E : Exception do begin
-          Synchronize(procedure begin
-            FOnTransferError(self, ATransferId, E.Message);
-          end);
+          if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then
+            raise
+          else begin
+            Synchronize(procedure begin
+              FOnTransferError(self, ATransferId, E.Message);
+            end);
 
-          ///
-          ATasks.Remove(ATransferId);
+            ///
+            ATasks.Remove(ATransferId);
+          end;
         end;
       end;
 

@@ -59,6 +59,7 @@ const
   IMAGE_THREAD_HANDLER      = 0;
   IMAGE_THREAD_TRANSFER     = 9;
   IMAGE_THREAD_GENERIC      = 10;
+  IMAGE_CERTIFICATE         = 11;
 
 var
   COLOR_LIST_LIMY : TColor;

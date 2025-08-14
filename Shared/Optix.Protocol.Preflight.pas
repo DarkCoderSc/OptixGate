@@ -47,7 +47,7 @@ interface
 
 {$I Optix.inc}
 
-const OPTIX_PROTOCOL_VERSION = 'v1.0.0a1';
+const OPTIX_PROTOCOL_VERSION = 'v1.0.0a1' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
 
 type
   TClientKind = (
@@ -57,7 +57,7 @@ type
   );
 
   TOptixPreflightRequest = record
-    ProtocolVersion : String[10];
+    ProtocolVersion : String[50];
     ClientKind      : TClientKind;
     SessionId       : TGUID;
     HandlerId       : TGUID;

@@ -142,8 +142,8 @@ var
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper, Optix.FileSystem.Helper, Optix.Constants,
-     Optix.VCL.Helper, System.IOUtils;
+uses uFormMain, System.Types, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper, Optix.FileSystem.Helper,
+     Optix.Constants, Optix.VCL.Helper, System.IOUtils;
 
 {$R *.dfm}
 

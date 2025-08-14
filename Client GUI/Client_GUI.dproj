@@ -4,7 +4,7 @@
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">Client_GUI</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -121,6 +121,7 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>..\Server\Assets\optix.ico</Icon_MainIcon>
+        <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -129,9 +130,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Units\Forms\uFormMain.pas">
-            <Form>FormMain</Form>
-        </DCCReference>
         <DCCReference Include="..\Shared\Optix.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Sockets.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas"/>
@@ -166,9 +164,16 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="..\Server\Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="..\Server\Units\Optix.Helper.pas"/>
+        <DCCReference Include="Units\Optix.Constants.pas"/>
+        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas"/>
+        <DCCReference Include="..\Client\Units\Optix.DebugCertificate.pas"/>
+        <DCCReference Include="..\Server\Units\Configs\Optix.Config.CertificatesStore.pas"/>
+        <DCCReference Include="..\Server\Units\Configs\Optix.Config.Helper.pas"/>
+        <DCCReference Include="Units\Forms\uFormMain.pas">
+            <Form>FormMain</Form>
+        </DCCReference>
         <DCCReference Include="Units\Forms\uFormConnectToServer.pas">
             <Form>FormConnectToServer</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\Server\Units\Forms\uFormAbout.pas">
             <Form>FormAbout</Form>
@@ -176,7 +181,6 @@
         <DCCReference Include="..\Server\Units\Forms\uFormDebugThreads.pas">
             <Form>FormDebugThreads</Form>
         </DCCReference>
-        <DCCReference Include="Units\Optix.Constants.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

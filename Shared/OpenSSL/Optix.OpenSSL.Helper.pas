@@ -56,6 +56,7 @@ type
     O            : String;
     CN           : String;
   end;
+  PX509Certificate = ^TX509Certificate;
 
   TOpenSSLCertificateKeyType = (
     cktPublic,
@@ -67,9 +68,9 @@ type
   public
     class function NewPrivateKey() : Pointer; static;
     class function NewX509(const pKey : Pointer; const C, O, CN : String) : Pointer; static;
-    class procedure ExportKeyToFile(const ACertificate : TX509Certificate; const AOutputFile : String; ACertificateTypes : TOpenSSLCertificateKeyTypes); static;
-    class procedure LoadCertificate(const APublicKey : String; const APrivateKey : String; var ACertificate : TX509Certificate); overload; static;
-    class procedure LoadCertificate(const ACertificateFile : String; var ACertificate : TX509Certificate); overload; static;
+    class procedure LoadCertificate(const APublicKey : String; const APrivateKey : String; var ACertificate : TX509Certificate); static;
+    class procedure ImportCertificate(const ACertificateFile : String; var ACertificate : TX509Certificate); static;
+    class procedure ExportCertificate(const ADestinationFile : String; var ACertificate : TX509Certificate; AExportWhich : TOpenSSLCertificateKeyTypes = []); static;
     class procedure RetrieveCertificateInformation(var ACertificate : TX509Certificate); static;
     class procedure CheckCertificateFile(const ACertificateFile : String); static;
     class function GetPeerSha512Fingerprint(const pSSL : Pointer) : String; static;
@@ -146,33 +147,14 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.ExportKeyToFile }
-class procedure TOptixOpenSSLHelper.ExportKeyToFile(const ACertificate : TX509Certificate; const AOutputFile : String; ACertificateTypes : TOpenSSLCertificateKeyTypes);
-begin
-  var pBIO := BIO_new_file(PAnsiChar(AnsiString(AOutputFile)), 'wb');
-  if not Assigned(pBIO) then
-    raise EOpenSSLBaseException.Create();
-  try
-    if ACertificateTypes = [] then
-      ACertificateTypes := [cktPublic, cktPrivate];
-
-    // Private
-    if Assigned(ACertificate.pPrivKey) and (cktPrivate in ACertificateTypes) then
-      PEM_write_bio_PrivateKey(pBIO, ACertificate.pPrivKey, nil, nil, 0, 0, nil);
-
-    // Public
-    if Assigned(ACertificate.pX509) and Assigned(ACertificate.pPrivKey) and (cktPublic in ACertificateTypes) then
-      PEM_write_bio_X509(pBIO, ACertificate.pX509);
-  finally
-    BIO_free(pBIO);
-  end;
-end;
-
 { TOptixOpenSSLHelper.LoadCertificate }
 class procedure TOptixOpenSSLHelper.LoadCertificate(const APublicKey : String; const APrivateKey : String; var ACertificate : TX509Certificate);
 
   function LoadKey(const AKey : String; const AKeyType : TOpenSSLCertificateKeyType) : Pointer;
   begin
+    result := nil;
+    ///
+
     var pBio := BIO_new_mem_buf(PAnsiChar(AnsiString(AKey)), Length(AKey));
     if not Assigned(pBio) then
       raise EOpenSSLBaseException.Create();
@@ -200,8 +182,8 @@ begin
   RetrieveCertificateInformation(ACertificate);
 end;
 
-{ TOptixOpenSSLHelper.LoadCertificate }
-class procedure TOptixOpenSSLHelper.LoadCertificate(const ACertificateFile : String; var ACertificate : TX509Certificate);
+{ TOptixOpenSSLHelper.ImportCertificate }
+class procedure TOptixOpenSSLHelper.ImportCertificate(const ACertificateFile : String; var ACertificate : TX509Certificate);
 begin
   ZeroMemory(@ACertificate, SizeOf(TX509Certificate));
   ///
@@ -213,15 +195,38 @@ begin
     // First we read the private key
     ACertificate.pPrivKey := PEM_read_bio_PrivateKey(pBIO, nil, nil, nil);
     if not Assigned(ACertificate.pPrivKey) then
-      raise EOpenSSLBaseException.Create();
+      raise EOpenSSLPrivateKeyException.Create();
 
     // Then we read the X509 structure
     ACertificate.pX509 := PEM_read_bio_X509(pBIO, nil, nil, nil);
     if not Assigned(ACertificate.pX509) then
-      raise EOpenSSLBaseException.Create();
+      raise EOpenSSLPublicKeyException.Create();
 
     // Retrieve Information about the certificate
     RetrieveCertificateInformation(ACertificate);
+  finally
+    BIO_free(pBIO);
+  end;
+end;
+
+{ TOptixOpenSSLHelper.ExportCertificate }
+class procedure TOptixOpenSSLHelper.ExportCertificate(const ADestinationFile : String; var ACertificate : TX509Certificate; AExportWhich : TOpenSSLCertificateKeyTypes = []);
+begin
+  if AExportWhich = [] then
+    AExportWhich := [cktPublic, cktPrivate];
+  ///
+
+  var pBIO := BIO_new_file(PAnsiChar(AnsiString(ADestinationFile)), 'wb');
+  if not Assigned(pBIO) then
+    raise EOpenSSLBaseException.Create();
+  try
+    if cktPrivate in AExportWhich then
+      if PEM_write_bio_PrivateKey(pBIO, ACertificate.pPrivKey, nil, nil, 0, nil, nil) <> 1 then
+        raise EOpenSSLBaseException.Create();
+
+    if cktPublic in AExportWhich then
+      if PEM_write_bio_X509(pBIO, ACertificate.pX509) <> 1 then
+        raise EOpenSSLBaseException.Create();
   finally
     BIO_free(pBIO);
   end;
@@ -356,7 +361,10 @@ begin
         ///
 
         AResult := PEM_write_bio_PrivateKey(pBIO, ACertificate.pPrivKey, nil, nil, 0, nil, nil);
-      end;
+      end
+
+      else
+        Exit();
     end;
     if AResult <> 1 then
       raise EOpenSSLBaseException.Create();

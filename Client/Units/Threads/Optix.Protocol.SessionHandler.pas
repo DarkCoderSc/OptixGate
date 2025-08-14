@@ -255,7 +255,7 @@ begin
     if AShellInstance.InstanceId <> ACommand.InstanceId then
       continue;
     try
-      AShellInstance.WriteLn(ACommand.CommandLine);
+      AShellInstance.WriteLn(AnsiString(ACommand.CommandLine));
     except
       AShellInstance.Close();
     end;

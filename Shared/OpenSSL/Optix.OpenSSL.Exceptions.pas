@@ -48,8 +48,6 @@ interface
 uses System.SysUtils, Optix.Sockets.Exceptions;
 
 type
-  EOpenSSLSocketException = class(ESocketException);
-
   EOpenSSLBaseException = class(Exception)
   private
     FErrorCode   : Integer;
@@ -57,12 +55,16 @@ type
   public
     {@C}
     constructor Create(); overload;
-    constructor Create(pSSL : Pointer); overload;
+    constructor Create(const pSSLConnection : Pointer); overload;
+    constructor Create(const AErrorCode : Integer); overload;
 
     {@G}
     property ErrorCode   : Integer    read FErrorCode;
     property ErrorString : AnsiString read FErrorString;
   end;
+
+  EOpenSSLPrivateKeyException = class(EOpenSSLBaseException);
+  EOpenSSLPublicKeyException = class(EOpenSSLBaseException);
 
   EOpenSSLLibraryException = class(Exception);
 
@@ -74,31 +76,29 @@ uses Winapi.Windows, Winapi.Winsock2, Optix.OpenSSL.Headers;
 
 { EOpenSSLBaseException.Create }
 constructor EOpenSSLBaseException.Create();
-var AFormatedMessage : String;
 begin
-  FErrorCode := ERR_get_error();
+  Create(ERR_get_error());
+end;
+
+{ EOpenSSLBaseException.Create }
+constructor EOpenSSLBaseException.Create(const pSSLConnection : Pointer);
+begin
+  Create(SSL_get_error(pSSLConnection, FErrorCode));
+end;
+
+{ EOpenSSLBaseException.Create }
+constructor EOpenSSLBaseException.Create(const AErrorCode : Integer);
+begin
+  FErrorCode := AErrorCode;
 
   SetLength(FErrorString, 256);
 
   ERR_error_string_n(FErrorCode, PAnsiChar(FErrorString), 256);
 
-  AFormatedMessage := Format('OpenSSL Error: last_error=[%d], error_str=[%s].', [
+  var AFormatedMessage := Format('OpenSSL Error: last_error=[%d], error_str=[%s].', [
       FErrorCode,
       FErrorString
   ]);
-
-  ///
-  inherited Create(AFormatedMessage);
-end;
-
-{ EOpenSSLBaseException.Create }
-constructor EOpenSSLBaseException.Create(pSSL : Pointer);
-begin
-  SSL_get_error(pSSL, FErrorCode);
-
-  FErrorString := 'Err';
-
-  var AFormatedMessage := Format('OpenSSL SSL Error: last_error=[%d], error_str=[%s].', [FErrorCode, FErrorString]);
 
   ///
   inherited Create(AFormatedMessage);

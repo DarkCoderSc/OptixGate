@@ -43,6 +43,8 @@
 
 program OptixGate;
 
+{$I Optix.inc}
+
 uses
   Vcl.Forms,
   Vcl.Themes,
@@ -54,22 +56,7 @@ uses
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas' {,
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Func.Response in '..\Shared\Functions\Optix.Func.Response.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.InformationGathering.Process in '..\Shared\Optix.InformationGathering.Process.pas',
-  Optix.Protocol.Network.Server in 'Units\Threads\Optix.Protocol.Network.Server.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Sockets.Client in 'Units\Threads\Optix.Protocol.Sockets.Client.pas',
-  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
-  Optix.Helper in 'Units\Optix.Helper.pas',
-  Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
+  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
   Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
@@ -89,16 +76,24 @@ uses
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
   Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
+  {$IFDEF USETLS}
   Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
   Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
   Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
   Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
+  Optix.OpenSSL.Handler in '..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas',
+  {$IFDEF DEBUG}
+  Optix.DebugCertificate in 'Units\Optix.DebugCertificate.pas',
+  {$ENDIF }
+  Optix.Config.CertificatesStore in 'Units\Configs\Optix.Config.CertificatesStore.pas',
+  {$ENDIF}
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
+  Optix.Config.Helper in 'Units\Configs\Optix.Config.Helper.pas',
   __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
   Optix.Constants in 'Units\Optix.Constants.pas',
@@ -113,11 +108,10 @@ uses
   uFormDumpProcess in 'Units\Forms\Dialogs\uFormDumpProcess.pas' {FormDumpProcess},
   uFormRemoteShell in 'Units\Forms\uFormRemoteShell.pas' {FormRemoteShell},
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
-  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
+  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen}
+  {$IFDEF USETLS},
   uFormCertificatesStore in 'Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore},
-  uFormGenerateNewCertificate in 'Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate},
-  Optix.Config.CertificatesStore in 'Units\Configs\Optix.Config.CertificatesStore.pas',
-  Optix.Config.Helper in 'Units\Configs\Optix.Config.Helper.pas';
+  uFormGenerateNewCertificate in 'Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate}{$ENDIF};
 
 {$R *.res}
 {$R data.res}
@@ -133,8 +127,9 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormListen, FormListen);
+  {$IFDEF USETLS},
   Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
-  // Application.CreateForm(TFormGenerateNewCertificate, FormGenerateNewCertificate);
+  {$ENDIF}
   // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
   // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
   // Application.CreateForm(TFormTransfers, FormTransfers);

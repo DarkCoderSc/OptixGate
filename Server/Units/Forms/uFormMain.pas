@@ -42,14 +42,17 @@
 {******************************************************************************}
 
 {
-  TODO:
+  TODO Long-term:
     - Column Sorting
-    - Improve OOP (Better visibility logic between parent-child)
+    - Improve OOP
+    - Units sorting
 }
 
 unit uFormMain;
 
 interface
+
+{$I Optix.inc}
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
@@ -188,8 +191,8 @@ implementation
 
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen,
-     uFormCertificatesStore;
+     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen
+     {$IFDEF USETLS}, uFormCertificatesStore{$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF}{$ENDIF};
 
 {$R *.dfm}
 
@@ -806,7 +809,9 @@ end;
 
 procedure TFormMain.Certificates1Click(Sender: TObject);
 begin
+  {$IFDEF USETLS}
   FormCertificatesStore.Show();
+  {$ENDIF}
 end;
 
 procedure TFormMain.Close1Click(Sender: TObject);
@@ -842,6 +847,11 @@ begin
 
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
 
+  {$IFNDEF USETLS}
+  Stores1.Visible := False;
+  Certificates1.Visible := False;
+  {$ENDIF}
+
   ///
   UpdateStatus();
 end;
@@ -851,7 +861,17 @@ begin
   StopServer();
   ///
 
-  FServer := TOptixServerThread.Create(ABindAddress, APort);
+  {$IFDEF USETLS}
+    var APublicKey  := '';
+    var APrivateKey := '';
+
+    {$IFDEF DEBUG}
+    APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
+    APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
+    {$ENDIF}
+  {$ENDIF}
+
+  FServer := TOptixServerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey,{$ENDIF}ABindAddress, APort);
 
   FServer.OnServerStart       := OnServerStart;
   FServer.OnServerError       := OnServerError;

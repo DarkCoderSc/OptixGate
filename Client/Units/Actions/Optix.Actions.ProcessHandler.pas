@@ -358,7 +358,7 @@ end;
 { TProcessHandler.Close }
 procedure TProcessHandler.Close();
 begin
-  var AExitCode : LongWord;
+  var AExitCode : LongWord := 0;
 
   if FJobObject > 0 then begin
     if not TerminateJobObject(FJobObject, AExitCode) then

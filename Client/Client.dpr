@@ -48,6 +48,8 @@
 
 program Client;
 
+{$I Optix.inc}
+
 {$APPTYPE GUI}
 // {$APPTYPE CONSOLE}
 
@@ -56,6 +58,14 @@ program Client;
 uses
   System.SysUtils,
   Winapi.Windows,
+  {$IFDEF USETLS}
+  Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
+  Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
+  Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
+  Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
+  Optix.OpenSSL.Handler in '..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas',
+  Optix.DebugCertificate in 'Units\Optix.DebugCertificate.pas',
+  {$ENDIF}
   Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
   Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
   Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
@@ -106,7 +116,14 @@ begin
       TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
       TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
 
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
+      var ASessionHandler := TOptixSessionHandlerThread.Create(
+        {$IFDEF USETLS}
+        DEBUG_CERTIFICATE_PUBLIC_KEY,
+        DEBUG_CERTIFICATE_PRIVATE_KEY,
+        {$ENDIF}
+        '127.0.0.1',
+         2801
+      );
       ASessionHandler.Retry := True;
       ASessionHandler.RetryDelay := 1000;
       ASessionHandler.Start();

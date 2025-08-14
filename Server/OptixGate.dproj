@@ -137,24 +137,7 @@
         <DCCReference Include="..\Shared\Optix.Sockets.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Interfaces.pas"/>
         <DCCReference Include="..\Shared\Optix.Thread.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas">
-            <Form>,
-  Optix.Func.SessionInformation in &apos;..\Shared\Functions\Optix.Func.SessionInformation.pas&apos;,
-  Optix.Func.Commands in &apos;..\Shared\Functions\Optix.Func.Commands.pas&apos;,
-  Optix.Func.Response in &apos;..\Shared\Functions\Optix.Func.Response.pas&apos;,
-  XSuperJSON in &apos;..\Shared\XSuperJSON.pas&apos;,
-  Optix.InformationGathering.Helper in &apos;..\Shared\Optix.InformationGathering.Helper.pas&apos;,
-  Optix.WinApiEx in &apos;..\Shared\Optix.WinApiEx.pas&apos;,
-  Optix.InformationGathering.Process in &apos;..\Shared\Optix.InformationGathering.Process.pas&apos;,
-  Optix.Protocol.Network.Server in &apos;Units\Threads\Optix.Protocol.Network.Server.pas&apos;,
-  Optix.Protocol.SessionHandler in &apos;Units\Threads\Optix.Protocol.SessionHandler.pas&apos;,
-  Optix.Protocol.Sockets.Client in &apos;Units\Threads\Optix.Protocol.Sockets.Client.pas&apos;,
-  __uBaseFormControl__ in &apos;Units\Forms\__uBaseFormControl__.pas&apos;,
-  Optix.Helper in &apos;Units\Optix.Helper.pas&apos;,
-  Optix.VCL.Helper in &apos;Units\Optix.VCL.Helper.pas&apos;,
-  XSuperObject in &apos;..\Shared\XSuperObject.pas&apos;,
-  uFormMain in &apos;Units\Forms\uFormMain.pas&apos; {FormMain</Form>
-        </DCCReference>
+        <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
         <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
@@ -175,15 +158,15 @@
         <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas"/>
-        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas"/>
-        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas"/>
-        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Context.pas"/>
+        <DCCReference Include="Units\Optix.DebugCertificate.pas"/>
+        <DCCReference Include="Units\Configs\Optix.Config.CertificatesStore.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Client.pas"/>
         <DCCReference Include="Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
+        <DCCReference Include="Units\Configs\Optix.Config.Helper.pas"/>
         <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
         <DCCReference Include="Units\Forms\uFormMain.pas">
             <Form>FormMain</Form>
@@ -226,14 +209,8 @@
         <DCCReference Include="Units\Forms\uFormListen.pas">
             <Form>FormListen</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormCertificatesStore.pas">
-            <Form>FormCertificatesStore</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Forms\uFormGenerateNewCertificate.pas">
-            <Form>FormGenerateNewCertificate</Form>
-        </DCCReference>
-        <DCCReference Include="Units\Configs\Optix.Config.CertificatesStore.pas"/>
-        <DCCReference Include="Units\Configs\Optix.Config.Helper.pas"/>
+        <None Include="..\Shared\XSuperObject.inc"/>
+        <None Include="Optix.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -260,6 +237,18 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Optix.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win32\Debug\OptixGate.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>OptixGate.exe</RemoteName>

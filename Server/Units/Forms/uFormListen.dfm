@@ -3,7 +3,7 @@ object FormListen: TFormListen
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Listen'
-  ClientHeight = 140
+  ClientHeight = 185
   ClientWidth = 298
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,7 +20,7 @@ object FormListen: TFormListen
   TextHeight = 15
   object PanelBottom: TPanel
     Left = 0
-    Top = 99
+    Top = 144
     Width = 298
     Height = 41
     Align = alBottom
@@ -51,7 +51,7 @@ object FormListen: TFormListen
     Left = 50
     Top = 0
     Width = 248
-    Height = 99
+    Height = 144
     Align = alClient
     BevelOuter = bvNone
     Padding.Left = 8
@@ -88,6 +88,20 @@ object FormListen: TFormListen
       Caption = 'Server Port:'
       ExplicitWidth = 60
     end
+    object Label3: TLabel
+      AlignWithMargins = True
+      Left = 8
+      Top = 101
+      Width = 232
+      Height = 15
+      Margins.Left = 0
+      Margins.Top = 8
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alTop
+      Caption = 'Server Certificate:'
+      ExplicitWidth = 92
+    end
     object SpinPort: TSpinEdit
       Left = 8
       Top = 69
@@ -98,6 +112,7 @@ object FormListen: TFormListen
       MinValue = 0
       TabOrder = 0
       Value = 2801
+      ExplicitWidth = 222
     end
     object EditServerBindAddress: TEdit
       Left = 8
@@ -107,13 +122,23 @@ object FormListen: TFormListen
       Align = alTop
       TabOrder = 1
       Text = '0.0.0.0'
+      ExplicitWidth = 222
+    end
+    object ComboCertificate: TComboBox
+      Left = 8
+      Top = 116
+      Width = 232
+      Height = 23
+      Align = alTop
+      Style = csDropDownList
+      TabOrder = 2
     end
   end
   object PanelLeft: TPanel
     Left = 0
     Top = 0
     Width = 50
-    Height = 99
+    Height = 144
     Align = alLeft
     BevelOuter = bvNone
     Padding.Left = 8
@@ -126,7 +151,7 @@ object FormListen: TFormListen
       Left = 8
       Top = 8
       Width = 34
-      Height = 83
+      Height = 128
       Align = alClient
       Center = True
       ImageCollection = FormMain.ImageCollectionDark

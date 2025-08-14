@@ -41,95 +41,163 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormListen;
+unit Optix.OpenSSL.Handler;
 
 interface
 
-uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+uses Winapi.Winsock2, Optix.OpenSSL.Context;
 
 type
-  TFormListen = class(TForm)
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
-    PanelClient: TPanel;
-    Label2: TLabel;
-    Label1: TLabel;
-    SpinPort: TSpinEdit;
-    EditServerBindAddress: TEdit;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
-    Label3: TLabel;
-    ComboCertificate: TComboBox;
-    procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure FormResize(Sender: TObject);
+  TOptixOpenSSLHandler = class
   private
-    FCanceled : Boolean;
+    FContext       : TOptixOpenSSLContext;
+    FSSLConnection : Pointer;
+    FSocketFd      : TSocket;
 
     {@M}
-    procedure DoResize();
+    procedure SSLFree();
   public
-    {@G}
-    property Canceled : Boolean read FCanceled;
-  end;
+    {@C}
+    constructor Create(AContext : TOptixOpenSSLContext; const ASocketFd : TSocket);
+    destructor Destroy(); override;
 
-var
-  FormListen: TFormListen;
+    {@M}
+    procedure Connect();
+    function IsDataPending() : Boolean;
+    function IsConnectionAlive() : Boolean;
+    procedure Send(const buf; const len : Integer);
+    procedure Recv(var buf; const len : Integer);
+
+  end;
 
 implementation
 
-uses uFormMain;
+uses System.SysUtils, Winapi.Windows, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Headers, Optix.OpenSSL.Helper;
 
-{$R *.dfm}
-
-procedure TFormListen.DoResize();
+{ TOptixOpenSSLHandler.Create }
+constructor TOptixOpenSSLHandler.Create(AContext : TOptixOpenSSLContext; const ASocketFd : TSocket);
 begin
-  ButtonConnect.Top := (PanelBottom.Height div 2) - (ButtonConnect.Height div 2);
-  ButtonCancel.Top  := ButtonConnect.Top;
+  inherited Create();
+  ///
 
-  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
-  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
+  FContext  := AContext;
+  FSocketFd := ASocketFd;
+
+  FSSLConnection := nil;
 end;
 
-procedure TFormListen.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+{ TOptixOpenSSLHandler.Destroy }
+destructor TOptixOpenSSLHandler.Destroy();
 begin
-  case Key of
-    13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+  SSLFree();
+
+  ///
+  inherited Destroy();
+end;
+
+{ TOptixOpenSSLHandler.SSLFree }
+procedure TOptixOpenSSLHandler.SSLFree();
+begin
+  if Assigned(FSSLConnection) then begin
+    SSL_free(FSSLConnection);
+
+    FSSLConnection := nil;
   end;
 end;
 
-procedure TFormListen.FormResize(Sender: TObject);
+{ TOptixOpenSSLHandler.SSLConnect }
+procedure TOptixOpenSSLHandler.Connect();
 begin
-  DoResize();
+  if not Assigned(FContext) or (FSocketFd = INVALID_SOCKET) then
+    Exit();
+  ///
+
+  if Assigned(FSSLConnection) then
+    SSLFree();
+
+  FSSLConnection := SSL_new(FContext.Context);
+  if not Assigned(FSSLConnection) then
+    raise EOpenSSLBaseException.Create();
+
+  if SSL_set_fd(FSSLConnection, FSocketFd) <> 1 then
+    raise EOpenSSLBaseException.Create();
+
+  var AReturn : Integer;
+
+  case FContext.Method of
+    sslClient : AReturn := SSL_connect(FSSLConnection);
+    sslServer : AReturn := SSL_accept(FSSLConnection);
+    else
+      Exit();
+  end;
+
+  if AReturn <> 1 then
+    raise EOpenSSLBaseException.Create.Create(FSSLConnection);
 end;
 
-procedure TFormListen.FormCreate(Sender: TObject);
+{ TOptixOpenSSLHandler.Send }
+procedure TOptixOpenSSLHandler.Send(const buf; const len : Integer);
 begin
-  FCanceled := False;
+  while True do begin
+    var AReturn := SSL_Write(FSSLConnection, buf, len);
+    if AReturn > 0 then
+      break;
+    ///
+
+    case SSL_get_error(FSSLConnection, AReturn) of
+      SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE :
+        continue;
+
+      else
+        raise EOpenSSLBaseException.Create(FSSLConnection);
+    end;
+  end;
 end;
 
-procedure TFormListen.FormShow(Sender: TObject);
+{ TOptixOpenSSLHandler.Recv }
+procedure TOptixOpenSSLHandler.Recv(var buf; const len : Integer);
 begin
-  DoResize();
+  while True do begin
+    var AReturn := SSL_Read(FSSLConnection, buf, len);
+    if AReturn > 0 then
+      break;
+    ///
+
+    case SSL_get_error(FSSLConnection, AReturn) of
+      SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE :
+        continue;
+
+      else
+        raise EOpenSSLBaseException.Create(FSSLConnection);
+    end;
+  end;
 end;
 
-procedure TFormListen.ButtonCancelClick(Sender: TObject);
+{ TOptixOpenSSLHandler.IsDataPending }
+function TOptixOpenSSLHandler.IsDataPending() : Boolean;
 begin
-  FCanceled := True;
-
-  Close();
+  result := SSL_pending(FSSLConnection) > 0;
 end;
 
-procedure TFormListen.ButtonConnectClick(Sender: TObject);
+{ TOptixOpenSSLHandler.IsConnectionAlive }
+function TOptixOpenSSLHandler.IsConnectionAlive() : Boolean;
 begin
-  Close();
+  var ADummyBuffer : array[0..0] of Byte;
+
+  var AReturn := SSL_peek(FSSLConnection, @ADummyBuffer, 1);
+  if AReturn > 0 then
+    result := True
+  else begin
+    var AError := SSL_get_error(FSSLConnection, AReturn);
+    case AError of
+      SSL_ERROR_ZERO_RETURN : result := False;
+
+      SSL_ERROR_WANT_READ,
+      SSL_ERROR_WANT_WRITE : result := True;
+    else
+      raise EOpenSSLBaseException.Create(FSSLConnection);
+    end;
+  end;
 end;
 
 end.

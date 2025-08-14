@@ -45,7 +45,7 @@ unit Optix.OpenSSL.Context;
 
 interface
 
-uses System.Classes, System.SyncObjs, Optix.OpenSSL.Headers;
+uses System.Classes, System.SyncObjs, Optix.OpenSSL.Headers, Optix.OpenSSL.Helper;
 
 type
   TOpenSSLMethod = (
@@ -55,26 +55,32 @@ type
 
   TOptixOpenSSLContext = class
   private
-    FCertificateFile : String;
-    FContext         : Pointer;
+    FContext : Pointer;
+    FMethod  : TOpenSSLMethod;
 
     {@M}
-    procedure CreateContext(const AOpenSSLMethod : TOpenSSLMethod);
-    procedure LoadCertificate(const ACertificateFile : String);
+    procedure CreateContext();
+    procedure LoadCertificate(const ACertificateFile : String); overload;
+    procedure LoadCertificate(const ACertificate : TX509Certificate); overload;
+
+    {@C}
+    constructor Create(const AOpenSSLMethod : TOpenSSLMethod); overload;
   public
     {@C}
-    constructor Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String);
+    constructor Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String); overload;
+    constructor Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificate : TX509Certificate); overload;
     destructor Destroy(); override;
 
     {@G}
-    property Context : Pointer read FContext;
+    property Context : Pointer        read FContext;
+    property Method  : TOpenSSLMethod read FMethod;
   end;
 
   var OPENSSL_VERIFY_CALLBACK_LOCK : TCriticalSection;
 
 implementation
 
-uses System.SysUtils, Optix.OpenSSL.Exceptions;
+uses Winapi.Windows, System.SysUtils, Optix.OpenSSL.Exceptions;
 
 (* Local *)
 
@@ -92,10 +98,10 @@ end;
 (* TOptixOpenSSLContext *)
 
 { TOptixOpenSSLContext.CreateContext }
-procedure TOptixOpenSSLContext.CreateContext(const AOpenSSLMethod : TOpenSSLMethod);
+procedure TOptixOpenSSLContext.CreateContext();
 begin
   var pOpenSSLMethod := nil;
-  case AOpenSSLMethod of
+  case FMethod of
     sslClient : pOpenSSLMethod := TLS_client_method;
     sslServer : pOpenSSLMethod := TLS_server_method;
   end;
@@ -106,7 +112,7 @@ begin
 
   // You have no choice man!
   var ACipherSuite := 'TLS_AES_256_GCM_SHA384';
-  if SSL_CTX_set_ciphersuites(FContext, PAnsiChar(ACipherSuite)) <> 1 then
+  if SSL_CTX_set_ciphersuites(FContext, PAnsiChar(AnsiString(ACipherSuite))) <> 1 then
     raise EOpenSSLLibraryException.Create(Format('Missing cipher suite: "%s"', [ACipherSuite]));
 
   SSL_CTX_set_verify(FContext, SSL_VERIFY_PEER or SSL_VERIFY_FAIL_IF_NO_PEER_CERT, @OpenSSLVerifyCallback);
@@ -120,11 +126,11 @@ begin
   ///
 
   // Load Public Key
-  if SSL_CTX_use_certificate_file(FContext, PAnsiChar(ACertificateFile), SSL_FILETYPE_PEM) <> 1 then
+  if SSL_CTX_use_certificate_file(FContext, PAnsiChar(AnsiString(ACertificateFile)), SSL_FILETYPE_PEM) <> 1 then
     raise EOpenSSLBaseException.Create();
 
   // Load Private Key
-  if SSL_CTX_use_PrivateKey_file(FContext, PAnsiChar(ACertificateFile), SSL_FILETYPE_PEM) <> 1 then
+  if SSL_CTX_use_PrivateKey_file(FContext, PAnsiChar(AnsiString(ACertificateFile)), SSL_FILETYPE_PEM) <> 1 then
     raise EOpenSSLBaseException.Create();
 
   // Check if key pair match
@@ -132,16 +138,47 @@ begin
     raise EOpenSSLBaseException.Create();
 end;
 
+{ TOptixOpenSSLContext.LoadCertificate }
+procedure TOptixOpenSSLContext.LoadCertificate(const ACertificate : TX509Certificate);
+begin
+  if SSL_CTX_use_certificate(FContext, ACertificate.pX509) <> 1 then
+    raise EOpenSSLBaseException.Create();
+
+  if SSL_CTX_use_PrivateKey(FContext, ACertificate.pPrivKey) <> 1 then
+    raise EOpenSSLBaseException.Create();
+
+  if SSL_CTX_check_private_key(FContext) <> 1 then
+    raise EOpenSSLBaseException.Create();
+end;
+
 { TOptixOpenSSLContext.Create }
-constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String);
+constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod);
 begin
   inherited Create();
   ///
 
   FContext := nil;
+  FMethod  := AOpenSSLMethod;
 
-  CreateContext(AOpenSSLMethod);
+  CreateContext();
+end;
+
+{ TOptixOpenSSLContext.Create }
+constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String);
+begin
+  Create(AOpenSSLMethod);
+  ///
+
   LoadCertificate(ACertificateFile);
+end;
+
+{ TOptixOpenSSLContext.Create }
+constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificate : TX509Certificate);
+begin
+  Create(AOpenSSLMethod);
+  ///
+
+  LoadCertificate(ACertificate);
 end;
 
 { TOptixOpenSSLContext.Destroy }

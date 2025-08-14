@@ -56,7 +56,7 @@ type
   public
     {@M}
     procedure Clear();
-    function ToString() : String;
+    function ToString() : String; override;
 
     {@C}
     constructor Create(const AJsonString : String = '');
@@ -79,7 +79,7 @@ type
     function Read(const AName : String) : TOptixConfigBase;
   end;
 
-  {$IFDEF SERVER or CLIENT_GUI}
+  {$IF defined(SERVER) or defined(CLIENT_GUI)}
   var CONFIG_HELPER : TOptixConfigHelper;
   {$ENDIF}
 
@@ -163,16 +163,19 @@ end;
 
 function TOptixConfigHelper.Read(const AName : String) : TOptixConfigBase;
 begin
+  result := nil;
+  ///
+
   Open();
   try
     if FRegistry.ValueExists(AName) then
       result := TOptixConfigBase.Create(FRegistry.ReadString(AName));
   except
-    result := nil;
+
   end;
 end;
 
-{$IFDEF SERVER or CLIENT_GUI}
+{$IF defined(SERVER) or defined(CLIENT_GUI)}
 initialization
   var AKeyName : String;
   var AHive    : HKEY;
@@ -180,7 +183,7 @@ initialization
   {$IFDEF SERVER}
     AKeyName := 'OptixGate';
     AHive    := HKEY_CURRENT_USER;
-    {$ELSEIF CLIENT_GUI}
+  {$ELSE}
       AKeyName := 'OptixGate_ClientGUI';
     {$IFDEF DEBUG}
       AHive := HKEY_CURRENT_USER;

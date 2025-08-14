@@ -195,7 +195,7 @@ object FormFileManager: TFormFileManager
       Left = 448
       Top = 10
       Width = 21
-      Height = 20
+      Height = 15
       Margins.Left = 8
       Margins.Top = 10
       Margins.Right = 8
@@ -209,9 +209,6 @@ object FormFileManager: TFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
-      ExplicitLeft = 452
-      ExplicitTop = 6
-      ExplicitHeight = 24
     end
   end
   object PopupMenu: TPopupMenu

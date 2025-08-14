@@ -45,6 +45,8 @@ unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
+{$I Optix.inc}
+
 uses System.Classes, Generics.Collections, Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands,
      Optix.Protocol.Client.Handler;
 
@@ -70,7 +72,8 @@ type
 implementation
 
 uses System.SysUtils, System.SyncObjs, Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Protocol.Packet,
-     Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Sockets.Exceptions;
+     Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Sockets.Exceptions
+     {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 
 { TOptixFileTransferOrchestratorThread.AddTransfer }
 procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixCommandTransfer);
@@ -193,15 +196,16 @@ begin
                 TOptixDownloadTask(ATask).DownloadChunk(FClient);
               end;
             except
-              on E : ESocketException do
-                raise;
-
               on E : Exception do begin
-                if Assigned(FHandler) then
-                  FHandler.AddPacket(TLogTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Progress'));
+                if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then
+                  raise
+                else begin
+                  if Assigned(FHandler) then
+                    FHandler.AddPacket(TLogTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Progress'));
 
-                ///
-                ATerminatedTransfers.Add(ATransfer);
+                  ///
+                  ATerminatedTransfers.Add(ATransfer);
+                end;
               end;
             end;
 
@@ -251,7 +255,8 @@ end;
 { TOptixFileTransferOrchestratorThread.Finalize }
 constructor TOptixFileTransferOrchestratorThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AHandler : TOptixClientHandlerThread);
 begin
-  inherited Create(ARemoteAddress, ARemotePort);
+  // TODO: better, context cloning? context reuse from handler for workers?
+  inherited Create({$IFDEF USETLS}AHandler.PublicKey, AHandler.PrivateKey, {$ENDIF}ARemoteAddress, ARemotePort);
   ///
 
   FHandler  := AHandler;

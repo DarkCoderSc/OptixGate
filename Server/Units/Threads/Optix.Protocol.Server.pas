@@ -45,8 +45,11 @@ unit Optix.Protocol.Server;
 
 interface
 
+{$I Optix.inc}
+
 uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject, Generics.Collections, Optix.Sockets.Helper,
-     Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight;
+     Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight
+     {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
 
 type
   TOptixServerThread = class;
@@ -69,6 +72,11 @@ type
     FBindPort            : Word;
     FServer              : TServerSocket;
 
+    {$IFDEF USETLS}
+    FSSLContext          : TOptixOpenSSLContext;
+    FX509Certificate     : TX509Certificate;
+    {$ENDIF}
+
     FClientSockets       : TList<TSocket>;
 
     FOnServerStart       : TOnServerStart;
@@ -87,7 +95,7 @@ type
     procedure TerminatedSet(); override;
   public
     {@C}
-    constructor Create(const ABindAddress : String; const ABindPort : Word); overload;
+    constructor Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word); overload;
     destructor Destroy(); override;
 
     {@G/S}
@@ -105,7 +113,7 @@ type
 implementation
 
 uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions, Optix.Protocol.Worker.FileTransfer,
-     Optix.Protocol.Client;
+     Optix.Protocol.Client{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 
 (* TOptixServerThread *)
 
@@ -126,12 +134,13 @@ begin
       while not Terminated do begin
         AClient := nil;
         try
-          AClient := FServer.AcceptClient();
+          AClient := FServer.AcceptClient({$IFDEF USETLS}FSSLContext{$ENDIF});
           ///
 
           // Preflight packet
           var APreflight : TOptixPreflightRequest;
           AClient.Recv(APreflight, SizeOf(TOptixPreflightRequest));
+
           if APreflight.ProtocolVersion <> OPTIX_PROTOCOL_VERSION then
             raise EOptixPreflightException.Create(Format('Client:[%s] / Server:[%s] version mismatch.', [
               APreflight.ProtocolVersion,
@@ -161,11 +170,15 @@ begin
           else
             raise EOptixPreflightException.Create('Nothing to do with incomming client.');
         except
-          if Assigned(AClient) then
-            FreeAndNil(AClient);
+          on E : Exception do begin
+            if Assigned(AClient) then
+              FreeAndNil(AClient);
 
-          ///
-          break;
+            {$IFDEF USETLS}
+            if not (E is EOpenSSLBaseException) then
+            {$ENDIF}
+              break;
+          end;
         end;
       end;
     except
@@ -204,7 +217,7 @@ begin
 end;
 
 { TOptixServerThread.Create }
-constructor TOptixServerThread.Create(const ABindAddress : String; const ABindPort : Word);
+constructor TOptixServerThread.Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word);
 begin
   inherited Create();
   ///
@@ -219,6 +232,11 @@ begin
   FBindAddress := ABindAddress;
   FBindPort    := ABindPort;
   FServer      := nil;
+
+  {$IFDEF USETLS}
+  TOptixOpenSSLHelper.LoadCertificate(APubKey, APrivKey, FX509Certificate);
+  FSSLContext := TOptixOpenSSLContext.Create(sslServer, FX509Certificate);
+  {$ENDIF}
 
   FClientSockets := TList<TSocket>.Create();
 end;
@@ -238,6 +256,14 @@ begin
 
   if Assigned(FServer) then
     FreeAndNil(FServer);
+
+  {$IFDEF USETLS}
+  if Assigned(FSSLContext) then begin
+    TOptixOpenSSLHelper.FreeCertificate(FX509Certificate);
+
+    FreeAndNil(FSSLContext);
+  end;
+  {$ENDIF}
 
   ///
   inherited Destroy();

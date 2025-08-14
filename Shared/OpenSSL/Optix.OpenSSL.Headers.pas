@@ -107,6 +107,7 @@ type
 const SSL_FILETYPE_PEM                = 1;
       SSL_ERROR_WANT_READ             = 2;
       SSL_ERROR_WANT_WRITE            = 3;
+      SSL_ERROR_ZERO_RETURN           = 6;
       SSL_ERROR_SSL                   = 1;
       SSL_ERROR_NONE                  = 0;
       SSL_VERIFY_PEER                 = $01;
@@ -122,25 +123,28 @@ const SSL_FILETYPE_PEM                = 1;
 (* libssl.dll *)
 
 function SSL_CTX_new(pMethod: Pointer): Pointer cdecl; external LIB_SSL_DLL;
-function SSL_CTX_use_certificate_file(pContext: Pointer; const ACertificateFile: PAnsiChar; ACertificateType: Integer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_CTX_use_PrivateKey_file(pContext: Pointer; const APrivateKeyFile: PAnsiChar; ACertificateType: Integer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_CTX_check_private_key(pContext: Pointer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_new(pContext: Pointer): Pointer cdecl; external LIB_SSL_DLL;
-procedure SSL_CTX_free(pContext: Pointer) cdecl; external LIB_SSL_DLL;
-function SSL_set_fd(pSSL: Pointer; ASocketFd: Integer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_accept(pSSL: Pointer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_read(pSSL: Pointer; pBuffer: Pointer; ABufferLength: Integer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_peek(pSSL: Pointer; pBuffer: Pointer; ABufferLength: Integer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_write(pSSL: Pointer; const pBuffer: Pointer; ABufferLength: Integer): Integer cdecl; external LIB_SSL_DLL;
-procedure SSL_free(pSSL: Pointer); cdecl; external LIB_SSL_DLL;
-function SSL_CTX_set_ciphersuites(_para1: Pointer; const AString: PAnsiChar): Integer cdecl; external LIB_SSL_DLL;
-function SSL_connect(pSSL: Pointer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_get_error(pSSL: Pointer; AReturnCode: Integer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_CTX_use_certificate_file(ctx: Pointer; const file_: PAnsiChar; type_: Integer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_CTX_use_PrivateKey_file(ctx: Pointer; const file_: PAnsiChar; type_: Integer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_CTX_use_certificate(ctx: Pointer; x: Pointer): Integer; cdecl; external LIB_SSL_DLL;
+function SSL_CTX_use_PrivateKey(ctx: Pointer; pkey: Pointer): Integer; cdecl; external LIB_SSL_DLL;
+function SSL_CTX_check_private_key(ctx: Pointer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_new(ctx: Pointer): Pointer cdecl; external LIB_SSL_DLL;
+procedure SSL_CTX_free(ctx: Pointer) cdecl; external LIB_SSL_DLL;
+function SSL_set_fd(ssl: Pointer; fd: Integer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_accept(ssl: Pointer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_read(ssl: Pointer; var buf; num: Integer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_peek(ssl: Pointer; buf: Pointer; num: Integer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_write(ssl: Pointer; const buf; num: Integer): Integer cdecl; external LIB_SSL_DLL;
+procedure SSL_free(ssl: Pointer); cdecl; external LIB_SSL_DLL;
+function SSL_CTX_set_ciphersuites(_para1: Pointer; const str: PAnsiChar): Integer cdecl; external LIB_SSL_DLL;
+function SSL_connect(ssl: Pointer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_get_error(ssl: Pointer; ret: Integer): Integer cdecl; external LIB_SSL_DLL;
 function TLS_server_method(): Pointer cdecl; external LIB_SSL_DLL;
 function TLS_client_method(): Pointer cdecl; external LIB_SSL_DLL;
-function SSL_has_pending(pSSL : Pointer): Integer cdecl; external LIB_SSL_DLL;
-function SSL_get_peer_certificate(pSSL: Pointer): Pointer cdecl; external LIB_SSL_DLL;
-procedure SSL_CTX_set_verify(pContext: Pointer; AMode: Integer; pCallback: Pointer) cdecl; external LIB_SSL_DLL;
+function SSL_has_pending(ssl : Pointer): Integer cdecl; external LIB_SSL_DLL;
+function SSL_get_peer_certificate(ssl : Pointer): Pointer cdecl; external LIB_SSL_DLL;
+procedure SSL_CTX_set_verify(ctx: Pointer; mode: Integer; verify_callback: Pointer) cdecl; external LIB_SSL_DLL;
+function SSL_pending(ssl: Pointer): Integer; cdecl; external  LIB_SSL_DLL;
 
 (* libcrypto.dll *)
 

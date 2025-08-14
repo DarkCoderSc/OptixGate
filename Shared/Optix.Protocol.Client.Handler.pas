@@ -80,7 +80,7 @@ type
 
 implementation
 
-uses Optix.Sockets.Exceptions, System.SyncObjs;
+uses Optix.Sockets.Exceptions, System.SyncObjs{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 
 { TOptixClientHandlerThread.PollActions }
 procedure TOptixClientHandlerThread.PollActions();
@@ -115,12 +115,12 @@ begin
           if Assigned(APacket) then
             FClient.SendPacket(APacket);
         except
-          on E : ESocketException do
-            raise;
-
           on E : Exception do begin
-            // Void
-          end;
+			if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then
+			  raise;
+
+			// Other exception, for now, we ignore.
+		  end;
         end;
       finally
         if Assigned(APacket) then
@@ -139,11 +139,11 @@ begin
       if Assigned(ASerializedPacket) then
         PacketReceived(ASerializedPacket);
     except
-      on E : ESocketException do
-        raise;
-
       on E : Exception do begin
-        // Void
+        if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then
+          raise;
+
+        // Other exception, for now, we ignore.
       end;
     end;
 

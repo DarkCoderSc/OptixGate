@@ -21,7 +21,6 @@ object FormAbout: TFormAbout
     Top = 8
     Width = 80
     Height = 80
-    ImageCollection = FormMain.ImageCollectionDark
     ImageWidth = 0
     ImageHeight = 0
     ImageIndex = -1

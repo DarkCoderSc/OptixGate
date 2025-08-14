@@ -48,7 +48,7 @@ interface
 {$I Optix.Inc}
 
 uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs, Generics.Collections,
-     Optix.Protocol.Preflight;
+     Optix.Protocol.Preflight{$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
 
 type
   {$IFDEF CLIENT_GUI}
@@ -68,6 +68,14 @@ type
 
     {$IFDEF CLIENT_GUI}
     FOnNetworkException : TOnNetworkException;
+    {$ENDIF}
+
+    {$IFDEF USETLS}
+    FSSLContext          : TOptixOpenSSLContext;
+    FX509Certificate     : TX509Certificate;
+
+    FPublicKey           : String;
+    FPrivateKey          : String;
     {$ENDIF}
 
     {@M}
@@ -92,7 +100,7 @@ type
     function InitializePreflightRequest() : TOptixPreflightRequest; virtual; abstract;
   public
     {@C}
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word); overload; virtual;
+    constructor Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word); overload; virtual;
 
     destructor Destroy(); override;
 
@@ -108,11 +116,17 @@ type
     property RemoteAddress : String read FRemoteAddress;
     property RemotePort    : Word   read FRemotePort;
     property ClientId      : TGUID  read FClientId;
+
+    {$IFDEF USETLS}
+    // TODO: better, context cloning? context reuse from handler for workers?
+    property PublicKey  : String read FPublicKey;
+    property PrivateKey : String read FPrivateKey;
+    {$ENDIF}
   end;
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions;
+uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 
 { TOptixClientThread.Connected }
 procedure TOptixClientThread.Connected();
@@ -139,7 +153,7 @@ begin
 end;
 
 { TOptixClientThread.Create }
-constructor TOptixClientThread.Create(const ARemoteAddress : String; const ARemotePort : Word);
+constructor TOptixClientThread.Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word);
 begin
   inherited Create();
   ///
@@ -154,6 +168,14 @@ begin
 
   {$IFDEF CLIENT_GUI}
   FOnNetworkException := nil;
+  {$ENDIF}
+
+  {$IFDEF USETLS}
+  TOptixOpenSSLHelper.LoadCertificate(APublicKey, APrivateKey, FX509Certificate);
+  FSSLContext := TOptixOpenSSLContext.Create(sslClient, FX509Certificate);
+
+  FPublicKey  := APublicKey;
+  FPrivateKey := APrivateKey;
   {$ENDIF}
 
   ///
@@ -172,6 +194,14 @@ begin
   ///
   Finalize();
 
+  {$IFDEF USETLS}
+  if Assigned(FSSLContext) then begin
+    TOptixOpenSSLHelper.FreeCertificate(FX509Certificate);
+
+    FreeAndNil(FSSLContext);
+  end;
+  {$ENDIF}
+
   ///
   inherited Destroy();
 end;
@@ -181,7 +211,7 @@ procedure TOptixClientThread.ThreadExecute();
 begin
   while not Terminated do begin
     try
-      FClient := TClientSocket.Create(FRemoteAddress, FRemotePort);
+      FClient := TClientSocket.Create({$IFDEF USETLS}FSSLContext, {$ENDIF}FRemoteAddress, FRemotePort);
       try
         FClient.Connect();
         ///
@@ -189,30 +219,30 @@ begin
         // Preflight Request
         var APreflight := InitializePreflightRequest();
         APreflight.HandlerId := FClientId;
-
         FClient.Send(APreflight, SizeOf(TOptixPreflightRequest));
 
         Connected();
 
         ClientExecute();
       except
-        on E: ESocketException do begin
-          Disconnected();
+        on E : Exception do begin
+          if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then begin
+            Disconnected();
 
-          {$IFDEF CLIENT_GUI}
-          if Assigned(FOnNetworkException) and not Terminated then
-            case e.WSALastError of
-              0, 10061 : ; // Ignore those error codes
-              else
-                Synchronize(procedure begin
-                  FOnNetworkException(self, E.Message);
-                end);
-            end;
-          {$ENDIF}
-        end;
-
-        on E: Exception do begin
-          raise;
+            {$IFDEF CLIENT_GUI}
+            if Assigned(FOnNetworkException) and not Terminated then
+              if E is ESocketException then begin
+                case ESocketException(E).WSALastError of
+                  0, 10061 : ; // Ignore those error codes
+                  else
+                    Synchronize(procedure begin
+                      FOnNetworkException(self, E.Message);
+                    end);
+                end;
+              end;
+            {$ENDIF}
+          end else
+            raise; // Raise other exceptions
         end;
       end;
     finally
