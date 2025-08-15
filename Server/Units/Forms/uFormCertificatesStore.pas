@@ -48,7 +48,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Optix.OpenSSL.Helper, VirtualTrees.Types;
+  VirtualTrees, Vcl.Menus, Optix.OpenSSL.Helper, VirtualTrees.Types, Generics.Collections;
 
 type
   TTreeData = record
@@ -71,6 +71,8 @@ type
     N1: TMenuItem;
     N2: TMenuItem;
     RemoveCertificate1: TMenuItem;
+    CopySelectedFingerprint1: TMenuItem;
+    N3: TMenuItem;
     procedure GeneratenewCertificate1Click(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -89,14 +91,22 @@ type
     procedure ExportCertificate1Click(Sender: TObject);
     procedure ExportPrivateKey1Click(Sender: TObject);
     procedure RemoveCertificate1Click(Sender: TObject);
+    procedure CopySelectedFingerprint1Click(Sender: TObject);
   private
     {@M}
+    function GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
     procedure ExportCertificate(const pNode : PVirtualNode; const AExportWhich : TOpenSSLCertificateKeyTypes = []);
     procedure RegisterCertificate(const ACertificate : TX509Certificate);
+    function GetCertificateCount() : Integer;
     procedure Save();
     procedure Load();
   public
-    { Public declarations }
+    {@M}
+    function GetCertificateKeys(const AFingerPrint : String; var APublicKey : String; var APrivateKey : String) : Boolean;
+    function GetCertificatesFingerprints() : TList<String>;
+
+    {@G}
+    property CertificateCount : Integer read GetCertificateCount;
   end;
 
 var
@@ -105,9 +115,61 @@ var
 implementation
 
 uses uFormGenerateNewCertificate, Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore,
-     Optix.Config.Helper, Optix.VCL.Helper, Optix.OpenSSL.Exceptions;
+     Optix.Config.Helper, Optix.VCL.Helper, Optix.OpenSSL.Exceptions, VCL.Clipbrd;
 
 {$R *.dfm}
+
+function TFormCertificatesStore.GetCertificateCount() : Integer;
+begin
+  result := VST.RootNodeCount;
+end;
+
+function TFormCertificatesStore.GetCertificatesFingerprints() : TList<String>;
+begin
+  result := TList<String>.Create();
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+
+    ///
+    result.Add(pData^.Certificate.Fingerprint);
+  end;
+end;
+
+function TFormCertificatesStore.GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+
+    if String.Compare(pData^.Certificate.Fingerprint, AFingerPrint, True) = 0 then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
+end;
+
+function TFormCertificatesStore.GetCertificateKeys(const AFingerPrint : String; var APublicKey : String; var APrivateKey : String) : Boolean;
+begin
+  result := False;
+
+  APublicKey := '';
+  APrivateKey := '';
+
+  var pNode := GetNodeByFingerprint(AFingerPrint);
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  TOptixOpenSSLHelper.SerializeKeys(pData^.Certificate, APublicKey, APrivateKey);
+
+  ///
+  result := (not APublicKey.IsEmpty) and (not APrivateKey.IsEmpty);
+end;
 
 procedure TFormCertificatesStore.Save();
 begin
@@ -128,6 +190,9 @@ end;
 
 procedure TFormCertificatesStore.Load();
 begin
+  VST.Clear();
+  ///
+
   var AConfig := TOptixConfigCertificatesStore(CONFIG_HELPER.Read('Certificates'));
   if not Assigned(AConfig) then
     Exit();
@@ -159,14 +224,21 @@ begin
   if not Assigned(pCertificate) then
     Exit();
 
-  ExportCertificate1.Visible := Assigned(pCertificate);
-  ExportPublicKey1.Visible   := Assigned(pCertificate);
-  ExportPrivateKey1.Visible  := Assigned(pCertificate);
-  RemoveCertificate1.Visible := Assigned(pCertificate);
+  ExportCertificate1.Visible       := Assigned(pCertificate);
+  ExportPublicKey1.Visible         := Assigned(pCertificate);
+  ExportPrivateKey1.Visible        := Assigned(pCertificate);
+  RemoveCertificate1.Visible       := Assigned(pCertificate);
+  CopySelectedFingerprint1.Visible := Assigned(pCertificate);
 end;
 
 procedure TFormCertificatesStore.RegisterCertificate(const ACertificate : TX509Certificate);
 begin
+  if GetNodeByFingerprint(ACertificate.Fingerprint) <> nil then begin
+    Application.MessageBox('The certificate already exists in the store and cannot be added again.', 'Register Certificate', MB_ICONERROR);
+    Exit();
+  end;
+  ///
+
   VST.BeginUpdate();
   try
     var pNode := VST.AddChild(nil);
@@ -260,6 +332,16 @@ begin
 
   ///
   result := PX509Certificate(@pData^.Certificate);
+end;
+
+procedure TFormCertificatesStore.CopySelectedFingerprint1Click(Sender: TObject);
+begin
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+
+  Clipboard.AsText := pData^.Certificate.Fingerprint;
 end;
 
 procedure TFormCertificatesStore.ExportCertificate(const pNode : PVirtualNode; const AExportWhich : TOpenSSLCertificateKeyTypes = []);

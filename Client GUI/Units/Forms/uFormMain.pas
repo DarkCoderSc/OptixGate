@@ -45,7 +45,7 @@ unit uFormMain;
 
 interface
 
-{$I Optix.inc}
+todo, me reste plus qu'à implémenter la validation du certificat server <> client pour la mTLS
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
@@ -55,12 +55,9 @@ uses
   VirtualTrees.Types, System.UITypes;
 
 type
-  TClientStatus = (csDisconnected, csConnected, csOnError, csFree);
+  TClientStatus = (csDisconnected, csConnected, csOnError);
 
   TTreeData = record
-    ServerAddress    : String; // Copy required (If Handler is Freed)
-    ServerPort       : Word;   // Copy required
-
     {$IFDEF USETLS}
     PublicKey        : String; // Copy required
     PrivateKey       : String; // Copy required
@@ -86,11 +83,10 @@ type
     about1: TMenuItem;
     Debug1: TMenuItem;
     hreads1: TMenuItem;
-    N2: TMenuItem;
-    Reload1: TMenuItem;
     NotificationCenter: TNotificationCenter;
     Stores1: TMenuItem;
     Certificates1: TMenuItem;
+    rustedCertificates1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -108,15 +104,15 @@ type
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure about1Click(Sender: TObject);
     procedure hreads1Click(Sender: TObject);
-    procedure Reload1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure Certificates1Click(Sender: TObject);
+    procedure rustedCertificates1Click(Sender: TObject);
   private
     FNotifications : TList<TGUID>;
 
     {@M}
-    procedure AddClient({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String;{$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+    procedure AddClient({$IFDEF USETLS}const AClientCertificateFingerprint : String; {$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
 
     procedure OnConnectedToServer(Sender : TOptixSessionHandlerThread);
     procedure OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
@@ -138,7 +134,8 @@ var
 implementation
 
 uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants, uFormAbout, uFormDebugThreads,
-     Optix.Protocol.Preflight{$IFDEF USETLS}, uFormCertificatesStore, Optix.DebugCertificate{$ENDIF};
+     Optix.Protocol.Preflight
+     {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, Optix.DebugCertificate{$ENDIF};
 
 {$R *.dfm}
 
@@ -236,7 +233,16 @@ end;
 
 procedure TFormMain.OnSessionHandlerDestroyed(Sender : TOptixSessionHandlerThread);
 begin
-  UpdateNodeStatus(Sender, csFree);
+  var pNode := GetNodeFromHandler(Sender);
+  if not Assigned(pNode) then
+    Exit();
+
+  VST.BeginUpdate();
+  try
+    VST.DeleteNode(pNode);
+  finally
+    VST.EndUpdate();
+  end;
 end;
 
 procedure TFormMain.OnNetworkException(Sender : TOptixClientThread; const AErrorMessage : String);
@@ -261,8 +267,29 @@ begin
   Close();
 end;
 
-procedure TFormMain.AddClient({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String;{$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+procedure TFormMain.AddClient({$IFDEF USETLS}const AClientCertificateFingerprint : String; {$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
 begin
+  {$IFDEF USETLS}
+    var APublicKey  : String;
+    var APrivateKey : String;
+
+    {$IFDEF DEBUG}
+      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
+      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
+    {$ELSE}
+      if not FormCertificatesStore.GetCertificateKeys(AClientCertificateFingerprint, APublicKey, APrivateKey) then begin
+        Application.MessageBox(
+          'Client certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
+          'generate a new one.',
+          'Connect To Server',
+          MB_ICONERROR
+        );
+
+        Exit();
+      end;
+    {$ENDIF}
+  {$ENDIF}
+
   VST.beginUpdate();
   try
     var pNode : PVirtualNode;
@@ -277,15 +304,7 @@ begin
     pData^.Status := csDisconnected;
     pData^.ExtraDescription := '';
 
-    pData^.ServerAddress := AServerAddress;
-    pData^.ServerPort    := AServerPort;
-
-    {$IFDEF USETLS}
-    pData^.PublicKey     := APublicKey;
-    pData^.PrivateKey    := APrivateKey;
-    {$ENDIF}
-
-    pData^.Handler := TOptixSessionHandlerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}pData^.ServerAddress, pData^.ServerPort);
+    pData^.Handler := TOptixSessionHandlerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}AServerAddress, AServerPort);
     pData^.Handler.Retry := True;
     pData^.Handler.RetryDelay := 1000;
 
@@ -301,28 +320,41 @@ begin
 end;
 
 procedure TFormMain.ConnecttoServer1Click(Sender: TObject);
+var AForm : TFormConnectToServer;
 begin
   {$IFDEF DEBUG}
-    {$IFDEF USETLS}
-      var APublicKey  := '';
-      var APrivateKey := '';
-
-      {$IFDEF DEBUG}
-      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
-      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
-      {$ENDIF}
-    {$ENDIF}
-
-    AddClient({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}'127.0.0.1', 2801);
+    AddClient({$IFDEF USETLS}'', {$ENDIF}'127.0.0.1', 2801);
   {$ELSE}
-    var AForm := TFormConnectToServer.Create(self);
+    {$IFDEF USETLS}
+      var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
+      try
+        if AFingerprints.Count = 0 then
+          raise Exception.Create('No existing certificate was found in the certificate store. You cannot connect ' +
+                                 'to a remote server without registering at least one certificate.');
+
+        if FormTrustedCertificates.TrustedCertificateCount = 0 then
+              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
+                                     'store. You cannot connect to a remote server without registering at least one ' +
+                                     'trusted certificate. A trusted certificate represents the fingerprint of a ' +
+                                     'server certificate and is required for mutual authentication, ensuring that ' +
+                                     'network communications are secure and not tampered with or eavesdropped on.');
+
+        ///
+
+        AForm := TFormConnectToServer.Create(self, AFingerprints);
+      finally
+        FreeAndNil(AFingerprints);
+      end;
+    {$ELSE}
+      AForm := TFormConnectToServer.Create(self);
+    {$ENDIF}
     try
       AForm.ShowModal();
       if AForm.Canceled then
         Exit();
       ///
 
-      AddClient(AForm.EditServerAddress.Text, AForm.SpinPort.Value);
+      AddClient({$IFDEF USETLS}AForm.ComboCertificate.Text, {$ENDIF}AForm.EditServerAddress.Text, AForm.SpinPort.Value);
     finally
       FreeAndNil(AForm);
     end;
@@ -343,6 +375,12 @@ procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FNotifications := TList<TGUID>.Create(); // Maybe, I will need that l8r
 
+  {$IFNDEF USETLS}
+  Stores1.Visible := False;
+  Certificates1.Visible := False;
+  rustedCertificates1.Visible := False;
+  {$ENDIF}
+
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
 end;
 
@@ -355,28 +393,6 @@ end;
 procedure TFormMain.PopupMenuPopup(Sender: TObject);
 begin
   RemoveClient1.Visible :=  VST.FocusedNode <> nil;
-  Reload1.Visible := False;
-
-  var pNode := VST.FocusedNode;
-  var pData : PTreeData;
-
-  if Assigned(pNode) then begin
-    pData := pNode.GetData;
-
-    if pData^.Status = csFree then
-      Reload1.Visible := True;
-  end;
-end;
-
-procedure TFormMain.Reload1Click(Sender: TObject);
-begin
-  if VST.FocusedNode = nil then
-    Exit();
-
-  var pData := PTreeData(VST.FocusedNode.GetData);
-
-  if pData^.Status = csFree then
-    AddClient({$IFDEF USETLS}pData^.PublicKey, pData^.PrivateKey, {$ENDIF}pData^.ServerAddress, pData^.ServerPort, VST.FocusedNode);
 end;
 
 procedure TFormMain.RemoveClient1Click(Sender: TObject);
@@ -390,6 +406,13 @@ begin
   finally
     VST.EndUpdate();
   end;
+end;
+
+procedure TFormMain.rustedCertificates1Click(Sender: TObject);
+begin
+  {$IFDEF USETLS}
+  FormTrustedCertificates.Show();
+  {$ENDIF}
 end;
 
 procedure TFormMain.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
@@ -439,7 +462,6 @@ begin
     csDisconnected : ImageIndex := IMAGE_CLIENT_DISCONNECTED;
     csConnected    : ImageIndex := IMAGE_CLIENT_CONNECTED;
     csOnError      : ImageIndex := IMAGE_CLIENT_ERROR;
-    csFree         : ImageIndex := IMAGE_CLIENT_FREED;
   end;
 end;
 
@@ -453,16 +475,18 @@ procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Col
 begin
   var pData := PTreeData(Node.GetData);
 
+  if not Assigned(pData^.Handler) then
+    Exit();
+
   CellText := '';
 
   case Column of
-    0 : CellText := pData^.ServerAddress;
-    1 : CellText := IntToStr(pData^.ServerPort);
+    0 : CellText := pData^.Handler.RemoteAddress;
+    1 : CellText := IntToStr(pData^.Handler.RemotePort);
     2 : begin
       case pData^.Status of
         csDisconnected : CellText := 'Disconnected';
         csConnected    : CellText := 'Connected';
-        csFree         : CellText := 'Free';
         csOnError      : CellText := 'Error';
       end;
     end;

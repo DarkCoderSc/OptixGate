@@ -45,8 +45,6 @@ unit Optix.Sockets.Helper;
 
 interface
 
-{$I Optix.inc}
-
 uses Winapi.Windows, Winapi.Winsock2, System.Classes, System.SysUtils, XSuperObject, Optix.Protocol.Packet
      {$IFDEF USETLS},Optix.OpenSSL.Handler, Optix.OpenSSL.Context{$ENDIF};
 

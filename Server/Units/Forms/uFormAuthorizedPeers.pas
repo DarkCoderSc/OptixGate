@@ -41,160 +41,27 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Config.Helper;
+unit uFormAuthorizedPeers;
 
 interface
 
-uses System.Classes, Winapi.Windows, System.Win.Registry, XSuperObject, Optix.Interfaces;
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
 
 type
-  TOptixConfigBase = class
-  protected
-    FJsonObject : ISuperObject;
-  public
-    {@M}
-    procedure Clear();
-    function ToString() : String; override;
-
-    {@C}
-    constructor Create(const AJsonString : String = '');
-  end;
-
-  TOptixConfigHelper = class
+  TFormAuthorizedPeers = class(TForm)
   private
-    FRegistry : TRegistry;
-    FKeyName  : String;
-
-    {@M}
-    procedure Open();
+    { Private declarations }
   public
-    {@C}
-    constructor Create(const AKeyName : String; const AHive : HKEY);
-    destructor Destroy(); override;
-
-    {@}
-    procedure Write(const AName : String; const AConfig : TOptixConfigBase);
-    function Read(const AName : String) : TOptixConfigBase;
+    { Public declarations }
   end;
 
-  {$IF defined(SERVER) or defined(CLIENT_GUI)}
-  var CONFIG_HELPER : TOptixConfigHelper;
-  {$ENDIF}
+var
+  FormAuthorizedPeers: TFormAuthorizedPeers;
 
 implementation
 
-uses System.SysUtils;
-
-(* TOptixConfigBase *)
-
-{ TOptixConfigBase.Create }
-constructor TOptixConfigBase.Create(const AJsonString : String);
-begin
-  inherited Create();
-  ///
-
-  try
-    FJsonObject := SO(AJsonString);
-  except
-    Clear();
-  end;
-end;
-
-{ TOptixConfigBase.Clear }
-procedure TOptixConfigBase.Clear();
-begin
-  FJsonObject := SO();
-end;
-
-{ TOptixConfigBase.ToString }
-function TOptixConfigBase.ToString() : String;
-begin
-  result := FJsonObject.AsJson();
-end;
-
-(* TOptixConfigHelper *)
-
-{ TOptixConfigHelper.Create }
-constructor TOptixConfigHelper.Create(const AKeyName : String; const AHive : HKEY);
-begin
-  inherited Create();
-  ///
-
-  FRegistry := TRegistry.Create(KEY_ALL_ACCESS);
-  FRegistry.RootKey := AHive;
-
-  FKeyName := AKeyName;
-
-  Open();
-end;
-
-{ TOptixConfigHelper.Destroy }
-destructor TOptixConfigHelper.Destroy();
-begin
-  if Assigned(FRegistry) then
-    FreeAndNil(FRegistry);
-
-  ///
-  inherited Destroy();
-end;
-
-{ TOptixConfigHelper.Open }
-procedure TOptixConfigHelper.Open();
-begin
-  var AKeyPath := 'Software\' + FKeyName;
-  ///
-
-  if String.Compare(FRegistry.CurrentPath, AKeyPath, True) <> 0 then
-    FRegistry.OpenKey(AKeyPath, True);
-end;
-
-procedure TOptixConfigHelper.Write(const AName : String; const AConfig : TOptixConfigBase);
-begin
-  if not Assigned(AConfig) then
-    Exit();
-  ///
-
-  Open();
-
-  FRegistry.WriteString(AName, AConfig.ToString());
-end;
-
-function TOptixConfigHelper.Read(const AName : String) : TOptixConfigBase;
-begin
-  result := nil;
-  ///
-
-  Open();
-  try
-    if FRegistry.ValueExists(AName) then
-      result := TOptixConfigBase.Create(FRegistry.ReadString(AName));
-  except
-
-  end;
-end;
-
-{$IF defined(SERVER) or defined(CLIENT_GUI)}
-initialization
-  var AKeyName : String;
-  var AHive    : HKEY;
-
-  {$IFDEF SERVER}
-    AKeyName := 'OptixGate';
-    AHive    := HKEY_CURRENT_USER;
-  {$ELSE}
-      AKeyName := 'OptixGate_ClientGUI';
-    {$IFDEF DEBUG}
-      AHive := HKEY_CURRENT_USER;
-    {$ELSE}
-      AHive := HKEY_LOCAL_MACHINE;
-    {$ENDIF}
-  {$ENDIF}
-
-  CONFIG_HELPER := TOptixConfigHelper.Create(AKeyName, AHive);
-
-finalization
-  if Assigned(CONFIG_HELPER) then
-    FreeAndNil(CONFIG_HELPER);
-{$ENDIF}
+{$R *.dfm}
 
 end.

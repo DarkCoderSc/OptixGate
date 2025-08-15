@@ -41,87 +41,97 @@
 {                                                                              }
 {******************************************************************************}
 
-program OptixGate;
+program Client_OpenSSL;
+
+{$APPTYPE GUI}
+// {$APPTYPE CONSOLE}
+
+{$R *.res}
+
 uses
-  Vcl.Forms,
-  Vcl.Themes,
-  Vcl.Styles,
-  XSuperObject in '..\Shared\XSuperObject.pas',
+  System.SysUtils,
+  Winapi.Windows,
+  Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
+  Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
+  Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
+  Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
+  Optix.OpenSSL.Handler in '..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas',
+  Optix.DebugCertificate in 'Units\Optix.DebugCertificate.pas',
   Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
   Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
   Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
   Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
+  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
   Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
   Optix.Thread in '..\Shared\Optix.Thread.pas',
   Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
+  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
+  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
+  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
+  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
+  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
+  XSuperJSON in '..\Shared\XSuperJSON.pas',
+  XSuperObject in '..\Shared\XSuperObject.pas',
+  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
   Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
+  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
   Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
   Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
   Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
+  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
+  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
   Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
-  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
-  Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
-  Optix.Helper in 'Units\Optix.Helper.pas',
-  Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
-  Optix.Config.Helper in 'Units\Configs\Optix.Config.Helper.pas',
-  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
-  uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
-  Optix.Constants in 'Units\Optix.Constants.pas',
-  uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout},
-  uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
-  uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs},
-  uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
-  uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms},
-  uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers},
-  uFormDebugThreads in 'Units\Forms\uFormDebugThreads.pas' {FormDebugThreads},
-  uFormTasks in 'Units\Forms\uFormTasks.pas' {FormTasks},
-  uFormDumpProcess in 'Units\Forms\Dialogs\uFormDumpProcess.pas' {FormDumpProcess},
-  uFormRemoteShell in 'Units\Forms\uFormRemoteShell.pas' {FormRemoteShell},
-  uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
-  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen};
-
-{$R *.res}
-{$R data.res}
+  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
+  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas';
 
 begin
   IsMultiThread := True;
-  ///
+  try
+	{$IFNDEF CLIENT}
+    'The CLIENT compiler directive is missing from the project options. Please define it in the respective build '
+    'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding CLIENT.'
+    {$ENDIF}
+	
+	{$IFNDEF USETLS}
+    'The USETLS compiler directive is missing from the project options. Please define it in the respective build '
+    'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding USETLS.'
+    {$ENDIF}
+  
+    var AUserUID := TOptixInformationGathering.GetUserUID('+OpenSSL');
 
-  {$IFNDEF SERVER}
-  'The SERVER compiler directive is missing from the project options. Please define it in the respective build '
-  'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding SERVER.'
-  {$ENDIF}
+    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
+    if AMutex = 0 then
+      raise EWindowsException.Create('CreateMutexW');
+    try
+      if GetLastError() = ERROR_ALREADY_EXISTS then
+        Exit();
+      ///
 
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  TStyleManager.TrySetStyle('Glossy');
-  Application.CreateForm(TFormMain, FormMain);
-  Application.CreateForm(TFormAbout, FormAbout);
-  Application.CreateForm(TFormDebugThreads, FormDebugThreads);
-  // Application.CreateForm(TFormListen, FormListen);
-  // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
-  // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
-  // Application.CreateForm(TFormTransfers, FormTransfers);
-  // Application.CreateForm(TFormTasks, FormTasks);
-  // Application.CreateForm(TFormFileManager, FormFileManager);
-  // Application.CreateForm(TFormControlForms, FormControlForms);
-  // Application.CreateForm(TFormLogs, FormLogs);
-  // Application.CreateForm(TFormProcessManager, FormProcessManager);
-  Application.Run;
+      // Enable certain useful privileges (if possible)
+      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
+      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
+
+      var ASessionHandler := TOptixSessionHandlerThread.Create(DEBUG_CERTIFICATE_PUBLIC_KEY, DEBUG_CERTIFICATE_PRIVATE_KEY, '127.0.0.1', 2801);
+      ASessionHandler.Retry := True;
+      ASessionHandler.RetryDelay := 1000;
+      ASessionHandler.Start();
+
+      ///
+      ASessionHandler.WaitFor();
+    finally
+      TOptixThread.SignalHiveAndFlush();
+
+      ///
+      CloseHandle(AMutex);
+    end;
+  except
+    on E: Exception do
+      Writeln(E.ClassName, ': ', E.Message);
+  end;
 end.

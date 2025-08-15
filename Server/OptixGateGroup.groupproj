@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{516263E6-D666-40E1-AAA4-151D99FD6F7E}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="OptixGate_OpenSSL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="OptixGate.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="OptixGate_OpenSSL">
+        <MSBuild Projects="OptixGate_OpenSSL.dproj"/>
+    </Target>
+    <Target Name="OptixGate_OpenSSL:Clean">
+        <MSBuild Projects="OptixGate_OpenSSL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OptixGate_OpenSSL:Make">
+        <MSBuild Projects="OptixGate_OpenSSL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="OptixGate">
+        <MSBuild Projects="OptixGate.dproj"/>
+    </Target>
+    <Target Name="OptixGate:Clean">
+        <MSBuild Projects="OptixGate.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="OptixGate:Make">
+        <MSBuild Projects="OptixGate.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="OptixGate_OpenSSL;OptixGate"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="OptixGate_OpenSSL:Clean;OptixGate:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="OptixGate_OpenSSL:Make;OptixGate:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

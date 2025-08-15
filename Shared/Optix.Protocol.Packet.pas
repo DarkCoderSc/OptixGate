@@ -47,8 +47,6 @@ interface
 
 uses System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject;
 
-{$I Optix.inc}
-
 type
   TOptixPacket = class(TInterfacedPersistent, IOptixSerializable)
   private

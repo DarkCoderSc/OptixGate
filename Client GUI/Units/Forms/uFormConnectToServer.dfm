@@ -3,7 +3,7 @@ object FormConnectToServer: TFormConnectToServer
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Add Client'
-  ClientHeight = 148
+  ClientHeight = 199
   ClientWidth = 321
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object FormConnectToServer: TFormConnectToServer
     Left = 0
     Top = 0
     Width = 50
-    Height = 107
+    Height = 158
     Align = alLeft
     BevelOuter = bvNone
     Padding.Left = 8
@@ -30,15 +30,15 @@ object FormConnectToServer: TFormConnectToServer
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 0
-    ExplicitHeight = 75
+    ExplicitHeight = 126
     object Image: TVirtualImage
       Left = 8
       Top = 8
       Width = 34
-      Height = 91
+      Height = 142
       Align = alClient
       Center = True
-      ImageCollection = FormMain.ImageCollection
+      ImageCollection = FormMain.ImageCollectionDark
       ImageWidth = 0
       ImageHeight = 0
       ImageIndex = 0
@@ -51,7 +51,7 @@ object FormConnectToServer: TFormConnectToServer
     Left = 50
     Top = 0
     Width = 271
-    Height = 107
+    Height = 158
     Align = alClient
     BevelOuter = bvNone
     Padding.Left = 8
@@ -60,7 +60,7 @@ object FormConnectToServer: TFormConnectToServer
     Padding.Bottom = 8
     TabOrder = 1
     ExplicitWidth = 261
-    ExplicitHeight = 75
+    ExplicitHeight = 126
     object Label1: TLabel
       Left = 8
       Top = 8
@@ -84,6 +84,20 @@ object FormConnectToServer: TFormConnectToServer
       Caption = 'Server Port:'
       ExplicitWidth = 60
     end
+    object LabelCertificate: TLabel
+      AlignWithMargins = True
+      Left = 8
+      Top = 101
+      Width = 255
+      Height = 15
+      Margins.Left = 0
+      Margins.Top = 8
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alTop
+      Caption = 'Client Certificate:'
+      ExplicitWidth = 91
+    end
     object EditServerAddress: TEdit
       Left = 8
       Top = 23
@@ -100,22 +114,34 @@ object FormConnectToServer: TFormConnectToServer
       Width = 255
       Height = 24
       Align = alTop
+      MaxLength = 5
       MaxValue = 65535
       MinValue = 0
       TabOrder = 1
       Value = 2801
+      OnChange = SpinPortChange
+      ExplicitWidth = 245
+    end
+    object ComboCertificate: TComboBox
+      Left = 8
+      Top = 116
+      Width = 255
+      Height = 23
+      Align = alTop
+      Style = csDropDownList
+      TabOrder = 2
       ExplicitWidth = 245
     end
   end
   object PanelBottom: TPanel
     Left = 0
-    Top = 107
+    Top = 158
     Width = 321
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitTop = 75
+    ExplicitTop = 126
     ExplicitWidth = 311
     object ButtonConnect: TButton
       Left = 152

@@ -103,6 +103,7 @@ const
  IMAGE_RED_EXCLAMATION              = 55;
  IMAGE_SHELL_CLOSED                 = IMAGE_RED_EXCLAMATION;
  IMAGE_CERTIFICATE                  = 58;
+ IMAGE_TRUSTED_CERTIFICATE          = 59;
 
 var
  (* COLORS *)

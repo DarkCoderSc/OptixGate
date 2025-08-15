@@ -95,10 +95,10 @@ begin
     Exit();
 
   var ANode := AJsonArray.O[AIndex];
-  if not ANode.Contains('pubKey') or not ANode.Contains('privKey') then
+  if not ANode.Contains('PublicKey') or not ANode.Contains('PrivateKey') then
     Exit();
   try
-    TOptixOpenSSLHelper.LoadCertificate(ANode.S['pubKey'], ANode.S['privKey'], result);
+    TOptixOpenSSLHelper.LoadCertificate(ANode.S['PublicKey'], ANode.S['PrivateKey'], result);
   except
   end;
 end;
@@ -121,8 +121,8 @@ begin
 
   var ANode := SO();
 
-  ANode.S['pubKey']  := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPublic);
-  ANode.S['privKey'] := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPrivate);
+  ANode.S['PublicKey']  := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPublic);
+  ANode.S['PrivateKey'] := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPrivate);
 
   if AIndex < 0 then
     AJsonArray.Add(ANode)

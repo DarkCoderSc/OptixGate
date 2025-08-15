@@ -45,8 +45,6 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
-{$I Optix.inc}
-
 uses System.Classes, Generics.Collections, XSuperObject, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
      Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands, Optix.Task,
      Optix.Actions.ProcessHandler;

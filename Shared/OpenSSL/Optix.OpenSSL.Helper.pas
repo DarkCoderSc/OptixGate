@@ -79,6 +79,7 @@ type
     class function SerializeCertificateKey(const ACertificate : TX509Certificate; ACertificateType : TOpenSSLCertificateKeyType) : String; static;
     class function SerializePublicKey(const ACertificate : TX509Certificate) : String; static;
     class function SerializePrivateKey(const ACertificate : TX509Certificate) : String; static;
+    class procedure SerializeKeys(const ACertificate : TX509Certificate; var APublicKey : String; var APrivateKey : String); static;
   end;
 
 implementation
@@ -389,6 +390,20 @@ end;
 class function TOptixOpenSSLHelper.SerializePrivateKey(const ACertificate : TX509Certificate) : String;
 begin
   result := SerializeCertificateKey(ACertificate, cktPrivate);
+end;
+
+{ TOptixOpenSSLHelper.SerializeKeys }
+class procedure TOptixOpenSSLHelper.SerializeKeys(const ACertificate : TX509Certificate; var APublicKey : String; var APrivateKey : String);
+begin
+  APublicKey  := '';
+  APrivateKey := '';
+  ///
+
+  if not Assigned(ACertificate.pX509) or not ASsigned(ACertificate.pPrivKey) then
+    Exit();
+
+  APublicKey  := SerializePublicKey(ACertificate);
+  APrivateKey := SerializePrivateKey(ACertificate);
 end;
 
 end.

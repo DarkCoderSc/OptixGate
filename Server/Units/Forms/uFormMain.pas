@@ -46,13 +46,12 @@
     - Column Sorting
     - Improve OOP
     - Units sorting
+    - Control Forms must respect naming format : TFormControl______ / uFormControl______
 }
 
 unit uFormMain;
 
 interface
-
-{$I Optix.inc}
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
@@ -112,6 +111,8 @@ type
     ImageCollectionDark: TImageCollection;
     Stores1: TMenuItem;
     Certificates1: TMenuItem;
+    ShowLogs1: TMenuItem;
+    rustedCertificates1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -145,13 +146,15 @@ type
     procedure asks1Click(Sender: TObject);
     procedure RemoteShell1Click(Sender: TObject);
     procedure Certificates1Click(Sender: TObject);
+    procedure ShowLogs1Click(Sender: TObject);
+    procedure rustedCertificates1Click(Sender: TObject);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
 
     {@M}
     procedure StopServer();
-    procedure StartServer(const ABindAddress : String; const APort : Word);
+    procedure StartServer({$IFDEF USETLS}const AServerCertificateFingerprint : String;{$ENDIF}const ABindAddress : String; const APort : Word);
 
     procedure OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
     procedure OnServerStop(Sender : TOptixServerThread);
@@ -192,7 +195,7 @@ implementation
 uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
      uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
      Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen
-     {$IFDEF USETLS}, uFormCertificatesStore{$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF}{$ENDIF};
+     {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, Optix.DebugCertificate{$ENDIF};
 
 {$R *.dfm}
 
@@ -332,6 +335,11 @@ begin
   SendCommand(pNode, ACommand);
 end;
 
+procedure TFormMain.ShowLogs1Click(Sender: TObject);
+begin
+  // TODO
+end;
+
 //procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
 //begin
 //  SendCommand(GetNodeBySessionId(ASessionId), ACommand);
@@ -462,6 +470,13 @@ end;
 procedure TFormMain.RemoteShell1Click(Sender: TObject);
 begin
   CreateNewControlForm(VST.FocusedNode, TFormRemoteShell);
+end;
+
+procedure TFormMain.rustedCertificates1Click(Sender: TObject);
+begin
+  {$IFDEF USETLS}
+  FormTrustedCertificates.Show();
+  {$ENDIF}
 end;
 
 procedure TFormMain.UpdateStatus(const ACaption : String = '');
@@ -850,24 +865,36 @@ begin
   {$IFNDEF USETLS}
   Stores1.Visible := False;
   Certificates1.Visible := False;
+  rustedCertificates1.Visible := False;
   {$ENDIF}
 
   ///
   UpdateStatus();
 end;
 
-procedure TFormMain.StartServer(const ABindAddress : String; const APort : Word);
+procedure TFormMain.StartServer({$IFDEF USETLS}const AServerCertificateFingerprint : String;{$ENDIF}const ABindAddress : String; const APort : Word);
 begin
   StopServer();
   ///
 
   {$IFDEF USETLS}
-    var APublicKey  := '';
-    var APrivateKey := '';
+    var APublicKey  : String;
+    var APrivateKey : String;
 
     {$IFDEF DEBUG}
-    APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
-    APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
+      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
+      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
+    {$ELSE}
+      if not FormCertificatesStore.GetCertificateKeys(AServerCertificateFingerprint, APublicKey, APrivateKey) then begin
+        Application.MessageBox(
+          'Server certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
+          'generate a new one.',
+          'Start Server',
+          MB_ICONERROR
+        );
+
+        Exit();
+      end;
     {$ENDIF}
   {$ENDIF}
 
@@ -895,17 +922,48 @@ begin
 end;
 
 procedure TFormMain.Start1Click(Sender: TObject);
+var AForm : TFormListen;
 begin
   case TMenuItem(Sender).Tag of
     0 : begin
       {$IFDEF DEBUG}
-      StartServer('0.0.0.0', 2801);
+      StartServer({$IFDEF USETLS}'', {$ENDIF}'0.0.0.0', 2801);
       {$ELSE}
-      FormListen.ShowModal();
-      if FormListen.Canceled then
-        Exit();
+        {$IFDEF USETLS}
+          var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
+          try
+            if AFingerprints.Count = 0 then
+              raise Exception.Create('No existing certificate was found in the certificate store. You cannot start ' +
+                                     'listening for clients without registering at least one certificate.');
+            ///
 
-      StartServer(FormListen.EditServerBindAddress.Text, FormListen.SpinPort.Value);
+            if FormTrustedCertificates.TrustedCertificateCount = 0 then
+              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
+                                     'store. You cannot start listening for clients without registering at least one ' +
+                                     'trusted certificate. A trusted certificate represents the fingerprint of a ' +
+                                     'client certificate and is required for mutual authentication, ensuring that ' +
+                                     'network communications are secure and not tampered with or eavesdropped on.');
+
+            AForm := TFormListen.Create(self, AFingerprints);
+          finally
+            FreeAndNil(AFingerprints);
+          end;
+        {$ELSE}
+          AForm := TFormListen.Create(self);
+        {$ENDIF}
+        try
+          AForm.ShowModal();
+          if AForm.Canceled then
+            Exit();
+
+          StartServer(
+            {$IFDEF USETLS}AForm.ComboCertificate.Text, {$ENDIF}
+            AForm.EditServerBindAddress.Text,
+            AForm.SpinPort.Value
+          );
+        finally
+          FreeAndNil(AForm);
+        end;
       {$ENDIF}
     end;
 

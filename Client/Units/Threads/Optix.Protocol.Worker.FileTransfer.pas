@@ -45,8 +45,6 @@ unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
-{$I Optix.inc}
-
 uses System.Classes, Generics.Collections, Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands,
      Optix.Protocol.Client.Handler;
 

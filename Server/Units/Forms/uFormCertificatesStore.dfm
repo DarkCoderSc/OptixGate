@@ -114,6 +114,13 @@ object FormCertificatesStore: TFormCertificatesStore
     object N2: TMenuItem
       Caption = '-'
     end
+    object CopySelectedFingerprint1: TMenuItem
+      Caption = 'Copy Selected Fingerprint'
+      OnClick = CopySelectedFingerprint1Click
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
     object RemoveCertificate1: TMenuItem
       Caption = 'Remove Certificate'
       OnClick = RemoveCertificate1Click

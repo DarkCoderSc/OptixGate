@@ -41,160 +41,99 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Config.Helper;
+unit Optix.Config.TrustedCertificatesStore;
 
 interface
 
-uses System.Classes, Winapi.Windows, System.Win.Registry, XSuperObject, Optix.Interfaces;
+uses XSuperObject, Optix.Config.Helper;
 
 type
-  TOptixConfigBase = class
-  protected
-    FJsonObject : ISuperObject;
-  public
-    {@M}
-    procedure Clear();
-    function ToString() : String; override;
-
-    {@C}
-    constructor Create(const AJsonString : String = '');
-  end;
-
-  TOptixConfigHelper = class
+  // TODO: Create a custom iterator for..in
+  TOptixTrustedConfigCertificatesStore = class(TOptixConfigBase)
   private
-    FRegistry : TRegistry;
-    FKeyName  : String;
-
     {@M}
-    procedure Open();
+    function GetCount() : Integer;
+
+    function GetItem(AIndex: Integer): String;
+    procedure SetItem(AIndex: Integer; const AValue: String);
   public
-    {@C}
-    constructor Create(const AKeyName : String; const AHive : HKEY);
-    destructor Destroy(); override;
+    {@M}
+    procedure Add(const AFingerprint : String);
 
-    {@}
-    procedure Write(const AName : String; const AConfig : TOptixConfigBase);
-    function Read(const AName : String) : TOptixConfigBase;
+    {@G}
+    property Count : Integer read GetCount;
+    property Items[AIndex : Integer]: String read GetItem write SetItem; default;
   end;
-
-  {$IF defined(SERVER) or defined(CLIENT_GUI)}
-  var CONFIG_HELPER : TOptixConfigHelper;
-  {$ENDIF}
 
 implementation
 
-uses System.SysUtils;
+uses Winapi.Windows, Optix.Helper;
 
-(* TOptixConfigBase *)
-
-{ TOptixConfigBase.Create }
-constructor TOptixConfigBase.Create(const AJsonString : String);
+{ TOptixTrustedConfigCertificatesStore.GetCount }
+function TOptixTrustedConfigCertificatesStore.GetCount() : Integer;
 begin
-  inherited Create();
+  result := 0;
   ///
 
-  try
-    FJsonObject := SO(AJsonString);
-  except
-    Clear();
-  end;
+ if not FJsonObject.Contains('Items') then
+  Exit();
+
+  result := FJsonObject.A['Items'].Length;
 end;
 
-{ TOptixConfigBase.Clear }
-procedure TOptixConfigBase.Clear();
+{ TOptixTrustedConfigCertificatesStore.GetItem }
+function TOptixTrustedConfigCertificatesStore.GetItem(AIndex: Integer): String;
 begin
-  FJsonObject := SO();
-end;
+  result := '';
 
-{ TOptixConfigBase.ToString }
-function TOptixConfigBase.ToString() : String;
-begin
-  result := FJsonObject.AsJson();
-end;
-
-(* TOptixConfigHelper *)
-
-{ TOptixConfigHelper.Create }
-constructor TOptixConfigHelper.Create(const AKeyName : String; const AHive : HKEY);
-begin
-  inherited Create();
-  ///
-
-  FRegistry := TRegistry.Create(KEY_ALL_ACCESS);
-  FRegistry.RootKey := AHive;
-
-  FKeyName := AKeyName;
-
-  Open();
-end;
-
-{ TOptixConfigHelper.Destroy }
-destructor TOptixConfigHelper.Destroy();
-begin
-  if Assigned(FRegistry) then
-    FreeAndNil(FRegistry);
-
-  ///
-  inherited Destroy();
-end;
-
-{ TOptixConfigHelper.Open }
-procedure TOptixConfigHelper.Open();
-begin
-  var AKeyPath := 'Software\' + FKeyName;
-  ///
-
-  if String.Compare(FRegistry.CurrentPath, AKeyPath, True) <> 0 then
-    FRegistry.OpenKey(AKeyPath, True);
-end;
-
-procedure TOptixConfigHelper.Write(const AName : String; const AConfig : TOptixConfigBase);
-begin
-  if not Assigned(AConfig) then
+  if not FJsonObject.Contains('Items') then
     Exit();
   ///
 
-  Open();
+  var AJsonArray := FJsonObject.A['Items'];
 
-  FRegistry.WriteString(AName, AConfig.ToString());
-end;
+  if (AIndex < 0) or (AIndex > AJsonArray.Length-1) then
+    Exit();
 
-function TOptixConfigHelper.Read(const AName : String) : TOptixConfigBase;
-begin
-  result := nil;
-  ///
-
-  Open();
+  var ANode := AJsonArray.O[AIndex];
+  if not ANode.Contains('Fingerprint') then
+    Exit();
   try
-    if FRegistry.ValueExists(AName) then
-      result := TOptixConfigBase.Create(FRegistry.ReadString(AName));
-  except
+    var AFingerprint := ANode.S['Fingerprint'];
+    CheckCertificateFingerprint(AFingerprint);
 
+    result := AFingerprint;
+  except
   end;
 end;
 
-{$IF defined(SERVER) or defined(CLIENT_GUI)}
-initialization
-  var AKeyName : String;
-  var AHive    : HKEY;
+{ TOptixTrustedConfigCertificatesStore.Add }
+procedure TOptixTrustedConfigCertificatesStore.Add(const AFingerprint : String);
+begin
+  SetItem(-1, AFingerprint);
+end;
 
-  {$IFDEF SERVER}
-    AKeyName := 'OptixGate';
-    AHive    := HKEY_CURRENT_USER;
-  {$ELSE}
-      AKeyName := 'OptixGate_ClientGUI';
-    {$IFDEF DEBUG}
-      AHive := HKEY_CURRENT_USER;
-    {$ELSE}
-      AHive := HKEY_LOCAL_MACHINE;
-    {$ENDIF}
-  {$ENDIF}
+{ TOptixTrustedConfigCertificatesStore.SetItem }
+procedure TOptixTrustedConfigCertificatesStore.SetItem(AIndex: Integer; const AValue: String);
+begin
+  var AJsonArray  : ISuperArray;
 
-  CONFIG_HELPER := TOptixConfigHelper.Create(AKeyName, AHive);
+  if FJsonObject.Contains('Items') then
+    AJsonArray := FJsonObject.A['Items']
+  else
+    AJsonArray := SA();
 
-finalization
-  if Assigned(CONFIG_HELPER) then
-    FreeAndNil(CONFIG_HELPER);
-{$ENDIF}
+  var ANode := SO();
+
+  ANode.S['Fingerprint']  := AValue;
+
+  if AIndex < 0 then
+    AJsonArray.Add(ANode)
+  else if (AIndex >= 0) and (AIndex <= AJsonArray.Length-1) then
+    AJsonArray.O[AIndex] := ANode;
+
+  ///
+  FJsonObject.A['Items'] := AJsonArray;
+end;
 
 end.

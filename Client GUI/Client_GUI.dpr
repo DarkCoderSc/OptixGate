@@ -43,8 +43,6 @@
 
 program Client_GUI;
 
-{$I Optix.inc}
-
 uses
   Winapi.Windows,
   System.SysUtils,
@@ -86,25 +84,11 @@ uses
   Optix.VCL.Helper in '..\Server\Units\Optix.VCL.Helper.pas',
   Optix.Helper in '..\Server\Units\Optix.Helper.pas',
   Optix.Constants in 'Units\Optix.Constants.pas',
-  {$IFDEF USETLS}
-  Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
-  Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
-  Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
-  Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
-  Optix.OpenSSL.Handler in '..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas',
-  {$IFDEF DEBUG}
-  Optix.DebugCertificate in '..\Client\Units\Optix.DebugCertificate.pas',
-  {$ENDIF}
-  Optix.Config.CertificatesStore in '..\Server\Units\Configs\Optix.Config.CertificatesStore.pas',
-  {$ENDIF}
   Optix.Config.Helper in '..\Server\Units\Configs\Optix.Config.Helper.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
   uFormConnectToServer in 'Units\Forms\uFormConnectToServer.pas' {FormConnectToServer},
   uFormAbout in '..\Server\Units\Forms\uFormAbout.pas' {FormAbout},
-  uFormDebugThreads in '..\Server\Units\Forms\uFormDebugThreads.pas' {FormDebugThreads}
-  {$IFDEF USETLS},
-  uFormCertificatesStore in '..\Server\Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore},
-  uFormGenerateNewCertificate in '..\Server\Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate}{$ENDIF};
+  uFormDebugThreads in '..\Server\Units\Forms\uFormDebugThreads.pas' {FormDebugThreads};
 
 {$R *.res}
 {$R ..\Server\data.res}
@@ -113,6 +97,16 @@ begin
   IsMultiThread := True;
   ///
 
+  {$IFNDEF CLIENT}
+  'The CLIENT compiler directive is missing from the project options. Please define it in the respective build '
+  'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding CLIENT.'
+  {$ENDIF}
+
+  {$IFNDEF CLIENT_GUI}
+  'The CLIENT_GUI compiler directive is missing from the project options. Please define it in the respective build '
+  'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding CLIENT_GUI.'
+  {$ENDIF}
+  
   var AUserUID := TOptixInformationGathering.GetUserUID();
   var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
   if AMutex = 0 then
@@ -134,9 +128,6 @@ begin
     Application.CreateForm(TFormMain, FormMain);
     Application.CreateForm(TFormAbout, FormAbout);
     Application.CreateForm(TFormDebugThreads, FormDebugThreads);
-    {$IFDEF USETLS}
-    Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
-    {$ENDIF}
   // Application.CreateForm(TFormConnectToServer, FormConnectToServer);
     Application.Run;
   finally

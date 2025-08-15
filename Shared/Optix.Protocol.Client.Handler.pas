@@ -45,8 +45,6 @@ unit Optix.Protocol.Client.Handler;
 
 interface
 
-{$I Optix.inc }
-
 uses Optix.Protocol.Client, Optix.Protocol.Packet, Generics.Collections, Optix.Sockets.Helper, System.SysUtils,
      XSuperObject, Winapi.Windows, Optix.Protocol.Preflight;
 

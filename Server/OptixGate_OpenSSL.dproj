@@ -1,15 +1,15 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{A5E90304-CC8B-4E79-BEA2-7122494D036C}</ProjectGuid>
+        <ProjectGuid>{A9A47EB5-6646-4908-9DE2-69635DA918C2}</ProjectGuid>
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectName Condition="'$(ProjectName)'==''">OptixGate</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">OptixGate_OpenSSL</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
-        <MainSource>OptixGate.dpr</MainSource>
+        <MainSource>OptixGate_OpenSSL.dpr</MainSource>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -70,7 +70,7 @@
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
-        <SanitizedProjectName>OptixGate</SanitizedProjectName>
+        <SanitizedProjectName>OptixGate_OpenSSL</SanitizedProjectName>
         <Custom_Styles>&quot;Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf&quot;;Glossy|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glossy.vsf</Custom_Styles>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -81,10 +81,10 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <DCC_ExeOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_DcuOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_DcuOutput>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
-        <DCC_Define>SERVER;$(DCC_Define)</DCC_Define>
+        <DCC_Define>SERVER;USETLS;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>vclwinx;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;FireDACCommonDriver;appanalytics;IndyProtocols;vclx;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;soapmidas;vclactnband;fmxFireDAC;dbexpress;DBXMySQLDriver;VclSmp;inet;vcltouch;fmxase;dbrtl;fmxdae;FireDACMSAccDriver;CustomIPTransport;vcldsnap;DBXInterBaseDriver;IndySystem;Skia.Package.VCL;vcldb;VirtualTreesR;vclFireDAC;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;adortl;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;fmxobj;bindcompvclsmp;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -94,10 +94,10 @@
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <DCC_ExeOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_DcuOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_DcuOutput>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
-        <DCC_Define>SERVER;$(DCC_Define)</DCC_Define>
+        <DCC_Define>SERVER;USETLS;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -115,12 +115,12 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>Assets\optix.ico</Icon_MainIcon>
-        <DCC_ExeOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_ExeOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_ExeOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <DCC_ExeOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_DcuOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
@@ -138,8 +138,8 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <DCC_ExeOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_DcuOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>.\bins\OpenSSL\$(Platform)\$(Config)</DCC_DcuOutput>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
@@ -174,6 +174,13 @@
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
+        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas"/>
+        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas"/>
+        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas"/>
+        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Context.pas"/>
+        <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas"/>
+        <DCCReference Include="Units\Optix.DebugCertificate.pas"/>
+        <DCCReference Include="Units\Configs\Optix.Config.CertificatesStore.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
@@ -223,6 +230,20 @@
         <DCCReference Include="Units\Forms\uFormListen.pas">
             <Form>FormListen</Form>
         </DCCReference>
+        <DCCReference Include="Units\Forms\uFormCertificatesStore.pas">
+            <Form>FormCertificatesStore</Form>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\uFormGenerateNewCertificate.pas">
+            <Form>FormGenerateNewCertificate</Form>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\uFormAuthorizedPeers.pas">
+            <Form>FormAuthorizedPeers</Form>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\uFormTrustedCertificates.pas">
+            <Form>FormTrustedCertificates</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="Units\Configs\Optix.Config.TrustedCertificatesStore.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -242,7 +263,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">OptixGate.dpr</Source>
+                    <Source Name="MainSource">OptixGate_OpenSSL.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
@@ -256,15 +277,27 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Release\OptixGate.exe" Configuration="Release" Class="ProjectOutput">
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Release" Class="ProjectFile">
                     <Platform Name="Win32">
-                        <RemoteName>OptixGate.exe</RemoteName>
+                        <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="bins\NoSSL\Win32\Debug\OptixGate.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Optix.inc" Configuration="Debug" Class="ProjectFile">
                     <Platform Name="Win32">
-                        <RemoteName>OptixGate.exe</RemoteName>
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="Win32\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="bins\OpenSSL\Win32\Release\OptixGate_OpenSSL.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

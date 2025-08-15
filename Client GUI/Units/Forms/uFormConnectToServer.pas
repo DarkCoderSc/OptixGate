@@ -47,7 +47,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, Vcl.Samples.Spin;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, Vcl.Samples.Spin,
+  Generics.Collections;
 
 type
   TFormConnectToServer = class(TForm)
@@ -61,19 +62,27 @@ type
     PanelBottom: TPanel;
     ButtonConnect: TButton;
     ButtonCancel: TButton;
+    LabelCertificate: TLabel;
+    ComboCertificate: TComboBox;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure SpinPortChange(Sender: TObject);
   private
     FCanceled : Boolean;
 
     {@M}
     procedure DoResize();
   public
-    {@}
+    {$IFDEF USETLS}
+    {@C}
+    constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); overload;
+    {$ENDIF}
+
+    {@G}
     property Canceled : Boolean read FCanceled;
   end;
 
@@ -88,13 +97,24 @@ uses uFormMain;
 
 procedure TFormConnectToServer.ButtonCancelClick(Sender: TObject);
 begin
-  FCanceled := True;
-
   Close();
 end;
 
 procedure TFormConnectToServer.ButtonConnectClick(Sender: TObject);
 begin
+  if String.IsNullOrWhiteSpace(EditServerAddress.Text) then begin
+    EditServerAddress.SetFocus();
+
+    raise Exception.Create('You must specify a server hostname.');
+  end;
+
+  if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
+    raise Exception.Create(
+      'You must select an existing certificate (via its fingerprint) for the server to start listening.'
+    );
+
+  FCanceled := False;
+
   Close();
 end;
 
@@ -105,11 +125,25 @@ begin
 
   ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
   ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
+
+  var ANewHeight := PanelBottom.Height;
+
+  if not LabelCertificate.Visible then
+    Inc(ANewHeight, SpinPort.Top + SpinPort.Height + 8)
+  else
+    Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + 8);
+
+  ClientHeight := ANewHeight;
 end;
 
 procedure TFormConnectToServer.FormCreate(Sender: TObject);
 begin
-  FCanceled := False;
+  FCanceled := True;
+
+  {$IFNDEF USETLS}
+  LabelCertificate.Visible := False;
+  ComboCertificate.Visible := False;
+  {$ENDIF}
 end;
 
 procedure TFormConnectToServer.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -128,6 +162,35 @@ end;
 procedure TFormConnectToServer.FormShow(Sender: TObject);
 begin
   DoResize();
+
+  {$IFDEF USETLS}
+  ComboCertificate.ItemIndex := 0;
+  {$ENDIF}
 end;
+
+procedure TFormConnectToServer.SpinPortChange(Sender: TObject);
+begin
+  if TSpinEdit(Sender).Value < 0 then
+    TSpinEdit(Sender).Value := 0
+  else if TSpinEdit(Sender).Value > 65535 then
+    TSpinEdit(Sender).Value := 65535;
+end;
+
+{$IFDEF USETLS}
+{ TFormConnectToServer.Create }
+constructor TFormConnectToServer.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
+begin
+  inherited Create(AOwner);
+  ///
+
+  ComboCertificate.Clear();
+
+  if not Assigned(ACertificatesFingerprints) then
+    Exit();
+
+  for var AFingerprint in ACertificatesFingerprints do
+    ComboCertificate.Items.Add(AFingerprint);
+end;
+{$ENDIF}
 
 end.

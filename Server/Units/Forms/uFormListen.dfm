@@ -4,7 +4,7 @@ object FormListen: TFormListen
   BorderStyle = bsDialog
   Caption = 'Listen'
   ClientHeight = 185
-  ClientWidth = 298
+  ClientWidth = 333
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -21,13 +21,13 @@ object FormListen: TFormListen
   object PanelBottom: TPanel
     Left = 0
     Top = 144
-    Width = 298
+    Width = 333
     Height = 41
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitTop = 67
-    ExplicitWidth = 288
+    ExplicitTop = 112
+    ExplicitWidth = 323
     object ButtonConnect: TButton
       Left = 152
       Top = 6
@@ -50,7 +50,7 @@ object FormListen: TFormListen
   object PanelClient: TPanel
     Left = 50
     Top = 0
-    Width = 248
+    Width = 283
     Height = 144
     Align = alClient
     BevelOuter = bvNone
@@ -59,12 +59,12 @@ object FormListen: TFormListen
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 1
-    ExplicitWidth = 238
-    ExplicitHeight = 67
+    ExplicitWidth = 273
+    ExplicitHeight = 112
     object Label2: TLabel
       Left = 8
       Top = 8
-      Width = 232
+      Width = 267
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -78,7 +78,7 @@ object FormListen: TFormListen
       AlignWithMargins = True
       Left = 8
       Top = 54
-      Width = 232
+      Width = 267
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -88,11 +88,11 @@ object FormListen: TFormListen
       Caption = 'Server Port:'
       ExplicitWidth = 60
     end
-    object Label3: TLabel
+    object LabelCertificate: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 101
-      Width = 232
+      Width = 267
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -105,33 +105,36 @@ object FormListen: TFormListen
     object SpinPort: TSpinEdit
       Left = 8
       Top = 69
-      Width = 232
+      Width = 267
       Height = 24
       Align = alTop
+      MaxLength = 5
       MaxValue = 65535
       MinValue = 0
       TabOrder = 0
       Value = 2801
-      ExplicitWidth = 222
+      OnChange = SpinPortChange
+      ExplicitWidth = 257
     end
     object EditServerBindAddress: TEdit
       Left = 8
       Top = 23
-      Width = 232
+      Width = 267
       Height = 23
       Align = alTop
       TabOrder = 1
       Text = '0.0.0.0'
-      ExplicitWidth = 222
+      ExplicitWidth = 257
     end
     object ComboCertificate: TComboBox
       Left = 8
       Top = 116
-      Width = 232
+      Width = 267
       Height = 23
       Align = alTop
       Style = csDropDownList
       TabOrder = 2
+      ExplicitWidth = 257
     end
   end
   object PanelLeft: TPanel
@@ -146,7 +149,7 @@ object FormListen: TFormListen
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 2
-    ExplicitHeight = 67
+    ExplicitHeight = 112
     object Image: TVirtualImage
       Left = 8
       Top = 8

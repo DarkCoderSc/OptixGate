@@ -22,7 +22,8 @@ unit Optix.Helper;
 
 interface
 
-uses System.Classes, System.SysUtils, System.DateUtils, System.Math, System.TimeSpan, Winapi.ShellAPI, VCL.Controls;
+uses System.Classes, System.SysUtils, System.DateUtils, System.Math, System.TimeSpan, Winapi.ShellAPI, VCL.Controls,
+     System.RegularExpressions;
 
 // Format Utilities
 function FormatInt(const AInteger : Integer) : String;
@@ -45,9 +46,29 @@ function GetWindowsDirectory() : string;
 
 procedure Open(const ACommand : String);
 
+procedure CheckValidIpV4Address(const AValue : String);
+procedure CheckCertificateFingerprint(const AValue : String);
+
 implementation
 
 uses Winapi.Windows, System.IOUtils;
+
+{ _.CheckCertificateFingerprint }
+procedure CheckCertificateFingerprint(const AValue : String);
+begin
+  if not TRegEx.IsMatch(AValue, '^([0-9A-Fa-f]{2}:){63}[0-9A-Fa-f]{2}$') then
+    raise Exception.Create(
+      'Invalid certificate fingerprint. It must be a valid SHA-512 fingerprint, with each byte separated by a colon ' +
+      '(e.g., AA:BB:CC:DD…:FF).'
+    );
+end;
+
+{ _.IsValidIpV4Address }
+procedure CheckValidIpV4Address(const AValue : String);
+begin
+  if not TRegEx.IsMatch(AValue, '^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d).){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$') then
+    raise Exception.Create('Invalid IPv4 address format. Please enter a valid IPv4 address (e.g., 192.168.0.1).');
+end;
 
 { _.Open }
 procedure Open(const ACommand : String);

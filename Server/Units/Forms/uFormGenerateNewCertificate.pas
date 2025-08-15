@@ -90,13 +90,31 @@ uses uFormMain, Optix.Constants;
 
 procedure TFormGenerateNewCertificate.ButtonCancelClick(Sender: TObject);
 begin
-  FCanceled := True;
-
   Close();
 end;
 
 procedure TFormGenerateNewCertificate.ButtonGenerateClick(Sender: TObject);
 begin
+  if String.IsNullOrWhiteSpace(EditC.Text) then begin
+    EditC.SetFocus();
+
+    raise Exception.Create('You must specify a country.');
+  end;
+
+  if String.IsNullOrWhiteSpace(EditO.Text) then begin
+    EditO.SetFocus();
+
+    raise Exception.Create('You must specify an organization name.');
+  end;
+
+  if String.IsNullOrWhiteSpace(EditCN.Text) then begin
+    EditCN.SetFocus();
+
+    raise Exception.Create('You must specify a common name.');
+  end;
+
+  FCanceled := False;
+
   Close();
 end;
 
@@ -111,7 +129,7 @@ end;
 
 procedure TFormGenerateNewCertificate.FormCreate(Sender: TObject);
 begin
-  FCanceled := False;
+  FCanceled := True;
 
   Image.ImageIndex := IMAGE_CERTIFICATE;
 end;

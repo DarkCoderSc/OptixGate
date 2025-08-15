@@ -45,8 +45,6 @@ unit Optix.Protocol.Client;
 
 interface
 
-{$I Optix.Inc}
-
 uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs, Generics.Collections,
      Optix.Protocol.Preflight{$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
 
@@ -263,6 +261,9 @@ procedure TOptixClientThread.TerminatedSet();
 begin
   inherited TerminatedSet();
   ///
+
+  if Assigned(FClient) then
+    FClient.Close();
 
   if Assigned(FRetryEvent) then
     FRetryEvent.SetEvent();

@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{91994102-3706-4FCE-9E12-7F24C241EAC9}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Client_GUI_OpenSSL.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Client_GUI.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Client_GUI_OpenSSL">
+        <MSBuild Projects="Client_GUI_OpenSSL.dproj"/>
+    </Target>
+    <Target Name="Client_GUI_OpenSSL:Clean">
+        <MSBuild Projects="Client_GUI_OpenSSL.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Client_GUI_OpenSSL:Make">
+        <MSBuild Projects="Client_GUI_OpenSSL.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Client_GUI">
+        <MSBuild Projects="Client_GUI.dproj"/>
+    </Target>
+    <Target Name="Client_GUI:Clean">
+        <MSBuild Projects="Client_GUI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Client_GUI:Make">
+        <MSBuild Projects="Client_GUI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Client_GUI_OpenSSL;Client_GUI"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Client_GUI_OpenSSL:Clean;Client_GUI:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Client_GUI_OpenSSL:Make;Client_GUI:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
