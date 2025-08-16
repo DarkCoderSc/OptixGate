@@ -49,7 +49,6 @@ const OPTIX_PROTOCOL_VERSION = 'v1.0.0a1' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
 
 type
   TClientKind = (
-    ckUndefined,
     ckHandler,
     ckFileTransfer
   );
@@ -75,7 +74,6 @@ uses Optix.Protocol.Packet;
 class operator TOptixPreflightRequest.Initialize(out ADestRecord : TOptixPreflightRequest);
 begin
   ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;
-  ADestRecord.ClientKind      := ckUndefined;
   ADestRecord.SessionId       := SESSION_ID;
   ADestRecord.HandlerId       := TGUID.Empty;
 end;

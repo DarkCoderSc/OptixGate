@@ -56,6 +56,10 @@ type
   TOnServerStop     = procedure(Sender : TOptixServerThread) of object;
   TOnServerError    = procedure(Sender : TOptixServerThread; const AErrorMessage : String) of object;
 
+  {$IFDEF USETLS}
+  TOnVerifyPeerCertificate = procedure(Sender : TObject; const APeerFingerprint : String; var ASuccess : Boolean) of object;
+  {$ENDIF}
+
   TOnRegisterWorker = procedure(
     Sender            : TOptixServerThread;
     const AClient     : TClientSocket;
@@ -66,24 +70,28 @@ type
   (* TOptixServerThread *)
   TOptixServerThread = class(TOptixThread)
   private
-    FBindAddress         : String;
-    FBindPort            : Word;
-    FServer              : TServerSocket;
+    FBindAddress             : String;
+    FBindPort                : Word;
+    FServer                  : TServerSocket;
 
     {$IFDEF USETLS}
-    FSSLContext          : TOptixOpenSSLContext;
-    FX509Certificate     : TX509Certificate;
+    FSSLContext              : TOptixOpenSSLContext;
+    FX509Certificate         : TX509Certificate;
     {$ENDIF}
 
-    FClientSockets       : TList<TSocket>;
+    FClientSockets           : TList<TSocket>;
 
-    FOnServerStart       : TOnServerStart;
-    FOnServerError       : TOnServerError;
-    FOnServerStop        : TOnServerStop;
+    FOnServerStart           : TOnServerStart;
+    FOnServerError           : TOnServerError;
+    FOnServerStop            : TOnServerStop;
 
-    FOnSessionDisconnect : TOnSessionDisconnect;
-    FOnReceivePacket     : TOnReceivePacket;
-    FOnRegisterWorker    : TOnRegisterWorker;
+    FOnSessionDisconnect     : TOnSessionDisconnect;
+    FOnReceivePacket         : TOnReceivePacket;
+    FOnRegisterWorker        : TOnRegisterWorker;
+
+    {$IFDEF USETLS}
+    FOnVerifyPeerCertificate : TOnVerifyPeerCertificate;
+    {$ENDIF}
 
     {@M}
     procedure Close();
@@ -97,12 +105,15 @@ type
     destructor Destroy(); override;
 
     {@G/S}
-    property OnServerStart       : TOnServerStart       read FOnServerStart       write FOnServerStart;
-    property OnServerError       : TOnServerError       read FOnServerError       write FOnServerError;
-    property OnServerStop        : TOnServerStop        read FOnServerStop        write FOnServerStop;
-    property OnSessionDisconnect : TOnSessionDisconnect read FOnSessionDisconnect write FOnSessionDisconnect;
-    property OnReceivePacket     : TOnReceivePacket     read FOnReceivePacket     write FOnReceivePacket;
-    property OnRegisterWorker    : TOnRegisterWorker    read FOnRegisterWorker    write FOnRegisterWorker;
+    property OnServerStart           : TOnServerStart           read FOnServerStart           write FOnServerStart;
+    property OnServerError           : TOnServerError           read FOnServerError           write FOnServerError;
+    property OnServerStop            : TOnServerStop            read FOnServerStop            write FOnServerStop;
+    property OnSessionDisconnect     : TOnSessionDisconnect     read FOnSessionDisconnect     write FOnSessionDisconnect;
+    property OnReceivePacket         : TOnReceivePacket         read FOnReceivePacket         write FOnReceivePacket;
+    property OnRegisterWorker        : TOnRegisterWorker        read FOnRegisterWorker        write FOnRegisterWorker;
+    {$IFDEF USETLS}
+    property OnVerifyPeerCertificate : TOnVerifyPeerCertificate read FOnVerifyPeerCertificate write FOnVerifyPeerCertificate;
+    {$ENDIF}
 
     {@G}
     property Port : Word read FBindPort;
@@ -135,6 +146,23 @@ begin
           AClient := FServer.AcceptClient({$IFDEF USETLS}FSSLContext{$ENDIF});
           ///
 
+          {$IFDEF USETLS}
+          if Assigned(FOnVerifyPeerCertificate) then begin
+            var ASuccess := False;
+            var AFingerprint := AClient.PeerCertificateFingerprint;
+
+            Synchronize(procedure begin
+              FOnVerifyPeerCertificate(self, AFingerprint, ASuccess);
+            end);
+
+            if not ASuccess then
+              raise EOptixPreflightException.Create(
+                'The client certificate fingerprint does not match any certificate in the trusted certificate store.',
+                pecUntrustedPeer
+              );
+          end;
+          {$ENDIF}
+
           // Preflight packet
           var APreflight : TOptixPreflightRequest;
           AClient.Recv(APreflight, SizeOf(TOptixPreflightRequest));
@@ -143,10 +171,11 @@ begin
             raise EOptixPreflightException.Create(Format('Client:[%s] / Server:[%s] version mismatch.', [
               APreflight.ProtocolVersion,
               OPTIX_PROTOCOL_VERSION
-            ]));
+            ]), pecVersionMismatch);
 
-          if APreflight.ClientKind = ckUndefined then
-            raise EOptixPreflightException.Create('Client kind is undefined.');
+          // Connection established with remote peer (Success)
+          var APreflightAck := pecSuccess;
+          AClient.Send(APreflightAck, SizeOf(TPreflightErrorCode));
 
           // Ensure clients dies when server dies.
           if not FClientSockets.Contains(AClient.Socket) then
@@ -166,15 +195,24 @@ begin
               FOnRegisterWorker(self, AClient, APreflight.HandlerId, APreflight.ClientKind);
             end)
           else
-            raise EOptixPreflightException.Create('Nothing to do with incomming client.');
+            FreeAndNil(AClient);
         except
           on E : Exception do begin
+            if E is EOptixPreflightException then
+              try
+                AClient.Send(EOptixPreflightException(E).ErrorCode, SizeOf(TPreflightErrorCode));
+              except
+              end;
+
             if Assigned(AClient) then
               FreeAndNil(AClient);
+            ///
 
+            if not (E is EOptixPreflightException)
             {$IFDEF USETLS}
-            if not (E is EOpenSSLBaseException) then
+            and not (E is EOpenSSLBaseException)
             {$ENDIF}
+            then
               break;
           end;
         end;
@@ -234,6 +272,8 @@ begin
   {$IFDEF USETLS}
   TOptixOpenSSLHelper.LoadCertificate(APubKey, APrivKey, FX509Certificate);
   FSSLContext := TOptixOpenSSLContext.Create(sslServer, FX509Certificate);
+
+  FOnVerifyPeerCertificate := nil;
   {$ENDIF}
 
   FClientSockets := TList<TSocket>.Create();

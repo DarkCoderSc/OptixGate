@@ -48,8 +48,54 @@ interface
 uses System.SysUtils;
 
 type
-  EOptixPreflightException = class(Exception);
+  TPreflightErrorCode = (
+    pecSuccess,
+    pecVersionMismatch
+    {$IFDEF USETLS},
+    pecUntrustedPeer
+    {$ENDIF}
+  );
+
+  EOptixPreflightException = class(Exception)
+  private
+    FErrorCode : TPreflightErrorCode;
+  public
+    {@C}
+    constructor Create(const AMessage : String; const AErrorCode : TPreflightErrorCode);
+
+    {@G}
+    property ErrorCode : TPreflightErrorCode read FErrorCode;
+  end;
+
+  function PreflightErrorCodeToString(const AValue : TPreflightErrorCode) : String;
 
 implementation
+
+(* Local *)
+
+{ _.PreflightErrorCodeToString }
+function PreflightErrorCodeToString(const AValue : TPreflightErrorCode) : String;
+begin
+  case AValue of
+    pecVersionMismatch : result := 'Protocol Version Mismatch';
+    {$IFDEF USETLS}
+    pecUntrustedPeer   : result := 'Untrusted Peer Certificate';
+    {$ENDIF}
+    else
+      result := 'Success';
+  end;
+end;
+
+(* EOptixPreflightException *)
+
+{ EOptixPreflightException.Create }
+constructor EOptixPreflightException.Create(const AMessage : String; const AErrorCode : TPreflightErrorCode);
+var AFormatedMessage : String;
+begin
+  FErrorCode := AErrorCode;
+
+  ///
+  inherited Create(AMessage);
+end;
 
 end.

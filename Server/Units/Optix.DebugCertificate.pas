@@ -130,6 +130,10 @@ const DEBUG_CERTIFICATE_PUBLIC_KEY =
 'ZH5witlG'                                                         + #13#10 +
 '-----END CERTIFICATE-----';
 
+DEBUG_CLIENT_CERTIFICATE_FINGERPRINT = '92:3F:50:8D:CC:CB:13:AF:47:70:62:60:11:BB:0C:23:D0:E3:DD:C9:32:C5:BD:47:3E:' +
+                                       '85:F0:89:7C:C1:A4:9D:C4:03:94:28:8E:50:41:69:55:19:B7:D0:7A:71:EE:FC:DA:C5:' +
+                                       '54:2F:A2:E5:0D:86:3E:7E:87:10:5A:16:09:AD';
+
 implementation
 
 end.

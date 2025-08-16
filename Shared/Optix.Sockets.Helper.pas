@@ -110,6 +110,9 @@ type
     {$IFDEF USETLS}
     {@C}
     constructor Create(const ASSLContext : TOptixOpenSSLContext); overload;
+
+    {@M}
+    function GetPeerCertificateFingerprint() : String;
     {$ENDIF}
   public
     {@C}
@@ -149,11 +152,16 @@ type
     {@G}
     property RemoteAddress : String read FRemoteAddress;
     property RemotePort    : Word   read FRemotePort;
+
+    {$IFDEF USETLS}
+    property PeerCertificateFingerprint : String read GetPeerCertificateFingerprint;
+    {$ENDIF}
   end;
 
 implementation
 
-uses Optix.Sockets.Exceptions{$IFDEF USETLS}, Optix.OpenSSL.Headers, Optix.OpenSSL.Exceptions{$ENDIF};
+uses Optix.Sockets.Exceptions
+     {$IFDEF USETLS}, Optix.OpenSSL.Headers, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Helper{$ENDIF};
 
 
 (* TSocketBase *)
@@ -204,7 +212,7 @@ begin
   if setsockopt(ASocket, IPPROTO_TCP, TCP_NODELAY, @b, SizeOf(LongBool)) = SOCKET_ERROR then
     raise ESocketException.Create('setsockopt(TCP_NODELAY)');
 
-  var dw := 2048;
+  var dw := PACKET_SIZE * 2;
 
   if (setsockopt(ASocket, SOL_SOCKET, SO_RCVBUF, @dw, SizeOf(DWORD)) = SOCKET_ERROR) then
     raise ESocketException.Create('setsockopt(SO_RCVBUF)');
@@ -323,6 +331,16 @@ begin
     FSSLHandler.Recv(buf, len);
 end;
 
+{ TClientSocket.GetPeerCertificateFingerprint }
+function TClientSocket.GetPeerCertificateFingerprint() : String;
+begin
+  result := '';
+  ///
+
+  if Assigned(FSSLHandler) then
+    result := FSSLHandler.PeerCertificateFingerprint;
+end;
+
 {$ELSE}
 
 { TClientSocket.Send }
@@ -411,7 +429,7 @@ begin
   AValue.Position := 0;
 
   ///
-  self.SendBuffer(AValue.Memory, AValue.Size);
+  SendBuffer(AValue.Memory, AValue.Size);
 end;
 
 { TClientSocket.ReceiveStream }
@@ -437,37 +455,25 @@ end;
 
 { TClientSocket.SendString }
 procedure TClientSocket.SendString(const AString : String);
-var AStream : TMemoryStream;
 begin
-  AStream := TStringStream.Create();
-  try
-    AStream.Write(AString[1], Length(AString) * SizeOf(WideChar));
-
-    AStream.Position := 0;
-
-    SendStream(AStream);
-  finally
-    FreeAndNil(AStream);
-  end;
+  SendBuffer(PWideChar(AString), Length(AString) * SizeOf(WideChar));
 end;
 
 { TClientSocket.RecvString }
 function TClientSocket.ReceiveString() : String;
-var AStream : TMemoryStream;
 begin
   result := '';
   ///
 
-  AStream := TStringStream.Create();
+  var pBuffer := nil;
+  var ABufferSize : UInt64;
   try
-    ReceiveStream(AStream);
-    ///
+    ReceiveBuffer(pBuffer, ABufferSize);
 
-    AStream.Position := 0;
-
-    SetString(result, PWideChar(AStream.Memory), AStream.Size div SizeOf(WideChar));
+    SetString(result, PWideChar(pBuffer), ABufferSize div SizeOf(WideChar));
   finally
-    FreeAndNil(AStream);
+    if Assigned(pBuffer) then
+      FreeMem(pBuffer, ABufferSize);
   end;
 end;
 
@@ -496,7 +502,11 @@ begin
   var AJsonString := ReceiveString();
   ///
 
-  result := TSuperObject.Create(AJsonString);
+  try
+    result := TSuperObject.Create(AJsonString);
+  except
+    result := nil;
+  end;
 end;
 
 { TClientSocket.ReceiveJsonArray }
@@ -505,7 +515,11 @@ begin
   var AJsonString := ReceiveString();
   ///
 
-  result := TSuperArray.Create(AJsonString);
+  try
+    result := TSuperArray.Create(AJsonString);
+  except
+    result := nil;
+  end;
 end;
 
 { TClientSocket.SendPacket }

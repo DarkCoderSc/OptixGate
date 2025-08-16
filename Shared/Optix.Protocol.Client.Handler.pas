@@ -114,11 +114,11 @@ begin
             FClient.SendPacket(APacket);
         except
           on E : Exception do begin
-			if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then
-			  raise;
+            if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then
+              raise;
 
-			// Other exception, for now, we ignore.
-		  end;
+            // Other exception, for now, we ignore.
+          end;
         end;
       finally
         if Assigned(APacket) then

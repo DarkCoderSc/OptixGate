@@ -50,30 +50,41 @@ uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs, Generi
 
 type
   {$IFDEF CLIENT_GUI}
-  TOptixClientThread = class;
+    TOptixClientThread = class;
 
-  TOnNetworkException = procedure(Sender : TOptixClientThread; const AErrorMessage : String) of object;
+    TOnNetworkException = procedure(Sender : TOptixClientThread; const AErrorMessage : String) of object;
+
+    {$IFDEF USETLS}
+      TOnVerifyPeerCertificate = procedure(Sender : TObject; const APeerFingerprint : String; var ASuccess : Boolean) of object;
+    {$ENDIF}
   {$ENDIF}
 
   TOptixClientThread = class(TOptixThread)
   private
-    FRetry              : Boolean;
-    FRetryDelay         : Cardinal;
-    FRetryEvent         : TEvent;
+    FRetry         : Boolean;
+    FRetryDelay    : Cardinal;
+    FRetryEvent    : TEvent;
 
-    FRemoteAddress      : String;
-    FRemotePort         : Word;
+    FRemoteAddress : String;
+    FRemotePort    : Word;
 
     {$IFDEF CLIENT_GUI}
-    FOnNetworkException : TOnNetworkException;
+    FOnNetworkException      : TOnNetworkException;
+    {$IFDEF USETLS}
+    FOnVerifyPeerCertificate : TOnVerifyPeerCertificate;
+    {$ENDIF}
     {$ENDIF}
 
     {$IFDEF USETLS}
-    FSSLContext          : TOptixOpenSSLContext;
-    FX509Certificate     : TX509Certificate;
+    FSSLContext       : TOptixOpenSSLContext;
+    FX509Certificate  : TX509Certificate;
 
-    FPublicKey           : String;
-    FPrivateKey          : String;
+    FPublicKey        : String;
+    FPrivateKey       : String;
+
+    {$IFNDEF CLIENT_GUI}
+    FServerCertificateFingerprint : String;
+    {$ENDIF}
     {$ENDIF}
 
     {@M}
@@ -103,11 +114,18 @@ type
     destructor Destroy(); override;
 
     {@S}
-    property Retry      : Boolean  write SetRetry;
-    property RetryDelay : Cardinal write SetRetryDelay;
+    property Retry      : Boolean   write SetRetry;
+    property RetryDelay : Cardinal  write SetRetryDelay;
 
     {$IFDEF CLIENT_GUI}
-    property OnNetworkException : TOnNetworkException write FOnNetworkException;
+      property OnNetworkException      : TOnNetworkException      write FOnNetworkException;
+      {$IFDEF USETLS}
+      property OnVerifyPeerCertificate : TOnVerifyPeerCertificate write FOnVerifyPeerCertificate;
+      {$ENDIF}
+    {$ELSE}
+      {$IFDEF USETLS}
+        property ServerCertificateFingerprint : String write FServerCertificateFingerprint;
+      {$ENDIF}
     {$ENDIF}
 
     {@G}
@@ -124,7 +142,8 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions, Optix.Protocol.Exceptions
+     {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 
 { TOptixClientThread.Connected }
 procedure TOptixClientThread.Connected();
@@ -165,15 +184,22 @@ begin
   FClientId      := TGUID.NewGuid();
 
   {$IFDEF CLIENT_GUI}
-  FOnNetworkException := nil;
+    FOnNetworkException := nil;
+    {$IFDEF USETLS}
+    FOnVerifyPeerCertificate := nil;
+    {$ENDIF}
   {$ENDIF}
 
   {$IFDEF USETLS}
-  TOptixOpenSSLHelper.LoadCertificate(APublicKey, APrivateKey, FX509Certificate);
-  FSSLContext := TOptixOpenSSLContext.Create(sslClient, FX509Certificate);
+    TOptixOpenSSLHelper.LoadCertificate(APublicKey, APrivateKey, FX509Certificate);
+    FSSLContext := TOptixOpenSSLContext.Create(sslClient, FX509Certificate);
 
-  FPublicKey  := APublicKey;
-  FPrivateKey := APrivateKey;
+    FPublicKey  := APublicKey;
+    FPrivateKey := APrivateKey;
+
+    {$IFNDEF CLIENT_GUI}
+    FServerCertificateFingerprint := '';
+    {$ENDIF}
   {$ENDIF}
 
   ///
@@ -214,30 +240,69 @@ begin
         FClient.Connect();
         ///
 
+        {$IFDEF USETLS}
+        var ASuccess := False;
+        var AFingerprint := FClient.PeerCertificateFingerprint;
+
+        {$IFDEF CLIENT_GUI}
+        if Assigned(FOnVerifyPeerCertificate) then
+          Synchronize(procedure begin
+            FOnVerifyPeerCertificate(self, AFingerprint, ASuccess);
+          end);
+        {$ELSE}
+          ASuccess := String.Compare(FServerCertificateFingerprint, AFingerprint) = 0;
+        {$ENDIF}
+
+        if not ASuccess then
+          raise EOptixPreflightException.Create(
+            'The server certificate fingerprint does not match ' +
+            {$IFDEF CLIENT_GUI}
+            'any certificate in the trusted certificate store.'
+            {$ELSE}
+            'the specified server certificate fingerprint to trust.'
+            {$ENDIF}
+          , pecUntrustedPeer);
+        {$ENDIF}
+
         // Preflight Request
         var APreflight := InitializePreflightRequest();
         APreflight.HandlerId := FClientId;
         FClient.Send(APreflight, SizeOf(TOptixPreflightRequest));
+
+        var APreflightResponse : TPreflightErrorCode;
+        FClient.Recv(APreflightResponse, SizeOf(TPreflightErrorCode));
+
+        if APreflightResponse <> pecSuccess then
+          raise EOptixPreflightException.Create(
+            Format('Server refused connection with error: "%s".', [PreflightErrorCodeToString(APreflightResponse)])
+          , APreflightResponse);
 
         Connected();
 
         ClientExecute();
       except
         on E : Exception do begin
-          if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then begin
+          // For normal Client, EOptixPreflightException is considered CRITICAL.
+          if (E is ESocketException) {$IFDEF CLIENT_GUI}or (E is EOptixPreflightException){$ENDIF}
+             {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then begin
             Disconnected();
 
             {$IFDEF CLIENT_GUI}
-            if Assigned(FOnNetworkException) and not Terminated then
+            if Assigned(FOnNetworkException) and not Terminated and
+               ((E is ESocketException) or (E is EOptixPreflightException))  then begin
+              var ANotifyError := True;
+
               if E is ESocketException then begin
                 case ESocketException(E).WSALastError of
-                  0, 10061 : ; // Ignore those error codes
-                  else
-                    Synchronize(procedure begin
-                      FOnNetworkException(self, E.Message);
-                    end);
+                  0, 10061 : ANotifyError := False; // Ignore those error codes
                 end;
               end;
+
+              if ANotifyError then
+                Synchronize(procedure begin
+                  FOnNetworkException(self, E.Message);
+                end);
+            end;
             {$ENDIF}
           end else
             raise; // Raise other exceptions

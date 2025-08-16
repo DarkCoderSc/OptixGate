@@ -900,12 +900,15 @@ begin
 
   FServer := TOptixServerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey,{$ENDIF}ABindAddress, APort);
 
-  FServer.OnServerStart       := OnServerStart;
-  FServer.OnServerError       := OnServerError;
-  FServer.OnServerStop        := OnServerStop;
-  FServer.OnSessionDisconnect := OnSessionDisconnect;
-  FServer.OnReceivePacket     := OnReceivePacket;
-  FServer.OnRegisterWorker    := OnRegisterWorker;
+  FServer.OnServerStart           := OnServerStart;
+  FServer.OnServerError           := OnServerError;
+  FServer.OnServerStop            := OnServerStop;
+  FServer.OnSessionDisconnect     := OnSessionDisconnect;
+  FServer.OnReceivePacket         := OnReceivePacket;
+  FServer.OnRegisterWorker        := OnRegisterWorker;
+  {$IFDEF USETLS}
+  FServer.OnVerifyPeerCertificate :=  FormTrustedCertificates.OnVerifyPeerCertificate;
+  {$ENDIF}
 
   ///
   FServer.Start();
@@ -937,12 +940,12 @@ begin
                                      'listening for clients without registering at least one certificate.');
             ///
 
-            if FormTrustedCertificates.TrustedCertificateCount = 0 then
-              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
-                                     'store. You cannot start listening for clients without registering at least one ' +
-                                     'trusted certificate. A trusted certificate represents the fingerprint of a ' +
-                                     'client certificate and is required for mutual authentication, ensuring that ' +
-                                     'network communications are secure and not tampered with or eavesdropped on.');
+//            if FormTrustedCertificates.TrustedCertificateCount = 0 then
+//              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
+//                                     'store. You cannot start listening for clients without registering at least one ' +
+//                                     'trusted certificate. A trusted certificate represents the fingerprint of a ' +
+//                                     'client certificate and is required for mutual authentication, ensuring that ' +
+//                                     'network communications are secure and not tampered with or eavesdropped on.');
 
             AForm := TFormListen.Create(self, AFingerprints);
           finally

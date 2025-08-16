@@ -73,7 +73,7 @@ type
     class procedure ExportCertificate(const ADestinationFile : String; var ACertificate : TX509Certificate; AExportWhich : TOpenSSLCertificateKeyTypes = []); static;
     class procedure RetrieveCertificateInformation(var ACertificate : TX509Certificate); static;
     class procedure CheckCertificateFile(const ACertificateFile : String); static;
-    class function GetPeerSha512Fingerprint(const pSSL : Pointer) : String; static;
+    class function GetPeerSha512Fingerprint(const pSSLConnection : Pointer) : String; static;
     class function GetX509Sha512Fingerprint(const pX509 : Pointer) : String; static;
     class procedure FreeCertificate(var ACertificate : TX509Certificate); static;
     class function SerializeCertificateKey(const ACertificate : TX509Certificate; ACertificateType : TOpenSSLCertificateKeyType) : String; static;
@@ -297,14 +297,16 @@ begin
 end;
 
 { TOptixOpenSSLHelper.GetPeerSha512Fingerprint }
-class function TOptixOpenSSLHelper.GetPeerSha512Fingerprint(const pSSL : Pointer) : String;
+class function TOptixOpenSSLHelper.GetPeerSha512Fingerprint(const pSSLConnection : Pointer) : String;
 begin
-  var pX509 := SSL_get_peer_certificate(pSSL);
+  var pX509 := SSL_get_peer_certificate(pSSLConnection);
   if not Assigned(pX509) then
     raise EOpenSSLBaseException.Create();
-
-  ///
-  result := GetX509Sha512Fingerprint(pX509);
+  try
+    result := GetX509Sha512Fingerprint(pX509);
+  finally
+    X509_free(pX509);
+  end;
 end;
 
 { TOptixOpenSSLHelper.GetX509Sha512Fingerprint }

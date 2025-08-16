@@ -77,11 +77,15 @@ type
     procedure PopupMenuPopup(Sender: TObject);
   private
     {@M}
+    function GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
     procedure AddTrustedCertificate(const AFingerprint : String);
     function GetTrustedCertificateCount() : Integer;
     procedure Save();
     procedure Load();
   public
+    {@M}
+    procedure OnVerifyPeerCertificate(Sender : TObject; const APeerFingerprint : String; var ASuccess : Boolean);
+
     {@G}
     property TrustedCertificateCount : Integer read GetTrustedCertificateCount;
   end;
@@ -91,7 +95,8 @@ var
 
 implementation
 
-uses Optix.Helper, Optix.Constants, Optix.Config.Helper, Optix.Config.TrustedCertificatesStore;
+uses Optix.Helper, Optix.Constants, Optix.Config.Helper, Optix.Config.TrustedCertificatesStore
+     {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
 
 {$R *.dfm}
 
@@ -139,9 +144,39 @@ begin
   end;
 end;
 
+procedure TFormTrustedCertificates.OnVerifyPeerCertificate(Sender : TObject; const APeerFingerprint : String; var ASuccess : Boolean);
+begin
+  {$IFDEF DEBUG}
+    ASuccess := String.Compare(DEBUG_CLIENT_CERTIFICATE_FINGERPRINT, APeerFingerprint, True) = 0;
+    if ASuccess then
+      Exit();
+  {$ENDIF}
+
+  ASuccess := GetNodeByFingerprint(APeerFingerprint) <> nil;
+end;
+
 function TFormTrustedCertificates.GetTrustedCertificateCount() : Integer;
 begin
   result := VST.RootNodeCount;
+end;
+
+function TFormTrustedCertificates.GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  if String.IsNullOrWhitespace(AFingerprint) then
+    Exit();
+
+  for var pNode in VST.Nodes do begin
+    var pData := PTreeData(pNode.GetData);
+
+    if String.Compare(pData^.Fingerprint, AFingerprint, True) = 0 then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
 end;
 
 procedure TFormTrustedCertificates.AddTrustedCertificate(const AFingerprint : String);

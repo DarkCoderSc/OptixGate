@@ -56,12 +56,12 @@ type
     FName      : String;
     FFormat    : String;
     FType      : TDriveType;
-    FTotalSize : UInt64;
-    FFreeSize  : UInt64;
+    FTotalSize : Int64;
+    FFreeSize  : Int64;
 
     {@G}
     function GetUsedPercentage() : Byte;
-    function GetUsedSize() : UInt64;
+    function GetUsedSize() : Int64;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
@@ -78,9 +78,9 @@ type
     property Name           : String     read FName;
     property Format         : String     read FFormat;
     property DriveType      : TDriveType read FType;
-    property TotalSize      : UInt64     read FTotalSize;
-    property FreeSize       : UInt64     read FFreeSize;
-    property UsedSize       : UInt64     read GetUsedSize;
+    property TotalSize      : Int64      read FTotalSize;
+    property FreeSize       : Int64      read FFreeSize;
+    property UsedSize       : Int64      read GetUsedSize;
     property UsedPercentage : Byte       read GetUsedPercentage;
   end;
 
@@ -244,7 +244,7 @@ end;
 { TDriveInformation.UsedPercentage }
 function TDriveInformation.GetUsedPercentage() : Byte;
 begin
-  if (FTotalSize = 0) or (FFreeSize = 0) then
+  if (FTotalSize <= 0) or (FFreeSize <= 0) then
     Exit(0);
   ///
 
@@ -252,9 +252,9 @@ begin
 end;
 
 { TDriveInformation.UsedSize }
-function TDriveInformation.GetUsedSize() : UInt64;
+function TDriveInformation.GetUsedSize() : Int64;
 begin
-  if FTotalSize = 0 then
+  if FTotalSize <= 0 then
     Exit(0);
   ///
 

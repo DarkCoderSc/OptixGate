@@ -43,8 +43,8 @@
 
 program Client_OpenSSL;
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+// {$APPTYPE GUI}
+{$APPTYPE CONSOLE}
 
 {$R *.res}
 
@@ -117,7 +117,15 @@ begin
       TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
       TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
 
-      var ASessionHandler := TOptixSessionHandlerThread.Create(DEBUG_CERTIFICATE_PUBLIC_KEY, DEBUG_CERTIFICATE_PRIVATE_KEY, '127.0.0.1', 2801);
+      var ASessionHandler := TOptixSessionHandlerThread.Create(
+        DEBUG_CERTIFICATE_PUBLIC_KEY,                                                       // @Config
+        DEBUG_CERTIFICATE_PRIVATE_KEY,                                                      // @Config
+        '127.0.0.1',                                                                        // @Config
+        2801                                                                                // @Config
+      );
+
+      ASessionHandler.ServerCertificateFingerprint := DEBUG_SERVER_CERTIFICATE_FINGERPRINT; // @Config
+
       ASessionHandler.Retry := True;
       ASessionHandler.RetryDelay := 1000;
       ASessionHandler.Start();

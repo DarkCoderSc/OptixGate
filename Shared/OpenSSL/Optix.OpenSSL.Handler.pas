@@ -56,6 +56,7 @@ type
 
     {@M}
     procedure SSLFree();
+    function GetPeerCertificateFingerprint() : String;
   public
     {@C}
     constructor Create(AContext : TOptixOpenSSLContext; const ASocketFd : TSocket);
@@ -68,6 +69,8 @@ type
     procedure Send(const buf; const len : Integer);
     procedure Recv(var buf; const len : Integer);
 
+    {@G}
+    property PeerCertificateFingerprint : String read GetPeerCertificateFingerprint;
   end;
 
 implementation
@@ -198,6 +201,16 @@ begin
       raise EOpenSSLBaseException.Create(FSSLConnection);
     end;
   end;
+end;
+
+{ TOptixOpenSSLHandler.GetPeerCertificateFingerprint }
+function TOptixOpenSSLHandler.GetPeerCertificateFingerprint() : String;
+begin
+  result := '';
+  ///
+
+  if Assigned(FSSLConnection) then
+    result := TOptixOpenSSLHelper.GetPeerSha512Fingerprint(FSSLConnection);
 end;
 
 end.
