@@ -30,6 +30,8 @@ unit XSuperJSON;
 
 interface
 
+{$WARNINGS OFF}
+
 uses
   System.SysUtils, System.Classes, Generics.Collections, Generics.Defaults,
   System.Math, System.DateUtils, System.RegularExpressions, System.RTTI;

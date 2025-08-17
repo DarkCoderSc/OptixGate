@@ -120,7 +120,7 @@ begin
   inherited Create();
   ///
 
-  FRegistry := TRegistry.Create(KEY_ALL_ACCESS);
+  FRegistry := TRegistry.Create(KEY_ALL_ACCESS or KEY_WOW64_64KEY);
   FRegistry.RootKey := AHive;
 
   FKeyName := AKeyName;
@@ -182,12 +182,8 @@ initialization
     AKeyName := 'OptixGate';
     AHive    := HKEY_CURRENT_USER;
   {$ELSE}
-      AKeyName := 'OptixGate_ClientGUI';
-    {$IFDEF DEBUG}
-      AHive := HKEY_CURRENT_USER;
-    {$ELSE}
-      AHive := HKEY_LOCAL_MACHINE;
-    {$ENDIF}
+    AKeyName := 'OptixGate_ClientGUI';
+    AHive    := HKEY_LOCAL_MACHINE;
   {$ENDIF}
 
   CONFIG_HELPER := TOptixConfigHelper.Create(AKeyName, AHive);

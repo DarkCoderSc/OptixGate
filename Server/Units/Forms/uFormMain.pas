@@ -42,25 +42,39 @@
 {******************************************************************************}
 
 {
-  TODO Long-term:
-    - Column Sorting
-    - Improve OOP
-    - Units sorting
-    - Control Forms must respect naming format : TFormControl______ / uFormControl______
+  Global Todo (Most important ones):
+    - Column Sorting.
+    - Improve OOP.
+    - Units Name Sorting (Units) / Units File Restructuration.
+    - Control Forms must respect naming format : TFormControl______ / uFormControl______.
+    - Keep a cached version of trusted certificates in both server / client_gui.
+    - Compress network traffic using ZLib.
+    - Ipv6 Support.
+
+    - Check other todo's in units.
 }
 
 unit uFormMain;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.Menus, VirtualTrees.BaseAncestorVCL, VirtualTrees.AncestorVCL,
-  VirtualTrees, Optix.Protocol.Server, Optix.Sockets.Helper, Winapi.Winsock2, Vcl.ComCtrls, XSuperObject,
-  Optix.Func.SessionInformation, Optix.Protocol.SessionHandler, Vcl.ExtCtrls, Optix.Func.Commands,
-  Vcl.BaseImageCollection, Vcl.ImageCollection, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList, Vcl.StdCtrls,
-  __uBaseFormControl__, Generics.Collections, Winapi.ShellAPI, Optix.Thread, Optix.Protocol.Preflight,
-  VirtualTrees.Types, VirtualTrees.BaseTree;
+  System.SysUtils, System.Variants, System.Classes, System.ImageList, Generics.Collections,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls, Vcl.ImgList, Vcl.VirtualImageList,
+  Vcl.StdCtrls, Vcl.ImageCollection, Vcl.ExtCtrls, Vcl.BaseImageCollection,
+
+  VirtualTrees.BaseAncestorVCL, VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseTree,
+  XSuperObject,
+
+  Winapi.ShellAPI, Winapi.Messages, Winapi.Windows, Winapi.Winsock2,
+
+  __uBaseFormControl__,
+
+  Optix.Thread, Optix.Protocol.Preflight, Optix.Protocol.Server, Optix.Sockets.Helper, Optix.Func.SessionInformation,
+  Optix.Protocol.SessionHandler, Optix.Func.Commands;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -72,6 +86,7 @@ type
 
     ///
     function ToString: String;
+    function GetUPN() : String;
   end;
   PTreeData = ^TTreeData;
 
@@ -148,6 +163,8 @@ type
     procedure Certificates1Click(Sender: TObject);
     procedure ShowLogs1Click(Sender: TObject);
     procedure rustedCertificates1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
@@ -192,10 +209,17 @@ var
 
 implementation
 
-uses Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper, uFormAbout,
-     uFormProcessManager, uFormLogs, Optix.Func.LogNotifier, uFormFileManager, uFormControlForms, uFormTransfers,
-     Optix.Protocol.Worker.FileTransfer, uFormDebugThreads, uFormTasks, Optix.Task, uFormRemoteShell, uFormListen
-     {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.DateUtils,
+
+  uFormProcessManager, uFormLogs, uFormAbout, uFormTransfers, uFormControlForms, uFormFileManager, uFormDebugThreads,
+  uFormTasks, uFormRemoteShell, uFormListen {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
+
+  Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
+  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.Task
+  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -212,6 +236,15 @@ begin
       SessionInformation.Computer,
       Handler.PeerAddress
     ]);
+end;
+
+{ TTreeData.GetUPN }
+function TTreeData.GetUPN() : String;
+begin
+  if Assigned(SessionInformation) then
+    result := Format('%s@%s', [SessionInformation.Username, SessionInformation.Computer])
+  else
+    result := '';
 end;
 
 (* TFormMain *)
@@ -586,6 +619,33 @@ begin
   NodeDataSize := SizeOf(TTreeData);
 end;
 
+procedure TFormMain.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+
+  if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
+    Result := CompareObjectAssigmenet(pData1^.SessionInformation, pData2^.SessionInformation)
+  else if not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler) then
+    Result := CompareObjectAssigmenet(pData1^.Handler, pData2^.Handler)
+  else begin
+    case Column of
+      0 : Result := CompareIpv4(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
+      1 : Result := CompareText(pData1^.GetUPN(), pData2^.GetUPN());
+      2 : Result := CompareText(pData1^.SessionInformation.Langroup, pData2^.SessionInformation.Langroup);
+      3 : Result := CompareText(pData1^.SessionInformation.DomainName, pData2^.SessionInformation.DomainName);
+      4 : Result := CompareText(pData1^.SessionInformation.WindowsVersion, pData2^.SessionInformation.WindowsVersion);
+      5 : Result := CompareDate(pData1^.SpawnDate, pData2^.SpawnDate);
+      6 : Result := CompareText(pData1^.SessionInformation.ProcessDetail, pData2^.SessionInformation.ProcessDetail);
+      7 : Result := CompareText(
+        pData1^.SessionInformation.ElevatedStatus_STR, pData2^.SessionInformation.ElevatedStatus_STR
+      );
+      8 : Result := Ord(pData1^.SessionInformation.IsInAdminGroup) - Ord(pData2^.SessionInformation.IsInAdminGroup);
+    end;
+  end;
+end;
+
 procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 begin
@@ -599,10 +659,7 @@ begin
 
   case Column of
     0 : CellText := pData^.Handler.PeerAddress;
-    1 : CellText := Format('%s@%s', [
-      pData^.SessionInformation.Username,
-      pData^.SessionInformation.Computer
-    ]);
+    1 : CellText := pData^.GetUPN;
     2 : CellText := DefaultIfEmpty(pData^.SessionInformation.Langroup);
     3 : CellText := DefaultIfEmpty(pData^.SessionInformation.DomainName);
     4 : CellText := pData^.SessionInformation.WindowsVersion;

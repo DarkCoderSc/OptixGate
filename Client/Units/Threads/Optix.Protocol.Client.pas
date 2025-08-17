@@ -68,23 +68,9 @@ type
     FRemoteAddress : String;
     FRemotePort    : Word;
 
-    {$IFDEF CLIENT_GUI}
-    FOnNetworkException      : TOnNetworkException;
-    {$IFDEF USETLS}
-    FOnVerifyPeerCertificate : TOnVerifyPeerCertificate;
-    {$ENDIF}
-    {$ENDIF}
-
     {$IFDEF USETLS}
     FSSLContext       : TOptixOpenSSLContext;
     FX509Certificate  : TX509Certificate;
-
-    FPublicKey        : String;
-    FPrivateKey       : String;
-
-    {$IFNDEF CLIENT_GUI}
-    FServerCertificateFingerprint : String;
-    {$ENDIF}
     {$ENDIF}
 
     {@M}
@@ -93,6 +79,22 @@ type
   protected
     FClientId : TGUID;
     FClient   : TClientSocket;
+
+    {$IFDEF CLIENT_GUI}
+      FOnNetworkException : TOnNetworkException;
+      {$IFDEF USETLS}
+        FOnVerifyPeerCertificate : TOnVerifyPeerCertificate;
+      {$ENDIF}
+    {$ENDIF}
+
+    {$IFDEF USETLS}
+    FPublicKey  : String;
+    FPrivateKey : String;
+    {$ENDIF}
+
+    {$IF not defined(CLIENT_GUI) and defined(USETLS)}
+    FServerCertificateFingerprint : String;
+    {$ENDIF}
 
     {@M}
     procedure ThreadExecute(); override;
@@ -118,13 +120,16 @@ type
     property RetryDelay : Cardinal  write SetRetryDelay;
 
     {$IFDEF CLIENT_GUI}
-      property OnNetworkException      : TOnNetworkException      write FOnNetworkException;
+      {@S}
+      property OnNetworkException : TOnNetworkException  write FOnNetworkException;
       {$IFDEF USETLS}
-      property OnVerifyPeerCertificate : TOnVerifyPeerCertificate write FOnVerifyPeerCertificate;
+      {@G/S}
+      property OnVerifyPeerCertificate : TOnVerifyPeerCertificate read FOnVerifyPeerCertificate write FOnVerifyPeerCertificate;
       {$ENDIF}
     {$ELSE}
       {$IFDEF USETLS}
-        property ServerCertificateFingerprint : String write FServerCertificateFingerprint;
+        {@S}
+        property ServerCertificateFingerprint : String read FServerCertificateFingerprint write FServerCertificateFingerprint;
       {$ENDIF}
     {$ENDIF}
 
@@ -134,7 +139,6 @@ type
     property ClientId      : TGUID  read FClientId;
 
     {$IFDEF USETLS}
-    // TODO: better, context cloning? context reuse from handler for workers?
     property PublicKey  : String read FPublicKey;
     property PrivateKey : String read FPrivateKey;
     {$ENDIF}

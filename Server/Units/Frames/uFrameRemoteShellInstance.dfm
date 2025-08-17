@@ -83,7 +83,6 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
         TabOrder = 0
         OnChange = CommandChange
         OnKeyUp = CommandKeyUp
-        ExplicitHeight = 39
       end
       object ButtonSend: TButton
         AlignWithMargins = True

@@ -105,7 +105,9 @@ type
   var OPTIX_THREAD_HIVE : TThreadList<TOptixThread>  = nil;
       OPTIX_WATCHDOG    : TOptixThreadWatchDogThread = nil;
 
+  {$WARN SYMBOL_PLATFORM OFF}
   function ThreadPriorityToString(const AThreadPriority : TThreadPriority) : String;
+  {$WARN SYMBOL_PLATFORM ON}
 
 implementation
 
@@ -113,6 +115,7 @@ uses Winapi.Windows, System.SysUtils;
 
 (* Local *)
 
+{$WARN SYMBOL_PLATFORM OFF}
 { _.GetPriorityString }
 function ThreadPriorityToString(const AThreadPriority : TThreadPriority) : String;
 begin
@@ -129,6 +132,7 @@ begin
     tpTimeCritical : result := 'Time Critical';
   end;
 end;
+{$WARN SYMBOL_PLATFORM ON}
 
 (* TOptixThreadWatchDogThread *)
 

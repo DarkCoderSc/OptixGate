@@ -107,7 +107,6 @@ type
   TUnicodeString = UNICODE_STRING;
   PUnicodeString = ^TUnicodeString;
 
-  {$A8}
   WKSTA_INFO_100 = record
     wki100_platform_id  : DWORD;
     wki100_computername : LPWSTR;
@@ -117,8 +116,6 @@ type
   end;
   TWkstaInfo100 = WKSTA_INFO_100;
   PWkstaInfo100 = ^TWkstaInfo100;
-  {$A4}
-
 
   DOMAIN_CONTROLLER_INFO = record
     DomainControllerName        : LPWSTR;
@@ -137,7 +134,7 @@ type
   SYSTEM_PROCESS_INFORMATION = record
     NextEntryOffset              : ULONG;
     NumberOfThreads              : ULONG;
-    WorkingSetPrivateSize        : LARGE_INTEGER;
+    WorkingSetPrivateSize        : ULONGLONG;
     HardFaultCount               : ULONG;
     NumberOfThreadsHighWaterMark : ULONG;
     CycleTime                    : ULONGLONG;
@@ -146,32 +143,33 @@ type
     KernelTime                   : LARGE_INTEGER;
     ModuleName                   : TUnicodeString;
     BasePriority                 : LONG;
-    ProcessID                    : NativeUInt;
-    InheritedFromProcessId       : NativeUInt;
+    ProcessID                    : THandle;
+    InheritedFromProcessId       : THandle;
     HandleCount                  : ULONG;
     SessionId                    : ULONG;
     UniqueProcessKey             : ULONG_PTR;
-    PeakVirtualSize              : ULONG_PTR;
-    VirtualSize                  : ULONG_PTR;
+    PeakVirtualSize              : SIZE_T;
+    VirtualSize                  : SIZE_T;
     PageFaultCount               : ULONG;
-    PeakWorkingSetSize           : ULONG_PTR;
-    WorkingSetSize               : ULONG_PTR;
-    QuotePeakPagedPoolUsage      : ULONG_PTR;
-    QuotaPagedPoolUsage          : ULONG_PTR;
-    QuotaPeakNonPagedPoolUsage   : ULONG_PTR;
-    QuotaNonPagedPoolUsage       : ULONG_PTR;
-    PagefileUsage                : ULONG_PTR;
-    PeakPagefileUsage            : ULONG_PTR;
-    PrivatePageCount             : ULONG_PTR;
+    PeakWorkingSetSize           : SIZE_T;
+    WorkingSetSize               : SIZE_T;
+    QuotePeakPagedPoolUsage      : SIZE_T;
+    QuotaPagedPoolUsage          : SIZE_T;
+    QuotaPeakNonPagedPoolUsage   : SIZE_T;
+    QuotaNonPagedPoolUsage       : SIZE_T;
+    PagefileUsage                : SIZE_T;
+    PeakPagefileUsage            : SIZE_T;
+    PrivatePageCount             : SIZE_T;
     ReadOperationCount           : LARGE_INTEGER;
     WriteOperationCount          : LARGE_INTEGER;
     OtherOperationCount          : LARGE_INTEGER;
     ReadTransferCount            : LARGE_INTEGER;
     WriteTransferCount           : LARGE_INTEGER;
-    OtherTransferCount           : LARGE_INTEGER
+    OtherTransferCount           : LARGE_INTEGER;
   end;
   TSystemProcessInformation = SYSTEM_PROCESS_INFORMATION;
   PSystemProcessInformation = ^TSystemProcessInformation;
+
 
   STORAGE_QUERY_TYPE = (
     PropertyStandardQuery = 0,

@@ -73,7 +73,7 @@ type
     procedure Close();
 
     {@C}
-    constructor Create(const AOwner : TComponent; const AControlForm : TBaseFormControl; const AInstanceId : TGUID); overload;
+    constructor Create(const AOwner : TComponent; const AControlForm : TBaseFormControl; const AInstanceId : TGUID); reintroduce;
     destructor Destroy(); override;
 
     {@G}

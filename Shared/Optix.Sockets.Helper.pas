@@ -571,9 +571,6 @@ end;
 { TClientSocket.IsSocketAlive }
 function TClientSocket.IsSocketAlive() : Boolean;
 begin
-  result := False;
-  ///
-
   var AReadFd : TFDSet;
   FD_ZERO(AReadFd);
   _FD_SET(FSocket, AReadFd);

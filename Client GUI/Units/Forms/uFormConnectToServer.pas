@@ -79,7 +79,7 @@ type
   public
     {$IFDEF USETLS}
     {@C}
-    constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); overload;
+    constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); reintroduce;
     {$ENDIF}
 
     {@G}

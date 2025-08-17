@@ -48,7 +48,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus;
+  VirtualTrees, Vcl.Menus, VirtualTrees.Types;
 
 type
   TTreeData = record
@@ -147,7 +147,7 @@ end;
 procedure TFormTrustedCertificates.OnVerifyPeerCertificate(Sender : TObject; const APeerFingerprint : String; var ASuccess : Boolean);
 begin
   {$IFDEF DEBUG}
-    ASuccess := String.Compare(DEBUG_CLIENT_CERTIFICATE_FINGERPRINT, APeerFingerprint, True) = 0;
+    ASuccess := String.Compare(DEBUG_PEER_CERTIFICATE_FINGERPRINT, APeerFingerprint, True) = 0;
     if ASuccess then
       Exit();
   {$ENDIF}

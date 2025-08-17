@@ -32,7 +32,7 @@ object FormMain: TFormMain
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
-    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
     Images = VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
@@ -40,6 +40,7 @@ object FormMain: TFormMain
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
+    OnCompareNodes = VSTCompareNodes
     OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
@@ -104,8 +105,6 @@ object FormMain: TFormMain
       item
         Width = 130
       end>
-    ExplicitTop = 304
-    ExplicitWidth = 521
   end
   object MainMenu: TMainMenu
     Left = 152

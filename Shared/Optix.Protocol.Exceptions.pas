@@ -90,7 +90,6 @@ end;
 
 { EOptixPreflightException.Create }
 constructor EOptixPreflightException.Create(const AMessage : String; const AErrorCode : TPreflightErrorCode);
-var AFormatedMessage : String;
 begin
   FErrorCode := AErrorCode;
 

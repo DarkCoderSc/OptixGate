@@ -64,7 +64,7 @@ type
     procedure AddTransfer(const ATransfer : TOptixCommandTransfer);
 
     {@C}
-    constructor Create(const ARemoteAddress : String; const ARemotePort : Word; const AHandler : TOptixClientHandlerThread); overload;
+    constructor Create(const AHandler : TOptixClientHandlerThread); reintroduce;
   end;
 
 implementation
@@ -251,11 +251,17 @@ begin
 end;
 
 { TOptixFileTransferOrchestratorThread.Finalize }
-constructor TOptixFileTransferOrchestratorThread.Create(const ARemoteAddress : String; const ARemotePort : Word; const AHandler : TOptixClientHandlerThread);
+constructor TOptixFileTransferOrchestratorThread.Create(const AHandler : TOptixClientHandlerThread);
 begin
   // TODO: better, context cloning? context reuse from handler for workers?
-  inherited Create({$IFDEF USETLS}AHandler.PublicKey, AHandler.PrivateKey, {$ENDIF}ARemoteAddress, ARemotePort);
+  inherited Create({$IFDEF USETLS}AHandler.PublicKey, AHandler.PrivateKey, {$ENDIF}AHandler.RemoteAddress, AHandler.RemotePort);
   ///
+
+  {$IF defined(CLIENT_GUI) and defined(USETLS)}
+  FOnVerifyPeerCertificate := AHandler.OnVerifyPeerCertificate;
+  {$ELSEIF defined(USETLS)}
+  FServerCertificateFingerprint := AHandler.ServerCertificateFingerprint;
+  {$ENDIF}
 
   FHandler  := AHandler;
   FClientId := AHandler.ClientId; // Same Group

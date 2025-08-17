@@ -118,13 +118,13 @@ begin
       TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
 
       var ASessionHandler := TOptixSessionHandlerThread.Create(
-        DEBUG_CERTIFICATE_PUBLIC_KEY,                                                       // @Config
-        DEBUG_CERTIFICATE_PRIVATE_KEY,                                                      // @Config
-        '127.0.0.1',                                                                        // @Config
-        2801                                                                                // @Config
+        DEBUG_CERTIFICATE_PUBLIC_KEY,                                                     // @Config
+        DEBUG_CERTIFICATE_PRIVATE_KEY,                                                    // @Config
+        '127.0.0.1',                                                                      // @Config
+        2801                                                                              // @Config
       );
 
-      ASessionHandler.ServerCertificateFingerprint := DEBUG_SERVER_CERTIFICATE_FINGERPRINT; // @Config
+      ASessionHandler.ServerCertificateFingerprint := DEBUG_PEER_CERTIFICATE_FINGERPRINT; // @Config
 
       ASessionHandler.Retry := True;
       ASessionHandler.RetryDelay := 1000;

@@ -108,7 +108,7 @@ type
     procedure CreateParams(var Params: TCreateParams); override;
   public
     {@C}
-    constructor Create(AOwner : TBaseFormControl; const AName : String; AProcessId : Cardinal; const AUserIdentifier : String; const AImageIndex : Integer);
+    constructor Create(AOwner : TBaseFormControl; const AName : String; AProcessId : Cardinal; const AUserIdentifier : String; const AImageIndex : Integer); reintroduce;
   end;
 
 var

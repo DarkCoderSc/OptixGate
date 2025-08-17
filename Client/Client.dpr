@@ -43,8 +43,8 @@
 
 program Client;
 
-{$APPTYPE GUI}
-// {$APPTYPE CONSOLE}
+// {$APPTYPE GUI}
+{$APPTYPE CONSOLE}
 
 {$R *.res}
 
@@ -91,7 +91,7 @@ begin
     'The CLIENT compiler directive is missing from the project options. Please define it in the respective build '
     'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding CLIENT.'
     {$ENDIF}
-  
+
     var AUserUID := TOptixInformationGathering.GetUserUID();
 
     var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));

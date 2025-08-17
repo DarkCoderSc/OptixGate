@@ -64,7 +64,7 @@ object FormListen: TFormListen
     object Label2: TLabel
       Left = 8
       Top = 8
-      Width = 267
+      Width = 75
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -72,13 +72,12 @@ object FormListen: TFormListen
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Bind Address :'
-      ExplicitWidth = 75
     end
     object Label1: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 54
-      Width = 267
+      Width = 60
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -86,13 +85,12 @@ object FormListen: TFormListen
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Port:'
-      ExplicitWidth = 60
     end
     object LabelCertificate: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 101
-      Width = 267
+      Width = 92
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -100,7 +98,6 @@ object FormListen: TFormListen
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Certificate:'
-      ExplicitWidth = 92
     end
     object SpinPort: TSpinEdit
       Left = 8
@@ -134,7 +131,6 @@ object FormListen: TFormListen
       Align = alTop
       Style = csDropDownList
       TabOrder = 2
-      ExplicitWidth = 257
     end
   end
   object PanelLeft: TPanel

@@ -122,7 +122,7 @@ type
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); virtual;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); reintroduce;
   end;
 
 var

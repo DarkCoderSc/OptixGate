@@ -64,17 +64,16 @@ object FormConnectToServer: TFormConnectToServer
     object Label1: TLabel
       Left = 8
       Top = 8
-      Width = 255
+      Width = 83
       Height = 15
       Align = alTop
       Caption = 'Server Address :'
-      ExplicitWidth = 83
     end
     object Label2: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 54
-      Width = 255
+      Width = 60
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -82,13 +81,12 @@ object FormConnectToServer: TFormConnectToServer
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Port:'
-      ExplicitWidth = 60
     end
     object LabelCertificate: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 101
-      Width = 255
+      Width = 91
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -96,7 +94,6 @@ object FormConnectToServer: TFormConnectToServer
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Client Certificate:'
-      ExplicitWidth = 91
     end
     object EditServerAddress: TEdit
       Left = 8
@@ -130,7 +127,6 @@ object FormConnectToServer: TFormConnectToServer
       Align = alTop
       Style = csDropDownList
       TabOrder = 2
-      ExplicitWidth = 245
     end
   end
   object PanelBottom: TPanel

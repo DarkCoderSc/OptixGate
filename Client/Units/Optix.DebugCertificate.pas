@@ -129,9 +129,9 @@ const DEBUG_CERTIFICATE_PUBLIC_KEY =
 '9Okn5XCYsKfPpLXEHbUbs+KQWhYs3UMgfhcYAl3DAeVCYsbysYV/74ZLkho='     + #13#10 +
 '-----END CERTIFICATE-----';
 
-DEBUG_SERVER_CERTIFICATE_FINGERPRINT = 'D7:7F:D9:8A:C1:CB:44:8F:D7:F1:8D:98:BA:BD:BE:06:81:F3:4F:B8:93:41:E9:6B:AF:' +
-                                       'D4:D6:C9:3B:C1:63:F3:E7:52:1C:00:04:AD:F8:2D:7D:38:18:70:75:09:76:E7:2E:D7:' +
-                                       'FB:AD:D3:87:4C:72:69:4C:D2:18:C2:C2:1C:5A';
+DEBUG_PEER_CERTIFICATE_FINGERPRINT = 'D7:7F:D9:8A:C1:CB:44:8F:D7:F1:8D:98:BA:BD:BE:06:81:F3:4F:B8:93:41:E9:6B:AF:' +
+                                     'D4:D6:C9:3B:C1:63:F3:E7:52:1C:00:04:AD:F8:2D:7D:38:18:70:75:09:76:E7:2E:D7:' +
+                                     'FB:AD:D3:87:4C:72:69:4C:D2:18:C2:C2:1C:5A';
 
 implementation
 

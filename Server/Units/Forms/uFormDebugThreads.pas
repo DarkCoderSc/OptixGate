@@ -55,7 +55,9 @@ type
     Guid         : TGUID;
     Id           : Cardinal;
     ClassName    : String;
+    {$WARN SYMBOL_PLATFORM OFF}
     Priority     : TThreadPriority;
+    {$WARN SYMBOL_PLATFORM ON}
     CreatedTime  : TDateTime;
     Running      : Boolean;
     Tick         : UInt64;

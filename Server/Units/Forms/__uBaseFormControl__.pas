@@ -118,7 +118,7 @@ type
     procedure PurgeRequest(); virtual;
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); virtual;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); reintroduce; virtual;
     destructor Destroy(); override;
 
     {@G}

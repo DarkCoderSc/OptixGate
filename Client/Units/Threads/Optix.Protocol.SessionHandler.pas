@@ -318,8 +318,6 @@ procedure TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread();
 begin
   if not TOptixThread.HasRunningInstance(FFileTransferOrchestrator) then begin
     FFileTransferOrchestrator := TOptixFileTransferOrchestratorThread.Create(
-      FClient.RemoteAddress,
-      FClient.RemotePort,
       self
     );
 

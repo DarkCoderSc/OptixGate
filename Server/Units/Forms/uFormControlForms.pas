@@ -41,11 +41,6 @@
 {                                                                              }
 {******************************************************************************}
 
-{
-  TODO:
-    - Column Sorting (Default Sorting)
-}
-
 unit uFormControlForms;
 
 interface
@@ -109,7 +104,7 @@ type
     function GetSelectedNodeGUID() : TGUID;
   public
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer); virtual;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer); reintroduce;
   end;
 
 var

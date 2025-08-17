@@ -127,8 +127,8 @@ type
     {@M}
     function GetContextDescription() : String; override;
 
-    function RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID; overload;
-    function RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; overload;
+    function RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID; reintroduce;
+    function RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; reintroduce;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
