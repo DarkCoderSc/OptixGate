@@ -1,0 +1,434 @@
+{******************************************************************************}
+{                                                                              }
+{         ____             _     ____          _           ____                }
+{        |  _ \  __ _ _ __| | __/ ___|___   __| | ___ _ __/ ___|  ___          }
+{        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
+{        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
+{        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
+{                             Project: Optix Gate                              }
+{                                                                              }
+{                                                                              }
+{                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
+{                   https://github.com/darkcodersc                             }
+{                   License: GPL v3                                            }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
+{                                                                              }
+{******************************************************************************}
+
+unit Optix.Task;
+
+interface
+
+uses Generics.Collections, XSuperObject, System.Classes, System.Threading, Optix.Protocol.Packet, Optix.Func.Commands,
+     Optix.Interfaces;
+
+type
+  TOptixTaskState = (
+    otsPending,
+    otsRunning,
+    otsFailed,
+    otsSuccess
+  );
+  TOptixTaskStates = set of TOptixTaskState;
+
+  TOptixTask = class;
+
+  TOptixTaskResult = class(TInterfacedPersistent, IOptixSerializable)
+  private
+    FSuccess          : Boolean;
+    FExceptionMessage : String;
+    FTaskDuration     : UInt64;
+
+    {@M}
+    function GetDescription() : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+    function GetExtendedDescription() : String; virtual;
+  public
+    {@M}
+    procedure SetTaskDuration(const AValue : UInt64);
+    procedure TaskFailed(const AExceptionMessage : String);
+    procedure TaskSucceed();
+    function Serialize() : ISuperObject; virtual;
+
+    {@C}
+    constructor Create(); overload;
+    constructor Create(const ASerializedObject : ISuperObject); overload; virtual;
+
+    {@G}
+    property Success          : Boolean read FSuccess;
+    property ExceptionMessage : String  read FExceptionMessage;
+    property TaskDuration     : UInt64  read FTaskDuration;
+    property Description      : String  read GetDescription;
+  end;
+
+  TOptixTaskCallback = class(TOptixPacket)
+  private
+    FId            : TGUID;
+    FTaskClassName : String;
+    FState         : TOptixTaskState;
+    FResult        : TOptixTaskResult;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@C}
+    constructor Create(const ATask : TOptixTask); overload;
+    destructor Destroy(); override;
+
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property Id            : TGUID            read FId;
+    property TaskClassName : String           read FTaskClassName;
+    property State         : TOptixTaskState  read FState;
+    property Result        : TOptixTaskResult read FResult;
+  end;
+
+  TOptixTask = class
+  private
+    FId           : TGUID;
+    FTask         : IFuture<TOptixTaskResult>;
+    FRunningAware : Boolean; // Tiny trick to know if we already know, task is running (actively)
+
+    {@M}
+    function Execute() : TOptixTaskResult;
+    function IsCompleted() : Boolean;
+    function IsSuccess() : Boolean;
+    function IsRunning() : Boolean;
+    function GetResult() : TOptixTaskResult;
+  protected
+    FCommand : TOptixCommand;
+
+    {@M}
+    function TaskCode() : TOptixTaskResult; virtual; abstract;
+  public
+    {@C}
+    constructor Create(const ACommand : TOptixCommand);
+    destructor Destroy(); override;
+
+    {@M}
+    procedure Start();
+    procedure SetTaskId(const ATaskId : TGUID);
+
+    {@G}
+    property Id           : TGUID            read FId;
+    property Completed    : Boolean          read IsCompleted;
+    property Running      : Boolean          read IsRunning;
+    property Success      : Boolean          read IsSuccess;
+    property Result       : TOptixTaskResult read GetResult;
+
+    {@G/S}
+    property RunningAware : Boolean read FRunningAware write FRunningAware;
+  end;
+
+implementation
+
+uses Winapi.Windows, System.SysUtils, Optix.Task.ProcessDump;
+
+(* TOptixTaskCallback *)
+
+{ TOptixTaskCallback.Create }
+constructor TOptixTaskCallback.Create(const ATask : TOptixTask);
+begin
+  inherited Create();
+  ///
+
+  FId            := ATask.Id;
+  FTaskClassName := ATask.ClassName;
+
+  if ATask.Completed then begin
+    FResult := ATask.Result;
+
+    if ATask.Success then
+      FState := otsSuccess
+    else
+      FState := otsFailed;
+  end else begin
+    if ATask.Running then
+      FState := otsRunning
+    else
+      FState := otsPending;
+
+    ///
+    FResult := nil;
+  end;
+end;
+
+{ TOptixTaskCallback.Destroy }
+destructor TOptixTaskCallback.Destroy();
+begin
+
+  ///
+  inherited Destroy();
+end;
+
+{ TOptixTaskCallback.DeSerialize }
+procedure TOptixTaskCallback.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FId            := TGUID.Create(ASerializedObject.S['Id']);
+  FTaskClassName := ASerializedObject.S['TaskClassName'];
+  FState         := TOptixTaskState(ASerializedObject.I['State']);
+
+  var ASerializedResult := ASerializedObject.O['Result'];
+
+  // -------------------------------------------------------------------------------------------------------------------
+  if TaskClassName = TOptixProcessDumpTask.ClassName then
+    FResult := TOptixProcessDumpTaskResult.Create(ASerializedResult)
+  // -------------------------------------------------------------------------------------------------------------------
+  else
+    FResult := TOptixTaskResult.Create(ASerializedResult);
+  // -------------------------------------------------------------------------------------------------------------------
+end;
+
+{ TOptixTaskCallback.Serialize }
+function TOptixTaskCallback.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['Id']            := FId.TOString();
+  result.S['TaskClassName'] := FTaskClassName;
+  result.I['State']         := Integer(FState);
+
+  if Assigned(FResult) then
+    result.O['result'] := FResult.Serialize()
+  else
+    result.O['result'] := SO();
+end;
+
+(* TOptixTask *)
+
+{ TOptixTask.Execute }
+function TOptixTask.Execute() : TOptixTaskResult;
+begin
+  result := nil;
+  try
+    var AStartTick := GetTickCount64();
+    ///
+
+    result := TaskCode();
+    if Assigned(result) then begin
+      result.SetTaskDuration(GetTickCount64() - AStartTick);
+
+      result.TaskSucceed();
+    end;
+  except
+    on E : Exception do begin
+      if not Assigned(result) then
+        result := TOptixTaskResult.Create();
+
+      ///
+      result.TaskFailed(E.Message);
+    end;
+  end;
+end;
+
+{ TOptixTask.IsCompleted }
+function TOptixTask.IsCompleted() : Boolean;
+begin
+  result := Assigned(FTask) and (FTask.Status in [TTaskStatus.Completed, TTaskStatus.Exception]);
+end;
+
+{ TOptixTask.IsSuccess }
+function TOptixTask.IsSuccess() : Boolean;
+begin
+  result := False;
+  if not IsCompleted() then
+    Exit();
+  ///
+
+  var AResult := GetResult();
+  if Assigned(AResult) then
+    result := AResult.Success;
+end;
+
+{ TOptixTask.IsRunning }
+function TOptixTask.IsRunning() : Boolean;
+begin
+  result := Assigned(FTask) and (FTask.Status in [TTaskStatus.Running]);
+end;
+
+{ TOptixTask.Start }
+procedure TOptixTask.Start();
+begin
+  if FTask = nil then
+    FTask := TTask.Future<TOptixTaskResult>(
+      function : TOptixTaskResult begin
+        result := Execute();
+      end
+    );
+end;
+
+{ TOptixTask.SetTaskId }
+procedure TOptixTask.SetTaskId(const ATaskId : TGUID);
+begin
+  FId := ATaskId;
+end;
+
+{ TOptixTask.GetResult }
+function TOptixTask.GetResult() : TOptixTaskResult;
+begin
+  result := nil;
+  ///
+
+  if IsCompleted() then
+    try
+      result := FTask.Value
+    except
+
+    end;
+end;
+
+{ TOptixTask.Create }
+constructor TOptixTask.Create(const ACommand : TOptixCommand);
+begin
+  inherited Create();
+  ///
+
+  FId           := TGUID.Empty;
+  FTask         := nil;
+  FCommand      := ACommand;
+  FRunningAware := False;
+end;
+
+{ TOptixTask.Destroy }
+destructor TOptixTask.Destroy();
+begin
+  FTask := nil;
+
+  if Assigned(FCommand) then
+    FreeAndNil(FCommand);
+
+  var AResult := GetResult();
+  if Assigned(AResult) then
+    FreeAndNil(AResult);
+
+  ///
+  inherited Destroy();
+end;
+
+(* TOptixTaskResult *)
+
+{ TOptixTaskResult.Create }
+constructor TOptixTaskResult.Create();
+begin
+  inherited Create();
+  ///
+
+  FSuccess          := False;
+  FExceptionMessage := '';
+  FTaskDuration     := 0;
+end;
+
+{ TOptixTaskResult.Create }
+constructor TOptixTaskResult.Create(const ASerializedObject : ISuperObject);
+begin
+  Create();
+  ///
+
+  if Assigned(ASerializedObject) then
+    DeSerialize(ASerializedObject);
+end;
+
+{ TOptixTaskResult.SetTaskDuration }
+procedure TOptixTaskResult.SetTaskDuration(const AValue : UInt64);
+begin
+  FTaskDuration := AValue;
+end;
+
+{ TOptixTaskResult.GetExtendedDescription }
+function TOptixTaskResult.GetExtendedDescription() : String;
+begin
+  result := '';
+end;
+
+{ TOptixTaskResult.GetDescription }
+function TOptixTaskResult.GetDescription() : String;
+begin
+  result := '';
+  ///
+
+  if FSuccess then begin
+    var AExtendedDescription := GetExtendedDescription();
+    var ATimingInformation := '';
+    if FTaskDuration > 1000 then
+      ATimingInformation := Format('Task completed in %d seconds.', [FTaskDuration div 1000]);
+    ///
+
+    if not String.IsNullOrWhiteSpace(AExtendedDescription) then
+      result := Format('%s (%s)', [
+        AExtendedDescription,
+        ATimingInformation
+      ])
+    else
+      result := ATimingInformation;
+  end else
+    result := Format('Task Failed: %s', [FExceptionMessage]);
+end;
+
+{ TOptixTaskResult.TaskFailed }
+procedure TOptixTaskResult.TaskFailed(const AExceptionMessage : String);
+begin
+  FSuccess          := False;
+  FExceptionMessage := AExceptionMessage;
+end;
+
+{ TOptixTaskResult.TaskSucceed }
+procedure TOptixTaskResult.TaskSucceed();
+begin
+  FSuccess          := True;
+  FExceptionMessage := '';
+end;
+
+{ TOptixTaskResult.DeSerialize }
+procedure TOptixTaskResult.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  FSuccess          := ASerializedObject.B['Success'];
+  FExceptionMessage := ASerializedObject.S['ExceptionMessage'];
+  FTaskDuration     := ASerializedObject.I['TaskDuration'];
+end;
+
+{ TOptixTaskResult.Serialize }
+function TOptixTaskResult.Serialize() : ISuperObject;
+begin
+  result := SO();
+  ///
+
+  result.B['Success']          := FSuccess;
+  result.S['ExceptionMessage'] := FExceptionMessage;
+  result.I['TaskDuration']     := FTaskDuration;
+end;
+
+end.
