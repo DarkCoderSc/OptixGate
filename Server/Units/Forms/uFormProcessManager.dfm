@@ -11,6 +11,7 @@ object FormProcessManager: TFormProcessManager
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poMainFormCenter
+  OnShow = FormShow
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0

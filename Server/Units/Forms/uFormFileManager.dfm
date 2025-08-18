@@ -48,7 +48,6 @@ object FormFileManager: TFormFileManager
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitTop = 59
     Columns = <
       item
         Position = 0
@@ -104,6 +103,7 @@ object FormFileManager: TFormFileManager
     Align = alTop
     ReadOnly = True
     TabOrder = 1
+    ExplicitWidth = 459
   end
   object PanelActions: TPanel
     Left = 0
@@ -117,6 +117,7 @@ object FormFileManager: TFormFileManager
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitWidth = 467
     object ButtonHome: TSpeedButton
       AlignWithMargins = True
       Left = 2
@@ -195,7 +196,7 @@ object FormFileManager: TFormFileManager
       Left = 448
       Top = 10
       Width = 21
-      Height = 15
+      Height = 20
       Margins.Left = 8
       Margins.Top = 10
       Margins.Right = 8
@@ -209,6 +210,7 @@ object FormFileManager: TFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
+      ExplicitHeight = 15
     end
   end
   object PopupMenu: TPopupMenu

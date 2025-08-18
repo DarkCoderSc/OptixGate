@@ -102,9 +102,11 @@ type
     procedure DumpProcess1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure FormShow(Sender: TObject);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
+    FFirstShow                   : Boolean; // TODO: method in TBaseFormControl (FirstFormShow override)
 
     {@M}
     procedure Refresh(const AProcessList : TProcessList);
@@ -113,6 +115,7 @@ type
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
     procedure RemoveProcess(const AProcessId : Cardinal);
     function GetImageIndex(const pData : PTreeData) : Integer;
+    procedure RefreshProcess();
   protected
     {@M}
     function GetContextDescription() : String; override;
@@ -134,6 +137,11 @@ uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Pro
      Optix.VCL.Helper, Optix.Protocol.Packet, System.Math, System.DateUtils;
 
 {$R *.dfm}
+
+procedure TFormProcessManager.RefreshProcess();
+begin
+  SendCommand(TOptixCommandRefreshProcess.Create());
+end;
 
 function TFormProcessManager.GetContextDescription() : String;
 begin
@@ -255,6 +263,7 @@ begin
   inherited Create(AOwner, AUserIdentifier);
   ///
 
+  FFirstShow                   := True;
   FClientArchitecture          := AClientArchitecture;
   FRemoteProcessorArchitecture := ARemoteProcessorArchitecture;
 end;
@@ -282,6 +291,16 @@ begin
   );
 
   RegisterNewDialogAndShow(ADialog);
+end;
+
+procedure TFormProcessManager.FormShow(Sender: TObject);
+begin
+  if FFirstShow then begin
+    FFirstShow := False;
+
+    ///
+    RefreshProcess();
+  end;
 end;
 
 procedure TFormProcessManager.KillProcess1Click(Sender: TObject);
@@ -331,7 +350,7 @@ end;
 
 procedure TFormProcessManager.Refresh1Click(Sender: TObject);
 begin
-  SendCommand(TOptixCommandRefreshProcess.Create());
+  RefreshProcess();
 end;
 
 procedure TFormProcessManager.UnreachableProcess1Click(Sender: TObject);
