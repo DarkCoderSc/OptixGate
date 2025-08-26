@@ -12,7 +12,7 @@ Optix can be used for:
 
 However, when it comes to Red Team missions, note that this tool is of no use. The simple reason is that it is not designed for stealth. A Remote Access Tool of this nature is inherently noisy, does not operate through covert channels (by design), and would very likely lead to quick detection and failure in such contexts.
 
-Furthermore, studying the source code will allow you to gain a deeper understanding of this type of program, which is highly comprehensive and covers multiple domains, including, but not limited to: network programming, system programming, cryptography, Windows API implementation and Windows internals, graphical interface creation and management, as well as parallelism and multithreading. This project complements the resources available on the Malware Gallery platform (www.malwaregalleryu.com), and the two will mutually enhance each other.
+Furthermore, studying the source code will allow you to gain a deeper understanding of this type of program, which is highly comprehensive and covers multiple domains, including, but not limited to: network programming, system programming, cryptography, Windows API implementation and Windows internals, graphical interface creation and management, as well as parallelism and multithreading. This project complements the resources available on the Malware Gallery platform (www.malwaregallery.com), and the two will mutually enhance each other.
 
 The first version focused on the design of its protocol, main structure, and architecture. Future versions will progressively integrate additional features and enhance its usefulness for the previously mentioned purposes.
 
@@ -48,7 +48,7 @@ For this version, I chose a completely different approach. All files are transmi
 
 The only limitation is that the overall transfer time increases with the number of files. However, this method allows thousands of files to be transmitted concurrently without compromising system performance or stability.
 
-### Jobs
+### Jobs / Tasks
 
 ![Jobs / Tasks](Assets/sshot-11.png)
 
@@ -178,6 +178,16 @@ This approach reflects the ambition to provide users with clear, actionable insi
 
 As extensively discussed in the protocol section, this is a core feature for remote system management. It supports unlimited parallel sessions as well as interrupts to terminate long-running commands.
 
+### What will you learn?
+
+* Windows APIs and system internals
+* Native socket programming
+* Implementing OpenSSL on top of native socket programming
+* Designing, writing, and maintaining custom network protocols
+* Advanced concepts in the Delphi programming language
+
+And additional related skills
+
 ### The future?
 
 Many additional actions are planned for existing features, and several new capabilities are also in development. One of my priorities is to enable the execution of .NET assemblies and PE files directly from memory. In addition, I plan to implement a Func-In engine to make the application more extensible, allowing seamless integration of third-party tools instead of reinventing functionality that already exists and performs well.
@@ -213,6 +223,8 @@ By using this software and code, you acknowledge and agree that:
 Modifying or redistributing the code is done entirely at your own responsibility.
 
 Use of this software and code constitutes acceptance of this disclaimer. If you do not agree to these terms, you should not use the software and code.
+
+  The GPLv3 license allows anyone to use, modify, and distribute the software freely, as long as any derivative works are also shared under the same license. It requires that source code be made available when distributing binaries, provides no warranty or liability for the author, and includes protections against patent claims and hardware restrictions that prevent user modifications. Commercial use is permitted, provided all GPLv3 obligations are met.
 
 ## Contact
 
