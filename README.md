@@ -252,6 +252,8 @@ zRt12rJmulmCvpFscq8G
 
 I would like to thank the following people for their support, extensive testing, and early feedback
 
-- Mr.NOODLE
-- Euz
-- Mudpak
+- [Mr.NOODLE](https://x.com/bragames2)
+- [Euz](https://x.com/_Euzebius)
+- [Mudpak](https://x.com/_mudpak)
+- [Tristan Manzano](https://www.linkedin.com/in/tristan%2Dmanzano%2D963223103/)
+- [Laurent Minne](https://www.linkedin.com/in/laurent%2Dminne/)
