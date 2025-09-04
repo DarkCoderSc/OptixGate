@@ -45,10 +45,16 @@ unit uFormTrustedCertificates;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, VirtualTrees.Types;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -75,6 +81,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure PopupMenuPopup(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
@@ -95,8 +103,11 @@ var
 
 implementation
 
-uses Optix.Helper, Optix.Constants, Optix.Config.Helper, Optix.Config.TrustedCertificatesStore
-     {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.Helper, Optix.Constants, Optix.Config.Helper, Optix.Config.TrustedCertificatesStore
+  {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -235,6 +246,22 @@ end;
 procedure TFormTrustedCertificates.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormTrustedCertificates.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+  Column: TColumnIndex; var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.Fingerprint, pData2^.Fingerprint);
+    end;
+  end;
 end;
 
 procedure TFormTrustedCertificates.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);

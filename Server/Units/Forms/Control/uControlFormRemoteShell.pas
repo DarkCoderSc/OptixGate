@@ -41,17 +41,26 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormRemoteShell;
+unit uControlFormRemoteShell;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, uFrameRemoteShellInstance, Vcl.Menus,
-  XSuperObject, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls, System.Actions, Vcl.ActnList, System.Types;
+  System.SysUtils, System.Variants, System.Classes, System.Types, System.Actions,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.Menus, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls,
+  Vcl.ActnList,
+
+  XSuperObject,
+
+  __uBaseFormControl__, uFrameRemoteShellInstance;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TFormRemoteShell = class(TBaseFormControl)
+  TControlFormRemoteShell = class(TBaseFormControl)
     Pages: TPageControl;
     PopupTabs: TPopupMenu;
     erminateInstance1: TMenuItem;
@@ -96,15 +105,20 @@ type
   end;
 
 var
-  FormRemoteShell: TFormRemoteShell;
+  ControlFormRemoteShell: TControlFormRemoteShell;
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants, Optix.VCL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain,
+
+  Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants, Optix.VCL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
-function TFormRemoteShell.IsActivePageShellInstanceActive() : Boolean;
+function TControlFormRemoteShell.IsActivePageShellInstanceActive() : Boolean;
 begin
   result := False;
 
@@ -114,18 +128,18 @@ begin
   result := Pages.ActivePage.ImageIndex = -1;
 end;
 
-procedure TFormRemoteShell.RefreshActionsButtons();
+procedure TControlFormRemoteShell.RefreshActionsButtons();
 begin
   ButtonBreak.Enabled := IsActivePageShellInstanceActive();
 end;
 
-procedure TFormRemoteShell.PurgeRequest();
+procedure TControlFormRemoteShell.PurgeRequest();
 begin
   for var I := 0 to Pages.PageCount -1 do
     TerminateShellInstance(Pages.Pages[I]);
 end;
 
-procedure TFormRemoteShell.TerminateShellInstance(const ATab : TTabSheet);
+procedure TControlFormRemoteShell.TerminateShellInstance(const ATab : TTabSheet);
 begin
   if not Assigned(ATab) then
     Exit();
@@ -137,7 +151,7 @@ begin
   SendCommand(TOptixTerminateShellInstance.Create(AFrame.InstanceId));
 end;
 
-procedure TFormRemoteShell.CloseTabTerminate1Click(Sender: TObject);
+procedure TControlFormRemoteShell.CloseTabTerminate1Click(Sender: TObject);
 begin
   TerminateShellInstance(FHitTab);
 
@@ -146,23 +160,23 @@ begin
   RefreshActionsButtons();
 end;
 
-procedure TFormRemoteShell.erminateInstance1Click(Sender: TObject);
+procedure TControlFormRemoteShell.erminateInstance1Click(Sender: TObject);
 begin
   TerminateShellInstance(FHitTab);
 end;
 
-procedure TFormRemoteShell.FormCreate(Sender: TObject);
+procedure TControlFormRemoteShell.FormCreate(Sender: TObject);
 begin
   FHitTab := nil;
   RefreshActionsButtons();
 end;
 
-procedure TFormRemoteShell.FormDestroy(Sender: TObject);
+procedure TControlFormRemoteShell.FormDestroy(Sender: TObject);
 begin
   ///
 end;
 
-function TFormRemoteShell.GetFrameByInstanceId(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
+function TControlFormRemoteShell.GetFrameByInstanceId(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
 begin
   result := nil;
   ///
@@ -182,7 +196,7 @@ begin
   end;
 end;
 
-function TFormRemoteShell.GetFrameByTab(const ATab : TTabSheet) : TFrameRemoteShellInstance;
+function TControlFormRemoteShell.GetFrameByTab(const ATab : TTabSheet) : TFrameRemoteShellInstance;
 begin
   result := nil;
   if not Assigned(ATab) then
@@ -192,12 +206,12 @@ begin
     result := TFrameRemoteShellInstance(ATab.Controls[0]);
 end;
 
-procedure TFormRemoteShell.NewShellInstance1Execute(Sender: TObject);
+procedure TControlFormRemoteShell.NewShellInstance1Execute(Sender: TObject);
 begin
   ButtonNewInstanceClick(ButtonNewInstance);
 end;
 
-procedure TFormRemoteShell.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormRemoteShell.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
   inherited;
   ///
@@ -228,7 +242,7 @@ begin
   end;
 end;
 
-procedure TFormRemoteShell.RenameTab1Click(Sender: TObject);
+procedure TControlFormRemoteShell.RenameTab1Click(Sender: TObject);
 begin
   if not Assigned(FHitTab) then
     Exit();
@@ -239,12 +253,12 @@ begin
     FHitTab.Caption := ATabName;
 end;
 
-procedure TFormRemoteShell.PagesChange(Sender: TObject);
+procedure TControlFormRemoteShell.PagesChange(Sender: TObject);
 begin
   RefreshActionsButtons();
 end;
 
-procedure TFormRemoteShell.PagesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
+procedure TControlFormRemoteShell.PagesContextPopup(Sender: TObject; MousePos: TPoint; var Handled: Boolean);
 begin
   FHitTab := nil;
   ///
@@ -264,7 +278,7 @@ begin
   end;
 end;
 
-procedure TFormRemoteShell.PopupTabsPopup(Sender: TObject);
+procedure TControlFormRemoteShell.PopupTabsPopup(Sender: TObject);
 begin
   TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
 
@@ -282,12 +296,12 @@ begin
   RenameTab1.Visible := True;
 end;
 
-procedure TFormRemoteShell.RequestNewShellInstance();
+procedure TControlFormRemoteShell.RequestNewShellInstance();
 begin
   SendCommand(TOptixStartShellInstance.Create());
 end;
 
-function TFormRemoteShell.TabNameExists(const AName : String) : Boolean;
+function TControlFormRemoteShell.TabNameExists(const AName : String) : Boolean;
 begin
   result := False;
   ///
@@ -304,7 +318,7 @@ begin
   end;
 end;
 
-function TFormRemoteShell.StartShellInstance(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
+function TControlFormRemoteShell.StartShellInstance(const AInstanceId : TGUID) : TFrameRemoteShellInstance;
 
   function GenerateRandomTabName() : String;
   begin
@@ -343,12 +357,12 @@ begin
   RefreshActionsButtons();
 end;
 
-procedure TFormRemoteShell.BreakActiveShellInstance1Execute(Sender: TObject);
+procedure TControlFormRemoteShell.BreakActiveShellInstance1Execute(Sender: TObject);
 begin
   ButtonBreakClick(ButtonBreak);
 end;
 
-procedure TFormRemoteShell.ButtonBreakClick(Sender: TObject);
+procedure TControlFormRemoteShell.ButtonBreakClick(Sender: TObject);
 begin
   var ATab := Pages.ActivePage;
 
@@ -362,12 +376,12 @@ begin
   SendCommand(TOptixBreakShellInstance.Create(AFrame.InstanceId));
 end;
 
-procedure TFormRemoteShell.ButtonNewInstanceClick(Sender: TObject);
+procedure TControlFormRemoteShell.ButtonNewInstanceClick(Sender: TObject);
 begin
   RequestNewShellInstance();
 end;
 
-procedure TFormRemoteShell.CloseShellInstance(const AInstanceId : TGUID);
+procedure TControlFormRemoteShell.CloseShellInstance(const AInstanceId : TGUID);
 begin
   var AFrame := GetFrameByInstanceId(AInstanceId);
   if not Assigned(AFrame) or not Assigned(AFrame.Owner) or not (AFrame.Owner is TTabSheet) then

@@ -1,24 +1,22 @@
-object FormControlForms: TFormControlForms
+object ControlFormTransfers: TControlFormTransfers
   Left = 0
   Top = 0
-  Caption = 'Control Forms'
-  ClientHeight = 271
-  ClientWidth = 455
+  Caption = 'Transfers'
+  ClientHeight = 269
+  ClientWidth = 694
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  Position = poOwnerFormCenter
-  OnClose = FormClose
-  OnShow = FormShow
+  Position = poMainFormCenter
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 455
-    Height = 271
+    Width = 694
+    Height = 269
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -32,18 +30,17 @@ object FormControlForms: TFormControlForms
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
     Header.MainColumn = 1
-    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-    Images = FormMain.VirtualImageList
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Header.SortColumn = 4
+    Images = FormMain.ImageSystem
     PopupMenu = PopupMenu
     StateImages = FormMain.VirtualImageList
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-    OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
-    OnDblClick = VSTDblClick
+    OnCompareNodes = VSTCompareNodes
     OnFocusChanged = VSTFocusChanged
-    OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
@@ -52,67 +49,67 @@ object FormControlForms: TFormControlForms
     Columns = <
       item
         Position = 0
-        Text = 'Title'
-        Width = 190
+        Text = 'Source File'
+        Width = 120
       end
       item
         Position = 1
-        Text = 'Class'
-        Width = 110
+        Text = 'Destination File'
+        Width = 120
       end
       item
         Position = 2
-        Text = 'State'
+        Text = 'Direction'
         Width = 100
       end
       item
         Position = 3
-        Text = 'Created Date'
-        Width = 130
+        Text = 'File Size'
+        Width = 100
       end
       item
         Position = 4
-        Text = 'Last Received Data'
-        Width = 130
+        Text = 'State'
+        Width = 90
       end
       item
         Position = 5
-        Text = 'Extended Information'
-        Width = 250
+        Text = 'Context'
+        Width = 100
       end
       item
         Position = 6
-        Text = 'GUID'
-        Width = 100
+        Text = 'Description'
+        Width = 250
+      end
+      item
+        Position = 7
+        Text = 'Id'
+        Width = 250
       end>
   end
   object PopupMenu: TPopupMenu
-    OnChange = PopupMenuChange
-    Left = 160
+    OnPopup = PopupMenuPopup
+    Left = 232
     Top = 96
-    object Refresh1: TMenuItem
-      Caption = 'Refresh'
-      OnClick = Refresh1Click
+    object DownloadaFile1: TMenuItem
+      Caption = 'Download a File'
+      OnClick = DownloadaFile1Click
     end
-    object N2: TMenuItem
-      Caption = '-'
-    end
-    object Show1: TMenuItem
-      Caption = 'Show'
-      OnClick = Show1Click
+    object UploadaFile1: TMenuItem
+      Caption = 'Upload a File'
+      OnClick = UploadaFile1Click
     end
     object N1: TMenuItem
       Caption = '-'
     end
-    object Purge1: TMenuItem
-      Caption = 'Purge'
-      OnClick = Purge1Click
+    object CancelTransfer1: TMenuItem
+      Caption = 'Cancel Transfer'
+      OnClick = CancelTransfer1Click
     end
   end
-  object TimerRefresh: TTimer
-    Enabled = False
-    OnTimer = TimerRefreshTimer
-    Left = 256
-    Top = 96
+  object OpenDialog: TOpenDialog
+    Left = 320
+    Top = 88
   end
 end

@@ -45,10 +45,16 @@ unit uFormDebugThreads;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.ExtCtrls, VirtualTrees.Types, Vcl.Menus;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ExtCtrls,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -84,6 +90,8 @@ type
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure PopupMenuPopup(Sender: TObject);
     procedure Terminate1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     {@M}
     FRefreshTick : UInt64;
@@ -99,8 +107,16 @@ var
 
 implementation
 
-uses Optix.Thread, Optix.Constants, Optix.Helper, System.StrUtils, uFormMain, Optix.Protocol.SessionHandler,
-     Optix.Protocol.Worker.FileTransfer {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.DateUtils, System.Math, System.StrUtils,
+
+  uFormMain,
+
+  Optix.Thread, Optix.Constants, Optix.Helper, Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer
+
+  {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -241,6 +257,26 @@ end;
 procedure TFormDebugThreads.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormDebugThreads.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareValue(pData1^.Id, pData2^.Id);
+      1 : Result := CompareText(pData1^.ClassName, pData2^.ClassName);
+      2 : Result := Ord(pData1^.Running) - Ord(pData2^.Running);
+      3 : Result := CompareDateTime(pData1^.CreatedTime, pData2^.CreatedTime);
+      4 : Result := CompareValue(Cardinal(pData1^.Priority), Cardinal(pData2^.Priority));
+    end;
+  end;
 end;
 
 procedure TFormDebugThreads.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);

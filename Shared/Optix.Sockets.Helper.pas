@@ -45,8 +45,16 @@ unit Optix.Sockets.Helper;
 
 interface
 
-uses Winapi.Windows, Winapi.Winsock2, System.Classes, System.SysUtils, XSuperObject, Optix.Protocol.Packet
-     {$IFDEF USETLS},Optix.OpenSSL.Handler, Optix.OpenSSL.Context{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Winapi.Windows, Winapi.Winsock2,
+
+  XSuperObject,
+
+  Optix.Protocol.Packet {$IFDEF USETLS},Optix.OpenSSL.Handler, Optix.OpenSSL.Context{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 const PACKET_SIZE = 8192;
 
@@ -160,9 +168,13 @@ type
 
 implementation
 
-uses Optix.Sockets.Exceptions
-     {$IFDEF USETLS}, Optix.OpenSSL.Headers, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.ZLib,
 
+  Optix.Sockets.Exceptions
+  {$IFDEF USETLS}, Optix.OpenSSL.Headers, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TSocketBase *)
 
@@ -456,7 +468,11 @@ end;
 { TClientSocket.SendString }
 procedure TClientSocket.SendString(const AString : String);
 begin
-  SendBuffer(PWideChar(AString), Length(AString) * SizeOf(WideChar));
+  var ABuffer := ZCompressStr(AString, TZCompressionLevel.zcDefault);
+
+  SendBuffer(@ABuffer[0], Length(ABuffer));
+
+  // SendBuffer(PWideChar(AString), Length(AString) * SizeOf(WideChar));
 end;
 
 { TClientSocket.RecvString }
@@ -465,15 +481,23 @@ begin
   result := '';
   ///
 
+  var pCompressedBuffer := nil;
+  var ACompressedBufferSize : UInt64;
+
   var pBuffer := nil;
-  var ABufferSize : UInt64;
+  var ABufferSize : Integer;
   try
-    ReceiveBuffer(pBuffer, ABufferSize);
+    ReceiveBuffer(pCompressedBuffer, ACompressedBufferSize);
+
+    ZDecompress(pCompressedBuffer, ACompressedBufferSize, pBuffer, ABufferSize);
 
     SetString(result, PWideChar(pBuffer), ABufferSize div SizeOf(WideChar));
   finally
     if Assigned(pBuffer) then
       FreeMem(pBuffer, ABufferSize);
+
+    if Assigned(pCompressedBuffer) then
+      FreeMem(pCompressedBuffer, ACompressedBufferSize);
   end;
 end;
 
@@ -483,6 +507,7 @@ begin
   if not Assigned(AJson) then
     Exit();
 
+  ///
   SendString(AJson.AsJSON());
 end;
 
@@ -590,7 +615,9 @@ begin
   else begin
     {$IFDEF USETLS}
       if Assigned(FSSLHandler) then
-        result := FSSLHandler.IsConnectionAlive();
+        result := FSSLHandler.IsConnectionAlive()
+      else
+        result := False;
     {$ELSE}
       var ADummyBuffer : array[0..0] of Byte;
       ARet := Winapi.Winsock2.recv(FSocket, ADummyBuffer, 1, MSG_PEEK);

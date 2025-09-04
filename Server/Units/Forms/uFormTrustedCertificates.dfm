@@ -32,13 +32,15 @@ object FormTrustedCertificates: TFormTrustedCertificates
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = 0
     Header.DefaultHeight = 25
-    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Header.SortColumn = 0
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnChange = VSTChange
+    OnCompareNodes = VSTCompareNodes
     OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex

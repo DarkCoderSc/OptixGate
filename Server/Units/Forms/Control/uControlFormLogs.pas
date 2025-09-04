@@ -41,25 +41,36 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormLogs;
+unit uControlFormLogs;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, XSuperObject, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL, VirtualTrees, Optix.Func.LogNotifier, VirtualTrees.Types;
+  System.Variants, System.Classes, System.SysUtils,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees,
+  XSuperObject,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+
+  __uBaseFormControl__,
+
+  Optix.Func.LogNotifier;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
     LogMessage : String;
     Context    : String;
     LogKind    : TLogKind;
-    When       : TDateTime;
+    LogDate    : TDateTime;
   end;
   PTreeData = ^TTreeData;
 
-  TFormLogs = class(TBaseFormControl)
+  TControlFormLogs = class(TBaseFormControl)
     VST: TVirtualStringTree;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
@@ -74,6 +85,8 @@ type
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     {@M}
     procedure AddLog(const AMessage, AContext : String; const AKind : TLogKind);
@@ -83,20 +96,27 @@ type
   end;
 
 var
-  FormLogs: TFormLogs;
+  ControlFormLogs: TControlFormLogs;
 
 implementation
 
-uses Optix.Helper, Optix.Protocol.Packet, Optix.Constants, uFormMain, Optix.VCL.Helper, uFormTransfers;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math, System.DateUtils,
+
+  uFormMain, uControlFormTransfers,
+
+  Optix.Helper, Optix.Protocol.Packet, Optix.Constants, Optix.VCL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
-procedure TFormLogs.AddLog(const AMessage, AContext : String; const AKind : TLogKind);
+procedure TControlFormLogs.AddLog(const AMessage, AContext : String; const AKind : TLogKind);
 begin
   var pNode := VST.AddChild(nil);
   var pData := PTreeData(pNode.GetData);
 
-  pData^.When       := Now;
+  pData^.LogDate    := Now;
 
   pData^.LogMessage := AMessage;
   pData^.Context    := AContext;
@@ -106,7 +126,7 @@ begin
   VST.Update();
 end;
 
-procedure TFormLogs.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormLogs.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
   inherited;
   ///
@@ -125,7 +145,7 @@ begin
       ALogNotifier := TLogTransferException.Create(ASerializedPacket);
 
       // Notify concerned transfer
-      var ATransfersForm := TFormTransfers(FormMain.GetControlForm(self, TFormTransfers));
+      var ATransfersForm := TControlFormTransfers(FormMain.GetControlForm(self, TControlFormTransfers));
       if Assigned(aTransfersForm) then
         ATransfersForm.ApplyTransferException(TLogTransferException(ALogNotifier));
     end;
@@ -143,7 +163,7 @@ begin
   TOptixVCLHelper.ShowForm(self);
 end;
 
-procedure TFormLogs.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+procedure TControlFormLogs.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
@@ -162,18 +182,37 @@ begin
   end;
 end;
 
-procedure TFormLogs.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+procedure TControlFormLogs.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormLogs.VSTFocusChanged(Sender: TBaseVirtualTree;
+procedure TControlFormLogs.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.LogMessage, pData2^.LogMessage);
+      1 : Result := CompareText(pData1^.Context, pData2^.Context);
+      2 : Result := CompareValue(Cardinal(pData1^.LogKind), Cardinal(pData2^.LogKind));
+      3 : Result := CompareDateTime(pData1^.LogDate, pData2^.LogDate);
+    end;
+  end;
+end;
+
+procedure TControlFormLogs.VSTFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormLogs.VSTGetImageIndex(Sender: TBaseVirtualTree;
+procedure TControlFormLogs.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
@@ -192,13 +231,13 @@ begin
   end;
 end;
 
-procedure TFormLogs.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
+procedure TControlFormLogs.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
   var NodeDataSize: Integer);
 begin
   NodeDataSize := SizeOf(TTreeData);
 end;
 
-procedure TFormLogs.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+procedure TControlFormLogs.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 begin
   var pData := PTreeData(Node.GetData);
@@ -209,7 +248,7 @@ begin
     0 : CellText := pData^.LogMessage;
     1 : CellText := pData^.Context;
     2 : CellText := LogKindToString(pData^.LogKind);
-    3 : CellText := DateTimeToStr(pData^.When);
+    3 : CellText := DateTimeToStr(pData^.LogDate);
   end;
 
   ///

@@ -41,15 +41,25 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormProcessManager;
+unit uControlFormProcessManager;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, Vcl.ComCtrls, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL, VirtualTrees, Vcl.Menus, XSuperObject, Optix.Func.Enum.Process, Optix.WinApiEx,
-  VirtualTrees.Types, uFormDumpProcess;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.Menus,
+
+  VirtualTrees, VirtualTrees.AncestorVCL, VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  XSuperObject,
+
+  __uBaseFormControl__, uControlFormDumpProcess,
+
+  Optix.Func.Enum.Process, Optix.WinApiEx;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -63,7 +73,7 @@ type
   );
   TFilterKinds = set of TFilterKind;
 
-  TFormProcessManager = class(TBaseFormControl)
+  TControlFormProcessManager = class(TBaseFormControl)
     PopupMenu: TPopupMenu;
     VST: TVirtualStringTree;
     Refresh1: TMenuItem;
@@ -102,11 +112,9 @@ type
     procedure DumpProcess1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
-    procedure FormShow(Sender: TObject);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
-    FFirstShow                   : Boolean; // TODO: method in TBaseFormControl (FirstFormShow override)
 
     {@M}
     procedure Refresh(const AProcessList : TProcessList);
@@ -120,6 +128,7 @@ type
     {@M}
     function GetContextDescription() : String; override;
     procedure RefreshCaption(); override;
+    procedure OnFirstShow(); override;
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
@@ -129,21 +138,36 @@ type
   end;
 
 var
-  FormProcessManager: TFormProcessManager;
+  ControlFormProcessManager: TControlFormProcessManager;
 
 implementation
 
-uses uFormMain, Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants,
-     Optix.VCL.Helper, Optix.Protocol.Packet, System.Math, System.DateUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math, System.DateUtils,
+
+  uFormMain,
+
+  Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper,
+  Optix.Protocol.Packet;
+ // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
-procedure TFormProcessManager.RefreshProcess();
+procedure TControlFormProcessManager.OnFirstShow();
+begin
+  inherited;
+  ///
+
+  RefreshProcess();
+end;
+
+procedure TControlFormProcessManager.RefreshProcess();
 begin
   SendCommand(TOptixCommandRefreshProcess.Create());
 end;
 
-function TFormProcessManager.GetContextDescription() : String;
+function TControlFormProcessManager.GetContextDescription() : String;
 begin
   result := inherited;
   ///
@@ -155,7 +179,7 @@ begin
     result := 'Process list empty.';
 end;
 
-procedure TFormProcessManager.RefreshCaption();
+procedure TControlFormProcessManager.RefreshCaption();
 begin
   inherited;
   ///
@@ -163,7 +187,7 @@ begin
   Caption := Caption + ' - ' + ProcessorArchitectureToString(FRemoteProcessorArchitecture);
 end;
 
-function TFormProcessManager.GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
+function TControlFormProcessManager.GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
 begin
   result := nil;
   ///
@@ -182,7 +206,7 @@ begin
   end;
 end;
 
-procedure TFormProcessManager.RemoveProcess(const AProcessId : Cardinal);
+procedure TControlFormProcessManager.RemoveProcess(const AProcessId : Cardinal);
 begin
   var pNode := GetNodeByProcessid(AProcessId);
   if not Assigned(pNode) then
@@ -190,11 +214,9 @@ begin
   ///
 
   VST.DeleteNode(pNode);
-
-  VST.Refresh();
 end;
 
-procedure TFormProcessManager.ApplyFilterSettings();
+procedure TControlFormProcessManager.ApplyFilterSettings();
 begin
   var AFilters : TFilterKinds := [];
 
@@ -208,17 +230,17 @@ begin
   ApplyFilters(AFilters);
 end;
 
-procedure TFormProcessManager.Clear1Click(Sender: TObject);
+procedure TControlFormProcessManager.Clear1Click(Sender: TObject);
 begin
   VST.Clear();
 end;
 
-procedure TFormProcessManager.ColorBackground1Click(Sender: TObject);
+procedure TControlFormProcessManager.ColorBackground1Click(Sender: TObject);
 begin
   VST.Refresh();
 end;
 
-procedure TFormProcessManager.ApplyFilters(const AFilters : TFilterKinds = []);
+procedure TControlFormProcessManager.ApplyFilters(const AFilters : TFilterKinds = []);
 begin
   VST.BeginUpdate();
   try
@@ -258,22 +280,21 @@ begin
   end;
 end;
 
-constructor TFormProcessManager.Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
+constructor TControlFormProcessManager.Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
 begin
   inherited Create(AOwner, AUserIdentifier);
   ///
 
-  FFirstShow                   := True;
   FClientArchitecture          := AClientArchitecture;
   FRemoteProcessorArchitecture := ARemoteProcessorArchitecture;
 end;
 
-procedure TFormProcessManager.DifferentArchitecture1Click(Sender: TObject);
+procedure TControlFormProcessManager.DifferentArchitecture1Click(Sender: TObject);
 begin
   ApplyFilterSettings();
 end;
 
-procedure TFormProcessManager.DumpProcess1Click(Sender: TObject);
+procedure TControlFormProcessManager.DumpProcess1Click(Sender: TObject);
 begin
   if VST.FocusedNode = nil then
     Exit();
@@ -282,7 +303,7 @@ begin
 
   //SendCommand(TOptixCommandProcessDump.Create(0, 'c:\temp\process_dump.dmp'));
 
-  var ADialog := TFormDumpProcess.Create(
+  var ADialog := TControlFormDumpProcess.Create(
     self,
     pData^.ProcessInformation.Name,
     pData^.ProcessInformation.Id,
@@ -293,17 +314,7 @@ begin
   RegisterNewDialogAndShow(ADialog);
 end;
 
-procedure TFormProcessManager.FormShow(Sender: TObject);
-begin
-  if FFirstShow then begin
-    FFirstShow := False;
-
-    ///
-    RefreshProcess();
-  end;
-end;
-
-procedure TFormProcessManager.KillProcess1Click(Sender: TObject);
+procedure TControlFormProcessManager.KillProcess1Click(Sender: TObject);
 begin
   if VST.FocusedNode = nil then
     Exit();
@@ -318,13 +329,13 @@ begin
   SendCommand(TOptixCommandKillProcess.Create(pData^.ProcessInformation.Id));
 end;
 
-procedure TFormProcessManager.PopupMenuPopup(Sender: TObject);
+procedure TControlFormProcessManager.PopupMenuPopup(Sender: TObject);
 begin
   KillProcess1.Visible := VST.FocusedNode <> nil;
   DumpProcess1.Visible := KillProcess1.Visible;
 end;
 
-procedure TFormProcessManager.Refresh(const AProcessList : TProcessList);
+procedure TControlFormProcessManager.Refresh(const AProcessList : TProcessList);
 begin
   if not Assigned(AProcessList) then
     Exit();
@@ -348,17 +359,17 @@ begin
   end;
 end;
 
-procedure TFormProcessManager.Refresh1Click(Sender: TObject);
+procedure TControlFormProcessManager.Refresh1Click(Sender: TObject);
 begin
   RefreshProcess();
 end;
 
-procedure TFormProcessManager.UnreachableProcess1Click(Sender: TObject);
+procedure TControlFormProcessManager.UnreachableProcess1Click(Sender: TObject);
 begin
   ApplyFilterSettings();
 end;
 
-procedure TFormProcessManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
@@ -389,13 +400,13 @@ begin
   end;
 end;
 
-procedure TFormProcessManager.VSTChange(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormProcessManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+procedure TControlFormProcessManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
   Column: TColumnIndex; var Result: Integer);
 
   function GetElevationOrder(const AValue: TElevatedStatus): Integer;
@@ -411,35 +422,38 @@ procedure TFormProcessManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, N
 begin
   var pData1 := PTreeData(Node1.GetData);
   var pData2 := PTreeData(Node2.GetData);
+  ///
 
-  if not Assigned(pData1^.ProcessInformation) or not Assigned(pData2^.ProcessInformation) then
-    Exit();
-
-  case Column of
-    0  : Result := CompareText(pData1^.ProcessInformation.Name, pData2^.ProcessInformation.Name);
-    1  : Result := CompareValue(pData1^.ProcessInformation.id, pData2^.ProcessInformation.Id);
-    2  : Result := CompareValue(pData1^.ProcessInformation.ParentId, pData2^.ProcessInformation.ParentId);
-    3  : Result := CompareValue(pData1^.ProcessInformation.ThreadCount, pData2^.ProcessInformation.ThreadCount);
-    4  : Result := CompareText(pData1^.ProcessInformation.Username, pData2^.ProcessInformation.Username);
-    5  : Result := CompareText(pData1^.ProcessInformation.Domain, pData2^.ProcessInformation.Domain);
-    6  : Result := CompareValue(pData1^.ProcessInformation.SessionId, pData2^.ProcessInformation.SessionId);
-    7  : Result := CompareValue(
-                                  GetElevationOrder(pData1^.ProcessInformation.Elevated),
-                                  GetElevationOrder(pData2^.ProcessInformation.Elevated)
-                   );
-    8  : Result := CompareDate(pData1^.ProcessInformation.CreatedTime, pData2^.ProcessInformation.CreatedTime);
-    9  : Result := CompareText(pData1^.ProcessInformation.CommandLine, pData2^.ProcessInformation.CommandLine);
-    10 : Result := CompareText(pData1^.ProcessInformation.ImagePath, pData2^.ProcessInformation.ImagePath);
+  if (not Assigned(pData1) or not Assigned(pData2)) or
+     (not Assigned(pData1^.ProcessInformation) or not Assigned(pData2^.ProcessInformation)) then
+    Result := 0
+  else begin
+    case Column of
+      0  : Result := CompareText(pData1^.ProcessInformation.Name, pData2^.ProcessInformation.Name);
+      1  : Result := CompareValue(pData1^.ProcessInformation.id, pData2^.ProcessInformation.Id);
+      2  : Result := CompareValue(pData1^.ProcessInformation.ParentId, pData2^.ProcessInformation.ParentId);
+      3  : Result := CompareValue(pData1^.ProcessInformation.ThreadCount, pData2^.ProcessInformation.ThreadCount);
+      4  : Result := CompareText(pData1^.ProcessInformation.Username, pData2^.ProcessInformation.Username);
+      5  : Result := CompareText(pData1^.ProcessInformation.Domain, pData2^.ProcessInformation.Domain);
+      6  : Result := CompareValue(pData1^.ProcessInformation.SessionId, pData2^.ProcessInformation.SessionId);
+      7  : Result := CompareValue(
+                                    GetElevationOrder(pData1^.ProcessInformation.Elevated),
+                                    GetElevationOrder(pData2^.ProcessInformation.Elevated)
+                     );
+      8  : Result := CompareDate(pData1^.ProcessInformation.CreatedTime, pData2^.ProcessInformation.CreatedTime);
+      9  : Result := CompareText(pData1^.ProcessInformation.CommandLine, pData2^.ProcessInformation.CommandLine);
+      10 : Result := CompareText(pData1^.ProcessInformation.ImagePath, pData2^.ProcessInformation.ImagePath);
+    end;
   end;
 end;
 
-procedure TFormProcessManager.VSTFocusChanged(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormProcessManager.VSTFreeNode(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
@@ -449,7 +463,7 @@ begin
     FreeAndNil(pData^.ProcessInformation);
 end;
 
-function TFormProcessManager.GetImageIndex(const pData : PTreeData) : Integer;
+function TControlFormProcessManager.GetImageIndex(const pData : PTreeData) : Integer;
 begin
   result := -1;
   ///
@@ -471,7 +485,7 @@ begin
   end;
 end;
 
-procedure TFormProcessManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
@@ -485,13 +499,13 @@ begin
   end;
 end;
 
-procedure TFormProcessManager.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
   var NodeDataSize: Integer);
 begin
   NodeDataSize := SizeOf(TTreeData);
 end;
 
-procedure TFormProcessManager.VSTGetText(Sender: TBaseVirtualTree;
+procedure TControlFormProcessManager.VSTGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 begin
@@ -527,7 +541,7 @@ begin
   CellText := DefaultIfEmpty(CellText);
 end;
 
-procedure TFormProcessManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormProcessManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
   inherited;
   ///

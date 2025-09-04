@@ -33,6 +33,7 @@ object FormMain: TFormMain
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Header.SortColumn = 1
     Images = VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
@@ -105,6 +106,8 @@ object FormMain: TFormMain
       item
         Width = 130
       end>
+    ExplicitTop = 304
+    ExplicitWidth = 521
   end
   object MainMenu: TMainMenu
     Left = 152

@@ -49,7 +49,7 @@ uses Optix.Protocol.Packet, Generics.Collections, XSuperObject, System.Classes,
      Optix.Shared.Classes, Optix.FileSystem.Helper;
 
 type
-  // Drives --------------------------------------------------------------------
+  // Drives ------------------------------------------------------------------------------------------------------------
   TDriveInformation = class(TEnumerableItem)
   private
     FLetter    : String;
@@ -104,8 +104,11 @@ type
     property List : TObjectList<TDriveInformation> read FList;
   end;
 
-  // Files ---------------------------------------------------------------------
+  // Files -------------------------------------------------------------------------------------------------------------
   TFileInformation = class(TEnumerableItem)
+  public
+    {@M}
+    function GetFileTypeDescription() : String;
   protected
     FName             : String;
     FIsDirectory      : Boolean;
@@ -133,7 +136,7 @@ type
     property IsDirectory      : Boolean               read FIsDirectory;
     property ACL_SSDL         : String                read FACL_SSDL;
     property Access           : TFileAccessAttributes read FAccess;
-    property TypeDescription  : String                read FTypeDescription;
+    property TypeDescription  : String                read GetFileTypeDescription;
     property Size             : Int64                 read FSize;
     property DateAreValid     : Boolean               read FDateAreValid;
     property CreatedDate      : TDateTime             read FCreatedDate;
@@ -353,6 +356,15 @@ end;
 //----------------------------------------------------------------------------------------------------------------------
 
 (* TFileInformation *)
+
+{ TFileInformation.GetFileTypeDescription }
+function TFileInformation.GetFileTypeDescription() : String;
+begin
+  if FIsDirectory then
+    result := 'Directory'
+  else
+    result := FTypeDescription;
+end;
 
 { TFileInformation.DeSerialize }
 procedure TFileInformation.DeSerialize(const ASerializedObject : ISuperObject);

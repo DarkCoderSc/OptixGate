@@ -1,4 +1,4 @@
-object FormDumpProcess: TFormDumpProcess
+object ControlFormDumpProcess: TControlFormDumpProcess
   Left = 0
   Top = 0
   Margins.Left = 8

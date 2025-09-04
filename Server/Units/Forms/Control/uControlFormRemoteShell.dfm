@@ -1,4 +1,4 @@
-object FormRemoteShell: TFormRemoteShell
+object ControlFormRemoteShell: TControlFormRemoteShell
   Left = 0
   Top = 0
   Caption = 'Remote Shell'
@@ -16,11 +16,11 @@ object FormRemoteShell: TFormRemoteShell
   TextHeight = 15
   object Pages: TPageControl
     AlignWithMargins = True
-    Left = 47
+    Left = 43
     Top = 4
-    Width = 647
+    Width = 651
     Height = 339
-    Margins.Left = 4
+    Margins.Left = 0
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
@@ -29,7 +29,8 @@ object FormRemoteShell: TFormRemoteShell
     TabOrder = 0
     OnChange = PagesChange
     OnContextPopup = PagesContextPopup
-    ExplicitWidth = 657
+    ExplicitWidth = 641
+    ExplicitHeight = 307
   end
   object PanelActions: TPanel
     AlignWithMargins = True

@@ -41,7 +41,7 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormDumpProcess;
+unit uControlFormDumpProcess;
 
 interface
 
@@ -50,7 +50,7 @@ uses
   Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.VirtualImage, Vcl.Mask, __uBaseFormControl__;
 
 type
-  TFormDumpProcess = class(TForm)
+  TControlFormDumpProcess = class(TForm)
     GroupDumpTypes: TGroupBox;
     PanelRightTypes: TPanel;
     PanelLeftTypes: TPanel;
@@ -112,7 +112,7 @@ type
   end;
 
 var
-  FormDumpProcess: TFormDumpProcess;
+  ControlFormDumpProcess: TControlFormDumpProcess;
 
 implementation
 
@@ -120,7 +120,7 @@ uses uFormMain, Optix.WinApiEx, Optix.Func.Commands;
 
 {$R *.dfm}
 
-function TFormDumpProcess.GetMiniDumpTypesValue() : DWORD;
+function TControlFormDumpProcess.GetMiniDumpTypesValue() : DWORD;
 begin
   result := 0;
   ///
@@ -204,22 +204,22 @@ begin
     result := result or MiniDumpValidTypeFlags;
 end;
 
-procedure TFormDumpProcess.RadioCutomFileNameClick(Sender: TObject);
+procedure TControlFormDumpProcess.RadioCutomFileNameClick(Sender: TObject);
 begin
   EditCustomFilePath.Enabled := RadioCutomFileName.Checked;
 end;
 
-procedure TFormDumpProcess.RadioTempFileClick(Sender: TObject);
+procedure TControlFormDumpProcess.RadioTempFileClick(Sender: TObject);
 begin
   RadioCutomFileNameClick(Sender);
 end;
 
-procedure TFormDumpProcess.ButtonCancelClick(Sender: TObject);
+procedure TControlFormDumpProcess.ButtonCancelClick(Sender: TObject);
 begin
   Close();
 end;
 
-procedure TFormDumpProcess.ButtonValidateClick(Sender: TObject);
+procedure TControlFormDumpProcess.ButtonValidateClick(Sender: TObject);
 begin
   var ATypesValue := GetMiniDumpTypesValue();
 
@@ -239,7 +239,7 @@ begin
   Close();
 end;
 
-constructor TFormDumpProcess.Create(AOwner : TBaseFormControl; const AName : String; AProcessId : Cardinal; const AUserIdentifier : String; const AImageIndex : Integer);
+constructor TControlFormDumpProcess.Create(AOwner : TBaseFormControl; const AName : String; AProcessId : Cardinal; const AUserIdentifier : String; const AImageIndex : Integer);
 begin
   inherited Create(AOwner);
   ///
@@ -257,7 +257,7 @@ begin
   Image.ImageIndex := AImageIndex;
 end;
 
-procedure TFormDumpProcess.DoResize();
+procedure TControlFormDumpProcess.DoResize();
 begin
   Image.Left := 8;
   Image.Top  := (PanelHeaderInfo.Height div 2) - (Image.Height div 2);
@@ -273,7 +273,7 @@ begin
 end;
 
 { TFormDumpProcess.CreateParams }
-procedure TFormDumpProcess.CreateParams(var Params: TCreateParams);
+procedure TControlFormDumpProcess.CreateParams(var Params: TCreateParams);
 begin
   inherited;
   ///
@@ -283,7 +283,7 @@ begin
   Params.WndParent := 0;
 end;
 
-procedure TFormDumpProcess.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TControlFormDumpProcess.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case key of
     13 : ButtonValidateClick(ButtonValidate);
@@ -291,12 +291,12 @@ begin
   end;
 end;
 
-procedure TFormDumpProcess.FormResize(Sender: TObject);
+procedure TControlFormDumpProcess.FormResize(Sender: TObject);
 begin
   DoResize();
 end;
 
-procedure TFormDumpProcess.FormShow(Sender: TObject);
+procedure TControlFormDumpProcess.FormShow(Sender: TObject);
 begin
   DoResize();
 end;

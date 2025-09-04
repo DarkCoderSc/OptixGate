@@ -41,14 +41,22 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormControlForms;
+unit uControlFormControlForms;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL, VirtualTrees, Vcl.Menus, Vcl.ExtCtrls, VirtualTrees.Types;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Forms, Vcl.Dialogs, Vcl.Graphics, Vcl.Controls, Vcl.Menus, Vcl.ExtCtrls,
+
+  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees,  VirtualTrees.Types,
+
+   __uBaseFormControl__;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -61,7 +69,7 @@ type
   end;
   PTreeData = ^TTreeData;
 
-  TFormControlForms = class(TBaseFormControl)
+  TControlFormControlForms = class(TBaseFormControl)
     VST: TVirtualStringTree;
     PopupMenu: TPopupMenu;
     Refresh1: TMenuItem;
@@ -93,6 +101,8 @@ type
       var ImageIndex: TImageIndex);
     procedure Show1Click(Sender: TObject);
     procedure VSTDblClick(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     FTick       : UInt64;
     FClientData : Pointer;
@@ -108,15 +118,22 @@ type
   end;
 
 var
-  FormControlForms: TFormControlForms;
+  ControlFormControlForms: TControlFormControlForms;
 
 implementation
 
-uses uFormMain, Optix.Helper, Generics.Collections, Optix.Constants, Optix.VCL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math, System.DateUtils,
+
+  uFormMain,
+
+  Optix.Helper, Generics.Collections, Optix.Constants, Optix.VCL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
-function TFormControlForms.GetNodeByGUID(const AGUID : TGUID) : PVirtualNode;
+function TControlFormControlForms.GetNodeByGUID(const AGUID : TGUID) : PVirtualNode;
 begin
   result := nil;
   ///
@@ -135,7 +152,7 @@ begin
   end;
 end;
 
-procedure TFormControlForms.PopupMenuChange(Sender: TObject; Source: TMenuItem;
+procedure TControlFormControlForms.PopupMenuChange(Sender: TObject; Source: TMenuItem;
   Rebuild: Boolean);
 begin
   var pNode := VST.FocusedNode;
@@ -147,7 +164,7 @@ begin
   self.Purge1.Visible := Assigned(pData) and not pData^.Special;
 end;
 
-function TFormControlForms.GetSelectedNodeGUID() : TGUID;
+function TControlFormControlForms.GetSelectedNodeGUID() : TGUID;
 begin
   result := TGUID.Empty;
   ///
@@ -160,7 +177,7 @@ begin
   result := pData^.FormInformation.GUID;
 end;
 
-function TFormControlForms.GetFormByGUID(const AGUID : TGUID) : TBaseFormControl;
+function TControlFormControlForms.GetFormByGUID(const AGUID : TGUID) : TBaseFormControl;
 begin
   result := nil;
   ///
@@ -189,7 +206,7 @@ begin
   end;
 end;
 
-procedure TFormControlForms.Purge1Click(Sender: TObject);
+procedure TControlFormControlForms.Purge1Click(Sender: TObject);
 begin
   var ATargetGUID := GetSelectedNodeGUID();
   if ATargetGUID.IsEmpty then
@@ -222,7 +239,7 @@ begin
   Refresh();
 end;
 
-constructor TFormControlForms.Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer);
+constructor TControlFormControlForms.Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer);
 begin
   inherited Create(AOwner, AUserIdentifier, True);
   ///
@@ -231,18 +248,18 @@ begin
   FTick        := 0;
 end;
 
-procedure TFormControlForms.FormClose(Sender: TObject;
+procedure TControlFormControlForms.FormClose(Sender: TObject;
   var Action: TCloseAction);
 begin
   TimerRefresh.Enabled := False;
 end;
 
-procedure TFormControlForms.FormShow(Sender: TObject);
+procedure TControlFormControlForms.FormShow(Sender: TObject);
 begin
   Refresh(True);
 end;
 
-procedure TFormControlForms.Refresh(const AStartRefreshTimer : Boolean = False);
+procedure TControlFormControlForms.Refresh(const AStartRefreshTimer : Boolean = False);
 begin
   var pClientNodeData := uFormMain.PTreeData(FClientData);
 
@@ -302,12 +319,12 @@ begin
     TimerRefresh.Enabled := True;
 end;
 
-procedure TFormControlForms.Refresh1Click(Sender: TObject);
+procedure TControlFormControlForms.Refresh1Click(Sender: TObject);
 begin
   Refresh();
 end;
 
-procedure TFormControlForms.Show1Click(Sender: TObject);
+procedure TControlFormControlForms.Show1Click(Sender: TObject);
 begin
   var ATargetGUID := GetSelectedNodeGUID();
   if ATargetGUID.IsEmpty then
@@ -319,12 +336,12 @@ begin
     TOptixVCLHelper.ShowForm(AForm);
 end;
 
-procedure TFormControlForms.TimerRefreshTimer(Sender: TObject);
+procedure TControlFormControlForms.TimerRefreshTimer(Sender: TObject);
 begin
   Refresh();
 end;
 
-procedure TFormControlForms.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
@@ -353,24 +370,59 @@ begin
   end;
 end;
 
-procedure TFormControlForms.VSTChange(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormControlForms.VSTDblClick(Sender: TObject);
+procedure TControlFormControlForms.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    if (Column in [2..4, 6]) and (not Assigned(pData1^.FormInformation) or not Assigned(pData2^.FormInformation)) then
+      Result := CompareObjectAssigmenet(pData1^.FormInformation, pData2^.FormInformation)
+    else begin
+      case Column of
+        0 : Result := CompareText(pData1^.Title, pData2^.Title);
+        1 : Result := CompareText(pData1^.ClassName, pData2^.ClassName);
+        2 : Result := CompareValue(Cardinal(pData1^.FormInformation.State), Cardinal(pData2^.FormInformation.State));
+        3 : Result := CompareDateTime(pData1^.FormInformation.CreatedTime, pData2^.FormInformation.CreatedTime);
+
+        4 : Result := CompareDateTime(
+                        pData1^.FormInformation.LastReceivedDataTime,
+                        pData2^.FormInformation.LastReceivedDataTime
+                      );
+
+        5 : Result := CompareText(pData1^.ContextDescription, pData2^.ContextDescription);
+
+        6 : Result := CompareText(
+                        pData1^.FormInformation.GUID.ToString,
+                        pData2^.FormInformation.GUID.ToString
+                      );
+      end;
+    end;
+  end;
+end;
+
+procedure TControlFormControlForms.VSTDblClick(Sender: TObject);
 begin
   Show1Click(Show1);
 end;
 
-procedure TFormControlForms.VSTFocusChanged(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormControlForms.VSTFreeNode(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
@@ -378,7 +430,7 @@ begin
     FreeAndNil(pData^.FormInformation);
 end;
 
-procedure TFormControlForms.VSTGetImageIndex(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
@@ -412,13 +464,13 @@ begin
   end;
 end;
 
-procedure TFormControlForms.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
   var NodeDataSize: Integer);
 begin
   NodeDataSize := SizeOf(TTreeData);
 end;
 
-procedure TFormControlForms.VSTGetText(Sender: TBaseVirtualTree;
+procedure TControlFormControlForms.VSTGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 begin

@@ -41,14 +41,25 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFormTasks;
+unit uControlFormTasks;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  VirtualTrees.AncestorVCL, VirtualTrees, XSuperObject, Optix.Task, Vcl.Menus, VirtualTrees.Types;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+  XSuperObject,
+
+  __uBaseFormControl__,
+
+  Optix.Task;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -59,7 +70,7 @@ type
   end;
   PTreeData = ^TTreeData;
 
-  TFormTasks = class(TBaseFormControl)
+  TControlFormTasks = class(TBaseFormControl)
     VST: TVirtualStringTree;
     PopupMenu: TPopupMenu;
     Action1: TMenuItem;
@@ -72,7 +83,9 @@ type
     procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
       var Ghosted: Boolean; var ImageIndex: TImageIndex);
-    procedure PopupMenuPopup(Sender: TObject);  private
+    procedure PopupMenuPopup(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);  private
     { Private declarations }
   private
     {@M}
@@ -86,15 +99,24 @@ type
   end;
 
 var
-  FormTasks: TFormTasks;
+  ControlFormTasks: TControlFormTasks;
 
 implementation
 
-uses uFormMain, Optix.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Task.ProcessDump, VCL.FileCtrl;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math, System.DateUtils,
+
+  VCL.FileCtrl,
+
+  uFormMain,
+
+  Optix.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Task.ProcessDump;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
-function TFormTasks.GetNodeByTaskId(const ATaskId : TGUID) : PVirtualNode;
+function TControlFormTasks.GetNodeByTaskId(const ATaskId : TGUID) : PVirtualNode;
 begin
   result := nil;
   ///
@@ -110,7 +132,7 @@ begin
   end;
 end;
 
-function TFormTasks.GetSelectedTaskCallBack(const AFilterState : TOptixTaskStates = []) : TOptixTaskCallBack;
+function TControlFormTasks.GetSelectedTaskCallBack(const AFilterState : TOptixTaskStates = []) : TOptixTaskCallBack;
 begin
   result := nil;
   ///
@@ -126,12 +148,12 @@ begin
     result := pData^.TaskCallBack;
 end;
 
-function TFormTasks.GetSelectedSucceededTaskCallBack() : TOptixTaskCallBack;
+function TControlFormTasks.GetSelectedSucceededTaskCallBack() : TOptixTaskCallBack;
 begin
   result := GetSelectedTaskCallBack([otsSuccess]);
 end;
 
-procedure TFormTasks.DownloadProcessDumpFile(Sender : TObject);
+procedure TControlFormTasks.DownloadProcessDumpFile(Sender : TObject);
 begin
   var ACallBack := GetSelectedSucceededTaskCallBack();
   if not Assigned(ACallBack) or not Assigned(ACallBack.Result) and (ACallBack.Result is TOptixProcessDumpTaskResult) then
@@ -150,7 +172,7 @@ begin
   );
 end;
 
-procedure TFormTasks.PopupMenuPopup(Sender: TObject);
+procedure TControlFormTasks.PopupMenuPopup(Sender: TObject);
 begin
   Action1.Visible := False;
   Action1.Caption := '';
@@ -175,7 +197,7 @@ begin
   end;
 end;
 
-procedure TFormTasks.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormTasks.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
   if not Assigned(ASerializedPacket) or (AClassName <> TOptixTaskCallback.ClassName) then
     Exit();
@@ -185,43 +207,95 @@ begin
   var pNode := GetNodeByTaskId(ATaskResult.Id);
   var pData : PTreeData;
 
-  if not Assigned(pNode) then begin
-    pNode := VST.AddChild(nil);
-    pData := pNode.GetData;
-    pData^.TaskCallBack := nil; // Ensure
-    pData^.Created := Now;
-    pData^.HasEnded := False;
+  VST.BeginUpdate();
+  try
+    if not Assigned(pNode) then begin
+      pNode := VST.AddChild(nil);
+      pData := pNode.GetData;
+      pData^.TaskCallBack := nil; // Ensure
+      pData^.Created := Now;
+      pData^.HasEnded := False;
 
-    ///
-    TOptixVCLHelper.ShowForm(self);
-  end else
-    pData := pNode.GetData;
+      ///
+      TOptixVCLHelper.ShowForm(self);
+    end else
+      pData := pNode.GetData;
 
-  if Assigned(pData^.TaskCallBack) then
-    FreeAndNil(pData^.TaskCallBack);
+    if Assigned(pData^.TaskCallBack) then
+      FreeAndNil(pData^.TaskCallBack);
 
-  pData^.TaskCallBack := ATaskResult;
+    pData^.TaskCallBack := ATaskResult;
 
-  if (pData^.TaskCallBack.State = otsFailed) or (pData^.TaskCallBack.State = otsSuccess) then begin
-    pData^.Ended := Now;
-    pData^.HasEnded := True;
+    if (pData^.TaskCallBack.State = otsFailed) or (pData^.TaskCallBack.State = otsSuccess) then begin
+      pData^.Ended := Now;
+      pData^.HasEnded := True;
+    end;
+  finally
+    VST.EndUpdate();
+  end;
+end;
+
+procedure TControlFormTasks.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TControlFormTasks.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+
+  function GetStateOrder(const AState: TOptixTaskState): Integer;
+  begin
+    case AState of
+      otsRunning : result := 0;
+      otsSuccess : result := 1;
+      otsPending : result := 2;
+      otsFailed  : result := 3;
+
+      else
+        result := 4;
+    end;
   end;
 
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
   ///
-  VST.Refresh();
+
+  if (not Assigned(pData1) or not Assigned(pData2)) or
+     (not Assigned(pData1^.TaskCallBack) or not Assigned(pData2^.TaskCallBack)) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.TaskCallBack.Id.ToString, pData2^.TaskCallBack.Id.ToString);
+      1 : Result := CompareText(pData1^.TaskCallBack.TaskClassName, pData2^.TaskCallBack.TaskClassName);
+
+      2 : begin
+        var AOrder1 := GetStateOrder(pData1^.TaskCallBack.State);
+        var AOrder2 := GetStateOrder(pData2^.TaskCallBack.State);
+        ///
+
+        Result := AOrder1 - AOrder2;
+      end;
+
+      3 : Result := CompareDateTime(pData1^.Created, pData2^.Created);
+      4 : Result := CompareDateTimeEx(pData1^.Ended, pData1^.HasEnded, pData2^.Ended, pData2^.HasEnded);
+
+      5 : begin
+        if not Assigned(pData1^.TaskCallBack.Result) or not Assigned(pData2^.TaskCallBack.Result) then
+          Result := CompareObjectAssigmenet(pData1^.TaskCallBack.Result, pData2^.TaskCallBack.Result)
+        else
+          Result := CompareText(pData1^.TaskCallBack.Result.Description, pData2^.TaskCallBack.Result.Description);
+      end;
+    end;
+  end;
 end;
 
-procedure TFormTasks.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+procedure TControlFormTasks.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormTasks.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
-procedure TFormTasks.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+procedure TControlFormTasks.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
 
@@ -229,7 +303,7 @@ begin
     FreeAndNil(pData^.TaskCallBack);
 end;
 
-procedure TFormTasks.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
+procedure TControlFormTasks.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   if ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) or (Column <> 0) then
@@ -248,15 +322,14 @@ begin
     else
       ImageIndex := IMAGE_TASK_PENDING;
   end;
-
 end;
 
-procedure TFormTasks.VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+procedure TControlFormTasks.VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
 begin
   NodeDataSize := SizeOf(TTreeData);
 end;
 
-procedure TFormTasks.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
+procedure TControlFormTasks.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
   TextType: TVSTTextType; var CellText: string);
 begin
   var pData := PTreeData(Node.GetData);

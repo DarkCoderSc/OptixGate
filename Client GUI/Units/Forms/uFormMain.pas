@@ -45,12 +45,21 @@ unit uFormMain;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Optix.Protocol.SessionHandler, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList,
-  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client, System.Notification, Generics.Collections,
-  VirtualTrees.Types, System.UITypes;
+  System.SysUtils, System.Variants, System.Classes, System.UITypes, System.ImageList, System.Notification,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.BaseImageCollection, Vcl.ImageCollection,
+  Vcl.ImgList, Vcl.VirtualImageList,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+
+  Optix.Protocol.SessionHandler, Optix.Protocol.Client;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TClientStatus = (csDisconnected, csConnected, csOnError);
@@ -106,6 +115,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure Certificates1Click(Sender: TObject);
     procedure rustedCertificates1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     FNotifications : TList<TGUID>;
 
@@ -131,9 +142,16 @@ var
 
 implementation
 
-uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants, uFormAbout, uFormDebugThreads,
-     Optix.Protocol.Preflight
-     {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math,
+
+  uFormConnectToServer, uFormAbout, uFormDebugThreads
+  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
+
+  Optix.Thread, Optix.VCL.Helper, Optix.Helper, Optix.Constants, Optix.Protocol.Preflight
+  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -438,6 +456,25 @@ end;
 procedure TFormMain.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormMain.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if (not Assigned(pData1) or not Assigned(pData2)) or
+     (not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler)) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.Handler.RemoteAddress, pData2^.Handler.RemoteAddress);
+      1 : Result := CompareValue(pData1^.Handler.RemotePort, pData2^.Handler.RemotePort);
+      2 : Result := CompareText(pData1^.ExtraDescription, pData2^.ExtraDescription);
+    end;
+  end;
 end;
 
 procedure TFormMain.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);

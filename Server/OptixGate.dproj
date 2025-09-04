@@ -181,7 +181,7 @@
         <DCCReference Include="Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="Units\Configs\Optix.Config.Helper.pas"/>
-        <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
+        <DCCReference Include="Units\Forms\Control\__uBaseFormControl__.pas"/>
         <DCCReference Include="Units\Forms\uFormMain.pas">
             <Form>FormMain</Form>
         </DCCReference>
@@ -189,32 +189,32 @@
         <DCCReference Include="Units\Forms\uFormAbout.pas">
             <Form>FormAbout</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormProcessManager.pas">
-            <Form>FormProcessManager</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormProcessManager.pas">
+            <Form>ControlFormProcessManager</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormLogs.pas">
-            <Form>FormLogs</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormLogs.pas">
+            <Form>ControlFormLogs</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormFileManager.pas">
-            <Form>FormFileManager</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormFileManager.pas">
+            <Form>ControlFormFileManager</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormControlForms.pas">
-            <Form>FormControlForms</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormControlForms.pas">
+            <Form>ControlFormControlForms</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormTransfers.pas">
-            <Form>FormTransfers</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormTransfers.pas">
+            <Form>ControlFormTransfers</Form>
         </DCCReference>
         <DCCReference Include="Units\Forms\uFormDebugThreads.pas">
             <Form>FormDebugThreads</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormTasks.pas">
-            <Form>FormTasks</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormTasks.pas">
+            <Form>ControlFormTasks</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\Dialogs\uFormDumpProcess.pas">
-            <Form>FormDumpProcess</Form>
+        <DCCReference Include="Units\Forms\Dialogs\Control\uControlFormDumpProcess.pas">
+            <Form>ControlFormDumpProcess</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormRemoteShell.pas">
-            <Form>FormRemoteShell</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormRemoteShell.pas">
+            <Form>ControlFormRemoteShell</Form>
         </DCCReference>
         <DCCReference Include="Units\Frames\uFrameRemoteShellInstance.pas">
             <Form>FrameRemoteShellInstance</Form>

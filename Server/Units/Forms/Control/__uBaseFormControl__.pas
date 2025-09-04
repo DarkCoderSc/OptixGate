@@ -48,7 +48,12 @@ interface
 uses VCL.Forms, VCL.Controls, System.Classes, Winapi.Messages, XSuperObject, Optix.Func.Commands, Generics.Collections;
 
 type
-  TFormControlState = (fcsUnset, fcsVisible, fcsMinimized, fcsClosed);
+  TFormControlState = (
+    fcsUnset,
+    fcsVisible,
+    fcsMinimized,
+    fcsClosed
+  );
 
   TFormControlInformation = class(TPersistent)
   private
@@ -88,6 +93,7 @@ type
   private
     FOriginalCaption  : String;
     FDialogs          : TObjectList<TForm>;
+    FFirstShow        : Boolean;
 
     {@M}
     function GetGUID() : TGUID;
@@ -104,7 +110,10 @@ type
     function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
     function RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
 
+    procedure DoShow(); override;
     procedure CreateParams(var Params: TCreateParams); override;
+
+    procedure OnFirstShow(); virtual;
 
     procedure CMVisibleChanged(var AMessage: TMessage); message CM_VISIBLECHANGED;
     procedure WMActivateApp(var AMessage: TWMActivateApp); message WM_ACTIVATEAPP;
@@ -134,7 +143,7 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, uFormMain, uFormTransfers;
+uses System.SysUtils, Winapi.Windows, uFormMain, uControlFormTransfers;
 
 (* Local *)
 
@@ -240,6 +249,26 @@ begin
   Params.WndParent := 0;
 end;
 
+{ TBaseFormControl.DoShow }
+procedure TBaseFormControl.DoShow();
+begin
+  inherited;
+  ///
+
+  if FFirstShow then begin
+    FFirstShow := False;
+
+    ///
+    OnFirstShow();
+  end;
+end;
+
+{ TBaseFormControl.OnFirstShow }
+procedure TBaseFormControl.OnFirstShow();
+begin
+  ///
+end;
+
 { TBaseFormControl.Create }
 constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
 begin
@@ -248,6 +277,7 @@ begin
 
   FOriginalCaption := self.Caption; // Default
   FSpecialForm     := ASpecialForm;
+  FFirstShow       := True;
   FFormInformation := TFormControlInformation.Create();
 
   FFormInformation.UserIdentifier := AUserIdentifier;
@@ -281,7 +311,7 @@ end;
 { TBaseFormControl.RequestFileDownload }
 function TBaseFormControl.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
-  var AForm := FormMain.GetControlForm(self, TFormTransfers);
+  var AForm := FormMain.GetControlForm(self, TControlFormTransfers);
   if Assigned(AForm) then
     AForm.RequestFileDownload(ARemoteFilePath, ALocalFilePath, AContext);
 end;
@@ -289,7 +319,7 @@ end;
 { TBaseFormControl.RequestFileUpload }
 function TBaseFormControl.RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
-  var AForm := FormMain.GetControlForm(self, TFormTransfers);
+  var AForm := FormMain.GetControlForm(self, TControlFormTransfers);
   if Assigned(AForm) then
     AForm.RequestFileUpload(ALocalFilePath, ARemoteFilePath, AContext);
 end;

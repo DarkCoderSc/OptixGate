@@ -45,10 +45,20 @@ unit uFormCertificatesStore;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Optix.OpenSSL.Helper, VirtualTrees.Types, Generics.Collections;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+
+  Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -92,6 +102,8 @@ type
     procedure ExportPrivateKey1Click(Sender: TObject);
     procedure RemoveCertificate1Click(Sender: TObject);
     procedure CopySelectedFingerprint1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
@@ -114,8 +126,15 @@ var
 
 implementation
 
-uses uFormGenerateNewCertificate, Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore,
-     Optix.Config.Helper, Optix.VCL.Helper, Optix.OpenSSL.Exceptions, VCL.Clipbrd;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  VCL.Clipbrd,
+
+  uFormGenerateNewCertificate,
+
+  Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore, Optix.Config.Helper,
+  Optix.VCL.Helper, Optix.OpenSSL.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -268,6 +287,25 @@ end;
 procedure TFormCertificatesStore.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormCertificatesStore.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+  Column: TColumnIndex; var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.Certificate.C, pData2^.Certificate.C);
+      1 : Result := CompareText(pData1^.Certificate.O, pData2^.Certificate.O);
+      2 : Result := CompareText(pData1^.Certificate.CN, pData2^.Certificate.CN);
+      3 : Result := CompareText(pData1^.Certificate.Fingerprint, pData2^.Certificate.Fingerprint);
+    end;
+  end;
 end;
 
 procedure TFormCertificatesStore.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);

@@ -1,4 +1,4 @@
-object FormFileManager: TFormFileManager
+object ControlFormFileManager: TControlFormFileManager
   Left = 0
   Top = 0
   Caption = 'File Manager'
@@ -11,7 +11,6 @@ object FormFileManager: TFormFileManager
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
-  OnShow = FormShow
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
@@ -31,6 +30,7 @@ object FormFileManager: TFormFileManager
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Header.SortColumn = 0
     Images = FormMain.ImageSystem
     PopupMenu = PopupMenu
     StateImages = FormMain.VirtualImageList
@@ -106,9 +106,10 @@ object FormFileManager: TFormFileManager
     ExplicitWidth = 459
   end
   object PanelActions: TPanel
-    Left = 0
+    AlignWithMargins = True
+    Left = 4
     Top = 0
-    Width = 477
+    Width = 469
     Height = 30
     Margins.Left = 4
     Margins.Top = 0
@@ -117,14 +118,15 @@ object FormFileManager: TFormFileManager
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitLeft = 0
     ExplicitWidth = 467
     object ButtonHome: TSpeedButton
       AlignWithMargins = True
-      Left = 2
+      Left = 0
       Top = 4
       Width = 30
       Height = 22
-      Margins.Left = 2
+      Margins.Left = 0
       Margins.Top = 4
       Margins.Right = 2
       Margins.Bottom = 4
@@ -138,7 +140,7 @@ object FormFileManager: TFormFileManager
     end
     object ButtonRefresh: TSpeedButton
       AlignWithMargins = True
-      Left = 36
+      Left = 34
       Top = 4
       Width = 30
       Height = 22
@@ -157,7 +159,7 @@ object FormFileManager: TFormFileManager
     end
     object ButtonUpload: TSpeedButton
       AlignWithMargins = True
-      Left = 70
+      Left = 68
       Top = 4
       Width = 30
       Height = 22
@@ -176,7 +178,7 @@ object FormFileManager: TFormFileManager
     end
     object ButtonOptions: TSpeedButton
       AlignWithMargins = True
-      Left = 104
+      Left = 102
       Top = 4
       Width = 30
       Height = 22
@@ -189,11 +191,12 @@ object FormFileManager: TFormFileManager
       ImageName = 'gear-filled'
       Images = FormMain.VirtualImageList
       OnClick = ButtonOptionsClick
+      ExplicitLeft = 104
       ExplicitTop = 2
     end
     object LabelAccess: TLabel
       AlignWithMargins = True
-      Left = 448
+      Left = 440
       Top = 10
       Width = 21
       Height = 20
@@ -210,6 +213,7 @@ object FormFileManager: TFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
+      ExplicitLeft = 448
       ExplicitHeight = 15
     end
   end

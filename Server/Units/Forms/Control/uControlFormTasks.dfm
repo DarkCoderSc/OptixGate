@@ -1,4 +1,4 @@
-object FormTasks: TFormTasks
+object ControlFormTasks: TControlFormTasks
   Left = 0
   Top = 0
   Caption = 'Tasks'
@@ -29,13 +29,15 @@ object FormTasks: TFormTasks
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
-    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Header.SortColumn = 2
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnChange = VSTChange
+    OnCompareNodes = VSTCompareNodes
     OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText

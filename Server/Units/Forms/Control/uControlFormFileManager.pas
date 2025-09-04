@@ -43,20 +43,29 @@
 
 {
   TODO:
-    - Column Sorting
     - Lock GUI during refresh (Folders), Unlock if : Refresh Success / Refresh Error
 }
 
-unit uFormFileManager;
+unit uControlFormFileManager;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, __uBaseFormControl__,
-  VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.StdCtrls, Vcl.ExtCtrls, XSuperObject, Vcl.Menus,
-  Optix.Func.Enum.FileSystem, VirtualTrees.Types, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Buttons;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Buttons, Vcl.Menus, Vcl.StdCtrls,
+  Vcl.ExtCtrls,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, XSuperObject,
+
+  __uBaseFormControl__,
+
+  Optix.Func.Enum.FileSystem, VirtualTrees.Types;
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -71,7 +80,7 @@ type
     dmFiles
   );
 
-  TFormFileManager = class(TBaseFormControl)
+  TControlFormFileManager = class(TBaseFormControl)
     VST: TVirtualStringTree;
     EditPath: TEdit;
     PopupMenu: TPopupMenu;
@@ -85,7 +94,6 @@ type
     PopupMenuOptions: TPopupMenu;
     ColoredFoldersAccessView1: TMenuItem;
     LabelAccess: TLabel;
-    procedure FormShow(Sender: TObject);
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -112,8 +120,6 @@ type
     procedure ButtonOptionsClick(Sender: TObject);
     procedure ButtonUploadClick(Sender: TObject);
   private
-    FFirstShow : Boolean;
-
     {@M}
     function CanNodeFileBeDownloaded(var pData : PTreeData) : Boolean;
     function CanFileBeUploadedToNodeDirectory(var pData : PTreeData) : Boolean;
@@ -126,6 +132,7 @@ type
   protected
     {@M}
     function GetContextDescription() : String; override;
+    procedure OnFirstShow(); override;
 
     function RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID; reintroduce;
     function RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; reintroduce;
@@ -138,51 +145,63 @@ type
   end;
 
 var
-  FormFileManager: TFormFileManager;
+  ControlFormFileManager: TControlFormFileManager;
 
 implementation
 
-uses uFormMain, System.Types, Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper, Optix.FileSystem.Helper,
-     Optix.Constants, Optix.VCL.Helper, System.IOUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Types, System.DateUtils, System.Math, System.IOUtils,
+
+  uFormMain,
+
+  Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper, Optix.FileSystem.Helper, Optix.Constants, Optix.VCL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
-function TFormFileManager.RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID;
-begin
-  inherited RequestFileDownload(ARemoteFilePath, ALocalFilePath, Format('File Manager (%s)', [EditPath.Text]));
-end;
-
-function TFormFileManager.RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
-begin
-  inherited RequestFileUpload(ALocalFilePath, ARemoteFilePath, Format('File Manager (%s)', [EditPath.Text]));
-end;
-
-procedure TFormFileManager.RefreshDrives();
-begin
-  SendCommand(TOptixCommandRefreshDrives.Create());
-end;
-
-procedure TFormFileManager.RefreshFiles();
-begin
-  BrowsePath(EditPath.Text);
-end;
-
-procedure TFormFileManager.ColoredFoldersAccessView1Click(Sender: TObject);
-begin
-  VST.Refresh();
-end;
-
-constructor TFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
+procedure TControlFormFileManager.OnFirstShow();
 begin
   inherited;
   ///
 
-  FFirstShow := True;
+  RefreshDrives();
+end;
+
+function TControlFormFileManager.RequestFileDownload(const ARemoteFilePath : String = ''; ALocalFilePath : String = '') : TGUID;
+begin
+  inherited RequestFileDownload(ARemoteFilePath, ALocalFilePath, Format('File Manager (%s)', [EditPath.Text]));
+end;
+
+function TControlFormFileManager.RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
+begin
+  inherited RequestFileUpload(ALocalFilePath, ARemoteFilePath, Format('File Manager (%s)', [EditPath.Text]));
+end;
+
+procedure TControlFormFileManager.RefreshDrives();
+begin
+  SendCommand(TOptixCommandRefreshDrives.Create());
+end;
+
+procedure TControlFormFileManager.RefreshFiles();
+begin
+  BrowsePath(EditPath.Text);
+end;
+
+procedure TControlFormFileManager.ColoredFoldersAccessView1Click(Sender: TObject);
+begin
+  VST.Refresh();
+end;
+
+constructor TControlFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
+begin
+  inherited;
+  ///
 
   SetDisplayMode(dmDrives);
 end;
 
-procedure TFormFileManager.SetDisplayMode(const AMode : TDisplayMode);
+procedure TControlFormFileManager.SetDisplayMode(const AMode : TDisplayMode);
 begin
   VST.Clear();
   ///
@@ -202,12 +221,12 @@ begin
   ButtonUpload.Visible  := AMode = dmFiles;
 end;
 
-procedure TFormFileManager.ButtonHomeClick(Sender: TObject);
+procedure TControlFormFileManager.ButtonHomeClick(Sender: TObject);
 begin
   RefreshDrives();
 end;
 
-procedure TFormFileManager.ButtonOptionsClick(Sender: TObject);
+procedure TControlFormFileManager.ButtonOptionsClick(Sender: TObject);
 begin
   var APoint := self.ClientToScreen(
     Point(
@@ -219,7 +238,7 @@ begin
   PopupMenuOptions.Popup(APoint.X, APoint.Y);
 end;
 
-procedure TFormFileManager.ButtonRefreshClick(Sender: TObject);
+procedure TControlFormFileManager.ButtonRefreshClick(Sender: TObject);
 begin
   if EditPath.Visible then
     RefreshFiles()
@@ -227,13 +246,13 @@ begin
     RefreshDrives();
 end;
 
-procedure TFormFileManager.ButtonUploadClick(Sender: TObject);
+procedure TControlFormFileManager.ButtonUploadClick(Sender: TObject);
 begin
   if EditPath.Visible then
     RequestFileUpload('', IncludeTrailingPathDelimiter(EditPath.Text));
 end;
 
-procedure TFormFileManager.UploadToFolder1Click(Sender: TObject);
+procedure TControlFormFileManager.UploadToFolder1Click(Sender: TObject);
 begin
   var pNode := VST.FocusedNode;
   if not Assigned(pNode) then
@@ -246,17 +265,7 @@ begin
   RequestFileUpload('', IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(EditPath.Text) + pData^.FileInformation.Name));
 end;
 
-procedure TFormFileManager.FormShow(Sender: TObject);
-begin
-  if FFirstShow then begin
-    RefreshDrives();
-    ///
-
-    FFirstShow := False;
-  end;
-end;
-
-function TFormFileManager.GetContextDescription() : String;
+function TControlFormFileManager.GetContextDescription() : String;
 begin
   var ANodeCount := VST.RootNodeCount;
   ///
@@ -267,7 +276,7 @@ begin
     result := Format('%s', [EditPath.Text])
 end;
 
-function TFormFileManager.CanNodeFileBeDownloaded(var pData : PTreeData) : Boolean;
+function TControlFormFileManager.CanNodeFileBeDownloaded(var pData : PTreeData) : Boolean;
 begin
   result := False;
   ///
@@ -280,7 +289,7 @@ begin
   result := (pData^.FileInformation.Size > 0) and (faRead in pData^.FileInformation.Access);
 end;
 
-function TFormFileManager.CanFileBeUploadedToNodeDirectory(var pData : PTreeData) : Boolean;
+function TControlFormFileManager.CanFileBeUploadedToNodeDirectory(var pData : PTreeData) : Boolean;
 begin
   result := False;
   ///
@@ -293,7 +302,7 @@ begin
   result := (pData^.FileInformation.IsDirectory) and (faWrite in pData^.FileInformation.Access);
 end;
 
-procedure TFormFileManager.PopupMenuPopup(Sender: TObject);
+procedure TControlFormFileManager.PopupMenuPopup(Sender: TObject);
 begin
   TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
   ///
@@ -317,7 +326,7 @@ begin
   end;
 end;
 
-procedure TFormFileManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
@@ -336,19 +345,28 @@ begin
 //  end;
 end;
 
-procedure TFormFileManager.VSTChange(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTChange(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormFileManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1,
+procedure TControlFormFileManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1,
   Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
 begin
   var pData1 := PTreeData(Node1.GetData);
   var pData2 := PTreeData(Node2.GetData);
+  ///
 
-  // File Mode Sorting ---------------------------------------------------------
+  if not Assigned(pData1) or not Assigned(pData2) then begin
+    Result := 0;
+
+    ///
+    Exit(); // Avoid too many nested blocks of code in this specific case.
+  end;
+
+
+  // File Mode Sorting -------------------------------------------------------------------------------------------------
   if Assigned(pData1^.FileInformation) and Assigned(pData2^.FileInformation) then begin
     case Column of
       0 : begin
@@ -378,29 +396,35 @@ begin
         end;
       end;
 
-      // TODO: Continue
-      1 : ;
-      2 : ;
-      3 : ;
-      4 : ;
-      5 : ;
-      6 : ;
-      7 : ;
+      1 : Result := CompareText(pData1^.FileInformation.TypeDescription, pData2^.FileInformation.TypeDescription);
+      2 : Result := CompareValue(pData1^.FileInformation.Size, pData2^.FileInformation.Size);
+
+      3 : Result := CompareText(
+                      AccessSetToReadableString(pData1^.FileInformation.Access),
+                      AccessSetToReadableString(pData2^.FileInformation.Access)
+                    );
+
+      4 : Result := CompareText(pData1^.FileInformation.ACL_SSDL, pData2^.FileInformation.ACL_SSDL);
+      5 : Result := CompareDateTime(pData1^.FileInformation.CreatedDate, pData2^.FileInformation.CreatedDate);
+      6 : Result := CompareDateTime(pData1^.FileInformation.LastModifiedDate, pData2^.FileInformation.LastModifiedDate);
+      7 : Result := CompareDateTime(pData1^.FileInformation.LastAccessDate, pData2^.FileInformation.LastAccessDate);
+    end;
+  end else if Assigned(pData1^.DriveInformation) and Assigned(pData2^.DriveInformation) then begin
+    case Column of
+      0 : Result := CompareText(pData1^.DriveInformation.Letter, pData1^.DriveInformation.Letter);
+      1 : Result := CompareText(pData1^.DriveInformation.Format, pData2^.DriveInformation.Format);
+      2 : Result := CompareValue(pData1^.DriveInformation.TotalSize, pData2^.DriveInformation.TotalSize);
     end;
   end;
-
-  // TODO: Drives
-
-  // ---------------------------------------------------------------------------
-
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
-procedure TFormFileManager.BrowsePath(const APath : string);
+procedure TControlFormFileManager.BrowsePath(const APath : string);
 begin
   SendCommand(TOptixCommandRefreshFiles.Create(APath));
 end;
 
-procedure TFormFileManager.VSTDblClick(Sender: TObject);
+procedure TControlFormFileManager.VSTDblClick(Sender: TObject);
 begin
   if VST.FocusedNode = nil then
     Exit();
@@ -424,13 +448,13 @@ begin
   end;
 end;
 
-procedure TFormFileManager.VSTFocusChanged(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTFocusChanged(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
-procedure TFormFileManager.VSTFreeNode(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
@@ -442,7 +466,7 @@ begin
     FreeAndNil(pData^.FileInformation);
 end;
 
-procedure TFormFileManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
@@ -491,13 +515,13 @@ begin
   end;
 end;
 
-procedure TFormFileManager.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTGetNodeDataSize(Sender: TBaseVirtualTree;
   var NodeDataSize: Integer);
 begin
   NodeDataSize := SizeOf(TTreeData);
 end;
 
-procedure TFormFileManager.VSTGetText(Sender: TBaseVirtualTree;
+procedure TControlFormFileManager.VSTGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
 begin
@@ -506,7 +530,7 @@ begin
   CellText := '';
 
   if Assigned(pData^.DriveInformation) then begin
-    // Drives ------------------------------------------------------------------
+    // Drives ----------------------------------------------------------------------------------------------------------
     case Column of
       0 : begin
         if String.IsNullOrEmpty(pData^.DriveInformation.Name) then
@@ -538,27 +562,22 @@ begin
           ]);
       end;
     end;
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
   end else if Assigned(pData^.FileInformation) then begin
-    // Files -------------------------------------------------------------------
+    // Files -----------------------------------------------------------------------------------------------------------
     if (pData^.FileInformation.Name = '..') then begin
       if Column = 0 then
         CellText := '< .. >';
     end else begin
       case Column of
         0 : CellText := pData^.FileInformation.Name;
-
-        1 : begin
-          if pData^.FileInformation.IsDirectory then
-            CellText := 'Directory'
-          else
-            CellText := pData^.FileInformation.TypeDescription;
-        end;
+        1 : CellText := pData^.FileInformation.TypeDescription;
 
         2 : begin
           if not pData^.FileInformation.IsDirectory then
             CellText := FormatFileSize(pData^.FileInformation.Size);
         end;
+
         3 : CellText := AccessSetToReadableString(pData^.FileInformation.Access);
         4 : CellText := pData^.FileInformation.ACL_SSDL;
       end;
@@ -572,39 +591,39 @@ begin
       end;
     end;
   end;
-  // ---------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
 
   ///
   CellText := DefaultIfEmpty(CellText);
 end;
 
-procedure TFormFileManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormFileManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
 begin
   inherited;
   ///
 
   var AOptixPacket : TOptixPacket := nil;
   try
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
     if AClassName = TDriveList.ClassName then begin
       AOptixPacket := TDriveList.Create(ASerializedPacket);
 
       DisplayDrives(TDriveList(AOptixPacket));
     end
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
     else if AClassName = TFileList.ClassName then begin
       AOptixPacket := TFileList.Create(ASerializedPacket);
 
       DisplayFiles(TFileList(AOptixPacket));
     end;
-    // -------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------------------------------
   finally
     if Assigned(AOptixPacket) then
       FreeAndNil(AOptixPacket);
   end;
 end;
 
-procedure TFormFileManager.DisplayDrives(const AList : TDriveList);
+procedure TControlFormFileManager.DisplayDrives(const AList : TDriveList);
 begin
   SetDisplayMode(dmDrives);
   ///
@@ -629,7 +648,7 @@ begin
   end;
 end;
 
-procedure TFormFileManager.DisplayFiles(const AList : TFileList);
+procedure TControlFormFileManager.DisplayFiles(const AList : TFileList);
 begin
   SetDisplayMode(dmFiles);
   ///
@@ -666,7 +685,7 @@ begin
   end;
 end;
 
-procedure TFormFileManager.DownloadFile1Click(Sender: TObject);
+procedure TControlFormFileManager.DownloadFile1Click(Sender: TObject);
 begin
   var pNode := VST.FocusedNode;
   if not Assigned(pNode) then

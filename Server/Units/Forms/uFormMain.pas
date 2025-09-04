@@ -42,13 +42,13 @@
 {******************************************************************************}
 
 {
+  Current Release Changelog [Done]:
+    - Column sorting
+    - ZLib Data Compression for Optix Packets (JSON Commands / Response)
+
   Global Todo (Most important ones):
-    - Column Sorting.
     - Improve OOP.
-    - Units Name Sorting (Units) / Units File Restructuration.
-    - Control Forms must respect naming format : TFormControl______ / uFormControl______.
     - Keep a cached version of trusted certificates in both server / client_gui.
-    - Compress network traffic using ZLib.
     - Ipv6 Support.
 
     - Check other todo's in units.
@@ -65,10 +65,10 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls, Vcl.ImgList, Vcl.VirtualImageList,
   Vcl.StdCtrls, Vcl.ImageCollection, Vcl.ExtCtrls, Vcl.BaseImageCollection,
 
+  Winapi.ShellAPI, Winapi.Messages, Winapi.Windows, Winapi.Winsock2,
+
   VirtualTrees.BaseAncestorVCL, VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseTree,
   XSuperObject,
-
-  Winapi.ShellAPI, Winapi.Messages, Winapi.Windows, Winapi.Winsock2,
 
   __uBaseFormControl__,
 
@@ -213,8 +213,9 @@ implementation
 uses
   System.DateUtils,
 
-  uFormProcessManager, uFormLogs, uFormAbout, uFormTransfers, uFormControlForms, uFormFileManager, uFormDebugThreads,
-  uFormTasks, uFormRemoteShell, uFormListen {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
+  uControlFormProcessManager, uControlFormLogs, uFormAbout, uControlFormTransfers, uControlFormControlForms,
+  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen
+  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
   Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.Task
@@ -318,7 +319,7 @@ end;
 
 procedure TFormMain.ControlForms1Click(Sender: TObject);
 begin
-  CreateOrOpenControlForm(VST.FocusedNode, TFormControlForms);
+  CreateOrOpenControlForm(VST.FocusedNode, TControlFormControlForms);
 end;
 
 procedure TFormMain.SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand);
@@ -409,8 +410,8 @@ begin
   if not Assigned(AForm) then begin
     var pData := PTreeData(pNode.GetData);
 
-    if AFormClass = TFormProcessManager then
-      AForm := TFormProcessManager.Create(
+    if AFormClass = TControlFormProcessManager then
+      AForm := TControlFormProcessManager.Create(
         self,
         pData^.ToString,
         pData^.SessionInformation.Architecture,
@@ -444,7 +445,7 @@ end;
 
 procedure TFormMain.Logs1Click(Sender: TObject);
 begin
-  CreateOrOpenControlForm(VST.FocusedNode, TFormLogs);
+  CreateOrOpenControlForm(VST.FocusedNode, TControlFormLogs);
 end;
 
 function TFormMain.GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
@@ -473,36 +474,35 @@ begin
     Exit();
   ///
 
-  // Should never happend!
-  // if GetNodeBySessionId(ASessionInformation.SessionId) <> nil then
-  //  Exit();
-
   var pNode := VST.AddChild(nil);
   var pData := PTreeData(pNode.GetData);
-
-  pData^.Handler := AHandler;
-  pData^.SessionInformation := ASessionInformation;
-  pData^.SpawnDate := Now;
-
-  // Create not mandatory windows
-
-  // -------------------------------------------------------------------------------------------------------------------
-  pData^.Forms.Add(TFormLogs.Create(self, pData^.ToString, True));
-  // -------------------------------------------------------------------------------------------------------------------
-  pData^.Forms.Add(TFormControlForms.Create(self, pData^.ToString, pData));
-  // -------------------------------------------------------------------------------------------------------------------
-  pData^.Forms.Add(TFormTransfers.Create(self, pData^.ToString, True));
-  // -------------------------------------------------------------------------------------------------------------------
-  pData^.Forms.Add(TFormTasks.Create(self, pData^.ToString, True));
-  // -------------------------------------------------------------------------------------------------------------------
-
   ///
-  VST.Refresh();
+
+  VST.BeginUpdate(); // Trigger sort. I haven't found a better method yet...
+  try
+    pData^.Handler := AHandler;
+    pData^.SessionInformation := ASessionInformation;
+    pData^.SpawnDate := Now;
+
+    // Create not mandatory windows
+
+    // -----------------------------------------------------------------------------------------------------------------
+    pData^.Forms.Add(TControlFormLogs.Create(self, pData^.ToString, True));
+    // -----------------------------------------------------------------------------------------------------------------
+    pData^.Forms.Add(TControlFormControlForms.Create(self, pData^.ToString, pData));
+    // -----------------------------------------------------------------------------------------------------------------
+    pData^.Forms.Add(TControlFormTransfers.Create(self, pData^.ToString, True));
+    // -----------------------------------------------------------------------------------------------------------------
+    pData^.Forms.Add(TControlFormTasks.Create(self, pData^.ToString, True));
+    // -----------------------------------------------------------------------------------------------------------------
+  finally
+    VST.EndUpdate();
+  end;
 end;
 
 procedure TFormMain.RemoteShell1Click(Sender: TObject);
 begin
-  CreateNewControlForm(VST.FocusedNode, TFormRemoteShell);
+  CreateNewControlForm(VST.FocusedNode, TControlFormRemoteShell);
 end;
 
 procedure TFormMain.rustedCertificates1Click(Sender: TObject);
@@ -624,6 +624,7 @@ procedure TFormMain.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVir
 begin
   var pData1 := PTreeData(Node1.GetData);
   var pData2 := PTreeData(Node2.GetData);
+  ///
 
   if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
     Result := CompareObjectAssigmenet(pData1^.SessionInformation, pData2^.SessionInformation)
@@ -636,7 +637,7 @@ begin
       2 : Result := CompareText(pData1^.SessionInformation.Langroup, pData2^.SessionInformation.Langroup);
       3 : Result := CompareText(pData1^.SessionInformation.DomainName, pData2^.SessionInformation.DomainName);
       4 : Result := CompareText(pData1^.SessionInformation.WindowsVersion, pData2^.SessionInformation.WindowsVersion);
-      5 : Result := CompareDate(pData1^.SpawnDate, pData2^.SpawnDate);
+      5 : Result := CompareDateTime(pData1^.SpawnDate, pData2^.SpawnDate);
       6 : Result := CompareText(pData1^.SessionInformation.ProcessDetail, pData2^.SessionInformation.ProcessDetail);
       7 : Result := CompareText(
         pData1^.SessionInformation.ElevatedStatus_STR, pData2^.SessionInformation.ElevatedStatus_STR
@@ -708,9 +709,6 @@ begin
     Exit();
 
   VST.DeleteNode(pNode);
-
-  ///
-  VST.Refresh();
 end;
 
 procedure TFormMain.PopupMenuPopup(Sender: TObject);
@@ -731,12 +729,12 @@ end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
 begin
-  CreateOrOpenControlForm(VST.FocusedNode, TFormProcessManager);
+  CreateOrOpenControlForm(VST.FocusedNode, TControlFormProcessManager);
 end;
 
 procedure TFormMain.transfers1Click(Sender: TObject);
 begin
-  CreateOrOpenControlForm(VST.FocusedNode, TFormTransfers);
+  CreateOrOpenControlForm(VST.FocusedNode, TControlFormTransfers);
 end;
 
 procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
@@ -776,13 +774,13 @@ begin
         end
         // -------------------------------------------------------------------------------------------------------------
         else if (AClassName = TLogNotifier.ClassName) or (AClassName = TLogTransferException.ClassName) then begin
-          var ALogsForm := GetControlForm(pNode, TFormLogs);
+          var ALogsForm := GetControlForm(pNode, TControlFormLogs);
           if Assigned(ALogsForm) then
             ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
         end
         // -------------------------------------------------------------------------------------------------------------
         else if (AClassName = TOptixTaskCallback.ClassName) then begin
-          var ATaskForm := GetControlForm(pNode, TFormTasks);
+          var ATaskForm := GetControlForm(pNode, TControlFormTasks);
           if Assigned(ATaskForm) then
             ATaskForm.ReceivePacket(AClassName, ASerializedPacket);
         end;
@@ -847,7 +845,7 @@ begin
       ckFileTransfer : begin
         AWorker := TOptixFileTransferWorker.Create(AClient);
 
-        var AForm := TFormTransfers(GetControlForm(pNode, TFormTransfers));
+        var AForm := TControlFormTransfers(GetControlForm(pNode, TControlFormTransfers));
         if Assigned(AWorker) then begin
           TOptixFileTransferWorker(AWorker).OnRequestTransferTask := AForm.OnRequestTransferTask;
           TOptixFileTransferWorker(AWorker).OnTransferError       := AForm.OnTransferError;
@@ -876,7 +874,7 @@ end;
 
 procedure TFormMain.asks1Click(Sender: TObject);
 begin
-  CreateOrOpenControlForm(VST.FocusedNode, TFormTasks);
+  CreateOrOpenControlForm(VST.FocusedNode, TControlFormTasks);
 end;
 
 procedure TFormMain.Certificates1Click(Sender: TObject);
@@ -898,7 +896,7 @@ end;
 
 procedure TFormMain.FileManager1Click(Sender: TObject);
 begin
-  CreateNewControlForm(VST.FocusedNode, TFormFileManager);
+  CreateNewControlForm(VST.FocusedNode, TControlFormFileManager);
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);

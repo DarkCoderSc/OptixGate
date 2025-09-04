@@ -22,8 +22,13 @@ unit Optix.Helper;
 
 interface
 
-uses System.Classes, System.SysUtils, System.DateUtils, System.Math, System.TimeSpan, Winapi.ShellAPI, VCL.Controls,
-     System.RegularExpressions;
+// ---------------------------------------------------------------------------------------------------------------------
+uses System.Classes, System.SysUtils, System.DateUtils, System.Math, System.TimeSpan, System.RegularExpressions,
+
+     Winapi.ShellAPI,
+
+     VCL.Controls;
+// ---------------------------------------------------------------------------------------------------------------------
 
 // Format Utilities
 function FormatInt(const AInteger : Integer) : String;
@@ -52,10 +57,28 @@ procedure CheckCertificateFingerprint(const AValue : String);
 
 function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
 function CompareIPv4(const AIp1, AIp2 : String) : Integer;
+function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
 
 implementation
 
-uses Winapi.Windows, System.IOUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses System.IOUtils,
+
+     Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+
+{ _.CompareDateTimeEx }
+function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
+begin
+  if not ADate1IsSet and not ADate2IsSet then
+    result := 0
+  else if not ADate1IsSet and ADate2IsSet then
+    result := 1
+  else if ADate1IsSet and not ADate2IsSet then
+    result := -1
+  else
+    result := CompareDateTime(ADate1, ADate2);
+end;
 
 { _.CompareIPv4 }
 function CompareIPv4(const AIp1, AIp2 : String) : Integer;
@@ -89,7 +112,7 @@ begin
     Result := 0
   else if not Assigned(AObject1) then
     Result := 1
-  else if not Assigned(AObject2) then
+  else
     Result := -1
 end;
 
