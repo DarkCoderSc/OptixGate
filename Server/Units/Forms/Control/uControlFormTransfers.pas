@@ -105,6 +105,7 @@ type
       var Result: Integer);
     procedure PopupMenuPopup(Sender: TObject);
     procedure CancelTransfer1Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
     {@M}
     function RegisterNewTransfer(const ASourceFilePath, ADestinationFilePath : String; const ADirection : TOptixTransferDirection; const AContext : String = '') : TGUID;
@@ -562,6 +563,11 @@ end;
 procedure TControlFormTransfers.DownloadaFile1Click(Sender: TObject);
 begin
   RequestFileDownload();
+end;
+
+procedure TControlFormTransfers.FormDestroy(Sender: TObject);
+begin
+  VST.Clear();
 end;
 
 end.

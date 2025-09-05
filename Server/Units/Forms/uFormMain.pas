@@ -42,16 +42,17 @@
 {******************************************************************************}
 
 {
-  Current Release Changelog [Done]:
+  Current Release Draft Changelog [Done]:
     - Column sorting
     - ZLib Data Compression for Optix Packets (JSON Commands / Response)
+    - File manager: browser backward / forward added
+    - Execute-only folder materialized by a specific folder icon
+    - Code Improvement
+
+  ---
 
   Global Todo (Most important ones):
-    - Improve OOP.
-    - Keep a cached version of trusted certificates in both server / client_gui.
     - Ipv6 Support.
-
-    - Check other todo's in units.
 }
 
 unit uFormMain;
@@ -126,7 +127,6 @@ type
     ImageCollectionDark: TImageCollection;
     Stores1: TMenuItem;
     Certificates1: TMenuItem;
-    ShowLogs1: TMenuItem;
     rustedCertificates1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure Start1Click(Sender: TObject);
@@ -161,7 +161,6 @@ type
     procedure asks1Click(Sender: TObject);
     procedure RemoteShell1Click(Sender: TObject);
     procedure Certificates1Click(Sender: TObject);
-    procedure ShowLogs1Click(Sender: TObject);
     procedure rustedCertificates1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
@@ -367,11 +366,6 @@ begin
 
   ///
   SendCommand(pNode, ACommand);
-end;
-
-procedure TFormMain.ShowLogs1Click(Sender: TObject);
-begin
-  // TODO
 end;
 
 //procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
@@ -746,7 +740,6 @@ begin
       Exit();
   ///
 
-  // TODO: make it more generic (Class Registry or RTTI)
   var AClassName := ASerializedPacket.S['PacketClass'];
   var AHandleMemory := False;
 

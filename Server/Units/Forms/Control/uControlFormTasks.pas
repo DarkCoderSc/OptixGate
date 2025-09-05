@@ -85,7 +85,8 @@ type
       var Ghosted: Boolean; var ImageIndex: TImageIndex);
     procedure PopupMenuPopup(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
-      var Result: Integer);  private
+      var Result: Integer);
+    procedure FormDestroy(Sender: TObject);  private
     { Private declarations }
   private
     {@M}
@@ -115,6 +116,11 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+procedure TControlFormTasks.FormDestroy(Sender: TObject);
+begin
+  VST.Clear();
+end;
 
 function TControlFormTasks.GetNodeByTaskId(const ATaskId : TGUID) : PVirtualNode;
 begin

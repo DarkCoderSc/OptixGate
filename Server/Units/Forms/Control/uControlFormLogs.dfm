@@ -11,6 +11,7 @@ object ControlFormLogs: TControlFormLogs
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
+  OnDestroy = FormDestroy
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0

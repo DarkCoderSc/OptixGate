@@ -112,6 +112,7 @@ type
     procedure DumpProcess1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure FormDestroy(Sender: TObject);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
@@ -312,6 +313,11 @@ begin
   );
 
   RegisterNewDialogAndShow(ADialog);
+end;
+
+procedure TControlFormProcessManager.FormDestroy(Sender: TObject);
+begin
+  VST.Clear();
 end;
 
 procedure TControlFormProcessManager.KillProcess1Click(Sender: TObject);

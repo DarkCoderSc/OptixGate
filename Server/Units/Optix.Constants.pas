@@ -85,6 +85,7 @@ const
  IMAGE_FOLDER_READONLY              = 32;
  IMAGE_FOLDER_FULLACCESS            = 33;
  IMAGE_FOLDER_WRITEONLY             = 34;
+ IMAGE_FOLDER_EXECONLY              = 62;
  IMAGE_FOLDER_DENIED                = 35;
  IMAGE_FOLDER_PREV                  = 36;
  IMAGE_THREAD_RUNNING               = 37;

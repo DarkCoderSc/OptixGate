@@ -253,12 +253,8 @@ begin
   if not Assigned(pNode) then
     Exit();
 
-  VST.BeginUpdate();
-  try
-    VST.DeleteNode(pNode);
-  finally
-    VST.EndUpdate();
-  end;
+  ///
+  VST.DeleteNode(pNode);
 end;
 
 procedure TFormMain.OnNetworkException(Sender : TOptixClientThread; const AErrorMessage : String);
@@ -306,7 +302,7 @@ begin
     {$ENDIF}
   {$ENDIF}
 
-  VST.beginUpdate();
+  VST.BeginUpdate();
   try
     var pNode : PVirtualNode;
 
@@ -331,7 +327,6 @@ begin
     {$IFDEF USETLS}
     pData^.Handler.OnVerifyPeerCertificate     := FormTrustedCertificates.OnVerifyPeerCertificate;
     {$ENDIF}
-
 
     pData^.Handler.Start();
   finally
@@ -406,6 +401,9 @@ end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
+  VST.Clear();
+  ///
+
   if Assigned(FNotifications) then
     FreeAndNil(FNotifications);
 end;
@@ -420,12 +418,8 @@ begin
   if VST.FocusedNode = nil then
     Exit();
 
-  VST.BeginUpdate();
-  try
-    VST.DeleteNode(VST.FocusedNode);
-  finally
-    VST.EndUpdate();
-  end;
+  ///
+  VST.DeleteNode(VST.FocusedNode);
 end;
 
 procedure TFormMain.rustedCertificates1Click(Sender: TObject);

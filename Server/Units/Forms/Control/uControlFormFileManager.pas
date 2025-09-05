@@ -54,6 +54,8 @@ interface
 uses
   System.SysUtils, System.Variants, System.Classes,
 
+  Generics.Collections,
+
   Winapi.Windows, Winapi.Messages,
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Buttons, Vcl.Menus, Vcl.StdCtrls,
@@ -94,6 +96,8 @@ type
     PopupMenuOptions: TPopupMenu;
     ColoredFoldersAccessView1: TMenuItem;
     LabelAccess: TLabel;
+    ButtonBack: TSpeedButton;
+    ButtonForward: TSpeedButton;
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -119,14 +123,23 @@ type
     procedure UploadToFolder1Click(Sender: TObject);
     procedure ButtonOptionsClick(Sender: TObject);
     procedure ButtonUploadClick(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure ButtonBackClick(Sender: TObject);
+    procedure ButtonForwardClick(Sender: TObject);
   private
+    FHistoryCursor : Integer;
+    FPathHistory   : TList<String>;
+
     {@M}
+    procedure InsertPathToHistory(APath : String);
+    procedure BrowseFromCurrentHistoryLocation();
     function CanNodeFileBeDownloaded(var pData : PTreeData) : Boolean;
     function CanFileBeUploadedToNodeDirectory(var pData : PTreeData) : Boolean;
     procedure DisplayDrives(const AList : TDriveList);
     procedure DisplayFiles(const AList : TFileList);
     procedure SetDisplayMode(const AMode : TDisplayMode);
-    procedure BrowsePath(const APath : string);
+    procedure BrowsePath(const APath : string; const APushToHistory : Boolean = True);
+    procedure RefreshNavButtons();
     procedure RefreshDrives();
     procedure RefreshFiles();
   protected
@@ -159,6 +172,42 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+procedure TControlFormFileManager.BrowseFromCurrentHistoryLocation();
+begin
+  if (FPathHistory.Count > 0) and (FHistoryCursor >= 0) then
+    BrowsePath(FPathHistory.Items[FHistoryCursor], False);
+end;
+
+procedure TControlFormFileManager.RefreshNavButtons();
+begin
+  ButtonBack.Enabled    := (FPathHistory.Count > 0) and (FHistoryCursor > 0);
+  ButtonForward.Enabled := (FPathHistory.Count > 0) and (FHistoryCursor < FPathHistory.Count -1)
+end;
+
+procedure TControlFormFileManager.InsertPathToHistory(APath : String);
+begin
+  if not Assigned(FPathHistory) then
+    Exit();
+  ///
+
+  APath := IncludeTrailingPathDelimiter(APath);
+
+  if (FPathHistory.Count = 0) or
+     (String.Compare(FPathHistory.Items[FPathHistory.Count-1], APath, True) <> 0) then begin
+
+     if FHistoryCursor < FPathHistory.Count -1 then
+      FPathHistory.DeleteRange(FHistoryCursor +1, (FPathHistory.Count -1) - FHistoryCursor);
+
+     FPathHistory.Add(APath);
+
+     ///
+     FHistoryCursor := FPathHistory.Count -1;
+  end;
+
+  ///
+  RefreshNavButtons();
+end;
 
 procedure TControlFormFileManager.OnFirstShow();
 begin
@@ -198,6 +247,9 @@ begin
   inherited;
   ///
 
+  FHistoryCursor := 0;
+  FPathHistory := TList<String>.Create();
+
   SetDisplayMode(dmDrives);
 end;
 
@@ -219,6 +271,38 @@ begin
 
   ButtonRefresh.Visible := AMode = dmFiles;
   ButtonUpload.Visible  := AMode = dmFiles;
+  ButtonBack.Visible    := AMode = dmFiles;
+  ButtonForward.Visible := AMode = dmFiles;
+
+  if AMode = dmDrives then begin
+    FPathHistory.Clear();
+    FHistoryCursor := 0;
+  end;
+
+  ///
+  RefreshNavButtons();
+end;
+
+procedure TControlFormFileManager.ButtonBackClick(Sender: TObject);
+begin
+  Dec(FHistoryCursor);
+  if FHistoryCursor < 0 then
+    FHistoryCursor := 0;
+
+  BrowseFromCurrentHistoryLocation();
+
+  RefreshNavButtons();
+end;
+
+procedure TControlFormFileManager.ButtonForwardClick(Sender: TObject);
+begin
+  Inc(FHistoryCursor);
+  if FHistoryCursor > FPathHistory.Count -1 then
+    FHistoryCursor := FPathHistory.Count -1;
+
+  BrowseFromCurrentHistoryLocation();
+
+  RefreshNavButtons();
 end;
 
 procedure TControlFormFileManager.ButtonHomeClick(Sender: TObject);
@@ -419,8 +503,12 @@ begin
   // -------------------------------------------------------------------------------------------------------------------
 end;
 
-procedure TControlFormFileManager.BrowsePath(const APath : string);
+procedure TControlFormFileManager.BrowsePath(const APath : string; const APushToHistory : Boolean = True);
 begin
+  if APushToHistory then
+    InsertPathToHistory(APath);
+  ///
+
   SendCommand(TOptixCommandRefreshFiles.Create(APath));
 end;
 
@@ -507,6 +595,8 @@ begin
             ImageIndex := IMAGE_FOLDER_READONLY
           else if (faWrite in pData^.FileInformation.Access) then
             ImageIndex := IMAGE_FOLDER_WRITEONLY
+          else if (faExecute in pData^.FileInformation.Access) then
+            ImageIndex := IMAGE_FOLDER_EXECONLY
           else
             ImageIndex := IMAGE_FOLDER_DENIED;
         end;
@@ -697,6 +787,15 @@ begin
 
   ///
   RequestFileDownload(IncludeTrailingPathDelimiter(EditPath.Text) + pData^.FileInformation.Name);
+end;
+
+procedure TControlFormFileManager.FormDestroy(Sender: TObject);
+begin
+  VST.Clear();
+  ///
+
+  if Assigned(FPathHistory) then
+    FreeAndNil(FPathHistory);
 end;
 
 end.

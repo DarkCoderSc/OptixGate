@@ -79,8 +79,7 @@ begin
   result := TSuperObject.Create();
   ///
 
-  // TODO: One day, optimized Deserialization / Serializaion using RTTI. But must
-  // be carefully tested to ensure it works as expected for common data formats.
+  // ??? RTTI ???
 end;
 
 { TEnumerableItem.Create }

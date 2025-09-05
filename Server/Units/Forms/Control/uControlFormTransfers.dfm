@@ -11,6 +11,7 @@ object ControlFormTransfers: TControlFormTransfers
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poMainFormCenter
+  OnDestroy = FormDestroy
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0

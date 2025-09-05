@@ -87,6 +87,7 @@ type
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure FormDestroy(Sender: TObject);
   private
     {@M}
     procedure AddLog(const AMessage, AContext : String; const AKind : TLogKind);
@@ -124,6 +125,11 @@ begin
 
   ///
   VST.Update();
+end;
+
+procedure TControlFormLogs.FormDestroy(Sender: TObject);
+begin
+  VST.Clear();
 end;
 
 procedure TControlFormLogs.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);

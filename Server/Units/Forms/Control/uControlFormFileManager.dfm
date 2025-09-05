@@ -11,6 +11,7 @@ object ControlFormFileManager: TControlFormFileManager
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
+  OnDestroy = FormDestroy
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
@@ -118,8 +119,7 @@ object ControlFormFileManager: TControlFormFileManager
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitLeft = 0
-    ExplicitWidth = 467
+    ExplicitWidth = 459
     object ButtonHome: TSpeedButton
       AlignWithMargins = True
       Left = 0
@@ -140,7 +140,7 @@ object ControlFormFileManager: TControlFormFileManager
     end
     object ButtonRefresh: TSpeedButton
       AlignWithMargins = True
-      Left = 34
+      Left = 102
       Top = 4
       Width = 30
       Height = 22
@@ -159,7 +159,7 @@ object ControlFormFileManager: TControlFormFileManager
     end
     object ButtonUpload: TSpeedButton
       AlignWithMargins = True
-      Left = 68
+      Left = 136
       Top = 4
       Width = 30
       Height = 22
@@ -178,7 +178,7 @@ object ControlFormFileManager: TControlFormFileManager
     end
     object ButtonOptions: TSpeedButton
       AlignWithMargins = True
-      Left = 102
+      Left = 170
       Top = 4
       Width = 30
       Height = 22
@@ -213,8 +213,40 @@ object ControlFormFileManager: TControlFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
-      ExplicitLeft = 448
       ExplicitHeight = 15
+    end
+    object ButtonBack: TSpeedButton
+      AlignWithMargins = True
+      Left = 34
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 60
+      ImageName = 'button-arrow-left'
+      Images = FormMain.VirtualImageList
+      SelectedImageName = '-1'
+      OnClick = ButtonBackClick
+    end
+    object ButtonForward: TSpeedButton
+      AlignWithMargins = True
+      Left = 68
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 61
+      ImageName = 'button-arrow-right'
+      Images = FormMain.VirtualImageList
+      OnClick = ButtonForwardClick
     end
   end
   object PopupMenu: TPopupMenu
