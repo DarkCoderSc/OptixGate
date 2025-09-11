@@ -379,13 +379,8 @@ procedure TControlFormProcessManager.VSTBeforeCellPaint(Sender: TBaseVirtualTree
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
-  if not self.ColorBackground1.Checked then
-    Exit();
-  ///
-
   var pData := PTreeData(Node.GetData);
-
-  if not Assigned(pData^.ProcessInformation) then
+  if not Assigned(pData) or not Assigned(pData^.ProcessInformation) or not self.ColorBackground1.Checked then
     Exit();
 
   var AColor := clNone;
@@ -465,7 +460,7 @@ begin
   var pData := PTreeData(Node.GetData);
   ///
 
-  if Assigned(pData^.ProcessInformation) then
+  if Assigned(pData) and Assigned(pData^.ProcessInformation) then
     FreeAndNil(pData^.ProcessInformation);
 end;
 
@@ -496,7 +491,7 @@ procedure TControlFormProcessManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   var pData := PTreeData(Node.GetData);
-  if not Assigned(pData^.ProcessInformation) or (Column <> 0) then
+  if not Assigned(pData) or not Assigned(pData^.ProcessInformation) or (Column <> 0) then
     Exit();
   ///
 
@@ -519,28 +514,27 @@ begin
 
   CellText := '';
 
-  if not Assigned(pData^.ProcessInformation) then
-    Exit();
+  if Assigned(pData) and Assigned(pData^.ProcessInformation) then begin
+    case Column of
+      0  : begin
+        if (FRemoteProcessorArchitecture = pa86_64) and
+           (pData^.ProcessInformation.IsWow64Process = brTrue) then begin
+          CellText := Format('%s (32 bit)', [pData^.ProcessInformation.Name]);
+        end else
+          CellText := pData^.ProcessInformation.Name;
+      end;
 
-  case Column of
-    0  : begin
-      if (FRemoteProcessorArchitecture = pa86_64) and
-         (pData^.ProcessInformation.IsWow64Process = brTrue) then begin
-        CellText := Format('%s (32 bit)', [pData^.ProcessInformation.Name]);
-      end else
-        CellText := pData^.ProcessInformation.Name;
+      1  : CellText := FormatInt(pData^.ProcessInformation.Id);
+      2  : CellText := FormatInt(pData^.ProcessInformation.ParentId);
+      3  : CellText := IntToStr(pData^.ProcessInformation.ThreadCount);
+      4  : CellText := pData^.ProcessInformation.Username;
+      5  : CellText := pData^.ProcessInformation.Domain;
+      6  : CellText := IntToStr(pData^.ProcessInformation.SessionId);
+      7  : CellText := ElevatedStatusToString(pData^.ProcessInformation.Elevated);
+      8  : CellText := DateTimeToStr(pData^.ProcessInformation.CreatedTime);
+      9  : CellText := pData^.ProcessInformation.CommandLine;
+      10 : CellText := pData^.ProcessInformation.ImagePath;
     end;
-
-    1  : CellText := FormatInt(pData^.ProcessInformation.Id);
-    2  : CellText := FormatInt(pData^.ProcessInformation.ParentId);
-    3  : CellText := IntToStr(pData^.ProcessInformation.ThreadCount);
-    4  : CellText := pData^.ProcessInformation.Username;
-    5  : CellText := pData^.ProcessInformation.Domain;
-    6  : CellText := IntToStr(pData^.ProcessInformation.SessionId);
-    7  : CellText := ElevatedStatusToString(pData^.ProcessInformation.Elevated);
-    8  : CellText := DateTimeToStr(pData^.ProcessInformation.CreatedTime);
-    9  : CellText := pData^.ProcessInformation.CommandLine;
-    10 : CellText := pData^.ProcessInformation.ImagePath;
   end;
 
   ///

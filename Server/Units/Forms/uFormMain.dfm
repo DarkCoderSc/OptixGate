@@ -2,7 +2,7 @@ object FormMain: TFormMain
   Left = 0
   Top = 0
   Caption = 'Optix Gate'
-  ClientHeight = 355
+  ClientHeight = 313
   ClientWidth = 531
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object FormMain: TFormMain
     Left = 0
     Top = 0
     Width = 531
-    Height = 336
+    Height = 313
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -97,16 +97,6 @@ object FormMain: TFormMain
         Width = 100
       end>
   end
-  object StatusBar: TStatusBar
-    Left = 0
-    Top = 336
-    Width = 531
-    Height = 19
-    Panels = <
-      item
-        Width = 130
-      end>
-  end
   object MainMenu: TMainMenu
     Left = 152
     Top = 160
@@ -118,12 +108,8 @@ object FormMain: TFormMain
       end
     end
     object Server1: TMenuItem
-      Caption = 'Server'
-      object Start1: TMenuItem
-        Caption = 'Start'
-        ShortCut = 16460
-        OnClick = Start1Click
-      end
+      Caption = 'Servers'
+      OnClick = Server1Click
     end
     object Stores1: TMenuItem
       Caption = 'Stores'

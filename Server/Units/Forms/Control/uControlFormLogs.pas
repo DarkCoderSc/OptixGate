@@ -174,6 +174,9 @@ procedure TControlFormLogs.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   var AColor := clNone;
 
@@ -223,9 +226,9 @@ procedure TControlFormLogs.VSTGetImageIndex(Sender: TBaseVirtualTree;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   var pData := PTreeData(Node.GetData);
-
-  if Column <> 0 then
+  if not Assigned(pData) or (Column <> 0) then
     Exit();
+  ///
 
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
@@ -250,11 +253,13 @@ begin
 
   CellText := '';
 
-  case Column of
-    0 : CellText := pData^.LogMessage;
-    1 : CellText := pData^.Context;
-    2 : CellText := LogKindToString(pData^.LogKind);
-    3 : CellText := DateTimeToStr(pData^.LogDate);
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := pData^.LogMessage;
+      1 : CellText := pData^.Context;
+      2 : CellText := LogKindToString(pData^.LogKind);
+      3 : CellText := DateTimeToStr(pData^.LogDate);
+    end;
   end;
 
   ///

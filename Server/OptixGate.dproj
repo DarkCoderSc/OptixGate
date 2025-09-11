@@ -223,6 +223,9 @@
         <DCCReference Include="Units\Forms\uFormListen.pas">
             <Form>FormListen</Form>
         </DCCReference>
+        <DCCReference Include="Units\Forms\uFormServers.pas">
+            <Form>FormServers</Form>
+        </DCCReference>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

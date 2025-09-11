@@ -433,6 +433,9 @@ procedure TFormMain.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: T
   Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   var AColor := clNone;
 
@@ -479,7 +482,9 @@ end;
 procedure TFormMain.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
-  if Assigned(pData^.Handler) then
+  ///
+
+  if Assigned(pData) and Assigned(pData^.Handler) then
     pData^.Handler.Terminate;
 end;
 
@@ -487,6 +492,9 @@ procedure TFormMain.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNod
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   if (Column <> 0) or ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) then
     Exit();
@@ -507,23 +515,23 @@ procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Col
   TextType: TVSTTextType; var CellText: string);
 begin
   var pData := PTreeData(Node.GetData);
-
-  if not Assigned(pData^.Handler) then
-    Exit();
+  ///
 
   CellText := '';
 
-  case Column of
-    0 : CellText := pData^.Handler.RemoteAddress;
-    1 : CellText := IntToStr(pData^.Handler.RemotePort);
-    2 : begin
-      case pData^.Status of
-        csDisconnected : CellText := 'Disconnected';
-        csConnected    : CellText := 'Connected';
-        csOnError      : CellText := 'Error';
+  if Assigned(pData) and Assigned(pData^.Handler) then begin
+    case Column of
+      0 : CellText := pData^.Handler.RemoteAddress;
+      1 : CellText := IntToStr(pData^.Handler.RemotePort);
+      2 : begin
+        case pData^.Status of
+          csDisconnected : CellText := 'Disconnected';
+          csConnected    : CellText := 'Connected';
+          csOnError      : CellText := 'Error';
+        end;
       end;
+      3 : CellText := pData^.ExtraDescription;
     end;
-    3 : CellText := pData^.ExtraDescription;
   end;
 
   ///

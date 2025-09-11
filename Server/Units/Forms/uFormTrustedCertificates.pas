@@ -293,8 +293,10 @@ begin
 
   var pData := PTreeData(Node.GetData);
 
-  case Column of
-    0 : CellText := pData^.Fingerprint;
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := pData^.Fingerprint;
+    end;
   end;
 
   CellText := DefaultIfEmpty(CellText);

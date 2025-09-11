@@ -130,7 +130,9 @@ implementation
 uses
   VCL.Clipbrd,
 
-  uFormGenerateNewCertificate,
+  uFormGenerateNewCertificate
+
+  {$IFDEF SERVER}, uFormServers{$ENDIF},
 
   Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore, Optix.Config.Helper,
   Optix.VCL.Helper, Optix.OpenSSL.Exceptions;
@@ -274,6 +276,18 @@ begin
   if VST.FocusedNode = nil then
     Exit();
 
+  {$IFDEF SERVER}
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if not Assigned(pData) then
+    Exit();
+
+  if FormServers.ServerCertificateIsInUse(pData^.Certificate.Fingerprint) then
+    raise Exception.Create(
+      'Cannot delete certificate. The certificate is currently in use by a server and must be unassigned before ' +
+      'removal from the store.'
+    );
+  {$ENDIF}
+
   if Application.MessageBox(
     'This action will delete the certificate and its associated information. If you do not have any physical backups,' +
     ' the certificate will be permanently lost. Are you sure?',
@@ -316,8 +330,8 @@ end;
 procedure TFormCertificatesStore.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
-
-  TOptixOpenSSLHelper.FreeCertificate(pData^.Certificate);
+  if Assigned(pData) then
+    TOptixOpenSSLHelper.FreeCertificate(pData^.Certificate);
 end;
 
 procedure TFormCertificatesStore.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
@@ -347,11 +361,13 @@ begin
 
   CellText := '';
 
-  case Column of
-    0 : CellText := pData^.Certificate.C;
-    1 : CellText := pData^.Certificate.O;
-    2 : CellText := pData^.Certificate.CN;
-    3 : CellText := pData^.Certificate.Fingerprint;
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := pData^.Certificate.C;
+      1 : CellText := pData^.Certificate.O;
+      2 : CellText := pData^.Certificate.CN;
+      3 : CellText := pData^.Certificate.Fingerprint;
+    end;
   end;
 
   ///

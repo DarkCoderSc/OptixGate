@@ -47,12 +47,17 @@
     - ZLib Data Compression for Optix Packets (JSON Commands / Response)
     - File manager: browser backward / forward added
     - Execute-only folder materialized by a specific folder icon
+    - Multi server
     - Code Improvement
 
   ---
 
-  Global Todo (Most important ones):
+  Global Todo b4 v1:
+    - Finish uFormServers popup actions (Remove, Start / Stop, Future Autostart: On or Off)
+    - Save listeners + impl auto start
     - Ipv6 Support.
+    - File Upload Feedback (Notify window's about a successful file upload)
+    - Investigate about a yet unidentified access violation
 }
 
 unit uFormMain;
@@ -94,7 +99,6 @@ type
   TFormMain = class(TForm)
     MainMenu: TMainMenu;
     Server1: TMenuItem;
-    Start1: TMenuItem;
     About1: TMenuItem;
     File1: TMenuItem;
     Close1: TMenuItem;
@@ -112,7 +116,6 @@ type
     RemoteShell1: TMenuItem;
     N4: TMenuItem;
     erminate1: TMenuItem;
-    StatusBar: TStatusBar;
     TimerRefresh: TTimer;
     VirtualImageList: TVirtualImageList;
     N5: TMenuItem;
@@ -129,7 +132,6 @@ type
     Certificates1: TMenuItem;
     rustedCertificates1: TMenuItem;
     procedure Close1Click(Sender: TObject);
-    procedure Start1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
@@ -164,28 +166,13 @@ type
     procedure rustedCertificates1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure Server1Click(Sender: TObject);
   private
-    FServer   : TOptixServerThread;
     FFileInfo : TSHFileInfo;
 
     {@M}
-    procedure StopServer();
-    procedure StartServer({$IFDEF USETLS}const AServerCertificateFingerprint : String;{$ENDIF}const ABindAddress : String; const APort : Word);
-
-    procedure OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
-    procedure OnServerStop(Sender : TOptixServerThread);
-    procedure OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
-
-    procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
-    procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
-
-    procedure OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const AHandlerId  : TGUID; const AWorkerKind : TClientKind);
-
-    procedure UpdateStatus(const ACaption : String = '');
-
     procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
     function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
-    // function GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
     function GetHandlerByHandlerId(const AHandlerId : TGUID) : TOptixSessionHandlerThread;
     function GetNodeByHandlerId(const AHandlerId : TGUID) : PVirtualNode;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
@@ -197,10 +184,13 @@ type
     function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
     function GetControlForm(const AControlForm : TBaseFormControl; const AClass : TClass) : TBaseFormControl; overload;
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
-
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
-    // procedure SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
+
+    {@ME}
+    procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
+    procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
+    procedure OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const AHandlerId  : TGUID; const AWorkerKind : TClientKind);
   end;
 
 var
@@ -213,7 +203,7 @@ uses
   System.DateUtils,
 
   uControlFormProcessManager, uControlFormLogs, uFormAbout, uControlFormTransfers, uControlFormControlForms,
-  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen
+  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
@@ -368,6 +358,11 @@ begin
   SendCommand(pNode, ACommand);
 end;
 
+procedure TFormMain.Server1Click(Sender: TObject);
+begin
+  FormServers.Show();
+end;
+
 //procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
 //begin
 //  SendCommand(GetNodeBySessionId(ASessionId), ACommand);
@@ -506,22 +501,14 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormMain.UpdateStatus(const ACaption : String = '');
-begin
-  if String.IsNullOrEmpty(ACaption) then
-    StatusBar.Panels[0].Text := 'Idle.'
-  else
-    StatusBar.Panels[0].Text := ACaption;
-end;
-
 procedure TFormMain.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
-
-  if not Assigned(pData^.SessionInformation) then
+  if not Assigned(pData) or not Assigned(pData^.SessionInformation) then
     Exit();
+  ///
 
   var AColor := clNone;
 
@@ -583,9 +570,9 @@ procedure TFormMain.VSTGetImageIndex(Sender: TBaseVirtualTree;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   var pData := PTreeData(Node.GetData);
-
-  if Column <> 0 then
+  if not Assigned(pData) or (Column <> 0) then
     Exit();
+  ///
 
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected: begin
@@ -620,6 +607,12 @@ begin
   var pData2 := PTreeData(Node2.GetData);
   ///
 
+  if not Assigned(pData1) or not Assigned(pData2) then begin
+    Result := 0;
+
+    Exit();
+  end;
+
   if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
     Result := CompareObjectAssigmenet(pData1^.SessionInformation, pData2^.SessionInformation)
   else if not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler) then
@@ -645,55 +638,36 @@ procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 begin
   var pData := PTreeData(Node.GetData);
-  if not Assigned(pData) or not Assigned(pData^.SessionInformation) or
-     not Assigned(pData^.Handler) then
-    Exit();
   ///
 
   CellText := '';
 
-  case Column of
-    0 : CellText := pData^.Handler.PeerAddress;
-    1 : CellText := pData^.GetUPN;
-    2 : CellText := DefaultIfEmpty(pData^.SessionInformation.Langroup);
-    3 : CellText := DefaultIfEmpty(pData^.SessionInformation.DomainName);
-    4 : CellText := pData^.SessionInformation.WindowsVersion;
-    5 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
-    6 : CellText := pData^.SessionInformation.ProcessDetail;
-    7 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
-    8 : CellText := BoolToStr(pData^.SessionInformation.IsInAdminGroup, True);
+  if Assigned(pData) and Assigned(pData^.SessionInformation) and Assigned(pData^.Handler) then begin
+    case Column of
+      0 : CellText := pData^.Handler.PeerAddress;
+      1 : CellText := pData^.GetUPN;
+      2 : CellText := DefaultIfEmpty(pData^.SessionInformation.Langroup);
+      3 : CellText := DefaultIfEmpty(pData^.SessionInformation.DomainName);
+      4 : CellText := pData^.SessionInformation.WindowsVersion;
+      5 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
+      6 : CellText := pData^.SessionInformation.ProcessDetail;
+      7 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
+      8 : CellText := BoolToStr(pData^.SessionInformation.IsInAdminGroup, True);
+    end;
   end;
+
+  ///
+  CellText := DefaultIfEmpty(CellText);
 end;
 
 procedure TFormMain.VSTInitNode(Sender: TBaseVirtualTree; ParentNode,
   Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 begin
   var pData := PTreeData(Node.GetData);
+  ///
+
   pData^.Forms := TObjectList<TBaseFormControl>.Create(True);
   pData^.Workers := TObjectList<TOptixThread>.Create(False);
-end;
-
-procedure TFormMain.OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
-begin
-  Start1.Tag := 1;
-  Start1.Caption := 'Stop';
-  UpdateStatus(Format('Listening on port: %d, socket: 0x%x', [FServer.Port, ASocketFd]));
-end;
-
-procedure TFormMain.OnServerStop(Sender : TOptixServerThread);
-begin
-  Start1.Tag := 0;
-  Start1.Caption := 'Start';
-  UpdateStatus();
-
-  FServer := nil;
-
-  VST.Clear();
-end;
-
-procedure TFormMain.OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
-begin
-  Application.MessageBox(PWideChar(AErrorMessage), 'Server Error', MB_ICONHAND);
 end;
 
 procedure TFormMain.OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
@@ -740,6 +714,7 @@ begin
       Exit();
   ///
 
+  // TODO: make it more generic (Class Registry or RTTI)
   var AClassName := ASerializedPacket.S['PacketClass'];
   var AHandleMemory := False;
 
@@ -894,17 +869,11 @@ end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  StopServer();
-
-  ///
   TOptixThread.SignalHiveAndFlush();
 end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  FServer := nil;
-  ///
-
   InitializeSystemIcons(ImageSystem, FFileInfo);
   ///
 
@@ -915,112 +884,17 @@ begin
   Certificates1.Visible := False;
   rustedCertificates1.Visible := False;
   {$ENDIF}
-
-  ///
-  UpdateStatus();
 end;
 
-procedure TFormMain.StartServer({$IFDEF USETLS}const AServerCertificateFingerprint : String;{$ENDIF}const ABindAddress : String; const APort : Word);
-begin
-  StopServer();
-  ///
-
-  {$IFDEF USETLS}
-    var APublicKey  : String;
-    var APrivateKey : String;
-
-    {$IFDEF DEBUG}
-      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
-      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
-    {$ELSE}
-      if not FormCertificatesStore.GetCertificateKeys(AServerCertificateFingerprint, APublicKey, APrivateKey) then begin
-        Application.MessageBox(
-          'Server certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
-          'generate a new one.',
-          'Start Server',
-          MB_ICONERROR
-        );
-
-        Exit();
-      end;
-    {$ENDIF}
-  {$ENDIF}
-
-  FServer := TOptixServerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey,{$ENDIF}ABindAddress, APort);
-
-  FServer.OnServerStart           := OnServerStart;
-  FServer.OnServerError           := OnServerError;
-  FServer.OnServerStop            := OnServerStop;
-  FServer.OnSessionDisconnect     := OnSessionDisconnect;
-  FServer.OnReceivePacket         := OnReceivePacket;
-  FServer.OnRegisterWorker        := OnRegisterWorker;
-  {$IFDEF USETLS}
-  FServer.OnVerifyPeerCertificate :=  FormTrustedCertificates.OnVerifyPeerCertificate;
-  {$ENDIF}
-
-  ///
-  FServer.Start();
-end;
-
-procedure TFormMain.StopServer();
-begin
-  if Assigned(FServer) then begin
-    TOptixThread.TerminateWait(FServer);
-
-    ///
-    FServer := nil;
-  end;
-end;
-
-procedure TFormMain.Start1Click(Sender: TObject);
-var AForm : TFormListen;
-begin
-  case TMenuItem(Sender).Tag of
-    0 : begin
-      {$IFDEF DEBUG}
-      StartServer({$IFDEF USETLS}'', {$ENDIF}'0.0.0.0', 2801);
-      {$ELSE}
-        {$IFDEF USETLS}
-          var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
-          try
-            if AFingerprints.Count = 0 then
-              raise Exception.Create('No existing certificate was found in the certificate store. You cannot start ' +
-                                     'listening for clients without registering at least one certificate.');
-            ///
-
-//            if FormTrustedCertificates.TrustedCertificateCount = 0 then
-//              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
-//                                     'store. You cannot start listening for clients without registering at least one ' +
-//                                     'trusted certificate. A trusted certificate represents the fingerprint of a ' +
-//                                     'client certificate and is required for mutual authentication, ensuring that ' +
-//                                     'network communications are secure and not tampered with or eavesdropped on.');
-
-            AForm := TFormListen.Create(self, AFingerprints);
-          finally
-            FreeAndNil(AFingerprints);
-          end;
-        {$ELSE}
-          AForm := TFormListen.Create(self);
-        {$ENDIF}
-        try
-          AForm.ShowModal();
-          if AForm.Canceled then
-            Exit();
-
-          StartServer(
-            {$IFDEF USETLS}AForm.ComboCertificate.Text, {$ENDIF}
-            AForm.EditServerBindAddress.Text,
-            AForm.SpinPort.Value
-          );
-        finally
-          FreeAndNil(AForm);
-        end;
-      {$ENDIF}
-    end;
-
-    1 : StopServer();
-  end;
-end;
+//procedure TFormMain.StopServer();
+//begin
+//  if Assigned(FServer) then begin
+//    TOptixThread.TerminateWait(FServer);
+//
+//    ///
+//    FServer := nil;
+//  end;
+//end;
 
 procedure TFormMain.TimerRefreshTimer(Sender: TObject);
 begin

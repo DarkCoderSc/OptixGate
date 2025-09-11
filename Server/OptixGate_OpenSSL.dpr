@@ -106,7 +106,8 @@ uses
   uFormCertificatesStore in 'Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore},
   uFormGenerateNewCertificate in 'Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate},
   uFormTrustedCertificates in 'Units\Forms\uFormTrustedCertificates.pas' {FormTrustedCertificates},
-  Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas';
+  Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas',
+  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers};
 
 {$R *.res}
 {$R data.res}
@@ -132,15 +133,9 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormTrustedCertificates, FormTrustedCertificates);
-  // Application.CreateForm(TFormListen, FormListen);
+  Application.CreateForm(TFormServers, FormServers);
   Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
-  // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
-  // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
-  // Application.CreateForm(TFormTransfers, FormTransfers);
-  // Application.CreateForm(TFormTasks, FormTasks);
-  // Application.CreateForm(TFormFileManager, FormFileManager);
-  // Application.CreateForm(TFormControlForms, FormControlForms);
-  // Application.CreateForm(TFormLogs, FormLogs);
-  // Application.CreateForm(TFormProcessManager, FormProcessManager);
+
+  ///
   Application.Run;
 end.

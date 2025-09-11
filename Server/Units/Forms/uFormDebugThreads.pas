@@ -241,6 +241,9 @@ procedure TFormDebugThreads.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetC
   Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   var AColor := clNone;
 
@@ -287,10 +290,10 @@ end;
 procedure TFormDebugThreads.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  if (Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected) then
-    Exit();
-
   var pData := PTreeData(Node.GetData);
+
+  if not Assigned(pData) or ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) then
+    Exit();
 
   case Column of
     0 : begin
@@ -337,12 +340,14 @@ begin
 
   CellText := '';
 
-  case Column of
-    0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
-    1 : CellText := pData^.ClassName;
-    2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
-    3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
-    4 : CellText := ThreadPriorityToString(pData^.Priority);
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
+      1 : CellText := pData^.ClassName;
+      2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
+      3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
+      4 : CellText := ThreadPriorityToString(pData^.Priority);
+    end;
   end;
 
   ///

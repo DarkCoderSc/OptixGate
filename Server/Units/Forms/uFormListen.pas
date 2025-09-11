@@ -45,10 +45,18 @@ unit uFormListen;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  Generics.Collections;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+
+  uFormServers;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormListen = class(TForm)
@@ -77,6 +85,9 @@ type
     {@M}
     procedure DoResize();
   public
+    {@M}
+    function GetServerConfiguration() : TServerConfiguration;
+
     {@G}
     property Canceled : Boolean read FCanceled;
 
@@ -91,9 +102,31 @@ var
 
 implementation
 
-uses uFormMain, Optix.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain,
+
+  Optix.Helper
+
+  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+function TFormListen.GetServerConfiguration() : TServerConfiguration;
+begin
+  result.Address := EditServerBindAddress.Text;
+  result.Port    := SpinPort.Value;
+  result.Version := ipv4; // TODO
+
+  {$IFDEF USETLS}
+    {$IFDEF DEBUG}
+      result.CertificateFingerprint := DEBUG_CERTIFICATE_FINGERPRINT;
+    {$ELSE}
+      result.CertificateFingerprint := ComboCertificate.Text;
+    {$ENDIF}
+  {$ENDIF}
+end;
 
 procedure TFormListen.DoResize();
 begin
@@ -130,7 +163,7 @@ procedure TFormListen.FormCreate(Sender: TObject);
 begin
   FCanceled := True;
 
-  {$IFNDEF USETLS}
+  {$IF Defined(DEBUG) or not Defined(USETLS)}
   LabelCertificate.Visible := False;
   ComboCertificate.Visible := False;
   {$ENDIF}

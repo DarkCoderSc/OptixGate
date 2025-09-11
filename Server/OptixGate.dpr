@@ -94,7 +94,8 @@ uses
   uControlFormDumpProcess in 'Units\Forms\Dialogs\Control\uControlFormDumpProcess.pas' {ControlFormDumpProcess},
   uControlFormRemoteShell in 'Units\Forms\Control\uControlFormRemoteShell.pas' {ControlFormRemoteShell},
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
-  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen};
+  uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
+  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers};
 
 {$R *.res}
 {$R data.res}
@@ -114,14 +115,8 @@ begin
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
-  // Application.CreateForm(TFormListen, FormListen);
-  // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
-  // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
-  // Application.CreateForm(TFormTransfers, FormTransfers);
-  // Application.CreateForm(TFormTasks, FormTasks);
-  // Application.CreateForm(TFormFileManager, FormFileManager);
-  // Application.CreateForm(TFormControlForms, FormControlForms);
-  // Application.CreateForm(TFormLogs, FormLogs);
-  // Application.CreateForm(TFormProcessManager, FormProcessManager);
+  Application.CreateForm(TFormServers, FormServers);
+
+  ///
   Application.Run;
 end.

@@ -130,6 +130,11 @@ const DEBUG_CERTIFICATE_PUBLIC_KEY =
 'ZH5witlG'                                                         + #13#10 +
 '-----END CERTIFICATE-----';
 
+
+DEBUG_CERTIFICATE_FINGERPRINT = 'D7:7F:D9:8A:C1:CB:44:8F:D7:F1:8D:98:BA:BD:BE:06:81:F3:4F:B8:93:41:E9:6B:AF:' +
+                                'D4:D6:C9:3B:C1:63:F3:E7:52:1C:00:04:AD:F8:2D:7D:38:18:70:75:09:76:E7:2E:D7:' +
+                                'FB:AD:D3:87:4C:72:69:4C:D2:18:C2:C2:1C:5A';
+
 DEBUG_PEER_CERTIFICATE_FINGERPRINT = '92:3F:50:8D:CC:CB:13:AF:47:70:62:60:11:BB:0C:23:D0:E3:DD:C9:32:C5:BD:47:3E:' +
                                      '85:F0:89:7C:C1:A4:9D:C4:03:94:28:8E:50:41:69:55:19:B7:D0:7A:71:EE:FC:DA:C5:' +
                                      '54:2F:A2:E5:0D:86:3E:7E:87:10:5A:16:09:AD';

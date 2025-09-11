@@ -304,7 +304,6 @@ end;
 procedure TControlFormTasks.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
-
   if Assigned(pData) and Assigned(pData^.TaskCallBack) then
     FreeAndNil(pData^.TaskCallBack);
 end;
@@ -312,21 +311,25 @@ end;
 procedure TControlFormTasks.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  if ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) or (Column <> 0) then
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) or not Assigned(pData^.TaskCallBack) or (Column <> 0) then
     Exit();
   ///
 
-  var pData := PTreeData(Node.GetData);
-  if not Assigned(pData^.TaskCallBack) then
-    Exit();
+  case Kind of
+    ikNormal, ikSelected : begin
+      case pData^.TaskCallBack.State of
+        otsRunning : ImageIndex := IMAGE_TASK_RUNNING;
+        otsFailed  : ImageIndex := IMAGE_TASK_FAILED;
+        otsSuccess : ImageIndex := IMAGE_TASK_SUCCESS;
 
-  case pData^.TaskCallBack.State of
-    otsRunning : ImageIndex := IMAGE_TASK_RUNNING;
-    otsFailed  : ImageIndex := IMAGE_TASK_FAILED;
-    otsSuccess : ImageIndex := IMAGE_TASK_SUCCESS;
+        else
+          ImageIndex := IMAGE_TASK_PENDING;
+      end;
+    end;
 
-    else
-      ImageIndex := IMAGE_TASK_PENDING;
+    ikState: ;
+    ikOverlay: ;
   end;
 end;
 
@@ -342,7 +345,7 @@ begin
 
   CellText := '';
 
-  if Assigned(pData^.TaskCallBack) then begin
+  if Assigned(pData) and Assigned(pData^.TaskCallBack) then begin
     case Column of
       0 : CellText := pData^.TaskCallBack.Id.ToString();
       1 : CellText := pData^.TaskCallBack.TaskClassName;

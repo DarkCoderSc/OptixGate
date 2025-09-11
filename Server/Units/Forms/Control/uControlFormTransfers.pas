@@ -455,6 +455,8 @@ procedure TControlFormTransfers.VSTGetImageIndex(Sender: TBaseVirtualTree; Node:
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
   ///
 
   if Kind = TVTImageKind.ikState then begin
@@ -493,45 +495,47 @@ begin
 
   CellText := '';
 
-  case Column of
-    0 : CellText := Format('%s (%s)', [
-      TPath.GetFileName(pData^.SourceFilePath),
-      TPath.GetDirectoryName(pData^.SourceFilePath)
-    ]);
-    1 : CellText := Format('%s (%s)', [
-      TPath.GetFileName(pData^.DestinationFilePath),
-      TPath.GetDirectoryName(pData^.DestinationFilePath)
-    ]);
-    2 : begin
-      case pData^.Direction of
-        otdClientIsUploading   : CellText := 'Download';
-        otdClientIsDownloading : CellText := 'Upload';
-      end;
-    end;
-    3 : begin
-      if pData^.FileSize > 0 then
-        CellText := FormatFileSize(pData^.FileSize);
-    end;
-    4 : begin
-      case pData^.State of
-        tsQueued : CellText := 'Queued';
-        tsProgress : begin
-          if pData^.FileSize > 0 then
-            CellText := Format('%d%% (%s/%s)', [
-              (pData^.WorkCount * 100) div pData^.FileSize,
-              FormatFileSize(pData^.WorkCount),
-              FormatFileSize(pData^.FileSize)
-            ]);
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := Format('%s (%s)', [
+        TPath.GetFileName(pData^.SourceFilePath),
+        TPath.GetDirectoryName(pData^.SourceFilePath)
+      ]);
+      1 : CellText := Format('%s (%s)', [
+        TPath.GetFileName(pData^.DestinationFilePath),
+        TPath.GetDirectoryName(pData^.DestinationFilePath)
+      ]);
+      2 : begin
+        case pData^.Direction of
+          otdClientIsUploading   : CellText := 'Download';
+          otdClientIsDownloading : CellText := 'Upload';
         end;
-        tsEnded         : CellText := 'Ended';
-        tsError         : CellText := 'Error';
-        tsCancelRequest : CellText := 'Cancel Request';
-        tsCanceled      : CellText := 'Canceled';
       end;
+      3 : begin
+        if pData^.FileSize > 0 then
+          CellText := FormatFileSize(pData^.FileSize);
+      end;
+      4 : begin
+        case pData^.State of
+          tsQueued : CellText := 'Queued';
+          tsProgress : begin
+            if pData^.FileSize > 0 then
+              CellText := Format('%d%% (%s/%s)', [
+                (pData^.WorkCount * 100) div pData^.FileSize,
+                FormatFileSize(pData^.WorkCount),
+                FormatFileSize(pData^.FileSize)
+              ]);
+          end;
+          tsEnded         : CellText := 'Ended';
+          tsError         : CellText := 'Error';
+          tsCancelRequest : CellText := 'Cancel Request';
+          tsCanceled      : CellText := 'Canceled';
+        end;
+      end;
+      5 : CellText := pData^.Context;
+      6 : CellText := pData^.Description;
+      7 : CellText := pData^.Id.ToString();
     end;
-    5 : CellText := pData^.Context;
-    6 : CellText := pData^.Description;
-    7 : CellText := pData^.Id.ToString();
   end;
 
   ///

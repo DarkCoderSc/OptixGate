@@ -346,8 +346,9 @@ procedure TControlFormControlForms.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
-  if not Assigned(pData^.FormInformation) then
+  if not Assigned(pData) or not Assigned(pData^.FormInformation) then
     Exit();
+  ///
 
   var AColor := clNone;
 
@@ -426,7 +427,7 @@ procedure TControlFormControlForms.VSTFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
-  if Assigned(pData^.FormInformation) then
+  if Assigned(pData) and Assigned(pData^.FormInformation) then
     FreeAndNil(pData^.FormInformation);
 end;
 
@@ -434,14 +435,10 @@ procedure TControlFormControlForms.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  if Column <> 0 then
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) or not Assigned(pData^.FormInformation) or (Column <> 0) then
     Exit();
   ///
-
-  var pData := PTreeData(Node.GetData);
-
-  if not Assigned(pData^.FormInformation) then
-    Exit();
 
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
@@ -478,23 +475,22 @@ begin
 
   CellText := '';
 
-  if not Assigned(pData^.FormInformation) then
-    Exit();
-
-  case Column of
-    0 : CellText := pData^.Title;
-    1 : CellText := pData^.ClassName;
-    2 : CellText := FormControlStateToString(pData^.FormInformation.State);
-    3 : CellText := DateTimeToStr(pData^.FormInformation.CreatedTime);
-    4 :begin
-      if pData^.FormInformation.HasReceivedData then
-        CellText := ElapsedDateTime(
-          pData^.FormInformation.LastReceivedDataTime,
-          Now
-        );
+  if Assigned(pData) and Assigned(pData^.FormInformation) then begin
+    case Column of
+      0 : CellText := pData^.Title;
+      1 : CellText := pData^.ClassName;
+      2 : CellText := FormControlStateToString(pData^.FormInformation.State);
+      3 : CellText := DateTimeToStr(pData^.FormInformation.CreatedTime);
+      4 :begin
+        if pData^.FormInformation.HasReceivedData then
+          CellText := ElapsedDateTime(
+            pData^.FormInformation.LastReceivedDataTime,
+            Now
+          );
+      end;
+      5 : CellText := pData^.ContextDescription;
+      6 : CellText := pData^.FormInformation.GUID.ToString;
     end;
-    5 : CellText := pData^.ContextDescription;
-    6 : CellText := pData^.FormInformation.GUID.ToString;
   end;
 
   ///

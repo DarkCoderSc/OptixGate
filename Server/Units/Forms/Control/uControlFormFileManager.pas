@@ -546,6 +546,9 @@ procedure TControlFormFileManager.VSTFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   if Assigned(pData^.DriveInformation) then
     FreeAndNil(pData^.DriveInformation);
@@ -558,10 +561,10 @@ procedure TControlFormFileManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
   var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  if Column <> 0 then
-    Exit();
-
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) or (Column <> 0) then
+    Exit();
+  ///
 
   if Assigned(pData^.DriveInformation) and (Kind = TVTImageKind.ikState) then begin
     case pData^.DriveInformation.DriveType of
@@ -619,7 +622,7 @@ begin
 
   CellText := '';
 
-  if Assigned(pData^.DriveInformation) then begin
+  if Assigned(pData) and Assigned(pData^.DriveInformation) then begin
     // Drives ----------------------------------------------------------------------------------------------------------
     case Column of
       0 : begin
@@ -653,7 +656,7 @@ begin
       end;
     end;
   // -------------------------------------------------------------------------------------------------------------------
-  end else if Assigned(pData^.FileInformation) then begin
+  end else if Assigned(pData) and Assigned(pData^.FileInformation) then begin
     // Files -----------------------------------------------------------------------------------------------------------
     if (pData^.FileInformation.Name = '..') then begin
       if Column = 0 then
