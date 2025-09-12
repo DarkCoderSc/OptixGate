@@ -91,6 +91,7 @@ type
     StatusMessage     : String;
     StartDateTime     : TDateTime;
     Server            : TOptixServerThread;
+    AutoStart         : Boolean;
   end;
   PTreeData = ^TTreeData;
 
@@ -114,6 +115,11 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure Start1Click(Sender: TObject);
     procedure Remove1Click(Sender: TObject);
+    procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: TImageIndex);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure PopupMenuPopup(Sender: TObject);
   private
     {@M}
     function GetNodeByPort(const APort : Word) : PVirtualNode;
@@ -147,7 +153,7 @@ uses
 
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
-  Optix.Helper
+  Optix.Helper, Optix.Constants
 
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -186,6 +192,37 @@ end;
 procedure TFormServers.OnServerStop(Sender : TOptixServerThread);
 begin
   UpdateStatus(Sender, ssStopped);
+  ///
+
+  var pNode := GetNodeByServer(Sender);
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  pData^.Server := nil;
+end;
+
+procedure TFormServers.PopupMenuPopup(Sender: TObject);
+begin
+  var pData := PTreeData(nil);
+
+  var pNode := VST.FocusedNode;
+  if Assigned(pNode) then
+    pData := pNode.GetData;
+
+  Start1.Visible := Assigned(pData);
+
+  if Assigned(pData) then
+    case pData^.Status of
+      ssStopped, ssOnError:
+        Start1.Caption := 'Start';
+
+      ssListening:
+        Start1.Caption := 'Stop';
+    end;
+
+  Remove1.Visible    := Assigned(pData);
+  AutoStart1.Visible := Assigned(pData);
 end;
 
 procedure TFormServers.OnServerError(Sender : TOptixServerThread; const AErrorMessage : String);
@@ -276,6 +313,7 @@ begin
     pData^.Status        := ssStopped;
     pData^.StatusMessage := '';
     pData^.StartDateTime := Now;
+    pData^.AutoStart     := False;
 
     {$IFDEF USETLS}
     pData^.ServerCertificate := AServerConfiguration.CertificateFingerprint;
@@ -292,12 +330,37 @@ end;
 
 procedure TFormServers.Remove1Click(Sender: TObject);
 begin
+  var pNode := VST.FocusedNode;
+  if not Assigned(pNode) then
+    Exit();
   ///
+
+  var pData := PTreeData(pNode.GetData);
+
+  if Assigned(pData^.Server) then
+    pData^.Server.Terminate;
+
+  ///
+  VST.DeleteNode(pNode);
 end;
 
 procedure TFormServers.Start1Click(Sender: TObject);
 begin
+  var pNode := VST.FocusedNode;
+  if not Assigned(pNode) then
+    Exit();
   ///
+
+  var pData := PTreeData(pNode.GetData);
+
+  case pData^.Status of
+    ssStopped, ssOnError:
+      StartServer(pNode);
+
+    ssListening:
+      if Assigned(pData^.Server) then
+        pData^.Server.Terminate;
+  end;
 end;
 
 procedure TFormServers.StartServer(const pNode : PVirtualNode);
@@ -406,6 +469,27 @@ begin
   {$ENDIF}
 end;
 
+procedure TFormServers.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
+
+  var AColor := clNone;
+
+  case pData^.Status of
+    ssListening : AColor := COLOR_LIST_LIMY;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
+  end;
+end;
+
 procedure TFormServers.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
@@ -414,6 +498,28 @@ end;
 procedure TFormServers.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormServers.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
+  Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
+begin
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) or (Column <> 0) then
+    Exit();
+  ///
+
+  case Kind of
+    ikNormal, ikSelected : begin
+      case pData^.Status of
+        ssStopped   : ImageIndex := IMAGE_SERVER_STOPPED;
+        ssListening : ImageIndex := IMAGE_SERVER_LISTENING;
+        ssOnError   : ImageIndex := IMAGE_SERVER_ERROR;
+      end;
+    end;
+
+    ikState: ;
+    ikOverlay: ;
+  end;
 end;
 
 procedure TFormServers.VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);

@@ -39,10 +39,12 @@ object FormServers: TFormServers
     PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
     OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
+    OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
@@ -91,6 +93,7 @@ object FormServers: TFormServers
     end
   end
   object PopupMenu: TPopupMenu
+    OnPopup = PopupMenuPopup
     Left = 240
     Top = 72
     object Start1: TMenuItem

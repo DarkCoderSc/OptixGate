@@ -37,7 +37,7 @@ object ControlFormFileManager: TControlFormFileManager
     StateImages = FormMain.VirtualImageList
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
@@ -49,6 +49,8 @@ object ControlFormFileManager: TControlFormFileManager
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitLeft = -4
+    ExplicitTop = 59
     Columns = <
       item
         Position = 0

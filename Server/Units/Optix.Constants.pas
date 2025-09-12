@@ -105,6 +105,9 @@ const
  IMAGE_SHELL_CLOSED                 = IMAGE_RED_EXCLAMATION;
  IMAGE_CERTIFICATE                  = 58;
  IMAGE_TRUSTED_CERTIFICATE          = 59;
+ IMAGE_SERVER_STOPPED               = 63;
+ IMAGE_SERVER_LISTENING             = 64;
+ IMAGE_SERVER_ERROR                 = 65;
 
 var
  (* COLORS *)
