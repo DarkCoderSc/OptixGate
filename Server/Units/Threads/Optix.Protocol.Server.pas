@@ -72,6 +72,7 @@ type
   private
     FBindAddress             : String;
     FBindPort                : Word;
+    FIPVersion               : TIPVersion;
     FServer                  : TServerSocket;
 
     {$IFDEF USETLS}
@@ -101,7 +102,7 @@ type
     procedure TerminatedSet(); override;
   public
     {@C}
-    constructor Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word); overload;
+    constructor Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion); overload;
     destructor Destroy(); override;
 
     {@G/S}
@@ -132,7 +133,7 @@ var AClient : TClientSocket;
 begin
   try
     try
-      FServer := TServerSocket.Create(FBindAddress, FBindPort);
+      FServer := TServerSocket.Create(FBindAddress, FBindPort, FIPVersion);
       FServer.Listen();
 
       if Assigned(FOnServerStart) then
@@ -253,7 +254,7 @@ begin
 end;
 
 { TOptixServerThread.Create }
-constructor TOptixServerThread.Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word);
+constructor TOptixServerThread.Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion);
 begin
   inherited Create();
   ///
@@ -267,6 +268,7 @@ begin
 
   FBindAddress := ABindAddress;
   FBindPort    := ABindPort;
+  FIPVersion   := AIPVersion;
   FServer      := nil;
 
   {$IFDEF USETLS}

@@ -47,7 +47,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.SysUtils, System.Variants, System.Classes, System.Types,
 
   Generics.Collections,
 
@@ -104,6 +104,7 @@ type
     procedure CopySelectedFingerprint1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
@@ -135,7 +136,9 @@ uses
   {$IFDEF SERVER}, uFormServers{$ENDIF},
 
   Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore, Optix.Config.Helper,
-  Optix.VCL.Helper, Optix.OpenSSL.Exceptions;
+  Optix.VCL.Helper, Optix.OpenSSL.Exceptions
+
+  {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -210,9 +213,20 @@ begin
 end;
 
 procedure TFormCertificatesStore.Load();
+var ACertificate : TX509Certificate;
 begin
   VST.Clear();
   ///
+
+  {$IFDEF DEBUG}
+  TOptixOpenSSLHelper.LoadCertificate(
+    DEBUG_CERTIFICATE_PUBLIC_KEY,
+    DEBUG_CERTIFICATE_PRIVATE_KEY,
+    ACertificate
+  );
+
+  RegisterCertificate(ACertificate);
+  {$ENDIF}
 
   var AConfig := TOptixConfigCertificatesStore(CONFIG_HELPER.Read('Certificates'));
   if not Assigned(AConfig) then
@@ -221,7 +235,7 @@ begin
     VST.BeginUpdate();
     try
       for var I := 0 to AConfig.Count -1 do begin
-        var ACertificate := AConfig.Items[I];
+        ACertificate := AConfig.Items[I];
 
         if not Assigned(ACertificate.pX509) or not Assigned(ACertificate.pPrivKey) then
           continue;
@@ -442,6 +456,16 @@ end;
 procedure TFormCertificatesStore.FormCreate(Sender: TObject);
 begin
   Load();
+end;
+
+procedure TFormCertificatesStore.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 procedure TFormCertificatesStore.GeneratenewCertificate1Click(Sender: TObject);

@@ -117,6 +117,7 @@ type
     procedure rustedCertificates1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     FNotifications : TList<TGUID>;
 
@@ -536,6 +537,15 @@ begin
 
   ///
   CellText := DefaultIfEmpty(CellText);
+end;
+
+procedure TFormMain.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 end.

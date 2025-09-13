@@ -14,6 +14,7 @@ object FormMain: TFormMain
   Position = poScreenCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
@@ -48,6 +49,7 @@ object FormMain: TFormMain
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
     OnInitNode = VSTInitNode
+    OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <

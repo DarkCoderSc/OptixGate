@@ -47,7 +47,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.SysUtils, System.Variants, System.Classes, System.Types,
 
   Winapi.Windows, Winapi.Messages,
 
@@ -92,6 +92,7 @@ type
     procedure Terminate1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     FRefreshTick : UInt64;
@@ -207,6 +208,15 @@ begin
 
   ///
   VST.Clear();
+end;
+
+procedure TFormDebugThreads.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 procedure TFormDebugThreads.FormShow(Sender: TObject);

@@ -12,6 +12,7 @@ object ControlFormTransfers: TControlFormTransfers
   Font.Style = []
   Position = poMainFormCenter
   OnDestroy = FormDestroy
+  OnMouseDown = FormMouseDown
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0

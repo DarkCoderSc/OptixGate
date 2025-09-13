@@ -12,6 +12,7 @@ object FormServers: TFormServers
   Font.Style = []
   Menu = MainMenu
   Position = poOwnerFormCenter
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
@@ -42,10 +43,12 @@ object FormServers: TFormServers
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnChange = VSTChange
+    OnCompareNodes = VSTCompareNodes
     OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
+    OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
@@ -71,11 +74,16 @@ object FormServers: TFormServers
       end
       item
         Position = 4
+        Text = 'Auto Start'
+        Width = 110
+      end
+      item
+        Position = 5
         Text = 'Server Certificate'
         Width = 250
       end
       item
-        Position = 5
+        Position = 6
         Text = 'Status Message'
         Width = 200
       end>
@@ -111,6 +119,7 @@ object FormServers: TFormServers
       AutoCheck = True
       Caption = 'Auto Start'
       Checked = True
+      OnClick = AutoStart1Click
     end
   end
 end

@@ -14,6 +14,7 @@ object FormTrustedCertificates: TFormTrustedCertificates
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnMouseDown = FormMouseDown
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
@@ -51,7 +52,7 @@ object FormTrustedCertificates: TFormTrustedCertificates
       item
         Position = 0
         Text = 'Fingerprint'
-        Width = 540
+        Width = 550
       end>
   end
   object MainMenu: TMainMenu

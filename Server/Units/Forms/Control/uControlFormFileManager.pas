@@ -126,6 +126,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure ButtonBackClick(Sender: TObject);
     procedure ButtonForwardClick(Sender: TObject);
+    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     FHistoryCursor : Integer;
     FPathHistory   : TList<String>;
@@ -688,6 +689,16 @@ begin
 
   ///
   CellText := DefaultIfEmpty(CellText);
+end;
+
+procedure TControlFormFileManager.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 procedure TControlFormFileManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);

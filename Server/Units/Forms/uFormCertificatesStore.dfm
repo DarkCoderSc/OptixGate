@@ -14,6 +14,7 @@ object FormCertificatesStore: TFormCertificatesStore
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnMouseDown = FormMouseDown
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0

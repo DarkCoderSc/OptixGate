@@ -226,6 +226,7 @@
         <DCCReference Include="Units\Forms\uFormServers.pas">
             <Form>FormServers</Form>
         </DCCReference>
+        <DCCReference Include="Units\Configs\Optix.Config.Servers.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

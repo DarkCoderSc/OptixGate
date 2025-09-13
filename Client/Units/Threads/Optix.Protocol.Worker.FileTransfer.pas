@@ -254,7 +254,12 @@ end;
 constructor TOptixFileTransferOrchestratorThread.Create(const AHandler : TOptixClientHandlerThread);
 begin
   // TODO: better, context cloning? context reuse from handler for workers?
-  inherited Create({$IFDEF USETLS}AHandler.PublicKey, AHandler.PrivateKey, {$ENDIF}AHandler.RemoteAddress, AHandler.RemotePort);
+  inherited Create(
+    {$IFDEF USETLS}AHandler.PublicKey, AHandler.PrivateKey, {$ENDIF}
+    AHandler.RemoteAddress,
+    AHandler.RemotePort,
+    AHandler.IPVersion
+  );
   ///
 
   {$IF defined(CLIENT_GUI) and defined(USETLS)}

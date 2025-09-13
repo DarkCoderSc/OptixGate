@@ -150,6 +150,7 @@
         <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <DCCReference Include="Units\Actions\Optix.Actions.ProcessHandler.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
+        <DCCReference Include="Units\Optix.Client.Entrypoint.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

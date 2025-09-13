@@ -41,58 +41,127 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit Optix.Config.Servers;
 
-{$IFDEF DEBUG}
-  {$APPTYPE GUI}
-{$ELSE}
-  {$APPTYPE CONSOLE}
-{$ENDIF}
+interface
 
-{$R *.res}
-
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
-  Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
-  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
-  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
-  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
-  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
-  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas';
+  XSuperObject,
 
-begin
-  IsMultiThread := True;
-  try
-    ClientEntrypoint();
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+  uFormServers,
+
+  Optix.Config.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+
+type
+  // TODO: Create a custom iterator for..in
+  TOptixConfigServers = class(TOptixConfigBase)
+  private
+    {@M}
+    function GetCount() : Integer;
+
+    function GetItem(AIndex: Integer): TServerConfiguration;
+    procedure SetItem(AIndex: Integer; const AServerConfiguration : TServerConfiguration);
+  public
+    {@M}
+    procedure Add(const AServerConfiguration : TServerConfiguration);
+
+    {@G}
+    property Count : Integer read GetCount;
+    property Items[AIndex : Integer]: TServerConfiguration read GetItem write SetItem; default;
   end;
+
+implementation
+
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows,
+
+  Optix.Helper, Optix.Sockets.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+
+{ TOptixConfigServers.GetCount }
+function TOptixConfigServers.GetCount() : Integer;
+begin
+  result := 0;
+  ///
+
+ if not FJsonObject.Contains('Items') then
+  Exit();
+
+  result := FJsonObject.A['Items'].Length;
+end;
+
+{ TOptixConfigServers.GetItem }
+function TOptixConfigServers.GetItem(AIndex: Integer): TServerConfiguration;
+begin
+  ZeroMemory(@result, SizeOf(TServerConfiguration));
+  ///
+
+  if not FJsonObject.Contains('Items') then
+    Exit();
+  ///
+
+  var AJsonArray := FJsonObject.A['Items'];
+
+  if (AIndex < 0) or (AIndex > AJsonArray.Length-1) then
+    Exit();
+
+  var ANode := AJsonArray.O[AIndex];
+  if not ANode.Contains('Address') or not ANode.Contains('Port') or not ANode.Contains('Version') or
+     not ANode.Contains('AutoStart')
+     {$IFDEF USETLS} or not ANode.Contains('CertificateFingerprint'){$ENDIF}
+  then
+    Exit();
+  try
+    result.Address   := ANode.S['Address'];
+    result.Port      := ANode.I['Port'];
+    result.Version   := TIPVersion(ANode.I['Version']);
+    result.AutoStart := ANode.B['AutoStart'];
+
+    {$IFDEF USETLS}
+    result.CertificateFingerprint  := ANode.S['CertificateFingerprint'];
+    {$ENDIF}
+  except
+  end;
+end;
+
+{ TOptixConfigServers.Add }
+procedure TOptixConfigServers.Add(const AServerConfiguration : TServerConfiguration);
+begin
+  SetItem(-1, AServerConfiguration);
+end;
+
+{ TOptixConfigServers.SetItem }
+procedure TOptixConfigServers.SetItem(AIndex: Integer; const AServerConfiguration : TServerConfiguration);
+begin
+  var AJsonArray  : ISuperArray;
+
+  if FJsonObject.Contains('Items') then
+    AJsonArray := FJsonObject.A['Items']
+  else
+    AJsonArray := SA();
+
+  var ANode := SO();
+
+  // TODO: check for data consistency
+  ANode.S['Address']     := AServerConfiguration.Address;
+  ANode.I['Port']        := AServerConfiguration.Port;
+  ANode.I['Version']     := Cardinal(AServerConfiguration.Version);
+  ANode.B['AutoStart']   := AServerConfiguration.AutoStart;
+
+  {$IFDEF USETLS}
+  ANode.S['CertificateFingerprint'] := AServerConfiguration.CertificateFingerprint;
+  {$ENDIF}
+
+  if AIndex < 0 then
+    AJsonArray.Add(ANode)
+  else if (AIndex >= 0) and (AIndex <= AJsonArray.Length-1) then
+    AJsonArray.O[AIndex] := ANode;
+
+  ///
+  FJsonObject.A['Items'] := AJsonArray;
+end;
+
 end.

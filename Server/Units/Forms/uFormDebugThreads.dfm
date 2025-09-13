@@ -12,6 +12,7 @@ object FormDebugThreads: TFormDebugThreads
   Font.Style = []
   Position = poOwnerFormCenter
   OnClose = FormClose
+  OnMouseDown = FormMouseDown
   OnShow = FormShow
   TextHeight = 15
   object VST: TVirtualStringTree

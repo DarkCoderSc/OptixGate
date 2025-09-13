@@ -284,6 +284,21 @@ type
   TMiniDumpCallbackInformation = MINIDUMP_CALLBACK_INFORMATION;
   PMiniDumpCallbackInformation = ^TMiniDumpCallbackInformation;
 
+  (* Winsock2 *)
+  TIn6Addr = record
+    Byte: array[0..15] of Byte;
+  end;
+  PIn6Addr = ^TIn6Addr;
+
+  TSockAddrIn6 = record
+    sin6_family   : USHORT;
+    sin6_port     : USHORT;
+    sin6_flowinfo : ULONG;
+    sin6_addr     : TIn6Addr;
+    sin6_scope_id : ULONG;
+  end;
+  PSockAddrIn6 = ^TSockAddrIn6;
+
 //----------------------------------------------------------------------------------------------------------------------
 
 const
@@ -358,6 +373,9 @@ const
   MiniDumpScanInaccessiblePartialPages    = $00800000;
   MiniDumpFilterWriteCombinedMemory       = $01000000;
   MiniDumpValidTypeFlags                  = $01ffffff;
+
+  (* Winsock 2 *)
+  in6addr_any: TIn6Addr = (Byte: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
 //----------------------------------------------------------------------------------------------------------------------
 

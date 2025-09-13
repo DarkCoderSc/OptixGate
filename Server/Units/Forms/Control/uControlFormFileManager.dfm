@@ -47,10 +47,9 @@ object ControlFormFileManager: TControlFormFileManager
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
+    OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitLeft = -4
-    ExplicitTop = 59
     Columns = <
       item
         Position = 0

@@ -64,14 +64,20 @@ type
     ButtonConnect: TButton;
     ButtonCancel: TButton;
     PanelClient: TPanel;
-    Label2: TLabel;
     Label1: TLabel;
     SpinPort: TSpinEdit;
-    EditServerBindAddress: TEdit;
     PanelLeft: TPanel;
     Image: TVirtualImage;
     LabelCertificate: TLabel;
     ComboCertificate: TComboBox;
+    CheckBoxAutoStart: TCheckBox;
+    Label3: TLabel;
+    ComboIpVersion: TComboBox;
+    GroupBox1: TGroupBox;
+    RadioBindAll: TRadioButton;
+    RadioBindLocal: TRadioButton;
+    RadioBindCustom: TRadioButton;
+    EditServerBindAddress: TEdit;
     procedure ButtonConnectClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -79,6 +85,9 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormResize(Sender: TObject);
     procedure SpinPortChange(Sender: TObject);
+    procedure RadioBindCustomClick(Sender: TObject);
+    procedure RadioBindLocalClick(Sender: TObject);
+    procedure RadioBindAllClick(Sender: TObject);
   private
     FCanceled : Boolean;
 
@@ -106,7 +115,7 @@ implementation
 uses
   uFormMain,
 
-  Optix.Helper
+  Optix.Helper, Optix.Sockets.Helper
 
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -115,17 +124,50 @@ uses
 
 function TFormListen.GetServerConfiguration() : TServerConfiguration;
 begin
-  result.Address := EditServerBindAddress.Text;
-  result.Port    := SpinPort.Value;
-  result.Version := ipv4; // TODO
+  result.Address   := EditServerBindAddress.Text;
+  result.Port      := SpinPort.Value;
+  result.Version   := TIpVersion(ComboIpVersion.ItemIndex);
+
+  if RadioBindCustom.Checked then
+    result.Address := EditServerBindAddress.Text
+  else begin
+    case result.Version of
+      ipv4 : begin
+        if RadioBindLocal.Checked then
+          result.Address := '127.0.0.1'
+        else
+          result.Address := '0.0.0.0';
+      end;
+
+      ipv6 : begin
+        if RadioBindLocal.checked then
+          result.Address := '::1'
+        else
+          result.Address := '::';
+      end;
+    end;
+  end;
+
+  result.AutoStart := CheckBoxAutoStart.Checked;
 
   {$IFDEF USETLS}
-    {$IFDEF DEBUG}
-      result.CertificateFingerprint := DEBUG_CERTIFICATE_FINGERPRINT;
-    {$ELSE}
-      result.CertificateFingerprint := ComboCertificate.Text;
-    {$ENDIF}
+  result.CertificateFingerprint := ComboCertificate.Text;
   {$ENDIF}
+end;
+
+procedure TFormListen.RadioBindAllClick(Sender: TObject);
+begin
+  EditServerBindAddress.Enabled := False;
+end;
+
+procedure TFormListen.RadioBindCustomClick(Sender: TObject);
+begin
+  EditServerBindAddress.Enabled := TRadioButton(Sender).Checked;
+end;
+
+procedure TFormListen.RadioBindLocalClick(Sender: TObject);
+begin
+  EditServerBindAddress.Enabled := False;
 end;
 
 procedure TFormListen.DoResize();
@@ -163,7 +205,9 @@ procedure TFormListen.FormCreate(Sender: TObject);
 begin
   FCanceled := True;
 
-  {$IF Defined(DEBUG) or not Defined(USETLS)}
+  ComboIpVersion.ItemIndex := 0;
+
+  {$IFNDEF USETLS}
   LabelCertificate.Visible := False;
   ComboCertificate.Visible := False;
   {$ENDIF}
@@ -193,8 +237,6 @@ end;
 
 procedure TFormListen.ButtonConnectClick(Sender: TObject);
 begin
-  CheckValidIpV4Address(EditServerBindAddress.Text);
-
   if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
     raise Exception.Create(
       'You must select an existing certificate (via its fingerprint) for the server to start listening.'

@@ -47,17 +47,14 @@
     - ZLib Data Compression for Optix Packets (JSON Commands / Response)
     - File manager: browser backward / forward added
     - Execute-only folder materialized by a specific folder icon
-    - Multi server
+    - Multi server + Saved Servers + Auto Start
     - Code Improvement
 
   ---
 
   Global Todo b4 v1:
-    - Finish uFormServers popup actions (Remove, Start / Stop, Future Autostart: On or Off)
-    - Save listeners + impl auto start
     - Ipv6 Support.
     - File Upload Feedback (Notify window's about a successful file upload)
-    - Investigate about a yet unidentified access violation
 }
 
 unit uFormMain;
@@ -66,7 +63,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes, System.ImageList, Generics.Collections,
+  System.SysUtils, System.Variants, System.Classes, System.ImageList, Generics.Collections, System.Types,
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ComCtrls, Vcl.ImgList, Vcl.VirtualImageList,
   Vcl.StdCtrls, Vcl.ImageCollection, Vcl.ExtCtrls, Vcl.BaseImageCollection,
@@ -167,6 +164,8 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure Server1Click(Sender: TObject);
+    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FormDestroy(Sender: TObject);
   private
     FFileInfo : TSHFileInfo;
 
@@ -670,6 +669,15 @@ begin
   pData^.Workers := TObjectList<TOptixThread>.Create(False);
 end;
 
+procedure TFormMain.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
+end;
+
 procedure TFormMain.OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
 begin
   var pNode := GetNodeByHandler(Sender);
@@ -884,6 +892,11 @@ begin
   Certificates1.Visible := False;
   rustedCertificates1.Visible := False;
   {$ENDIF}
+end;
+
+procedure TFormMain.FormDestroy(Sender: TObject);
+begin
+
 end;
 
 //procedure TFormMain.StopServer();

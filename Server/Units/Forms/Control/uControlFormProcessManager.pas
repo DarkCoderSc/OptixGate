@@ -47,7 +47,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.SysUtils, System.Variants, System.Classes, System.Types,
 
   Winapi.Windows, Winapi.Messages,
 
@@ -113,6 +113,7 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure FormDestroy(Sender: TObject);
+    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     FClientArchitecture          : TProcessorArchitecture;
     FRemoteProcessorArchitecture : TProcessorArchitecture;
@@ -539,6 +540,16 @@ begin
 
   ///
   CellText := DefaultIfEmpty(CellText);
+end;
+
+procedure TControlFormProcessManager.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 procedure TControlFormProcessManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);

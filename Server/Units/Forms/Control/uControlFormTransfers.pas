@@ -47,7 +47,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.SysUtils, System.Variants, System.Classes, System.Types,
 
   Winapi.Windows, Winapi.Messages,
 
@@ -106,6 +106,7 @@ type
     procedure PopupMenuPopup(Sender: TObject);
     procedure CancelTransfer1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     function RegisterNewTransfer(const ASourceFilePath, ADestinationFilePath : String; const ADirection : TOptixTransferDirection; const AContext : String = '') : TGUID;
@@ -572,6 +573,15 @@ end;
 procedure TControlFormTransfers.FormDestroy(Sender: TObject);
 begin
   VST.Clear();
+end;
+
+procedure TControlFormTransfers.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 end.

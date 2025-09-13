@@ -95,7 +95,8 @@ uses
   uControlFormRemoteShell in 'Units\Forms\Control\uControlFormRemoteShell.pas' {ControlFormRemoteShell},
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
   uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
-  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers};
+  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
+  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas';
 
 {$R *.res}
 {$R data.res}

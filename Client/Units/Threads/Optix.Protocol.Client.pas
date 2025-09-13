@@ -67,6 +67,7 @@ type
 
     FRemoteAddress : String;
     FRemotePort    : Word;
+    FIPVersion     : TIPVersion;
 
     {$IFDEF USETLS}
     FSSLContext       : TOptixOpenSSLContext;
@@ -111,7 +112,7 @@ type
     function InitializePreflightRequest() : TOptixPreflightRequest; virtual; abstract;
   public
     {@C}
-    constructor Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word); overload; virtual;
+    constructor Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word; const AIPVersion : TIPVersion); overload; virtual;
 
     destructor Destroy(); override;
 
@@ -134,9 +135,10 @@ type
     {$ENDIF}
 
     {@G}
-    property RemoteAddress : String read FRemoteAddress;
-    property RemotePort    : Word   read FRemotePort;
-    property ClientId      : TGUID  read FClientId;
+    property RemoteAddress : String     read FRemoteAddress;
+    property RemotePort    : Word       read FRemotePort;
+    property IPVersion     : TIPVersion read FIpVersion;
+    property ClientId      : TGUID      read FClientId;
 
     {$IFDEF USETLS}
     property PublicKey  : String read FPublicKey;
@@ -174,7 +176,7 @@ begin
 end;
 
 { TOptixClientThread.Create }
-constructor TOptixClientThread.Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word);
+constructor TOptixClientThread.Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word; const AIPVersion : TIPVersion);
 begin
   inherited Create();
   ///
@@ -183,8 +185,11 @@ begin
   FRetryDelay    := 5000;
   FRetryEvent    := nil;
   FClient        := nil;
+
   FRemoteAddress := ARemoteAddress;
   FRemotePort    := ARemotePort;
+  FIPVersion     := AIPVersion;
+
   FClientId      := TGUID.NewGuid();
 
   {$IFDEF CLIENT_GUI}
@@ -239,13 +244,13 @@ procedure TOptixClientThread.ThreadExecute();
 begin
   while not Terminated do begin
     try
-      FClient := TClientSocket.Create({$IFDEF USETLS}FSSLContext, {$ENDIF}FRemoteAddress, FRemotePort);
+      FClient := TClientSocket.Create({$IFDEF USETLS}FSSLContext, {$ENDIF}FRemoteAddress, FRemotePort, FIPVersion);
       try
         FClient.Connect();
         ///
 
         {$IFDEF USETLS}
-        var ASuccess := False;
+        var ASuccess : Boolean;
         var AFingerprint := FClient.PeerCertificateFingerprint;
 
         {$IFDEF CLIENT_GUI}

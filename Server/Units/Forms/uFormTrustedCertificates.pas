@@ -47,7 +47,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.SysUtils, System.Variants, System.Classes, System.Types,
 
   Winapi.Windows, Winapi.Messages,
 
@@ -83,6 +83,7 @@ type
     procedure PopupMenuPopup(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
@@ -113,7 +114,7 @@ uses
 
 procedure TFormTrustedCertificates.Save();
 begin
-  var AConfig := TOptixTrustedConfigCertificatesStore.Create();
+  var AConfig := TOptixConfigTrustedCertificatesStore.Create();
   try
     for var pNode in VST.Nodes do begin
       var pData := PTreeData(pNode.GetData);
@@ -133,7 +134,7 @@ begin
   VST.Clear();
   ///
 
-  var AConfig := TOptixTrustedConfigCertificatesStore(CONFIG_HELPER.Read('TrustedCertificates'));
+  var AConfig := TOptixConfigTrustedCertificatesStore(CONFIG_HELPER.Read('TrustedCertificates'));
   if not Assigned(AConfig) then
     Exit();
   try
@@ -223,6 +224,16 @@ end;
 procedure TFormTrustedCertificates.FormCreate(Sender: TObject);
 begin
   Load();
+end;
+
+procedure TFormTrustedCertificates.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 procedure TFormTrustedCertificates.PopupMenuPopup(Sender: TObject);

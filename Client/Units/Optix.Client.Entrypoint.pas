@@ -41,58 +41,89 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit Optix.Client.Entrypoint;
 
-{$IFDEF DEBUG}
-  {$APPTYPE GUI}
-{$ELSE}
-  {$APPTYPE CONSOLE}
-{$ENDIF}
+interface
 
-{$R *.res}
-
+// ---------------------------------------------------------------------------------------------------------------------
 uses
   System.SysUtils,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
-  Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
-  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
-  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
-  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
-  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
-  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas';
 
+  Winapi.Windows,
+
+  Optix.InformationGathering.Helper, Optix.Exceptions, Optix.System.Helper, Optix.Protocol.SessionHandler, Optix.Thread,
+  Optix.Sockets.Helper
+
+  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+
+procedure ClientEntrypoint();
+
+implementation
+
+{ _.ClientEntrypoint }
+procedure ClientEntrypoint();
 begin
-  IsMultiThread := True;
+  {$IFNDEF CLIENT}
+  'The CLIENT compiler directive is missing from the project options. Please define it in the respective build '
+  'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding CLIENT.'
+  {$ENDIF}
+
+  {$IFNDEF DEBUG}
+    WriteLn(
+      '(!) This console application is actively running and may allow a remote peer to control your computer.' +
+      #13#10#13#10 +
+
+      '* if you are not aware of this program, or you did not give consent for remote access, please close this ' +
+      'console window immediately to stop the connection.' + #13#10 +
+      '* Leaving it open could allow someone else to access and control your system without your knowledge.' + #13#10 +
+      '* Only keep this application running if you fully understand what it does and you explicitly authorized the ' +
+      'remote access.' + #13#10#13#10 +
+
+      'Your system’s security and privacy may be at risk.'
+    );
+  {$ENDIF}
+
+  var AUserUID := TOptixInformationGathering.GetUserUID({$IFDEF USETLS}'+OpenSSL'{$ENDIF});
+
+  var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
+  if AMutex = 0 then
+    raise EWindowsException.Create('CreateMutexW');
   try
-    ClientEntrypoint();
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+    if GetLastError() = ERROR_ALREADY_EXISTS then
+      Exit();
+    ///
+
+    // Enable certain useful privileges (if possible)
+    TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
+    TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
+
+    {$IFDEF USETLS}
+    var ASessionHandler := TOptixSessionHandlerThread.Create(
+      DEBUG_CERTIFICATE_PUBLIC_KEY,
+      DEBUG_CERTIFICATE_PRIVATE_KEY,
+      '::1',  // IPv6 -> ::1
+      2801,
+      ipv6    // ipv6
+    );
+
+    ASessionHandler.ServerCertificateFingerprint := DEBUG_PEER_CERTIFICATE_FINGERPRINT;
+    {$ELSE}
+    var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801, ipv4);
+    {$ENDIF}
+
+    ASessionHandler.Retry := True;
+    ASessionHandler.RetryDelay := 1000;
+    ASessionHandler.Start();
+
+    ///
+    ASessionHandler.WaitFor();
+  finally
+    TOptixThread.SignalHiveAndFlush();
+
+    ///
+    CloseHandle(AMutex);
   end;
+end;
+
 end.

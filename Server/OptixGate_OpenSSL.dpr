@@ -107,7 +107,8 @@ uses
   uFormGenerateNewCertificate in 'Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate},
   uFormTrustedCertificates in 'Units\Forms\uFormTrustedCertificates.pas' {FormTrustedCertificates},
   Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas',
-  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers};
+  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
+  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas';
 
 {$R *.res}
 {$R data.res}
@@ -129,13 +130,14 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Glossy');
+
+  // (!) The order of creation is VERY important (!) //
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormTrustedCertificates, FormTrustedCertificates);
-  Application.CreateForm(TFormServers, FormServers);
   Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
-
+  Application.CreateForm(TFormServers, FormServers);
   ///
   Application.Run;
 end.
