@@ -284,7 +284,7 @@ type
   TMiniDumpCallbackInformation = MINIDUMP_CALLBACK_INFORMATION;
   PMiniDumpCallbackInformation = ^TMiniDumpCallbackInformation;
 
-  (* Winsock2 *)
+  (* Winsock2 & Network *)
   TIn6Addr = record
     Byte: array[0..15] of Byte;
   end;
@@ -374,8 +374,9 @@ const
   MiniDumpFilterWriteCombinedMemory       = $01000000;
   MiniDumpValidTypeFlags                  = $01ffffff;
 
-  (* Winsock 2 *)
+  (* Winsock 2 & Network *)
   in6addr_any: TIn6Addr = (Byte: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  NI_MAXHOST            = 1025;
 
 //----------------------------------------------------------------------------------------------------------------------
 

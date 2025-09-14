@@ -58,6 +58,8 @@ uses
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
 
+  uFormConnectToServer,
+
   Optix.Protocol.SessionHandler, Optix.Protocol.Client;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -122,7 +124,7 @@ type
     FNotifications : TList<TGUID>;
 
     {@M}
-    procedure AddClient({$IFDEF USETLS}const AClientCertificateFingerprint : String; {$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+    procedure AddClient(const AClientConfiguration : TClientConfiguration; const pExistingNode : PVirtualNode = nil);
 
     procedure OnConnectedToServer(Sender : TOptixSessionHandlerThread);
     procedure OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
@@ -147,7 +149,7 @@ implementation
 uses
   System.Math,
 
-  uFormConnectToServer, uFormAbout, uFormDebugThreads
+  uFormAbout, uFormDebugThreads
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Thread, Optix.VCL.Helper, Optix.Helper, Optix.Constants, Optix.Protocol.Preflight
@@ -280,7 +282,7 @@ begin
   Close();
 end;
 
-procedure TFormMain.AddClient({$IFDEF USETLS}const AClientCertificateFingerprint : String; {$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+procedure TFormMain.AddClient(const AClientConfiguration : TClientConfiguration; const pExistingNode : PVirtualNode = nil);
 begin
   {$IFDEF USETLS}
     var APublicKey  : String;
@@ -290,7 +292,7 @@ begin
       APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
       APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
     {$ELSE}
-      if not FormCertificatesStore.GetCertificateKeys(AClientCertificateFingerprint, APublicKey, APrivateKey) then begin
+      if not FormCertificatesStore.GetCertificateKeys(AClientConfiguration.CertificateFingerprint, APublicKey, APrivateKey) then begin
         Application.MessageBox(
           'Client certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
           'generate a new one.',
@@ -317,7 +319,13 @@ begin
     pData^.Status := csDisconnected;
     pData^.ExtraDescription := '';
 
-    pData^.Handler := TOptixSessionHandlerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}AServerAddress, AServerPort);
+    pData^.Handler := TOptixSessionHandlerThread.Create(
+      {$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}
+      AClientConfiguration.Address,
+      AClientConfiguration.Port,
+      AClientConfiguration.Version
+    );
+
     pData^.Handler.Retry := True;
     pData^.Handler.RetryDelay := 1000;
 
@@ -338,15 +346,12 @@ end;
 procedure TFormMain.ConnecttoServer1Click(Sender: TObject);
 var AForm : TFormConnectToServer;
 begin
-  {$IFDEF DEBUG}
-    AddClient({$IFDEF USETLS}'', {$ENDIF}'127.0.0.1', 2801);
-  {$ELSE}
-    {$IFDEF USETLS}
-      var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
-      try
-        if AFingerprints.Count = 0 then
-          raise Exception.Create('No existing certificate was found in the certificate store. You cannot connect ' +
-                                 'to a remote server without registering at least one certificate.');
+  {$IFDEF USETLS}
+    var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
+    try
+      if AFingerprints.Count = 0 then
+        raise Exception.Create('No existing certificate was found in the certificate store. You cannot connect ' +
+                               'to a remote server without registering at least one certificate.');
 
 //        if FormTrustedCertificates.TrustedCertificateCount = 0 then
 //              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
@@ -355,26 +360,25 @@ begin
 //                                     'server certificate and is required for mutual authentication, ensuring that ' +
 //                                     'network communications are secure and not tampered with or eavesdropped on.');
 
-        ///
-
-        AForm := TFormConnectToServer.Create(self, AFingerprints);
-      finally
-        FreeAndNil(AFingerprints);
-      end;
-    {$ELSE}
-      AForm := TFormConnectToServer.Create(self);
-    {$ENDIF}
-    try
-      AForm.ShowModal();
-      if AForm.Canceled then
-        Exit();
       ///
 
-      AddClient({$IFDEF USETLS}AForm.ComboCertificate.Text, {$ENDIF}AForm.EditServerAddress.Text, AForm.SpinPort.Value);
+      AForm := TFormConnectToServer.Create(self, AFingerprints);
     finally
-      FreeAndNil(AForm);
+      FreeAndNil(AFingerprints);
     end;
+  {$ELSE}
+    AForm := TFormConnectToServer.Create(self);
   {$ENDIF}
+  try
+    AForm.ShowModal();
+    if AForm.Canceled then
+      Exit();
+    ///
+
+    AddClient(AForm.GetClientConfiguration());
+  finally
+    FreeAndNil(AForm);
+  end;
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);

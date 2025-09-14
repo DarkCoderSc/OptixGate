@@ -26,8 +26,8 @@ object FormListen: TFormListen
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitLeft = 8
-    ExplicitTop = 297
+    ExplicitTop = 253
+    ExplicitWidth = 388
     object ButtonConnect: TButton
       Left = 152
       Top = 6
@@ -59,8 +59,8 @@ object FormListen: TFormListen
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 1
-    ExplicitWidth = 273
-    ExplicitHeight = 141
+    ExplicitWidth = 338
+    ExplicitHeight = 253
     object Label1: TLabel
       AlignWithMargins = True
       Left = 8
@@ -73,7 +73,6 @@ object FormListen: TFormListen
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Port:'
-      ExplicitTop = 54
       ExplicitWidth = 60
     end
     object LabelCertificate: TLabel
@@ -88,7 +87,6 @@ object FormListen: TFormListen
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Certificate:'
-      ExplicitTop = 126
       ExplicitWidth = 92
     end
     object Label3: TLabel
@@ -117,8 +115,7 @@ object FormListen: TFormListen
       TabOrder = 0
       Value = 2801
       OnChange = SpinPortChange
-      ExplicitTop = 69
-      ExplicitWidth = 257
+      ExplicitWidth = 322
     end
     object ComboCertificate: TComboBox
       Left = 8
@@ -128,8 +125,7 @@ object FormListen: TFormListen
       Align = alTop
       Style = csDropDownList
       TabOrder = 1
-      ExplicitTop = 141
-      ExplicitWidth = 257
+      ExplicitWidth = 322
     end
     object CheckBoxAutoStart: TCheckBox
       AlignWithMargins = True
@@ -146,8 +142,7 @@ object FormListen: TFormListen
       Checked = True
       State = cbChecked
       TabOrder = 2
-      ExplicitTop = 101
-      ExplicitWidth = 257
+      ExplicitWidth = 322
     end
     object ComboIpVersion: TComboBox
       Left = 8
@@ -162,9 +157,7 @@ object FormListen: TFormListen
       Items.Strings = (
         'IPv4'
         'IPv6')
-      ExplicitLeft = 6
-      ExplicitTop = 17
-      ExplicitWidth = 267
+      ExplicitWidth = 322
     end
     object GroupBox1: TGroupBox
       Left = 8
@@ -178,6 +171,7 @@ object FormListen: TFormListen
       Padding.Right = 8
       Padding.Bottom = 8
       TabOrder = 4
+      ExplicitWidth = 322
       object RadioBindAll: TRadioButton
         Left = 10
         Top = 25
@@ -189,8 +183,7 @@ object FormListen: TFormListen
         TabOrder = 0
         TabStop = True
         OnClick = RadioBindAllClick
-        ExplicitLeft = 9
-        ExplicitTop = 19
+        ExplicitWidth = 302
       end
       object RadioBindLocal: TRadioButton
         Left = 10
@@ -201,8 +194,7 @@ object FormListen: TFormListen
         Caption = 'Local host only'
         TabOrder = 1
         OnClick = RadioBindLocalClick
-        ExplicitLeft = 11
-        ExplicitTop = 85
+        ExplicitWidth = 302
       end
       object RadioBindCustom: TRadioButton
         Left = 10
@@ -213,8 +205,7 @@ object FormListen: TFormListen
         Caption = 'Custom:'
         TabOrder = 2
         OnClick = RadioBindCustomClick
-        ExplicitLeft = 11
-        ExplicitTop = 77
+        ExplicitWidth = 302
       end
       object EditServerBindAddress: TEdit
         AlignWithMargins = True
@@ -229,9 +220,7 @@ object FormListen: TFormListen
         Align = alTop
         Enabled = False
         TabOrder = 3
-        ExplicitLeft = 26
-        ExplicitTop = 85
-        ExplicitWidth = 298
+        ExplicitWidth = 284
       end
     end
   end
@@ -247,7 +236,7 @@ object FormListen: TFormListen
     Padding.Right = 8
     Padding.Bottom = 8
     TabOrder = 2
-    ExplicitHeight = 141
+    ExplicitHeight = 253
     object Image: TVirtualImage
       Left = 8
       Top = 8

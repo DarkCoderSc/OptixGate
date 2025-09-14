@@ -45,12 +45,31 @@ unit uFormConnectToServer;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, Vcl.Samples.Spin,
-  Generics.Collections;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask,
+  Vcl.Samples.Spin,
+
+  Optix.Sockets.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
+  TClientConfiguration = record
+    Address   : String[255];
+    Port      : Word;
+    Version   : TIpVersion;
+
+    {$IFDEF USETLS}
+    CertificateFingerprint : String[255];
+    {$ENDIF}
+  end;
+
   TFormConnectToServer = class(TForm)
     PanelLeft: TPanel;
     Image: TVirtualImage;
@@ -64,6 +83,8 @@ type
     ButtonCancel: TButton;
     LabelCertificate: TLabel;
     ComboCertificate: TComboBox;
+    ComboIpVersion: TComboBox;
+    Label3: TLabel;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -71,6 +92,7 @@ type
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SpinPortChange(Sender: TObject);
+    procedure ComboIpVersionChange(Sender: TObject);
   private
     FCanceled : Boolean;
 
@@ -81,6 +103,9 @@ type
     {@C}
     constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); reintroduce;
     {$ENDIF}
+
+    {@M}
+    function GetClientConfiguration() : TClientConfiguration;
 
     {@G}
     property Canceled : Boolean read FCanceled;
@@ -94,6 +119,17 @@ implementation
 uses uFormMain;
 
 {$R *.dfm}
+
+function TFormConnectToServer.GetClientConfiguration() : TClientConfiguration;
+begin
+  result.Address := EditServerAddress.Text;
+  result.Port    := SpinPort.Value;
+  result.Version := TIpVersion(ComboIpVersion.ItemIndex);
+
+  {$IFDEF USETLS}
+  result.CertificateFingerprint := ComboCertificate.Text;
+  {$ENDIF}
+end;
 
 procedure TFormConnectToServer.ButtonCancelClick(Sender: TObject);
 begin
@@ -178,6 +214,21 @@ end;
 
 {$IFDEF USETLS}
 { TFormConnectToServer.Create }
+procedure TFormConnectToServer.ComboIpVersionChange(Sender: TObject);
+begin
+  case TComboBox(Sender).ItemIndex of
+    0 : begin
+      if Trim(EditServerAddress.Text) = '::1' then
+        EditServerAddress.Text := '127.0.0.1';
+    end;
+
+    1 : begin
+      if Trim(EditServerAddress.Text) = '127.0.0.1' then
+        EditServerAddress.Text := '::1';
+    end;
+  end;
+end;
+
 constructor TFormConnectToServer.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
 begin
   inherited Create(AOwner);

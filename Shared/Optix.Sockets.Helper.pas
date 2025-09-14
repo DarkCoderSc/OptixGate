@@ -295,16 +295,48 @@ end;
 
 { TClientSocket.GetPeerInformations }
 procedure TClientSocket.GetPeerInformations();
-var ASockAddr    : TSockAddrIn;
-    ASockAddrLen : Integer;
 begin
-  // TODO: Ipv6
-  ASockAddrLen := SizeOf(TSockAddrIn);
-  if Winapi.Winsock2.getpeername(FSocket, TSockAddr(ASockAddr), ASockAddrLen) <> 0 then
+  var ASockAddrStorage : TSockAddrStorage;
+  var ASockAddrStorageLen : Integer := SizeOf(TSockAddrStorage);
+
+  if Winapi.Winsock2.getpeername(FSocket, PSockAddr(@ASockAddrStorage)^, ASockAddrStorageLen) <> 0 then
     raise ESocketException.Create('getpeername');
 
-  FRemotePort := ntohs(ASockAddr.sin_port);
-  FRemoteAddress := string(inet_ntoa(ASockAddr.sin_addr));
+  case ASockAddrStorage.ss_family of
+    AF_INET : begin
+      FRemotePort := ntohs(PSockAddrIn(@ASockAddrStorage)^.sin_port);
+      FRemoteAddress := string(inet_ntoa(PSockAddrIn(@ASockAddrStorage)^.sin_addr));
+    end;
+
+    AF_INET6 : begin
+      FRemotePort := ntohs(PSockAddrIn6(@ASockAddrStorage)^.sin6_port);
+
+      var ASockAddrIn6Len : Integer := SizeOf(TSockAddrIn6);
+      var AAddressString : array[0..NI_MAXHOST - 1] of WideChar;
+      var AAdressStringLength : DWORD;
+
+      if WSAAddressToStringW(
+         PSockAddr(@ASockAddrStorage)^,
+         ASockAddrIn6Len,
+         nil,
+         AAddressString,
+         AAdressStringLength
+       ) <> 0 then
+      raise ESocketException.Create('WSAAddressToStringW');
+
+      FRemoteAddress := string(AAddressString);
+
+      if FRemoteAddress[1] = '[' then
+        FRemoteAddress := Copy(FRemoteAddress, 2, Pos(']', FRemoteAddress) - 2)
+      else
+        FRemoteAddress := Copy(FRemoteAddress, 1, LastDelimiter(':', FRemoteAddress) - 1);
+    end;
+
+    else begin
+      FRemotePort := 0;
+      FRemoteAddress := '?';
+    end;
+  end;
 end;
 
 { TClientSocket.Connect }
@@ -321,7 +353,6 @@ begin
 
     ASockAddrIn6.sin6_family := AF_INET6;
     if WSAStringToAddressW(
-      TODO: Continue here
       PWideChar(FRemoteAddress), AF_INET6, nil, PSockAddr(@ASockAddrIn6)^, ASockAddrLength) <> 0 then begin
         var AAddrInfo : TAddrInfoW;
         var pAddrInfo : PAddrInfoW;
@@ -342,6 +373,8 @@ begin
       end;
 
       ///
+      ASockAddrIn6.sin6_port := WinAPI.Winsock2.htons(FRemotePort);
+
       ptrSockAddr := PSockAddr(@ASockAddrIn6);
   end else begin
     var ASockAddrIn : TSockAddrIn;

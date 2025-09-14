@@ -3,7 +3,7 @@ object FormConnectToServer: TFormConnectToServer
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Add Client'
-  ClientHeight = 199
+  ClientHeight = 228
   ClientWidth = 321
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object FormConnectToServer: TFormConnectToServer
     Left = 0
     Top = 0
     Width = 50
-    Height = 158
+    Height = 187
     Align = alLeft
     BevelOuter = bvNone
     Padding.Left = 8
@@ -35,7 +35,8 @@ object FormConnectToServer: TFormConnectToServer
       Left = 8
       Top = 8
       Width = 34
-      Height = 142
+      Height = 171
+      Margins.Top = 8
       Align = alClient
       Center = True
       ImageCollection = FormMain.ImageCollectionDark
@@ -51,7 +52,7 @@ object FormConnectToServer: TFormConnectToServer
     Left = 50
     Top = 0
     Width = 271
-    Height = 158
+    Height = 187
     Align = alClient
     BevelOuter = bvNone
     Padding.Left = 8
@@ -63,17 +64,23 @@ object FormConnectToServer: TFormConnectToServer
     ExplicitHeight = 126
     object Label1: TLabel
       Left = 8
-      Top = 8
-      Width = 83
+      Top = 46
+      Width = 255
       Height = 15
+      Margins.Left = 0
+      Margins.Top = 8
+      Margins.Right = 0
+      Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Address :'
+      ExplicitTop = 8
+      ExplicitWidth = 83
     end
     object Label2: TLabel
       AlignWithMargins = True
       Left = 8
-      Top = 54
-      Width = 60
+      Top = 92
+      Width = 255
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -81,12 +88,14 @@ object FormConnectToServer: TFormConnectToServer
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Port:'
+      ExplicitTop = 54
+      ExplicitWidth = 60
     end
     object LabelCertificate: TLabel
       AlignWithMargins = True
       Left = 8
-      Top = 101
-      Width = 91
+      Top = 139
+      Width = 255
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -94,20 +103,37 @@ object FormConnectToServer: TFormConnectToServer
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Client Certificate:'
+      ExplicitTop = 101
+      ExplicitWidth = 91
+    end
+    object Label3: TLabel
+      AlignWithMargins = True
+      Left = 8
+      Top = 8
+      Width = 255
+      Height = 15
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      Align = alTop
+      Caption = 'IP Version:'
+      ExplicitWidth = 54
     end
     object EditServerAddress: TEdit
       Left = 8
-      Top = 23
+      Top = 61
       Width = 255
       Height = 23
       Align = alTop
       TabOrder = 0
       Text = '127.0.0.1'
+      ExplicitTop = 23
       ExplicitWidth = 245
     end
     object SpinPort: TSpinEdit
       Left = 8
-      Top = 69
+      Top = 107
       Width = 255
       Height = 24
       Align = alTop
@@ -117,21 +143,41 @@ object FormConnectToServer: TFormConnectToServer
       TabOrder = 1
       Value = 2801
       OnChange = SpinPortChange
+      ExplicitTop = 69
       ExplicitWidth = 245
     end
     object ComboCertificate: TComboBox
       Left = 8
-      Top = 116
+      Top = 154
       Width = 255
       Height = 23
       Align = alTop
       Style = csDropDownList
       TabOrder = 2
+      ExplicitTop = 116
+      ExplicitWidth = 245
+    end
+    object ComboIpVersion: TComboBox
+      Left = 8
+      Top = 23
+      Width = 255
+      Height = 23
+      Align = alTop
+      Style = csDropDownList
+      ItemIndex = 0
+      TabOrder = 3
+      Text = 'IPv4'
+      OnChange = ComboIpVersionChange
+      Items.Strings = (
+        'IPv4'
+        'IPv6')
+      ExplicitLeft = 6
+      ExplicitTop = 20
     end
   end
   object PanelBottom: TPanel
     Left = 0
-    Top = 158
+    Top = 187
     Width = 321
     Height = 41
     Align = alBottom

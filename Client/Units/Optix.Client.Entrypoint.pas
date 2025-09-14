@@ -102,9 +102,9 @@ begin
     var ASessionHandler := TOptixSessionHandlerThread.Create(
       DEBUG_CERTIFICATE_PUBLIC_KEY,
       DEBUG_CERTIFICATE_PRIVATE_KEY,
-      '::1',  // IPv6 -> ::1
+      '127.0.0.1',  // or IPv6 -> ::1
       2801,
-      ipv6    // ipv6
+      ipv4          // or ipv6
     );
 
     ASessionHandler.ServerCertificateFingerprint := DEBUG_PEER_CERTIFICATE_FINGERPRINT;
