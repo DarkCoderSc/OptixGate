@@ -82,7 +82,7 @@ type
 
 implementation
 
-uses uFormMain, uFormRemoteShell, Optix.Func.Commands, Optix.Helper, Optix.Constants;
+uses uFormMain, uControlFormRemoteShell, Optix.Func.Commands, Optix.Helper, Optix.Constants;
 
 {$R *.dfm}
 

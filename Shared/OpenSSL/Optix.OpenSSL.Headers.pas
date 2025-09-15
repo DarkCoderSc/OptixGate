@@ -183,6 +183,8 @@ function PEM_write_bio_PrivateKey(pBIO : Pointer; pKey : Pointer; const enc : Po
 function PEM_read_bio_X509(pBIO: Pointer; pX509: Pointer; cb: Pointer; u: Pointer): Pointer cdecl; external LIB_CRYPTO_DLL;
 function PEM_read_bio_PrivateKey(pBIO : Pointer; pKey : Pointer; cb : Pointer; u : Pointer) : Pointer cdecl; external LIB_CRYPTO_DLL;
 function X509_digest(const data: PX509; const _type: Pointer; md: PByte; var len: cuint): Integer cdecl; external LIB_CRYPTO_DLL;
+function X509_up_ref(x: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
+function EVP_PKEY_up_ref(pkey: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
 
 //----------------------------------------------------------------------------------------------------------------------
 

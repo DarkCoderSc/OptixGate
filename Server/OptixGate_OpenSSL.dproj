@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">OptixGate_OpenSSL</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -190,7 +190,7 @@
         <DCCReference Include="Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="Units\Configs\Optix.Config.Helper.pas"/>
-        <DCCReference Include="Units\Forms\__uBaseFormControl__.pas"/>
+        <DCCReference Include="Units\Forms\Control\__uBaseFormControl__.pas"/>
         <DCCReference Include="Units\Forms\uFormMain.pas">
             <Form>FormMain</Form>
         </DCCReference>
@@ -198,32 +198,32 @@
         <DCCReference Include="Units\Forms\uFormAbout.pas">
             <Form>FormAbout</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormProcessManager.pas">
-            <Form>FormProcessManager</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormProcessManager.pas">
+            <Form>ControlFormProcessManager</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormLogs.pas">
-            <Form>FormLogs</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormLogs.pas">
+            <Form>ControlFormLogs</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormFileManager.pas">
-            <Form>FormFileManager</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormFileManager.pas">
+            <Form>ControlFormFileManager</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormControlForms.pas">
-            <Form>FormControlForms</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormControlForms.pas">
+            <Form>ControlFormControlForms</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormTransfers.pas">
-            <Form>FormTransfers</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormTransfers.pas">
+            <Form>ControlFormTransfers</Form>
         </DCCReference>
         <DCCReference Include="Units\Forms\uFormDebugThreads.pas">
             <Form>FormDebugThreads</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormTasks.pas">
-            <Form>FormTasks</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormTasks.pas">
+            <Form>ControlFormTasks</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\Dialogs\uFormDumpProcess.pas">
-            <Form>FormDumpProcess</Form>
+        <DCCReference Include="Units\Forms\Dialogs\Control\uControlFormDumpProcess.pas">
+            <Form>ControlFormDumpProcess</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormRemoteShell.pas">
-            <Form>FormRemoteShell</Form>
+        <DCCReference Include="Units\Forms\Control\uControlFormRemoteShell.pas">
+            <Form>ControlFormRemoteShell</Form>
         </DCCReference>
         <DCCReference Include="Units\Frames\uFrameRemoteShellInstance.pas">
             <Form>FrameRemoteShellInstance</Form>
@@ -238,14 +238,16 @@
         <DCCReference Include="Units\Forms\uFormGenerateNewCertificate.pas">
             <Form>FormGenerateNewCertificate</Form>
         </DCCReference>
-        <DCCReference Include="Units\Forms\uFormAuthorizedPeers.pas">
-            <Form>FormAuthorizedPeers</Form>
-        </DCCReference>
         <DCCReference Include="Units\Forms\uFormTrustedCertificates.pas">
             <Form>FormTrustedCertificates</Form>
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Units\Configs\Optix.Config.TrustedCertificatesStore.pas"/>
+        <DCCReference Include="Units\Forms\uFormServers.pas">
+            <Form>FormServers</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="Units\Configs\Optix.Config.Servers.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -279,8 +281,20 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Release" Class="ProjectFile">
                     <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Release" Class="ProjectFile">
+                    <Platform Name="Win64">
                         <RemoteDir>.\</RemoteDir>
                         <Overwrite>true</Overwrite>
                     </Platform>
@@ -299,6 +313,24 @@
                 </DeployFile>
                 <DeployFile LocalName="bins\OpenSSL\Win32\Release\OptixGate_OpenSSL.exe" Configuration="Release" Class="ProjectOutput">
                     <Platform Name="Win32">
+                        <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\OptixGate_OpenSSL.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>OptixGate_OpenSSL.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Release\OptixGate_OpenSSL.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win64">
                         <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>

@@ -67,10 +67,11 @@ type
 
     FRemoteAddress : String;
     FRemotePort    : Word;
+    FIPVersion     : TIPVersion;
 
     {$IFDEF USETLS}
+    FCertificate      : TX509Certificate;
     FSSLContext       : TOptixOpenSSLContext;
-    FX509Certificate  : TX509Certificate;
     {$ENDIF}
 
     {@M}
@@ -85,11 +86,6 @@ type
       {$IFDEF USETLS}
         FOnVerifyPeerCertificate : TOnVerifyPeerCertificate;
       {$ENDIF}
-    {$ENDIF}
-
-    {$IFDEF USETLS}
-    FPublicKey  : String;
-    FPrivateKey : String;
     {$ENDIF}
 
     {$IF not defined(CLIENT_GUI) and defined(USETLS)}
@@ -111,7 +107,7 @@ type
     function InitializePreflightRequest() : TOptixPreflightRequest; virtual; abstract;
   public
     {@C}
-    constructor Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word); overload; virtual;
+    constructor Create({$IFDEF USETLS}const ACertificate : TX509Certificate; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word; const AIPVersion : TIPVersion); overload; virtual;
 
     destructor Destroy(); override;
 
@@ -134,13 +130,13 @@ type
     {$ENDIF}
 
     {@G}
-    property RemoteAddress : String read FRemoteAddress;
-    property RemotePort    : Word   read FRemotePort;
-    property ClientId      : TGUID  read FClientId;
+    property RemoteAddress : String     read FRemoteAddress;
+    property RemotePort    : Word       read FRemotePort;
+    property IPVersion     : TIPVersion read FIpVersion;
+    property ClientId      : TGUID      read FClientId;
 
     {$IFDEF USETLS}
-    property PublicKey  : String read FPublicKey;
-    property PrivateKey : String read FPrivateKey;
+    property Certificate : TX509Certificate read FCertificate;
     {$ENDIF}
   end;
 
@@ -174,7 +170,7 @@ begin
 end;
 
 { TOptixClientThread.Create }
-constructor TOptixClientThread.Create({$IFDEF USETLS}const APublicKey : String; const APrivateKey : String; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word);
+constructor TOptixClientThread.Create({$IFDEF USETLS}const ACertificate : TX509Certificate; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word; const AIPVersion : TIPVersion);
 begin
   inherited Create();
   ///
@@ -183,8 +179,11 @@ begin
   FRetryDelay    := 5000;
   FRetryEvent    := nil;
   FClient        := nil;
+
   FRemoteAddress := ARemoteAddress;
   FRemotePort    := ARemotePort;
+  FIPVersion     := AIPVersion;
+
   FClientId      := TGUID.NewGuid();
 
   {$IFDEF CLIENT_GUI}
@@ -195,11 +194,8 @@ begin
   {$ENDIF}
 
   {$IFDEF USETLS}
-    TOptixOpenSSLHelper.LoadCertificate(APublicKey, APrivateKey, FX509Certificate);
-    FSSLContext := TOptixOpenSSLContext.Create(sslClient, FX509Certificate);
-
-    FPublicKey  := APublicKey;
-    FPrivateKey := APrivateKey;
+    FCertificate := ACertificate;
+    FSSLContext := TOptixOpenSSLContext.Create(sslClient, FCertificate);
 
     {$IFNDEF CLIENT_GUI}
     FServerCertificateFingerprint := '';
@@ -223,11 +219,10 @@ begin
   Finalize();
 
   {$IFDEF USETLS}
-  if Assigned(FSSLContext) then begin
-    TOptixOpenSSLHelper.FreeCertificate(FX509Certificate);
+  TOptixOpenSSLHelper.FreeCertificate(FCertificate);
 
+  if Assigned(FSSLContext) then
     FreeAndNil(FSSLContext);
-  end;
   {$ENDIF}
 
   ///
@@ -239,13 +234,13 @@ procedure TOptixClientThread.ThreadExecute();
 begin
   while not Terminated do begin
     try
-      FClient := TClientSocket.Create({$IFDEF USETLS}FSSLContext, {$ENDIF}FRemoteAddress, FRemotePort);
+      FClient := TClientSocket.Create({$IFDEF USETLS}FSSLContext, {$ENDIF}FRemoteAddress, FRemotePort, FIPVersion);
       try
         FClient.Connect();
         ///
 
         {$IFDEF USETLS}
-        var ASuccess := False;
+        var ASuccess : Boolean;
         var AFingerprint := FClient.PeerCertificateFingerprint;
 
         {$IFDEF CLIENT_GUI}

@@ -49,7 +49,7 @@ uses XSuperObject, Optix.Config.Helper;
 
 type
   // TODO: Create a custom iterator for..in
-  TOptixTrustedConfigCertificatesStore = class(TOptixConfigBase)
+  TOptixConfigTrustedCertificatesStore = class(TOptixConfigBase)
   private
     {@M}
     function GetCount() : Integer;
@@ -69,8 +69,8 @@ implementation
 
 uses Winapi.Windows, Optix.Helper;
 
-{ TOptixTrustedConfigCertificatesStore.GetCount }
-function TOptixTrustedConfigCertificatesStore.GetCount() : Integer;
+{ TOptixConfigTrustedCertificatesStore.GetCount }
+function TOptixConfigTrustedCertificatesStore.GetCount() : Integer;
 begin
   result := 0;
   ///
@@ -81,8 +81,8 @@ begin
   result := FJsonObject.A['Items'].Length;
 end;
 
-{ TOptixTrustedConfigCertificatesStore.GetItem }
-function TOptixTrustedConfigCertificatesStore.GetItem(AIndex: Integer): String;
+{ TOptixConfigTrustedCertificatesStore.GetItem }
+function TOptixConfigTrustedCertificatesStore.GetItem(AIndex: Integer): String;
 begin
   result := '';
 
@@ -107,14 +107,14 @@ begin
   end;
 end;
 
-{ TOptixTrustedConfigCertificatesStore.Add }
-procedure TOptixTrustedConfigCertificatesStore.Add(const AFingerprint : String);
+{ TOptixConfigTrustedCertificatesStore.Add }
+procedure TOptixConfigTrustedCertificatesStore.Add(const AFingerprint : String);
 begin
   SetItem(-1, AFingerprint);
 end;
 
-{ TOptixTrustedConfigCertificatesStore.SetItem }
-procedure TOptixTrustedConfigCertificatesStore.SetItem(AIndex: Integer; const AValue: String);
+{ TOptixConfigTrustedCertificatesStore.SetItem }
+procedure TOptixConfigTrustedCertificatesStore.SetItem(AIndex: Integer; const AValue: String);
 begin
   var AJsonArray  : ISuperArray;
 

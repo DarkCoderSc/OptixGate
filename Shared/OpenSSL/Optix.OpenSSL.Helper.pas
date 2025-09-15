@@ -75,6 +75,7 @@ type
     class procedure CheckCertificateFile(const ACertificateFile : String); static;
     class function GetPeerSha512Fingerprint(const pSSLConnection : Pointer) : String; static;
     class function GetX509Sha512Fingerprint(const pX509 : Pointer) : String; static;
+    class procedure CopyCertificate(const ASource : TX509Certificate; var ADest : TX509Certificate); static;
     class procedure FreeCertificate(var ACertificate : TX509Certificate); static;
     class function SerializeCertificateKey(const ACertificate : TX509Certificate; ACertificateType : TOpenSSLCertificateKeyType) : String; static;
     class function SerializePublicKey(const ACertificate : TX509Certificate) : String; static;
@@ -324,6 +325,33 @@ begin
 
     ///
     result := result + Format('%.2x', [Byte(ACertificateFingerpring.Sha512[i])]);
+  end;
+end;
+
+{ TOptixOpenSSLHelper.CopyCertificate }
+class procedure TOptixOpenSSLHelper.CopyCertificate(const ASource : TX509Certificate; var ADest : TX509Certificate);
+begin
+  FreeCertificate(ADest);
+  ///
+
+  ZeroMemory(@ADest, SizeOf(TX509Certificate));
+  ///
+
+  ADest.Fingerprint := Copy(ASource.Fingerprint, 1, Length(ASource.Fingerprint));
+  ADest.C           := Copy(ASource.C, 1, Length(ASource.C));
+  ADest.O           := Copy(ASource.O, 1, Length(ASource.O));
+  ADest.CN          := Copy(ASource.CN, 1, Length(ASource.CN));
+
+  if ASource.pX509 <> nil then begin
+    X509_up_ref(ASource.pX509);
+
+    ADest.pX509 := ASource.pX509;
+  end;
+
+  if ASource.pPrivKey <> nil then begin
+    EVP_PKEY_up_ref(ASource.pPrivKey);
+
+    ADest.pPrivKey := ASource.pPrivKey;
   end;
 end;
 

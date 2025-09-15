@@ -45,12 +45,31 @@ unit uFormConnectToServer;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask, Vcl.Samples.Spin,
-  Generics.Collections;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask,
+  Vcl.Samples.Spin,
+
+  Optix.Sockets.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
+  TClientConfiguration = record
+    Address   : String;
+    Port      : Word;
+    Version   : TIpVersion;
+
+    {$IFDEF USETLS}
+    CertificateFingerprint : String;
+    {$ENDIF}
+  end;
+
   TFormConnectToServer = class(TForm)
     PanelLeft: TPanel;
     Image: TVirtualImage;
@@ -64,6 +83,8 @@ type
     ButtonCancel: TButton;
     LabelCertificate: TLabel;
     ComboCertificate: TComboBox;
+    ComboIpVersion: TComboBox;
+    Label3: TLabel;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -71,6 +92,7 @@ type
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SpinPortChange(Sender: TObject);
+    procedure ComboIpVersionChange(Sender: TObject);
   private
     FCanceled : Boolean;
 
@@ -82,6 +104,9 @@ type
     constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); reintroduce;
     {$ENDIF}
 
+    {@M}
+    function GetClientConfiguration() : TClientConfiguration;
+
     {@G}
     property Canceled : Boolean read FCanceled;
   end;
@@ -91,9 +116,23 @@ var
 
 implementation
 
-uses uFormMain;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+function TFormConnectToServer.GetClientConfiguration() : TClientConfiguration;
+begin
+  result.Address := EditServerAddress.Text;
+  result.Port    := SpinPort.Value;
+  result.Version := TIpVersion(ComboIpVersion.ItemIndex);
+
+  {$IFDEF USETLS}
+  result.CertificateFingerprint := ComboCertificate.Text;
+  {$ENDIF}
+end;
 
 procedure TFormConnectToServer.ButtonCancelClick(Sender: TObject);
 begin
@@ -102,10 +141,17 @@ end;
 
 procedure TFormConnectToServer.ButtonConnectClick(Sender: TObject);
 begin
-  if String.IsNullOrWhiteSpace(EditServerAddress.Text) then begin
+  if String.IsNullOrWhiteSpace(EditServerAddress.Text) or
+     not TOptixSocketHelper.IsValidHost(EditServerAddress.Text, TIPVersion(ComboIpVersion.ItemIndex))
+  then begin
     EditServerAddress.SetFocus();
 
-    raise Exception.Create('You must specify a server hostname.');
+    raise Exception.Create(
+      'You must specify a valid server address. For IPv4, use an address such as "127.0.0.1" for localhost or any ' +
+      'valid LAN or WAN IPv4 address. For IPv6, use "::1" for localhost or a full IPv6 address such as ' +
+      '"fd00:abcd:1234::100". You can also use a hostname that resolves to the appropriate IP version depending on ' +
+      'the selected IP version mode.'
+    );
   end;
 
   if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
@@ -176,9 +222,23 @@ begin
     TSpinEdit(Sender).Value := 65535;
 end;
 
-{$IFDEF USETLS}
 { TFormConnectToServer.Create }
-constructor TFormConnectToServer.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
+procedure TFormConnectToServer.ComboIpVersionChange(Sender: TObject);
+begin
+  case TComboBox(Sender).ItemIndex of
+    0 : begin
+      if Trim(EditServerAddress.Text) = '::1' then
+        EditServerAddress.Text := '127.0.0.1';
+    end;
+
+    1 : begin
+      if Trim(EditServerAddress.Text) = '127.0.0.1' then
+        EditServerAddress.Text := '::1';
+    end;
+  end;
+end;
+
+{$IFDEF USETLS}constructor TFormConnectToServer.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
 begin
   inherited Create(AOwner);
   ///
@@ -190,7 +250,6 @@ begin
 
   for var AFingerprint in ACertificatesFingerprints do
     ComboCertificate.Items.Add(AFingerprint);
-end;
-{$ENDIF}
+end;{$ENDIF}
 
 end.

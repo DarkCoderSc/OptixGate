@@ -81,6 +81,7 @@ type
     class procedure GetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime); static;
     class function TryGetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean; static;
     class function UniqueFileName(const AFileName : String) : String; static;
+    class function ExpandPath(const APath : String) : String; static;
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
@@ -500,5 +501,23 @@ begin
     Inc(i);
   until (NOT FileExists(result));
 end;
+
+{ TFileSystemHelper.ExpandPath }
+class function TFileSystemHelper.ExpandPath(const APath : String) : String;
+begin
+  var APathLength := ExpandEnvironmentStrings(PWideChar(APath), nil, 0);
+  if APathLength = 0 then
+    Exit(APath);
+  ///
+
+  SetLength(Result, APathLength - 1);
+
+  if ExpandEnvironmentStrings(PWideChar(APath), PWideChar(result), APathLength) = 0 then
+    result := APath;
+
+  ///
+  result := IncludeTrailingPathDelimiter(result);
+end;
+
 
 end.

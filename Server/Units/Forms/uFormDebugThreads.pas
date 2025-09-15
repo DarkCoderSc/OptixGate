@@ -45,10 +45,16 @@ unit uFormDebugThreads;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.ExtCtrls, VirtualTrees.Types, Vcl.Menus;
+  System.SysUtils, System.Variants, System.Classes, System.Types,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ExtCtrls,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -84,6 +90,9 @@ type
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure PopupMenuPopup(Sender: TObject);
     procedure Terminate1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     FRefreshTick : UInt64;
@@ -99,8 +108,16 @@ var
 
 implementation
 
-uses Optix.Thread, Optix.Constants, Optix.Helper, System.StrUtils, uFormMain, Optix.Protocol.SessionHandler,
-     Optix.Protocol.Worker.FileTransfer {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.DateUtils, System.Math, System.StrUtils,
+
+  uFormMain,
+
+  Optix.Thread, Optix.Constants, Optix.Helper, Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer
+
+  {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -193,6 +210,15 @@ begin
   VST.Clear();
 end;
 
+procedure TFormDebugThreads.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
+end;
+
 procedure TFormDebugThreads.FormShow(Sender: TObject);
 begin
   FRefreshTick := 0;
@@ -225,6 +251,9 @@ procedure TFormDebugThreads.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetC
   Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   var AColor := clNone;
 
@@ -243,6 +272,26 @@ begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
+procedure TFormDebugThreads.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareValue(pData1^.Id, pData2^.Id);
+      1 : Result := CompareText(pData1^.ClassName, pData2^.ClassName);
+      2 : Result := Ord(pData1^.Running) - Ord(pData2^.Running);
+      3 : Result := CompareDateTime(pData1^.CreatedTime, pData2^.CreatedTime);
+      4 : Result := CompareValue(Cardinal(pData1^.Priority), Cardinal(pData2^.Priority));
+    end;
+  end;
+end;
+
 procedure TFormDebugThreads.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
@@ -251,10 +300,10 @@ end;
 procedure TFormDebugThreads.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  if (Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected) then
-    Exit();
-
   var pData := PTreeData(Node.GetData);
+
+  if not Assigned(pData) or ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) then
+    Exit();
 
   case Column of
     0 : begin
@@ -301,12 +350,14 @@ begin
 
   CellText := '';
 
-  case Column of
-    0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
-    1 : CellText := pData^.ClassName;
-    2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
-    3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
-    4 : CellText := ThreadPriorityToString(pData^.Priority);
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
+      1 : CellText := pData^.ClassName;
+      2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
+      3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
+      4 : CellText := ThreadPriorityToString(pData^.Priority);
+    end;
   end;
 
   ///

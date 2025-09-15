@@ -239,10 +239,9 @@ begin
       if not Assigned(AThread) then
         continue;
 
-      ///
-      AList.Remove(AThread);
       AThreadsToFlush.Add(AThread);
     end;
+    AList.CLear();
   finally
     OPTIX_THREAD_HIVE.UnlockList();
   end;

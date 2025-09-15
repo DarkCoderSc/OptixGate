@@ -45,10 +45,16 @@ unit uFormTrustedCertificates;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, VirtualTrees.Types;
+  System.SysUtils, System.Variants, System.Classes, System.Types,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -75,6 +81,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure PopupMenuPopup(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
@@ -95,14 +104,17 @@ var
 
 implementation
 
-uses Optix.Helper, Optix.Constants, Optix.Config.Helper, Optix.Config.TrustedCertificatesStore
-     {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.Helper, Optix.Constants, Optix.Config.Helper, Optix.Config.TrustedCertificatesStore
+  {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
 procedure TFormTrustedCertificates.Save();
 begin
-  var AConfig := TOptixTrustedConfigCertificatesStore.Create();
+  var AConfig := TOptixConfigTrustedCertificatesStore.Create();
   try
     for var pNode in VST.Nodes do begin
       var pData := PTreeData(pNode.GetData);
@@ -122,7 +134,7 @@ begin
   VST.Clear();
   ///
 
-  var AConfig := TOptixTrustedConfigCertificatesStore(CONFIG_HELPER.Read('TrustedCertificates'));
+  var AConfig := TOptixConfigTrustedCertificatesStore(CONFIG_HELPER.Read('TrustedCertificates'));
   if not Assigned(AConfig) then
     Exit();
   try
@@ -214,6 +226,16 @@ begin
   Load();
 end;
 
+procedure TFormTrustedCertificates.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
+end;
+
 procedure TFormTrustedCertificates.PopupMenuPopup(Sender: TObject);
 begin
   Remove1.Visible := VST.FocusedNode <> nil;
@@ -235,6 +257,22 @@ end;
 procedure TFormTrustedCertificates.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormTrustedCertificates.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+  Column: TColumnIndex; var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.Fingerprint, pData2^.Fingerprint);
+    end;
+  end;
 end;
 
 procedure TFormTrustedCertificates.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -266,8 +304,10 @@ begin
 
   var pData := PTreeData(Node.GetData);
 
-  case Column of
-    0 : CellText := pData^.Fingerprint;
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := pData^.Fingerprint;
+    end;
   end;
 
   CellText := DefaultIfEmpty(CellText);

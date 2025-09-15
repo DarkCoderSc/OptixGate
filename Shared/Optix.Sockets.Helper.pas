@@ -45,20 +45,32 @@ unit Optix.Sockets.Helper;
 
 interface
 
-uses Winapi.Windows, Winapi.Winsock2, System.Classes, System.SysUtils, XSuperObject, Optix.Protocol.Packet
-     {$IFDEF USETLS},Optix.OpenSSL.Handler, Optix.OpenSSL.Context{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Winapi.Windows, Winapi.Winsock2,
+
+  XSuperObject,
+
+  Optix.Protocol.Packet, Optix.WinApiEx {$IFDEF USETLS},Optix.OpenSSL.Handler, Optix.OpenSSL.Context{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 const PACKET_SIZE = 8192;
 
 type
   TClientSocket = class;
 
+  TIpVersion = (
+    ipv4,
+    ipv6
+  );
+
   TSocketBase = class
-  private
-    FSocket     : TSocket;
-    FIdentifier : TGUID;
-    FData       : Pointer;
   protected
+    FSocket  : TSocket;
+    FVersion : TIPVersion;
+
     {@M}
     procedure CreateSocket();
   public
@@ -66,15 +78,11 @@ type
     procedure Close(); overload;
 
     {@C}
-    constructor Create();
+    constructor Create(const AVersion : TIPVersion);
     destructor Destroy(); override;
 
     {@G}
-    property Socket     : TSocket read FSocket;
-    property Identifier : TGUID   read FIdentifier;
-
-    {@G/S}
-    property Data : Pointer read FData write FData;
+    property Socket : TSocket read FSocket;
   end;
 
   TServerSocket = class(TSocketBase)
@@ -83,7 +91,7 @@ type
     FBindPort    : Word;
   public
     {@C}
-    constructor Create(const ABindAddress : String; const ABindPort : Word); overload;
+    constructor Create(const ABindAddress : String; const ABindPort : Word; const AVersion : TIPVersion); overload;
 
     {@M}
     procedure Listen();
@@ -108,16 +116,14 @@ type
     procedure GetPeerInformations();
 
     {$IFDEF USETLS}
-    {@C}
-    constructor Create(const ASSLContext : TOptixOpenSSLContext); overload;
-
     {@M}
     function GetPeerCertificateFingerprint() : String;
     {$ENDIF}
   public
     {@C}
-    constructor Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF}const ARemoteAddress : String; const ARemotePort : word); overload;
-    constructor Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF}const ASocket : TSocket); overload;
+    constructor Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF} const ARemoteAddress : String; const ARemotePort : word; const AVersion : TIPVersion); overload;
+    constructor Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF} const ASocket : TSocket); overload;
+
     {$IFDEF USETLS}
     destructor Destroy(); override;
     {$ENDIF}
@@ -154,33 +160,43 @@ type
     property RemotePort    : Word   read FRemotePort;
 
     {$IFDEF USETLS}
+    {@G}
     property PeerCertificateFingerprint : String read GetPeerCertificateFingerprint;
     {$ENDIF}
   end;
 
+  TOptixSocketHelper = class
+  public
+    {@M}
+    class function IsValidHost(const AValue : String; const AIPVersion : TIPVersion) : Boolean; static;
+  end;
+
 implementation
 
-uses Optix.Sockets.Exceptions
-     {$IFDEF USETLS}, Optix.OpenSSL.Headers, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.ZLib,
 
+  Optix.Sockets.Exceptions
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Headers, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TSocketBase *)
 
 { TSocketBase.Create }
-constructor TSocketBase.Create();
+constructor TSocketBase.Create(const AVersion : TIPVersion);
 begin
-  self.CreateSocket();
+  FVersion := AVersion;
+
   ///
-
-  FIdentifier := TGUID.NewGuid();
-
-  FData := nil;
+  CreateSocket();
 end;
 
 { TSocketBase.Destroy }
 destructor TSocketBase.Destroy();
 begin
-  self.Close();
+  Close();
 
   ///
   inherited Destroy();
@@ -204,7 +220,11 @@ begin
   FSocket := INVALID_SOCKET;
   ///
 
-  var ASocket := Winapi.Winsock2.socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  var AFamily := AF_INET;
+  if FVersion = ipv6 then
+    AFamily := AF_INET6;
+
+  var ASocket := Winapi.Winsock2.socket(AFamily, SOCK_STREAM, IPPROTO_TCP);
   if (ASocket = INVALID_SOCKET) then
     raise ESocketException.Create('socket');
 
@@ -227,27 +247,43 @@ end;
 (* TClientSocket *)
 
 { TClientSocket.Create }
-constructor TClientSocket.Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF}const ARemoteAddress : String; const ARemotePort : word);
+constructor TClientSocket.Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF} const ARemoteAddress : String; const ARemotePort : word; const AVersion : TIPVersion);
 begin
-  {$IFNDEF USETLS}inherited{$ENDIF} Create({$IFDEF USETLS}ASSLContext{$ENDIF});
+  inherited Create(AVersion);
   ///
+
+  {$IFDEF USETLS}
+  FSSLContext := ASSLContext;
+  FSSLHandler := nil;
+  {$ENDIF}
 
   FRemoteAddress := ARemoteAddress;
   FRemotePort    := ARemotePort;
 end;
 
 { TClientSocket.Create }
-constructor TClientSocket.Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF}const ASocket : TSocket);
+constructor TClientSocket.Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF} const ASocket : TSocket);
 begin
-  {$IFNDEF USETLS}inherited{$ENDIF} Create({$IFDEF USETLS}ASSLContext{$ENDIF});
-  ///
-
   FSocket := ASocket;
 
+  // Identify IP Version from socket handle:
+  var ASockAddrStorage : TSockAddrStorage;
+  var ALen : Integer;
+
+  ALen := SizeOf(TSockAddrStorage);
+  if getsockname(FSocket, PSockAddr(@ASockAddrStorage)^, ALen) = SOCKET_ERROR then
+    raise ESocketException.Create('getsockname');
+
+  if ASockAddrStorage.ss_family = AF_INET6 then
+    FVersion := ipv6
+  else
+    FVersion := ipv4;
+
   ///
-  self.GetPeerInformations();
+  GetPeerInformations();
 
   {$IFDEF USETLS}
+  FSSLContext := ASSLContext;
   FSSLHandler := TOptixOpenSSLHandler.Create(FSSLContext, FSocket);
   FSSLHandler.Connect();
   {$ENDIF}
@@ -255,36 +291,107 @@ end;
 
 { TClientSocket.GetPeerInformations }
 procedure TClientSocket.GetPeerInformations();
-var ASockAddr    : TSockAddrIn;
-    ASockAddrLen : Integer;
 begin
-  ASockAddrLen := SizeOf(TSockAddrIn);
-  if Winapi.Winsock2.getpeername(FSocket, TSockAddr(ASockAddr), ASockAddrLen) <> 0 then
+  var ASockAddrStorage : TSockAddrStorage;
+  var ASockAddrStorageLen : Integer := SizeOf(TSockAddrStorage);
+
+  if Winapi.Winsock2.getpeername(FSocket, PSockAddr(@ASockAddrStorage)^, ASockAddrStorageLen) <> 0 then
     raise ESocketException.Create('getpeername');
 
-  FRemotePort := ntohs(ASockAddr.sin_port);
-  FRemoteAddress := string(inet_ntoa(ASockAddr.sin_addr));
+  case ASockAddrStorage.ss_family of
+    AF_INET : begin
+      FRemotePort := ntohs(PSockAddrIn(@ASockAddrStorage)^.sin_port);
+      FRemoteAddress := string(inet_ntoa(PSockAddrIn(@ASockAddrStorage)^.sin_addr));
+    end;
+
+    AF_INET6 : begin
+      FRemotePort := ntohs(PSockAddrIn6(@ASockAddrStorage)^.sin6_port);
+
+      var ASockAddrIn6Len : Integer := SizeOf(TSockAddrIn6);
+      var AAddressString : array[0..NI_MAXHOST - 1] of WideChar;
+      var AAdressStringLength := DWORD(NI_MAXHOST);
+
+      if WSAAddressToStringW(
+         PSockAddr(@ASockAddrStorage)^,
+         ASockAddrIn6Len,
+         nil,
+         AAddressString,
+         AAdressStringLength
+       ) <> 0 then
+      raise ESocketException.Create('WSAAddressToStringW');
+
+      FRemoteAddress := string(AAddressString);
+
+      var idx: Integer := Pos(']', FRemoteAddress);
+      if (idx > 1) then
+        FRemoteAddress := Copy(FRemoteAddress, 2, idx - 2)
+      else
+        FRemoteAddress := Copy(FRemoteAddress, 1, LastDelimiter(':', FRemoteAddress) - 1);
+    end;
+    else begin
+      FRemotePort := 0;
+      FRemoteAddress := '?';
+    end;
+  end;
 end;
 
 { TClientSocket.Connect }
 procedure TClientSocket.Connect();
-var ASockAddrIn : TSockAddrIn;
 begin
-  ZeroMemory(@ASockAddrIn, SizeOf(TSockAddrIn));
+  var ptrSockAddr     : PSockAddr;
+  var ASockAddrLength : Integer;
 
-  ASockAddrIn.sin_port        := WinAPI.Winsock2.htons(FRemotePort);
-  ASockAddrIn.sin_family      := AF_INET;
-  ASockAddrIn.sin_addr.S_addr := WinAPI.Winsock2.inet_addr(PAnsiChar(AnsiString(FRemoteAddress)));
+  if FVersion = ipv6 then begin
+    var ASockAddrIn6 : TSockAddrIn6;
+    ASockAddrLength := SizeOf(TSockAddrIn6);
+    ZeroMemory(@ASockAddrIn6, ASockAddrLength);
+    ///
 
-  // Resolve Host if any
-  if ASockAddrIn.sin_addr.S_addr = INADDR_NONE then begin
-    var AHostEnt := Winapi.Winsock2.GetHostByName(PAnsiChar(AnsiString(FRemoteAddress)));
-    if AHostEnt <> nil then
-      ASockAddrIn.sin_addr.S_addr := Integer(Pointer(AHostEnt^.h_addr^)^);
+    var AAddrInfo : TAddrInfoW;
+    var pAddrInfo : PAddrInfoW;
+
+    ZeroMemory(@AAddrInfo, SizeOf(TAddrInfoW));
+
+    AAddrInfo.ai_family   := AF_INET6;
+    AAddrInfo.ai_socktype := SOCK_STREAM;
+    AAddrInfo.ai_protocol := IPPROTO_TCP;
+
+    // We could use it for ipv4 too. But I don't..
+    if GetAddrInfoW(PWideChar(FRemoteAddress), nil, AAddrInfo, pAddrInfo) <> 0 then
+      raise ESocketException.Create('GetAddrInfoW');
+    try
+      CopyMemory(@ASockAddrIn6, pAddrInfo^.ai_addr, pAddrInfo^.ai_addrlen);
+    finally
+      FreeAddrInfoW(pAddrInfo^);
+    end;
+
+    ///
+    ASockAddrIn6.sin6_port := WinAPI.Winsock2.htons(FRemotePort);
+
+    ptrSockAddr := PSockAddr(@ASockAddrIn6);
+  end else begin
+    var ASockAddrIn : TSockAddrIn;
+    ASockAddrLength := SizeOf(TSockAddrIn);
+    ZeroMemory(@ASockAddrIn, ASockAddrLength);
+    ///
+
+    ASockAddrIn.sin_port        := WinAPI.Winsock2.htons(FRemotePort);
+    ASockAddrIn.sin_family      := AF_INET;
+    ASockAddrIn.sin_addr.S_addr := WinAPI.Winsock2.inet_addr(PAnsiChar(AnsiString(FRemoteAddress)));
+
+    // Resolve Host if any
+    if ASockAddrIn.sin_addr.S_addr = INADDR_NONE then begin
+      var AHostEnt := Winapi.Winsock2.GetHostByName(PAnsiChar(AnsiString(FRemoteAddress)));
+      if AHostEnt <> nil then
+        ASockAddrIn.sin_addr.S_addr := Integer(Pointer(AHostEnt^.h_addr^)^);
+    end;
+
+    ///
+    ptrSockAddr := PSockAddr(@ASockAddrIn);
   end;
 
   // Attempt to connect to remote server
-  if (WinAPI.Winsock2.connect(FSocket, TSockAddr(ASockAddrIn), SizeOf(TSockAddrIn)) = SOCKET_ERROR) then
+  if (WinAPI.Winsock2.connect(FSocket, ptrSockAddr^, ASockAddrLength) = SOCKET_ERROR) then
     raise ESocketException.Create('connect');
 
   {$IFDEF USETLS}
@@ -295,17 +402,7 @@ end;
 
 {$IFDEF USETLS}
 
-(* TClientSocket.OpenSSL *)
-
-{ TClientSocket.Create }
-constructor TClientSocket.Create(const ASSLContext : TOptixOpenSSLContext);
-begin
-  inherited Create();
-  ///
-
-  FSSLContext := ASSLContext;
-  FSSLHandler := nil;
-end;
+(* TClientSocket.__OpenSSL__ *)
 
 { TClientSocket.Destroy }
 destructor TClientSocket.Destroy();
@@ -361,10 +458,6 @@ end;
 
 { TClientSocket.SendBuffer }
 procedure TClientSocket.SendBuffer(const pValue : Pointer; const ABufferSize : UInt64);
-var ABytesWritten : UInt64;
-    AChunkSize    : UInt64;
-    pOffset       : PByte;
-    ACompleted    : Boolean;
 begin
   if not Assigned(pValue) or (ABufferSize = 0) then
     Exit();
@@ -372,28 +465,25 @@ begin
 
   Send(ABufferSize, SizeOf(UInt64));
 
-  ABytesWritten := 0;
+  var ABytesWritten : UInt64 := 0;
+  var AChunkSize : UInt64;
   repeat
     AChunkSize := (ABufferSize - ABytesWritten);
 
     if AChunkSize > PACKET_SIZE then
       AChunkSize := PACKET_SIZE;
 
-    pOffset := PByte(NativeUInt(pValue) + ABytesWritten);
+    var pOffset := PByte(NativeUInt(pValue) + ABytesWritten);
 
     Send(PByte(pOffset)^, AChunkSize);
 
+    ///
     Inc(ABytesWritten, AChunkSize);
-
-    ACompleted := (ABytesWritten >= ABufferSize);
-  until ACompleted;
+  until ABytesWritten >= ABufferSize;
 end;
 
 { TClientSocket.ReceiveBuffer }
 procedure TClientSocket.ReceiveBuffer(var pBuffer : Pointer; var ABufferSize : UInt64);
-var ABytesRead  : UInt64;
-    ACompleted  : Boolean;
-    AChunkSize  : UInt64;
 begin
   Recv(ABufferSize, SizeOf(UInt64));
   if ABufferSize = 0 then
@@ -402,7 +492,8 @@ begin
 
   GetMem(pBuffer, ABufferSize);
 
-  ABytesRead := 0;
+  var ABytesRead := UInt64(0);
+  var AChunkSize : UInt64;
   repeat
     AChunkSize := (ABufferSize - ABytesRead);
 
@@ -411,10 +502,9 @@ begin
 
     Recv(PByte(NativeUInt(pBuffer) + ABytesRead)^, AChunkSize);
 
+    ///
     Inc(ABytesRead, AChunkSize);
-
-    ACompleted := (ABytesRead >= ABufferSize);
-  until ACompleted;
+  until ABytesRead >= ABufferSize;
 end;
 
 { TClientSocket.SendStream }
@@ -434,13 +524,16 @@ end;
 
 { TClientSocket.ReceiveStream }
 procedure TClientSocket.ReceiveStream(var AValue : TMemoryStream);
-var pBuffer     : Pointer;
-    ABufferSize : UInt64;
 begin
   if not Assigned(AValue) then
     AValue := TMemoryStream.Create();
   ///
+
+  var pBuffer     : Pointer;
+  var ABufferSize : UInt64;
+
   ReceiveBuffer(pBuffer, ABufferSize);
+
   if Assigned(pBuffer) and (ABufferSize > 0) then begin
     try
       AValue.Write(PByte(pBuffer)^, ABufferSize);
@@ -456,7 +549,11 @@ end;
 { TClientSocket.SendString }
 procedure TClientSocket.SendString(const AString : String);
 begin
-  SendBuffer(PWideChar(AString), Length(AString) * SizeOf(WideChar));
+  var ABuffer := ZCompressStr(AString, TZCompressionLevel.zcDefault);
+
+  SendBuffer(@ABuffer[0], Length(ABuffer));
+
+  // SendBuffer(PWideChar(AString), Length(AString) * SizeOf(WideChar));
 end;
 
 { TClientSocket.RecvString }
@@ -465,15 +562,23 @@ begin
   result := '';
   ///
 
+  var pCompressedBuffer := nil;
+  var ACompressedBufferSize : UInt64;
+
   var pBuffer := nil;
-  var ABufferSize : UInt64;
+  var ABufferSize : Integer;
   try
-    ReceiveBuffer(pBuffer, ABufferSize);
+    ReceiveBuffer(pCompressedBuffer, ACompressedBufferSize);
+
+    ZDecompress(pCompressedBuffer, ACompressedBufferSize, pBuffer, ABufferSize);
 
     SetString(result, PWideChar(pBuffer), ABufferSize div SizeOf(WideChar));
   finally
     if Assigned(pBuffer) then
       FreeMem(pBuffer, ABufferSize);
+
+    if Assigned(pCompressedBuffer) then
+      FreeMem(pCompressedBuffer, ACompressedBufferSize);
   end;
 end;
 
@@ -483,6 +588,7 @@ begin
   if not Assigned(AJson) then
     Exit();
 
+  ///
   SendString(AJson.AsJSON());
 end;
 
@@ -536,7 +642,7 @@ end;
 procedure TClientSocket.ReceivePacket(var APacketBody : ISuperObject; const ABlockUntilDataAvailable : Boolean = False);
 begin
   if not ABlockUntilDataAvailable then
-    if not self.IsDataAvailable() then
+    if not IsDataAvailable() then
       Exit();
 
   APacketBody := ReceiveJson();
@@ -590,7 +696,9 @@ begin
   else begin
     {$IFDEF USETLS}
       if Assigned(FSSLHandler) then
-        result := FSSLHandler.IsConnectionAlive();
+        result := FSSLHandler.IsConnectionAlive()
+      else
+        result := False;
     {$ELSE}
       var ADummyBuffer : array[0..0] of Byte;
       ARet := Winapi.Winsock2.recv(FSocket, ADummyBuffer, 1, MSG_PEEK);
@@ -607,9 +715,9 @@ end;
 (* TServerSocket *)
 
 { TServerSocket.Create }
-constructor TServerSocket.Create(const ABindAddress : String; const ABindPort : Word);
+constructor TServerSocket.Create(const ABindAddress : String; const ABindPort : Word; const AVersion : TIPVersion);
 begin
-  inherited Create();
+  inherited Create(AVersion);
   ///
 
   FBindAddress := ABindAddress;
@@ -618,21 +726,48 @@ end;
 
 { TServerSocket.Listen }
 procedure TServerSocket.Listen();
-var ASockAddrIn : TSockAddrIn;
 begin
+  var ptrSockAddr     : PSockAddr;
+  var ASockAddrLength : Integer;
   try
-    ZeroMemory(@ASockAddrIn, SizeOf(TSockAddrIn));
+    if FVersion = ipv6 then begin
+      var ASockAddrIn6: TSockAddrIn6;
+      ZeroMemory(@ASockAddrIn6, SizeOf(TSockAddrIn6));
+      ///
 
-    ASockAddrIn.sin_port   := WinAPI.Winsock2.htons(FBindPort);
-    ASockAddrIn.sin_family := AF_INET;
+      ASockAddrLength := SizeOf(TSockAddrIn6);
 
-    if (FBindAddress = '0.0.0.0') or (FBindAddress = '') then
-      ASockAddrIn.sin_addr.S_addr := INADDR_ANY
-    else
-      ASockAddrIn.sin_addr.S_addr := WinAPI.Winsock2.inet_addr(PAnsiChar(AnsiString(FBindAddress)));
+      ASockAddrIn6.sin6_family := AF_INET6;
+      ASockAddrIn6.sin6_port   := Winapi.Winsock2.htons(FBindPort);
+
+      if (FBindAddress = '') or (FBindAddress = '::') then
+        Move(in6addr_any, ASockAddrIn6.sin6_addr, SizeOf(ASockAddrIn6.sin6_addr))
+      else
+        if WSAStringToAddressW(PWideChar(FBindAddress), AF_INET6, nil, PSockAddr(@ASockAddrIn6)^, ASockAddrLength) <> 0 then
+          raise ESocketException.Create('WSAStringToAddressW');
+
+      ///
+      ptrSockAddr := PSockAddr(@ASockAddrIn6);
+    end else begin
+      var ASockAddrIn : TSockAddrIn;
+      ZeroMemory(@ASockAddrIn, SizeOf(TSockAddrIn));
+      ///
+
+      ASockAddrIn.sin_port   := WinAPI.Winsock2.htons(FBindPort);
+      ASockAddrIn.sin_family := AF_INET;
+
+      if (FBindAddress = '0.0.0.0') or (FBindAddress = '') then
+        ASockAddrIn.sin_addr.S_addr := INADDR_ANY
+      else
+        ASockAddrIn.sin_addr.S_addr := WinAPI.Winsock2.inet_addr(PAnsiChar(AnsiString(FBindAddress)));
+
+      ///
+      ptrSockAddr := PSockAddr(@ASockAddrIn);
+      ASockAddrLength := SizeOf(TSockAddrIn);
+    end;
 
     // Bind Socket
-    if Winapi.Winsock2.bind(FSocket, TSockAddr(ASockAddrIn), SizeOf(TSockAddrIn)) = SOCKET_ERROR then
+    if Winapi.Winsock2.bind(FSocket, ptrSockAddr^, ASockAddrLength) = SOCKET_ERROR then
       raise ESocketException.Create('bind');
 
     // Listen on Socket
@@ -653,19 +788,56 @@ end;
 
 { TServerSocket.AcceptClient }
 function TServerSocket.AcceptClient({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext{$ENDIF}) : TClientSocket;
-var ASockAddrIn : TSockAddrIn;
 begin
-  // Wait until a new client connects
-  ZeroMemory(@ASockAddrIn, SizeOf(TSockAddrIn));
+  var ptrSockAddr     : PSockAddr;
+  var ASockAddrLength : Integer;
 
-  var ALen : Integer := SizeOf(TSockAddrIn);
+  if FVersion = ipv6 then begin
+    var ASockAddrIn6: TSockAddrIn6;
+    ASockAddrLength := SizeOf(TSockAddrIn6);
 
-  var AClient := Winapi.Winsock2.accept(FSocket, @ASockAddrIn, @ALen);
+    ZeroMemory(@ASockAddrIn6, ASockAddrLength);
+    ///
+
+    ptrSockAddr := PSockAddr(@ASockAddrIn6);
+  end else begin
+    var ASockAddrIn : TSockAddrIn;
+    ASockAddrLength := SizeOf(TSockAddrIn);
+
+    ZeroMemory(@ASockAddrIn, ASockAddrLength);
+    ///
+
+    ptrSockAddr := PSockAddr(@ASockAddrIn);
+  end;
+
+  var AClient := Winapi.Winsock2.accept(FSocket, ptrSockAddr, @ASockAddrLength);
   if AClient = INVALID_SOCKET then
     raise ESocketException.Create('accept');
 
   ///
   result := TClientSocket.Create({$IFDEF USETLS}ASSLContext, {$ENDIF}AClient);
+end;
+
+(* TOptixSocketHelper *)
+
+{ TOptixSocketHelper.IsValidHost }
+class function TOptixSocketHelper.IsValidHost(const AValue : String; const AIPVersion : TIPVersion) : Boolean;
+begin
+  var AAddrInfo : TAddrInfoW;
+  var pDummy    : PAddrInfoW;
+  ZeroMemory(@AAddrInfo, SizeOf(TAddrInfoW));
+  ///
+
+  case AIPVersion of
+    ipv4 : AAddrInfo.ai_family  := AF_INET;
+    ipv6 : AAddrInfo.ai_family := AF_INET6;
+  end;
+
+  AAddrInfo.ai_socktype := SOCK_STREAM;
+
+  result := GetAddrInfoW(PWideChar(AValue), nil, AAddrInfo, pDummy) = 0;
+  if result then
+    FreeAddrInfoW(pDummy^);
 end;
 
 (* Initialization / Finalization *)

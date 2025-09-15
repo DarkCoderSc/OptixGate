@@ -45,8 +45,16 @@ unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
-uses System.Classes, Generics.Collections, Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands,
-     Optix.Protocol.Client.Handler;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Generics.Collections,
+
+  Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands, Optix.Protocol.Client.Handler
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixFileTransferOrchestratorThread = class(TOptixClientThread)
@@ -69,9 +77,17 @@ type
 
 implementation
 
-uses System.SysUtils, System.SyncObjs, Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Protocol.Packet,
-     Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Sockets.Exceptions
-     {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.SyncObjs, System.Diagnostics,
+
+  Winapi.Windows,
+
+  Optix.Exceptions, Optix.Protocol.Packet, Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier,
+  Optix.Sockets.Exceptions
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 { TOptixFileTransferOrchestratorThread.AddTransfer }
 procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixCommandTransfer);
@@ -253,8 +269,18 @@ end;
 { TOptixFileTransferOrchestratorThread.Finalize }
 constructor TOptixFileTransferOrchestratorThread.Create(const AHandler : TOptixClientHandlerThread);
 begin
-  // TODO: better, context cloning? context reuse from handler for workers?
-  inherited Create({$IFDEF USETLS}AHandler.PublicKey, AHandler.PrivateKey, {$ENDIF}AHandler.RemoteAddress, AHandler.RemotePort);
+  {$IFDEF USETLS}
+  var ACertificate : TX509Certificate;
+
+  TOptixOpenSSLHelper.CopyCertificate(AHandler.Certificate, ACertificate);
+  {$ENDIF}
+
+  inherited Create(
+    {$IFDEF USETLS}ACertificate, {$ENDIF}
+    AHandler.RemoteAddress,
+    AHandler.RemotePort,
+    AHandler.IPVersion
+  );
   ///
 
   {$IF defined(CLIENT_GUI) and defined(USETLS)}

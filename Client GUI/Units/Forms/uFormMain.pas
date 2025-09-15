@@ -45,25 +45,39 @@ unit uFormMain;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Optix.Protocol.SessionHandler, System.ImageList, Vcl.ImgList, Vcl.VirtualImageList,
-  Vcl.BaseImageCollection, Vcl.ImageCollection, Optix.Protocol.Client, System.Notification, Generics.Collections,
-  VirtualTrees.Types, System.UITypes;
+  System.SysUtils, System.Variants, System.Classes, System.UITypes, System.ImageList, System.Notification, System.Types,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.BaseImageCollection, Vcl.ImageCollection,
+  Vcl.ImgList, Vcl.VirtualImageList,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+
+  uFormConnectToServer,
+
+  Optix.Protocol.SessionHandler, Optix.Protocol.Client
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TClientStatus = (csDisconnected, csConnected, csOnError);
 
   TTreeData = record
-    {$IFDEF USETLS}
-    PublicKey        : String; // Copy required
-    PrivateKey       : String; // Copy required
-    {$ENDIF}
+    ClientConfiguration : TClientConfiguration;
+    Handler             : TOptixSessionHandlerThread;
 
-    Handler          : TOptixSessionHandlerThread;
-    Status           : TClientStatus;
-    ExtraDescription : String;
+    Status              : TClientStatus;
+    ExtraDescription    : String;
+
+    {$IFDEF USETLS}
+    Certificate : TX509Certificate;
+    {$ENDIF}
   end;
   PTreeData = ^TTreeData;
 
@@ -106,11 +120,14 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure Certificates1Click(Sender: TObject);
     procedure rustedCertificates1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
+    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     FNotifications : TList<TGUID>;
 
     {@M}
-    procedure AddClient({$IFDEF USETLS}const AClientCertificateFingerprint : String; {$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+    procedure AddClient(const AClientConfiguration : TClientConfiguration; const pExistingNode : PVirtualNode = nil);
 
     procedure OnConnectedToServer(Sender : TOptixSessionHandlerThread);
     procedure OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
@@ -131,9 +148,16 @@ var
 
 implementation
 
-uses Optix.Thread, Optix.VCL.Helper, Optix.Helper, uFormConnectToServer, Optix.Constants, uFormAbout, uFormDebugThreads,
-     Optix.Protocol.Preflight
-     {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math,
+
+  uFormAbout, uFormDebugThreads
+  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
+
+  Optix.Thread, Optix.VCL.Helper, Optix.Helper, Optix.Constants, Optix.Protocol.Preflight, Optix.Sockets.Helper
+  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -235,12 +259,8 @@ begin
   if not Assigned(pNode) then
     Exit();
 
-  VST.BeginUpdate();
-  try
-    VST.DeleteNode(pNode);
-  finally
-    VST.EndUpdate();
-  end;
+  ///
+  VST.DeleteNode(pNode);
 end;
 
 procedure TFormMain.OnNetworkException(Sender : TOptixClientThread; const AErrorMessage : String);
@@ -265,30 +285,25 @@ begin
   Close();
 end;
 
-procedure TFormMain.AddClient({$IFDEF USETLS}const AClientCertificateFingerprint : String; {$ENDIF} const AServerAddress : String; const AServerPort : Word; const pExistingNode : PVirtualNode = nil);
+procedure TFormMain.AddClient(const AClientConfiguration : TClientConfiguration; const pExistingNode : PVirtualNode = nil);
 begin
   {$IFDEF USETLS}
-    var APublicKey  : String;
-    var APrivateKey : String;
+    var ACertificate : TX509Certificate;
 
-    {$IFDEF DEBUG}
-      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
-      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
-    {$ELSE}
-      if not FormCertificatesStore.GetCertificateKeys(AClientCertificateFingerprint, APublicKey, APrivateKey) then begin
-        Application.MessageBox(
-          'Client certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
-          'generate a new one.',
-          'Connect To Server',
-          MB_ICONERROR
-        );
+    if not FormCertificatesStore.GetCertificateKeys(AClientConfiguration.CertificateFingerprint, ACertificate)
+    then begin
+      Application.MessageBox(
+        'Client certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
+        'generate a new one.',
+        'Connect To Server',
+        MB_ICONERROR
+      );
 
-        Exit();
-      end;
-    {$ENDIF}
+      Exit();
+    end;
   {$ENDIF}
 
-  VST.beginUpdate();
+  VST.BeginUpdate();
   try
     var pNode : PVirtualNode;
 
@@ -299,10 +314,18 @@ begin
 
     var pData := PTreeData(pNode.GetData);
 
+    pData^.ClientConfiguration := AClientConfiguration;
+
     pData^.Status := csDisconnected;
     pData^.ExtraDescription := '';
 
-    pData^.Handler := TOptixSessionHandlerThread.Create({$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}AServerAddress, AServerPort);
+    pData^.Handler := TOptixSessionHandlerThread.Create(
+      {$IFDEF USETLS}ACertificate,{$ENDIF}
+      AClientConfiguration.Address,
+      AClientConfiguration.Port,
+      AClientConfiguration.Version
+    );
+
     pData^.Handler.Retry := True;
     pData^.Handler.RetryDelay := 1000;
 
@@ -314,7 +337,6 @@ begin
     pData^.Handler.OnVerifyPeerCertificate     := FormTrustedCertificates.OnVerifyPeerCertificate;
     {$ENDIF}
 
-
     pData^.Handler.Start();
   finally
     VST.EndUpdate();
@@ -324,15 +346,12 @@ end;
 procedure TFormMain.ConnecttoServer1Click(Sender: TObject);
 var AForm : TFormConnectToServer;
 begin
-  {$IFDEF DEBUG}
-    AddClient({$IFDEF USETLS}'', {$ENDIF}'127.0.0.1', 2801);
-  {$ELSE}
-    {$IFDEF USETLS}
-      var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
-      try
-        if AFingerprints.Count = 0 then
-          raise Exception.Create('No existing certificate was found in the certificate store. You cannot connect ' +
-                                 'to a remote server without registering at least one certificate.');
+  {$IFDEF USETLS}
+    var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
+    try
+      if AFingerprints.Count = 0 then
+        raise Exception.Create('No existing certificate was found in the certificate store. You cannot connect ' +
+                               'to a remote server without registering at least one certificate.');
 
 //        if FormTrustedCertificates.TrustedCertificateCount = 0 then
 //              raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
@@ -341,26 +360,25 @@ begin
 //                                     'server certificate and is required for mutual authentication, ensuring that ' +
 //                                     'network communications are secure and not tampered with or eavesdropped on.');
 
-        ///
-
-        AForm := TFormConnectToServer.Create(self, AFingerprints);
-      finally
-        FreeAndNil(AFingerprints);
-      end;
-    {$ELSE}
-      AForm := TFormConnectToServer.Create(self);
-    {$ENDIF}
-    try
-      AForm.ShowModal();
-      if AForm.Canceled then
-        Exit();
       ///
 
-      AddClient({$IFDEF USETLS}AForm.ComboCertificate.Text, {$ENDIF}AForm.EditServerAddress.Text, AForm.SpinPort.Value);
+      AForm := TFormConnectToServer.Create(self, AFingerprints);
     finally
-      FreeAndNil(AForm);
+      FreeAndNil(AFingerprints);
     end;
+  {$ELSE}
+    AForm := TFormConnectToServer.Create(self);
   {$ENDIF}
+  try
+    AForm.ShowModal();
+    if AForm.Canceled then
+      Exit();
+    ///
+
+    AddClient(AForm.GetClientConfiguration());
+  finally
+    FreeAndNil(AForm);
+  end;
 end;
 
 procedure TFormMain.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -376,18 +394,25 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FNotifications := TList<TGUID>.Create(); // Maybe, I will need that l8r
+  ///
 
   {$IFNDEF USETLS}
   Stores1.Visible := False;
   Certificates1.Visible := False;
   rustedCertificates1.Visible := False;
+
+  VST.Header.Columns[5].Options := VST.Header.Columns[5].Options - [coVisible];
   {$ENDIF}
 
+  ///
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
 end;
 
 procedure TFormMain.FormDestroy(Sender: TObject);
 begin
+  VST.Clear();
+  ///
+
   if Assigned(FNotifications) then
     FreeAndNil(FNotifications);
 end;
@@ -402,12 +427,8 @@ begin
   if VST.FocusedNode = nil then
     Exit();
 
-  VST.BeginUpdate();
-  try
-    VST.DeleteNode(VST.FocusedNode);
-  finally
-    VST.EndUpdate();
-  end;
+  ///
+  VST.DeleteNode(VST.FocusedNode);
 end;
 
 procedure TFormMain.rustedCertificates1Click(Sender: TObject);
@@ -421,6 +442,9 @@ procedure TFormMain.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: T
   Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   var AColor := clNone;
 
@@ -440,6 +464,33 @@ begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
+procedure TFormMain.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+  var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if (not Assigned(pData1) or not Assigned(pData2)) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.ClientConfiguration.Address, pData2^.ClientConfiguration.Address);
+      1 : Result := CompareValue(pData1^.ClientConfiguration.Port, pData2^.ClientConfiguration.Port);
+      2 : Result := CompareValue(Cardinal(pData1^.Status), Cardinal(pData2^.Status));
+      3 : Result := CompareValue(Cardinal(pData1^.Status), Cardinal(pData2^.Status));
+      4 : Result := CompareText(pData1^.ExtraDescription, pData2^.ExtraDescription);
+
+      {$IFDEF USETLS}
+      5 : Result := CompareText(
+        pData1^.ClientConfiguration.CertificateFingerprint,
+        pData2^.ClientConfiguration.CertificateFingerprint
+      );
+      {$ENDIF}
+    end;
+  end;
+end;
+
 procedure TFormMain.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
@@ -448,7 +499,9 @@ end;
 procedure TFormMain.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
-  if Assigned(pData^.Handler) then
+  ///
+
+  if Assigned(pData) and Assigned(pData^.Handler) then
     pData^.Handler.Terminate;
 end;
 
@@ -456,6 +509,9 @@ procedure TFormMain.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNod
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
   var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
   if (Column <> 0) or ((Kind <> TVTImageKind.ikNormal) and (Kind <> TVTImageKind.ikSelected)) then
     Exit();
@@ -476,27 +532,45 @@ procedure TFormMain.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Col
   TextType: TVSTTextType; var CellText: string);
 begin
   var pData := PTreeData(Node.GetData);
-
-  if not Assigned(pData^.Handler) then
-    Exit();
+  ///
 
   CellText := '';
 
-  case Column of
-    0 : CellText := pData^.Handler.RemoteAddress;
-    1 : CellText := IntToStr(pData^.Handler.RemotePort);
-    2 : begin
-      case pData^.Status of
-        csDisconnected : CellText := 'Disconnected';
-        csConnected    : CellText := 'Connected';
-        csOnError      : CellText := 'Error';
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := pData^.ClientConfiguration.Address;
+      1 : CellText := pData^.ClientConfiguration.Port.ToString;
+      2 : begin
+        case pData^.Status of
+          csDisconnected : CellText := 'Disconnected';
+          csConnected    : CellText := 'Connected';
+          csOnError      : CellText := 'Error';
+        end;
       end;
+      3 : begin
+        case pData^.ClientConfiguration.Version of
+          ipv4 : CellText := 'IPv4';
+          ipv6 : CellText := 'IPv6';
+        end;
+      end;
+      4 : CellText := pData^.ExtraDescription;
+      {$IFDEF USETLS}
+      5 : CellText := pData^.ClientConfiguration.CertificateFingerprint;
+      {$ENDIF}
     end;
-    3 : CellText := pData^.ExtraDescription;
   end;
 
   ///
   CellText := DefaultIfEmpty(CellText);
+end;
+
+procedure TFormMain.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 end.

@@ -380,7 +380,6 @@ begin
       Exit();
   ///
 
-  // TODO: make it more generic (Class Registry or RTTI)
   var AClassName := ASerializedPacket.S['PacketClass'];
 
   var AWindowGUID := TGUID.Empty;

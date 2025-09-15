@@ -14,6 +14,7 @@ object FormTrustedCertificates: TFormTrustedCertificates
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
+  OnMouseDown = FormMouseDown
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0
@@ -32,13 +33,15 @@ object FormTrustedCertificates: TFormTrustedCertificates
     DefaultNodeHeight = 19
     Header.AutoSizeIndex = 0
     Header.DefaultHeight = 25
-    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+    Header.SortColumn = 0
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-    TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnChange = VSTChange
+    OnCompareNodes = VSTCompareNodes
     OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
@@ -49,7 +52,7 @@ object FormTrustedCertificates: TFormTrustedCertificates
       item
         Position = 0
         Text = 'Fingerprint'
-        Width = 540
+        Width = 550
       end>
   end
   object MainMenu: TMainMenu

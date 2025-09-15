@@ -43,6 +43,8 @@
 
 program OptixGate_OpenSSL;
 
+{$WARN DUPLICATE_CTOR_DTOR OFF}
+
 uses
   Vcl.Forms,
   Vcl.Themes,
@@ -88,26 +90,27 @@ uses
   Optix.Helper in 'Units\Optix.Helper.pas',
   Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
   Optix.Config.Helper in 'Units\Configs\Optix.Config.Helper.pas',
-  __uBaseFormControl__ in 'Units\Forms\__uBaseFormControl__.pas',
+  __uBaseFormControl__ in 'Units\Forms\Control\__uBaseFormControl__.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
   Optix.Constants in 'Units\Optix.Constants.pas',
   uFormAbout in 'Units\Forms\uFormAbout.pas' {FormAbout},
-  uFormProcessManager in 'Units\Forms\uFormProcessManager.pas' {FormProcessManager},
-  uFormLogs in 'Units\Forms\uFormLogs.pas' {FormLogs},
-  uFormFileManager in 'Units\Forms\uFormFileManager.pas' {FormFileManager},
-  uFormControlForms in 'Units\Forms\uFormControlForms.pas' {FormControlForms},
-  uFormTransfers in 'Units\Forms\uFormTransfers.pas' {FormTransfers},
+  uControlFormProcessManager in 'Units\Forms\Control\uControlFormProcessManager.pas' {ControlFormProcessManager},
+  uControlFormLogs in 'Units\Forms\Control\uControlFormLogs.pas' {ControlFormLogs},
+  uControlFormFileManager in 'Units\Forms\Control\uControlFormFileManager.pas' {ControlFormFileManager},
+  uControlFormControlForms in 'Units\Forms\Control\uControlFormControlForms.pas' {ControlFormControlForms},
+  uControlFormTransfers in 'Units\Forms\Control\uControlFormTransfers.pas' {ControlFormTransfers},
   uFormDebugThreads in 'Units\Forms\uFormDebugThreads.pas' {FormDebugThreads},
-  uFormTasks in 'Units\Forms\uFormTasks.pas' {FormTasks},
-  uFormDumpProcess in 'Units\Forms\Dialogs\uFormDumpProcess.pas' {FormDumpProcess},
-  uFormRemoteShell in 'Units\Forms\uFormRemoteShell.pas' {FormRemoteShell},
+  uControlFormTasks in 'Units\Forms\Control\uControlFormTasks.pas' {ControlFormTasks},
+  uControlFormDumpProcess in 'Units\Forms\Dialogs\Control\uControlFormDumpProcess.pas' {ControlFormDumpProcess},
+  uControlFormRemoteShell in 'Units\Forms\Control\uControlFormRemoteShell.pas' {ControlFormRemoteShell},
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
   uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
   uFormCertificatesStore in 'Units\Forms\uFormCertificatesStore.pas' {FormCertificatesStore},
   uFormGenerateNewCertificate in 'Units\Forms\uFormGenerateNewCertificate.pas' {FormGenerateNewCertificate},
-  uFormAuthorizedPeers in 'Units\Forms\uFormAuthorizedPeers.pas' {FormAuthorizedPeers},
   uFormTrustedCertificates in 'Units\Forms\uFormTrustedCertificates.pas' {FormTrustedCertificates},
-  Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas';
+  Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas',
+  uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
+  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas';
 
 {$R *.res}
 {$R data.res}
@@ -129,20 +132,14 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   TStyleManager.TrySetStyle('Glossy');
+
+  // (!) The order of creation is VERY important (!) //
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormTrustedCertificates, FormTrustedCertificates);
-  // Application.CreateForm(TFormListen, FormListen);
   Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
-  Application.CreateForm(TFormAuthorizedPeers, FormAuthorizedPeers);
-  // Application.CreateForm(TFormRemoteShell, FormRemoteShell);
-  // Application.CreateForm(TFormDumpProcess, FormDumpProcess);
-  // Application.CreateForm(TFormTransfers, FormTransfers);
-  // Application.CreateForm(TFormTasks, FormTasks);
-  // Application.CreateForm(TFormFileManager, FormFileManager);
-  // Application.CreateForm(TFormControlForms, FormControlForms);
-  // Application.CreateForm(TFormLogs, FormLogs);
-  // Application.CreateForm(TFormProcessManager, FormProcessManager);
+  Application.CreateForm(TFormServers, FormServers);
+  ///
   Application.Run;
 end.

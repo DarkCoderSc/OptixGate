@@ -170,7 +170,15 @@ begin
   if Assigned(FPacketQueue) then begin
     FPacketQueue.DoShutDown();
 
-    // TODO: Free un-poped resources
+    var APacket : TOptixPacket;
+    while True do begin
+      APacket := FPacketQueue.PopItem;
+      if not Assigned(APacket) then
+        break;
+
+      ///
+      FreeAndNil(APacket);
+    end;
 
     ///
     FreeAndNil(FPacketQueue);

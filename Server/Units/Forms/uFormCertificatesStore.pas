@@ -45,10 +45,20 @@ unit uFormCertificatesStore;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  VirtualTrees, Vcl.Menus, Optix.OpenSSL.Helper, VirtualTrees.Types, Generics.Collections;
+  System.SysUtils, System.Variants, System.Classes, System.Types,
+
+  Generics.Collections,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
+
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+
+  Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -92,6 +102,11 @@ type
     procedure ExportPrivateKey1Click(Sender: TObject);
     procedure RemoveCertificate1Click(Sender: TObject);
     procedure CopySelectedFingerprint1Click(Sender: TObject);
+    procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
@@ -102,7 +117,7 @@ type
     procedure Load();
   public
     {@M}
-    function GetCertificateKeys(const AFingerPrint : String; var APublicKey : String; var APrivateKey : String) : Boolean;
+    function GetCertificateKeys(const AFingerPrint : String; var ACertificate : TX509Certificate) : Boolean;
     function GetCertificatesFingerprints() : TList<String>;
 
     {@G}
@@ -114,8 +129,19 @@ var
 
 implementation
 
-uses uFormGenerateNewCertificate, Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore,
-     Optix.Config.Helper, Optix.VCL.Helper, Optix.OpenSSL.Exceptions, VCL.Clipbrd;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  VCL.Clipbrd,
+
+  uFormGenerateNewCertificate
+
+  {$IFDEF SERVER}, uFormServers{$ENDIF},
+
+  Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore, Optix.Config.Helper,
+  Optix.VCL.Helper, Optix.OpenSSL.Exceptions
+
+  {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -153,22 +179,19 @@ begin
   end;
 end;
 
-function TFormCertificatesStore.GetCertificateKeys(const AFingerPrint : String; var APublicKey : String; var APrivateKey : String) : Boolean;
+function TFormCertificatesStore.GetCertificateKeys(const AFingerPrint : String; var ACertificate : TX509Certificate) : Boolean;
 begin
   result := False;
-
-  APublicKey := '';
-  APrivateKey := '';
 
   var pNode := GetNodeByFingerprint(AFingerPrint);
   if not Assigned(pNode) then
     Exit();
 
   var pData := PTreeData(pNode.GetData);
-  TOptixOpenSSLHelper.SerializeKeys(pData^.Certificate, APublicKey, APrivateKey);
+  TOptixOpenSSLHelper.CopyCertificate(pData^.Certificate, ACertificate);
 
   ///
-  result := (not APublicKey.IsEmpty) and (not APrivateKey.IsEmpty);
+  result := True;
 end;
 
 procedure TFormCertificatesStore.Save();
@@ -177,6 +200,11 @@ begin
   try
     for var pNode in VST.Nodes do begin
       var pData := PTreeData(pNode.GetData);
+
+      {$IFDEF DEBUG}
+      if String.Compare(pData^.Certificate.Fingerprint, DEBUG_CERTIFICATE_FINGERPRINT, True) = 0 then
+        continue;
+      {$ENDIF}
 
       AConfig.Add(pData^.Certificate);
     end;
@@ -189,9 +217,20 @@ begin
 end;
 
 procedure TFormCertificatesStore.Load();
+var ACertificate : TX509Certificate;
 begin
   VST.Clear();
   ///
+
+  {$IFDEF DEBUG}
+  TOptixOpenSSLHelper.LoadCertificate(
+    DEBUG_CERTIFICATE_PUBLIC_KEY,
+    DEBUG_CERTIFICATE_PRIVATE_KEY,
+    ACertificate
+  );
+
+  RegisterCertificate(ACertificate);
+  {$ENDIF}
 
   var AConfig := TOptixConfigCertificatesStore(CONFIG_HELPER.Read('Certificates'));
   if not Assigned(AConfig) then
@@ -200,7 +239,7 @@ begin
     VST.BeginUpdate();
     try
       for var I := 0 to AConfig.Count -1 do begin
-        var ACertificate := AConfig.Items[I];
+        ACertificate := AConfig.Items[I];
 
         if not Assigned(ACertificate.pX509) or not Assigned(ACertificate.pPrivKey) then
           continue;
@@ -255,6 +294,18 @@ begin
   if VST.FocusedNode = nil then
     Exit();
 
+  {$IFDEF SERVER}
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if not Assigned(pData) then
+    Exit();
+
+  if FormServers.ServerCertificateIsInUse(pData^.Certificate.Fingerprint) then
+    raise Exception.Create(
+      'Cannot delete certificate. The certificate is currently in use by a server and must be unassigned before ' +
+      'removal from the store.'
+    );
+  {$ENDIF}
+
   if Application.MessageBox(
     'This action will delete the certificate and its associated information. If you do not have any physical backups,' +
     ' the certificate will be permanently lost. Are you sure?',
@@ -265,9 +316,49 @@ begin
   VST.DeleteNode(VST.FocusedNode);
 end;
 
+procedure TFormCertificatesStore.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  {$IFDEF DEBUG}
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
+
+  var AColor := clNone;
+
+  if String.Compare(pData^.Certificate.Fingerprint, DEBUG_CERTIFICATE_FINGERPRINT, True) = 0 then
+    AColor := COLOR_LIST_RED;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+    TargetCanvas.FillRect(CellRect);
+  end;
+  {$ENDIF}
+end;
+
 procedure TFormCertificatesStore.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TFormCertificatesStore.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+  Column: TColumnIndex; var Result: Integer);
+begin
+  var pData1 := PTreeData(Node1.GetData);
+  var pData2 := PTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else begin
+    case Column of
+      0 : Result := CompareText(pData1^.Certificate.C, pData2^.Certificate.C);
+      1 : Result := CompareText(pData1^.Certificate.O, pData2^.Certificate.O);
+      2 : Result := CompareText(pData1^.Certificate.CN, pData2^.Certificate.CN);
+      3 : Result := CompareText(pData1^.Certificate.Fingerprint, pData2^.Certificate.Fingerprint);
+    end;
+  end;
 end;
 
 procedure TFormCertificatesStore.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -278,8 +369,8 @@ end;
 procedure TFormCertificatesStore.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
   var pData := PTreeData(Node.GetData);
-
-  TOptixOpenSSLHelper.FreeCertificate(pData^.Certificate);
+  if Assigned(pData) then
+    TOptixOpenSSLHelper.FreeCertificate(pData^.Certificate);
 end;
 
 procedure TFormCertificatesStore.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
@@ -289,8 +380,16 @@ begin
     Exit();
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected :
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
+      {$IFDEF DEBUG}
+      var pData := PTreeData(Node.GetData);
+
+      if Assigned(pData) and (String.Compare(pData^.Certificate.Fingerprint, DEBUG_CERTIFICATE_FINGERPRINT) = 0) then
+        ImageIndex := IMAGE_BUG
+      else
+      {$ENDIF}
       ImageIndex := IMAGE_CERTIFICATE;
+    end;
 
     TVTImageKind.ikState: ;
     TVTImageKind.ikOverlay: ;
@@ -309,11 +408,13 @@ begin
 
   CellText := '';
 
-  case Column of
-    0 : CellText := pData^.Certificate.C;
-    1 : CellText := pData^.Certificate.O;
-    2 : CellText := pData^.Certificate.CN;
-    3 : CellText := pData^.Certificate.Fingerprint;
+  if Assigned(pData) then begin
+    case Column of
+      0 : CellText := pData^.Certificate.C;
+      1 : CellText := pData^.Certificate.O;
+      2 : CellText := pData^.Certificate.CN;
+      3 : CellText := pData^.Certificate.Fingerprint;
+    end;
   end;
 
   ///
@@ -388,6 +489,16 @@ end;
 procedure TFormCertificatesStore.FormCreate(Sender: TObject);
 begin
   Load();
+end;
+
+procedure TFormCertificatesStore.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+begin
+  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
+    TBaseVirtualTree(Sender).ClearSelection();
+
+    TBaseVirtualTree(Sender).FocusedNode := nil;
+  end;
 end;
 
 procedure TFormCertificatesStore.GeneratenewCertificate1Click(Sender: TObject);

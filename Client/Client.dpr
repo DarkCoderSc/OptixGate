@@ -43,14 +43,18 @@
 
 program Client;
 
-// {$APPTYPE GUI}
-{$APPTYPE CONSOLE}
+{$WARN DUPLICATE_CTOR_DTOR OFF}
+
+{$IFDEF DEBUG}
+  {$APPTYPE GUI}
+{$ELSE}
+  {$APPTYPE CONSOLE}
+{$ENDIF}
 
 {$R *.res}
 
 uses
   System.SysUtils,
-  Winapi.Windows,
   Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
   Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
   Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
@@ -82,43 +86,13 @@ uses
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
   Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas';
+  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
+  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas';
 
 begin
   IsMultiThread := True;
   try
-	  {$IFNDEF CLIENT}
-    'The CLIENT compiler directive is missing from the project options. Please define it in the respective build '
-    'configuration by navigating to Project > Options > Delphi Compiler > Conditional defines, and adding CLIENT.'
-    {$ENDIF}
-
-    var AUserUID := TOptixInformationGathering.GetUserUID();
-
-    var AMutex := CreateMutexW(nil, True, PWideChar(AUserUID.ToString));
-    if AMutex = 0 then
-      raise EWindowsException.Create('CreateMutexW');
-    try
-      if GetLastError() = ERROR_ALREADY_EXISTS then
-        Exit();
-      ///
-
-      // Enable certain useful privileges (if possible)
-      TSystemHelper.TryNTSetPrivilege('SeDebugPrivilege', True);
-      TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
-
-      var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801);
-      ASessionHandler.Retry := True;
-      ASessionHandler.RetryDelay := 1000;
-      ASessionHandler.Start();
-
-      ///
-      ASessionHandler.WaitFor();
-    finally
-      TOptixThread.SignalHiveAndFlush();
-
-      ///
-      CloseHandle(AMutex);
-    end;
+    ClientEntrypoint();
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);

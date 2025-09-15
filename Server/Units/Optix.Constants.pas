@@ -85,6 +85,7 @@ const
  IMAGE_FOLDER_READONLY              = 32;
  IMAGE_FOLDER_FULLACCESS            = 33;
  IMAGE_FOLDER_WRITEONLY             = 34;
+ IMAGE_FOLDER_EXECONLY              = 62;
  IMAGE_FOLDER_DENIED                = 35;
  IMAGE_FOLDER_PREV                  = 36;
  IMAGE_THREAD_RUNNING               = 37;
@@ -104,6 +105,10 @@ const
  IMAGE_SHELL_CLOSED                 = IMAGE_RED_EXCLAMATION;
  IMAGE_CERTIFICATE                  = 58;
  IMAGE_TRUSTED_CERTIFICATE          = 59;
+ IMAGE_SERVER_STOPPED               = 63;
+ IMAGE_SERVER_LISTENING             = 64;
+ IMAGE_SERVER_ERROR                 = 65;
+ IMAGE_BUG                          = 66;
 
 var
  (* COLORS *)

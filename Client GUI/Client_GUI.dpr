@@ -43,6 +43,8 @@
 
 program Client_GUI;
 
+{$WARN DUPLICATE_CTOR_DTOR OFF}
+
 uses
   Winapi.Windows,
   System.SysUtils,
