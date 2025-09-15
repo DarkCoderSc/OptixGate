@@ -98,6 +98,7 @@ type
     LabelAccess: TLabel;
     ButtonBack: TSpeedButton;
     ButtonForward: TSpeedButton;
+    ButtonGoTo: TSpeedButton;
     procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -127,6 +128,7 @@ type
     procedure ButtonBackClick(Sender: TObject);
     procedure ButtonForwardClick(Sender: TObject);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure ButtonGoToClick(Sender: TObject);
   private
     FHistoryCursor : Integer;
     FPathHistory   : TList<String>;
@@ -141,7 +143,7 @@ type
     procedure SetDisplayMode(const AMode : TDisplayMode);
     procedure BrowsePath(const APath : string; const APushToHistory : Boolean = True);
     procedure RefreshNavButtons();
-    procedure RefreshDrives();
+    procedure RefreshDrives(const APushToHistory : Boolean = True);
     procedure RefreshFiles();
   protected
     {@M}
@@ -176,8 +178,14 @@ uses
 
 procedure TControlFormFileManager.BrowseFromCurrentHistoryLocation();
 begin
-  if (FPathHistory.Count > 0) and (FHistoryCursor >= 0) then
-    BrowsePath(FPathHistory.Items[FHistoryCursor], False);
+  if (FPathHistory.Count > 0) and (FHistoryCursor >= 0) then begin
+    var APath := FPathHistory.Items[FHistoryCursor];
+
+    if String.Compare(APath, '\\:DRIVES:\\') = 0 then
+      RefreshDrives(False)
+    else
+      BrowsePath(APath, False);
+  end;
 end;
 
 procedure TControlFormFileManager.RefreshNavButtons();
@@ -228,8 +236,12 @@ begin
   inherited RequestFileUpload(ALocalFilePath, ARemoteFilePath, Format('File Manager (%s)', [EditPath.Text]));
 end;
 
-procedure TControlFormFileManager.RefreshDrives();
+procedure TControlFormFileManager.RefreshDrives(const APushToHistory : Boolean = True);
 begin
+  if APushToHistory then
+    InsertPathToHistory('\\:DRIVES:\\');
+  ///
+
   SendCommand(TOptixCommandRefreshDrives.Create());
 end;
 
@@ -270,15 +282,15 @@ begin
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Last Modified', AMode = dmFiles);
   TOptixVirtualTreesHelper.UpdateColumnVisibility(VST, 'Last Access', AMode = dmFiles);
 
-  ButtonRefresh.Visible := AMode = dmFiles;
-  ButtonUpload.Visible  := AMode = dmFiles;
-  ButtonBack.Visible    := AMode = dmFiles;
-  ButtonForward.Visible := AMode = dmFiles;
+  ButtonRefresh.Enabled := AMode = dmFiles;
+  ButtonUpload.Enabled  := AMode = dmFiles;
+//  ButtonBack.Enabled    := AMode = dmFiles;
+//  ButtonForward.Enabled := AMode = dmFiles;
 
-  if AMode = dmDrives then begin
-    FPathHistory.Clear();
-    FHistoryCursor := 0;
-  end;
+//  if AMode = dmDrives then begin
+//    FPathHistory.Clear();
+//    FHistoryCursor := 0;
+//  end;
 
   ///
   RefreshNavButtons();
@@ -304,6 +316,17 @@ begin
   BrowseFromCurrentHistoryLocation();
 
   RefreshNavButtons();
+end;
+
+procedure TControlFormFileManager.ButtonGoToClick(Sender: TObject);
+begin
+  var APath := '';
+
+  if not InputQuery('Go To', 'Path:', APath) then
+    Exit();
+
+  ///
+  BrowsePath(APath);
 end;
 
 procedure TControlFormFileManager.ButtonHomeClick(Sender: TObject);

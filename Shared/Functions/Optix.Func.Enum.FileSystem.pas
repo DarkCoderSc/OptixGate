@@ -488,6 +488,8 @@ begin
   if String.IsNullOrEmpty(FPath) then
     Exit();
 
+  FPath := TFileSystemHelper.ExpandPath(FPath);
+
   var ASearchParameter := Format('%s*.*', [FPath]);
 
   var AWin32FindData : TWin32FindDataW;

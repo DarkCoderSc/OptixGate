@@ -153,14 +153,13 @@ object ControlFormFileManager: TControlFormFileManager
       ImageIndex = 52
       ImageName = 'symbol-refresh'
       Images = FormMain.VirtualImageList
-      Visible = False
       OnClick = ButtonRefreshClick
       ExplicitLeft = 42
       ExplicitTop = 2
     end
     object ButtonUpload: TSpeedButton
       AlignWithMargins = True
-      Left = 136
+      Left = 170
       Top = 4
       Width = 30
       Height = 22
@@ -172,14 +171,13 @@ object ControlFormFileManager: TControlFormFileManager
       ImageIndex = 50
       ImageName = 'folder-open-filled-arrow-up-filled'
       Images = FormMain.VirtualImageList
-      Visible = False
       OnClick = ButtonUploadClick
       ExplicitLeft = 118
       ExplicitTop = 8
     end
     object ButtonOptions: TSpeedButton
       AlignWithMargins = True
-      Left = 170
+      Left = 204
       Top = 4
       Width = 30
       Height = 22
@@ -248,6 +246,23 @@ object ControlFormFileManager: TControlFormFileManager
       ImageName = 'button-arrow-right'
       Images = FormMain.VirtualImageList
       OnClick = ButtonForwardClick
+    end
+    object ButtonGoTo: TSpeedButton
+      AlignWithMargins = True
+      Left = 136
+      Top = 4
+      Width = 30
+      Height = 22
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 67
+      ImageName = 'control-edit'
+      Images = FormMain.VirtualImageList
+      OnClick = ButtonGoToClick
+      ExplicitLeft = 122
     end
   end
   object PopupMenu: TPopupMenu
