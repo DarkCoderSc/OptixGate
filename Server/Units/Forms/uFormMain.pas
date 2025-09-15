@@ -50,11 +50,6 @@
     - Multi server + Saved Servers + Auto Start
     - Ipv6 support
     - Code Improvement
-
-  ---
-
-  Global Todo b4 v1:
-    - File Upload Feedback (Notify window's about a successful file upload)
 }
 
 unit uFormMain;
@@ -618,7 +613,7 @@ begin
     Result := CompareObjectAssigmenet(pData1^.Handler, pData2^.Handler)
   else begin
     case Column of
-      0 : Result := CompareIpv4(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
+      0 : Result := CompareText(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
       1 : Result := CompareText(pData1^.GetUPN(), pData2^.GetUPN());
       2 : Result := CompareText(pData1^.SessionInformation.Langroup, pData2^.SessionInformation.Langroup);
       3 : Result := CompareText(pData1^.SessionInformation.DomainName, pData2^.SessionInformation.DomainName);

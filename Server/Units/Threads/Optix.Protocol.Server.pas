@@ -77,7 +77,7 @@ type
 
     {$IFDEF USETLS}
     FSSLContext              : TOptixOpenSSLContext;
-    FX509Certificate         : TX509Certificate;
+    FCertificate             : TX509Certificate;
     {$ENDIF}
 
     FClientSockets           : TList<TSocket>;
@@ -102,7 +102,7 @@ type
     procedure TerminatedSet(); override;
   public
     {@C}
-    constructor Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion); overload;
+    constructor Create({$IFDEF USETLS}const ACertificate : TX509Certificate; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion); overload;
     destructor Destroy(); override;
 
     {@G/S}
@@ -254,7 +254,7 @@ begin
 end;
 
 { TOptixServerThread.Create }
-constructor TOptixServerThread.Create({$IFDEF USETLS}const APubKey : String; const APrivKey : String; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion);
+constructor TOptixServerThread.Create({$IFDEF USETLS}const ACertificate : TX509Certificate; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion);
 begin
   inherited Create();
   ///
@@ -272,8 +272,8 @@ begin
   FServer      := nil;
 
   {$IFDEF USETLS}
-  TOptixOpenSSLHelper.LoadCertificate(APubKey, APrivKey, FX509Certificate);
-  FSSLContext := TOptixOpenSSLContext.Create(sslServer, FX509Certificate);
+  FCertificate := ACertificate;
+  FSSLContext := TOptixOpenSSLContext.Create(sslServer, FCertificate);
 
   FOnVerifyPeerCertificate := nil;
   {$ENDIF}
@@ -298,11 +298,10 @@ begin
     FreeAndNil(FServer);
 
   {$IFDEF USETLS}
-  if Assigned(FSSLContext) then begin
-    TOptixOpenSSLHelper.FreeCertificate(FX509Certificate);
+  TOptixOpenSSLHelper.FreeCertificate(FCertificate);
 
+  if Assigned(FSSLContext) then
     FreeAndNil(FSSLContext);
-  end;
   {$ENDIF}
 
   ///

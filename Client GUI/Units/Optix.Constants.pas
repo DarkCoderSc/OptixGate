@@ -61,15 +61,18 @@ const
   IMAGE_THREAD_GENERIC      = 10;
   IMAGE_CERTIFICATE         = 11;
   IMAGE_TRUSTED_CERTIFICATE = 12;
+  IMAGE_BUG                 = 13;
 
 var
   COLOR_LIST_LIMY : TColor;
   COLOR_LIST_GRAY : TColor;
+  COLOR_LIST_RED  : TColor;
 
 implementation
 
 initialization
   COLOR_LIST_LIMY := RGB(40, 70, 40);
   COLOR_LIST_GRAY := RGB(40, 40, 40);
+  COLOR_LIST_RED  := RGB(90, 50, 60);
 
 end.

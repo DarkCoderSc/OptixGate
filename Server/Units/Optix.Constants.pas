@@ -108,6 +108,7 @@ const
  IMAGE_SERVER_STOPPED               = 63;
  IMAGE_SERVER_LISTENING             = 64;
  IMAGE_SERVER_ERROR                 = 65;
+ IMAGE_BUG                          = 66;
 
 var
  (* COLORS *)

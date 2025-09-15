@@ -47,7 +47,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes, System.UITypes, System.ImageList, System.Notification,
+  System.SysUtils, System.Variants, System.Classes, System.UITypes, System.ImageList, System.Notification, System.Types,
 
   Generics.Collections,
 
@@ -60,21 +60,24 @@ uses
 
   uFormConnectToServer,
 
-  Optix.Protocol.SessionHandler, Optix.Protocol.Client;
+  Optix.Protocol.SessionHandler, Optix.Protocol.Client
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TClientStatus = (csDisconnected, csConnected, csOnError);
 
   TTreeData = record
-    {$IFDEF USETLS}
-    PublicKey        : String; // Copy required
-    PrivateKey       : String; // Copy required
-    {$ENDIF}
+    ClientConfiguration : TClientConfiguration;
+    Handler             : TOptixSessionHandlerThread;
 
-    Handler          : TOptixSessionHandlerThread;
-    Status           : TClientStatus;
-    ExtraDescription : String;
+    Status              : TClientStatus;
+    ExtraDescription    : String;
+
+    {$IFDEF USETLS}
+    Certificate : TX509Certificate;
+    {$ENDIF}
   end;
   PTreeData = ^TTreeData;
 
@@ -152,7 +155,7 @@ uses
   uFormAbout, uFormDebugThreads
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
-  Optix.Thread, Optix.VCL.Helper, Optix.Helper, Optix.Constants, Optix.Protocol.Preflight
+  Optix.Thread, Optix.VCL.Helper, Optix.Helper, Optix.Constants, Optix.Protocol.Preflight, Optix.Sockets.Helper
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -285,24 +288,19 @@ end;
 procedure TFormMain.AddClient(const AClientConfiguration : TClientConfiguration; const pExistingNode : PVirtualNode = nil);
 begin
   {$IFDEF USETLS}
-    var APublicKey  : String;
-    var APrivateKey : String;
+    var ACertificate : TX509Certificate;
 
-    {$IFDEF DEBUG}
-      APublicKey  := DEBUG_CERTIFICATE_PUBLIC_KEY;
-      APrivateKey := DEBUG_CERTIFICATE_PRIVATE_KEY;
-    {$ELSE}
-      if not FormCertificatesStore.GetCertificateKeys(AClientConfiguration.CertificateFingerprint, APublicKey, APrivateKey) then begin
-        Application.MessageBox(
-          'Client certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
-          'generate a new one.',
-          'Connect To Server',
-          MB_ICONERROR
-        );
+    if not FormCertificatesStore.GetCertificateKeys(AClientConfiguration.CertificateFingerprint, ACertificate)
+    then begin
+      Application.MessageBox(
+        'Client certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
+        'generate a new one.',
+        'Connect To Server',
+        MB_ICONERROR
+      );
 
-        Exit();
-      end;
-    {$ENDIF}
+      Exit();
+    end;
   {$ENDIF}
 
   VST.BeginUpdate();
@@ -316,11 +314,13 @@ begin
 
     var pData := PTreeData(pNode.GetData);
 
+    pData^.ClientConfiguration := AClientConfiguration;
+
     pData^.Status := csDisconnected;
     pData^.ExtraDescription := '';
 
     pData^.Handler := TOptixSessionHandlerThread.Create(
-      {$IFDEF USETLS}APublicKey, APrivateKey, {$ENDIF}
+      {$IFDEF USETLS}ACertificate,{$ENDIF}
       AClientConfiguration.Address,
       AClientConfiguration.Port,
       AClientConfiguration.Version
@@ -394,13 +394,17 @@ end;
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FNotifications := TList<TGUID>.Create(); // Maybe, I will need that l8r
+  ///
 
   {$IFNDEF USETLS}
   Stores1.Visible := False;
   Certificates1.Visible := False;
   rustedCertificates1.Visible := False;
+
+  VST.Header.Columns[5].Options := VST.Header.Columns[5].Options - [coVisible];
   {$ENDIF}
 
+  ///
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
 end;
 
@@ -467,14 +471,22 @@ begin
   var pData2 := PTreeData(Node2.GetData);
   ///
 
-  if (not Assigned(pData1) or not Assigned(pData2)) or
-     (not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler)) then
+  if (not Assigned(pData1) or not Assigned(pData2)) then
     Result := 0
   else begin
     case Column of
-      0 : Result := CompareText(pData1^.Handler.RemoteAddress, pData2^.Handler.RemoteAddress);
-      1 : Result := CompareValue(pData1^.Handler.RemotePort, pData2^.Handler.RemotePort);
-      2 : Result := CompareText(pData1^.ExtraDescription, pData2^.ExtraDescription);
+      0 : Result := CompareText(pData1^.ClientConfiguration.Address, pData2^.ClientConfiguration.Address);
+      1 : Result := CompareValue(pData1^.ClientConfiguration.Port, pData2^.ClientConfiguration.Port);
+      2 : Result := CompareValue(Cardinal(pData1^.Status), Cardinal(pData2^.Status));
+      3 : Result := CompareValue(Cardinal(pData1^.Status), Cardinal(pData2^.Status));
+      4 : Result := CompareText(pData1^.ExtraDescription, pData2^.ExtraDescription);
+
+      {$IFDEF USETLS}
+      5 : Result := CompareText(
+        pData1^.ClientConfiguration.CertificateFingerprint,
+        pData2^.ClientConfiguration.CertificateFingerprint
+      );
+      {$ENDIF}
     end;
   end;
 end;
@@ -524,10 +536,10 @@ begin
 
   CellText := '';
 
-  if Assigned(pData) and Assigned(pData^.Handler) then begin
+  if Assigned(pData) then begin
     case Column of
-      0 : CellText := pData^.Handler.RemoteAddress;
-      1 : CellText := IntToStr(pData^.Handler.RemotePort);
+      0 : CellText := pData^.ClientConfiguration.Address;
+      1 : CellText := pData^.ClientConfiguration.Port.ToString;
       2 : begin
         case pData^.Status of
           csDisconnected : CellText := 'Disconnected';
@@ -535,7 +547,16 @@ begin
           csOnError      : CellText := 'Error';
         end;
       end;
-      3 : CellText := pData^.ExtraDescription;
+      3 : begin
+        case pData^.ClientConfiguration.Version of
+          ipv4 : CellText := 'IPv4';
+          ipv6 : CellText := 'IPv6';
+        end;
+      end;
+      4 : CellText := pData^.ExtraDescription;
+      {$IFDEF USETLS}
+      5 : CellText := pData^.ClientConfiguration.CertificateFingerprint;
+      {$ENDIF}
     end;
   end;
 

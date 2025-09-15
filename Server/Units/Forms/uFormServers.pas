@@ -66,17 +66,14 @@ type
   );
 
   TServerConfiguration = record
-    Address   : String[255];
+    Address   : String;
     Port      : Word;
     Version   : TIpVersion;
     AutoStart : Boolean;
 
     {$IFDEF USETLS}
-    CertificateFingerprint : String[255];
+    CertificateFingerprint : String;
     {$ENDIF}
-
-    {@M}
-    procedure Assign(const ASource: TServerConfiguration);
   end;
 
   TTreeData = record
@@ -158,19 +155,12 @@ uses
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Helper, Optix.Constants, Optix.Config.Servers, Optix.Config.Helper
+  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF}
 
-  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+  {$IF Defined(DEBUG) and Defined(USETLS)}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
-
-(* TServerConfiguration *)
-
-{ TServerConfiguration.Assign }
-procedure TServerConfiguration.Assign(const ASource: TServerConfiguration);
-begin
-  CopyMemory(@self, @ASource, SizeOf(TServerConfiguration));
-end;
 
 (* TFormServers *)
 
@@ -396,10 +386,10 @@ begin
     var pData := PTreeData(pNode.GetData);
     ///
 
-    pData^.ServerConfiguration.Assign(AServerConfiguration);
-    pData^.Status        := ssStopped;
-    pData^.StatusMessage := '';
-    pData^.StartDateTime := Now;
+    pData^.ServerConfiguration := AServerConfiguration;
+    pData^.Status              := ssStopped;
+    pData^.StatusMessage       := '';
+    pData^.StartDateTime       := Now;
 
     if AServerConfiguration.AutoStart then
       StartServer(pNode)
@@ -456,12 +446,10 @@ begin
     Exit();
 
   {$IFDEF USETLS}
-    var APublicKey  : String;
-    var APrivateKey : String;
+    var ACertificate : TX509Certificate;
 
-    if not FormCertificatesStore.GetCertificateKeys(
-      pData^.ServerConfiguration.CertificateFingerprint, APublicKey, APrivateKey
-    ) then begin
+    if not FormCertificatesStore.GetCertificateKeys(pData^.ServerConfiguration.CertificateFingerprint, ACertificate)
+    then begin
       Application.MessageBox(
         'Server certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
         'generate a new one.',
@@ -475,8 +463,7 @@ begin
 
   pData^.Server := TOptixServerThread.Create(
     {$IFDEF USETLS}
-    APublicKey,
-    APrivateKey,
+    ACertificate,
     {$ENDIF}
     pData^.ServerConfiguration.Address,
     pData^.ServerConfiguration.Port,

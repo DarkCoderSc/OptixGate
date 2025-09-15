@@ -54,7 +54,7 @@ uses
   Optix.InformationGathering.Helper, Optix.Exceptions, Optix.System.Helper, Optix.Protocol.SessionHandler, Optix.Thread,
   Optix.Sockets.Helper
 
-  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+  {$IFDEF USETLS}, Optix.OpenSSL.Helper, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure ClientEntrypoint();
@@ -99,17 +99,19 @@ begin
     TSystemHelper.TryNTSetPrivilege('SeTakeOwnershipPrivilege', True);
 
     {$IFDEF USETLS}
+    var ACertificate : TX509Certificate;
+    TOptixOpenSSLHelper.LoadCertificate(DEBUG_CERTIFICATE_PUBLIC_KEY, DEBUG_CERTIFICATE_PRIVATE_KEY, ACertificate);
+    {$ENDIF}
+
     var ASessionHandler := TOptixSessionHandlerThread.Create(
-      DEBUG_CERTIFICATE_PUBLIC_KEY,
-      DEBUG_CERTIFICATE_PRIVATE_KEY,
-      '127.0.0.1',  // or IPv6 -> ::1
+      {$IFDEF USETLS}ACertificate, {$ENDIF}
+      '127.0.0.1',
       2801,
-      ipv4          // or ipv6
+      ipv4
     );
 
+    {$IFDEF USETLS}
     ASessionHandler.ServerCertificateFingerprint := DEBUG_PEER_CERTIFICATE_FINGERPRINT;
-    {$ELSE}
-    var ASessionHandler := TOptixSessionHandlerThread.Create('127.0.0.1', 2801, ipv4);
     {$ENDIF}
 
     ASessionHandler.Retry := True;

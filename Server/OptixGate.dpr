@@ -42,6 +42,9 @@
 {******************************************************************************}
 
 program OptixGate;
+
+{$WARN DUPLICATE_CTOR_DTOR OFF}
+
 uses
   Vcl.Forms,
   Vcl.Themes,

@@ -61,12 +61,12 @@ uses
 
 type
   TClientConfiguration = record
-    Address   : String[255];
+    Address   : String;
     Port      : Word;
     Version   : TIpVersion;
 
     {$IFDEF USETLS}
-    CertificateFingerprint : String[255];
+    CertificateFingerprint : String;
     {$ENDIF}
   end;
 
@@ -116,7 +116,10 @@ var
 
 implementation
 
-uses uFormMain;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
@@ -138,11 +141,18 @@ end;
 
 procedure TFormConnectToServer.ButtonConnectClick(Sender: TObject);
 begin
-  if String.IsNullOrWhiteSpace(EditServerAddress.Text) then begin
-    EditServerAddress.SetFocus();
-
-    raise Exception.Create('You must specify a server hostname.');
-  end;
+//  if String.IsNullOrWhiteSpace(EditServerAddress.Text) or
+//     not TOptixSocketHelper.IsValidHost(EditServerAddress.Text, TIPVersion(ComboIpVersion.ItemIndex))
+//  then begin
+//    EditServerAddress.SetFocus();
+//
+//    raise Exception.Create(
+//      'You must specify a valid server address. For IPv4, use an address such as "127.0.0.1" for localhost or any ' +
+//      'valid LAN or WAN IPv4 address. For IPv6, use "::1" for localhost or a full IPv6 address such as ' +
+//      '"fd00:abcd:1234::100". You can also use a hostname that resolves to the appropriate IP version depending on ' +
+//      'the selected IP version mode.'
+//    );
+//  end;
 
   if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
     raise Exception.Create(
@@ -212,7 +222,6 @@ begin
     TSpinEdit(Sender).Value := 65535;
 end;
 
-{$IFDEF USETLS}
 { TFormConnectToServer.Create }
 procedure TFormConnectToServer.ComboIpVersionChange(Sender: TObject);
 begin
@@ -229,7 +238,7 @@ begin
   end;
 end;
 
-constructor TFormConnectToServer.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
+{$IFDEF USETLS}constructor TFormConnectToServer.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
 begin
   inherited Create(AOwner);
   ///
@@ -241,7 +250,6 @@ begin
 
   for var AFingerprint in ACertificatesFingerprints do
     ComboCertificate.Items.Add(AFingerprint);
-end;
-{$ENDIF}
+end;{$ENDIF}
 
 end.

@@ -115,6 +115,14 @@ begin
   then
     Exit();
   try
+    var APort := ANode.I['Port'];
+    if (APort < Low(Word)) or (APort > High(Word)) then
+      Exit();
+
+    var AVersion := ANode.I['Version'];
+    if (AVersion < 0) or (AVersion > 1) then
+      Exit();
+
     result.Address   := ANode.S['Address'];
     result.Port      := ANode.I['Port'];
     result.Version   := TIPVersion(ANode.I['Version']);
@@ -145,11 +153,10 @@ begin
 
   var ANode := SO();
 
-  // TODO: check for data consistency
-  ANode.S['Address']     := AServerConfiguration.Address;
-  ANode.I['Port']        := AServerConfiguration.Port;
-  ANode.I['Version']     := Cardinal(AServerConfiguration.Version);
-  ANode.B['AutoStart']   := AServerConfiguration.AutoStart;
+  ANode.S['Address']   := AServerConfiguration.Address;
+  ANode.I['Port']      := AServerConfiguration.Port;
+  ANode.I['Version']   := Cardinal(AServerConfiguration.Version);
+  ANode.B['AutoStart'] := AServerConfiguration.AutoStart;
 
   {$IFDEF USETLS}
   ANode.S['CertificateFingerprint'] := AServerConfiguration.CertificateFingerprint;

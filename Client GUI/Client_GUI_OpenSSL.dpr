@@ -43,6 +43,8 @@
 
 program Client_GUI_OpenSSL;
 
+{$WARN DUPLICATE_CTOR_DTOR OFF}
+
 uses
   Winapi.Windows,
   System.SysUtils,

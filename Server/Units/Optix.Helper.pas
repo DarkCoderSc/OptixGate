@@ -51,12 +51,9 @@ function GetWindowsDirectory() : string;
 
 procedure Open(const ACommand : String);
 
-procedure CheckValidIpV4Address(const AValue : String);
-function TryCheckValidIpV4Address(const AValue : String) : Boolean;
 procedure CheckCertificateFingerprint(const AValue : String);
 
 function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
-function CompareIPv4(const AIp1, AIp2 : String) : Integer;
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
 
 implementation
@@ -80,31 +77,6 @@ begin
     result := CompareDateTime(ADate1, ADate2);
 end;
 
-{ _.CompareIPv4 }
-function CompareIPv4(const AIp1, AIp2 : String) : Integer;
-begin
-  if not TryCheckValidIpV4Address(AIp1) or not TryCheckValidIpV4Address(AIp2) then
-    Result := CompareText(AIp1, AIp2)
-  else begin
-    var Parts1 := AIp1.Split(['.']);
-    var Parts2 := AIp2.Split(['.']);
-
-    for var I := 0 to 3 do begin
-      var AValue1 := StrToIntDef(Parts1[I], 0);
-      var AValue2 := StrToIntDef(Parts2[I], 0);
-
-      if AValue1 < AValue2 then
-        Exit(-1)
-      else if AValue1 > AValue2 then
-        Exit(1);
-    end;
-
-    ///
-    Result := 0;
-  end;
-end;
-
-
 { _.CompareObjectAssignement }
 function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
 begin
@@ -124,26 +96,6 @@ begin
       'Invalid certificate fingerprint. It must be a valid SHA-512 fingerprint, with each byte separated by a colon ' +
       '(e.g., AA:BB:CC:DD…:FF).'
     );
-end;
-
-{ _.IsValidIpV4Address }
-procedure CheckValidIpV4Address(const AValue : String);
-begin
-  if not TRegEx.IsMatch(AValue, '^(?:(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d).){3}(?:25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$') then
-    raise Exception.Create('Invalid IPv4 address format. Please enter a valid IPv4 address (e.g., 192.168.0.1).');
-end;
-
-{ _.TryCheckValidIpV4Address }
-function TryCheckValidIpV4Address(const AValue : String) : Boolean;
-begin
-  try
-    CheckValidIpV4Address(AValue);
-
-    ///
-    result := True;
-  except
-    result := False;
-  end;
 end;
 
 { _.Open }

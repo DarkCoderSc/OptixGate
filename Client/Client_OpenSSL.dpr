@@ -43,6 +43,8 @@
 
 program Client_OpenSSL;
 
+{$WARN DUPLICATE_CTOR_DTOR OFF}
+
 {$IFDEF DEBUG}
   {$APPTYPE GUI}
 {$ELSE}

@@ -26,11 +26,9 @@
   *
   *)
 
-  // Updated by Jean-Pierre LESUEUR to avoid having shitty Indy components embedded
-  // Also disabled warnings and hints
-
 unit XSuperObject;
 
+{$WARN DUPLICATE_CTOR_DTOR OFF}
 {$WARNINGS OFF}
 {$HINTS OFF}
 
@@ -3302,3 +3300,4 @@ initialization
   GenericsUnit := TEnumerable<Boolean>.UnitName;
 
 end.
+
