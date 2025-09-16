@@ -12,17 +12,27 @@ Optix can be used for:
 
 However, when it comes to Red Team missions, note that this tool is of no use. The simple reason is that it is not designed for stealth. A Remote Access Tool of this nature is inherently noisy, does not operate through covert channels (by design), and would very likely lead to quick detection and failure in such contexts.
 
-Furthermore, studying the source code will allow you to gain a deeper understanding of this type of program, which is highly comprehensive and covers multiple domains, including, but not limited to: network programming, system programming, cryptography, Windows API implementation and Windows internals, graphical interface creation and management, as well as parallelism and multithreading. This project complements the resources available on the Malware Gallery platform (www.malwaregallery.com), and the two will mutually enhance each other.
+Furthermore, studying the source code will allow you to gain a deeper understanding of this type of program, which is highly comprehensive and covers multiple domains, including, but not limited to: network programming, system programming, cryptography, Windows API implementation and Windows internals, graphical interface creation and management, as well as parallelism and multithreading. This project complements the resources available on the Malware Gallery platform ([Malware Gallery](https://www.malwaregallery.com)), and the two will mutually enhance each other.
 
-The first version focused on the design of its protocol, main structure, and architecture. Future versions will progressively integrate additional features and enhance its usefulness for the previously mentioned purposes.
+It is important to distinguish between a Remote Access Tool and a related category of malware known as a Remote Access Trojan (RAT). The key difference lies in intent: a Trojan is any program that disguises itself as legitimate, for example, in appearance or execution pretext, but actually performs malicious actions without the knowledge of the user.
 
-It is important to distinguish between a Remote Access Tool and a related category of malware known as a Remote Access Trojan (RAT). The key difference lies in intent: a Trojan is any program that disguises itself as legitimate—for example, in appearance or execution pretext—but actually performs malicious actions without the knowledge of the user.
-
-Optix will not, and will never, implement code that facilitates such usage. This includes features intended solely for malicious purposes, evasion or stealth techniques, client configuration patching, and persistence mechanisms. If you are conducting a penetration test and require such features, it is your responsibility to implement them and compile your own version.
+⚠️ *Optix will not, and will never, implement code that facilitates such usage. This includes features intended solely for malicious purposes, evasion or stealth techniques, client configuration patching, and persistence mechanisms. If you are conducting a penetration test and require such features, it is your responsibility to implement them and compile your own version.*
 
 The programming language used in this project is Delphi. In recent years, Embarcadero made a significant decision by offering a completely free edition of Delphi for open-source projects and students. You can now use the latest version of the IDE for free, provided you comply with their usage terms.
 
-Finally, Optix is a reference to an old Remote Access Trojan of the same name from the early 2000s, and the program’s logo is also a direct reference to it. The connection is a tribute, which is a recurring theme in many of my projects.
+Finally, Optix is a reference to an old Remote Access Trojan of the same name from the early 2000s, and the program's logo is also a direct reference to it. The connection is a tribute, which is a recurring theme in many of my projects.
+
+## Key Features
+
+* Multi-threaded and parallelized environment for managing multiple clients simultaneously
+* Mutual authentication (**mTLS**) between peers using **TLS 1.3** with **AES-256-GCM SHA-384** via OpenSSL for secure communication
+* Multi-listener (server) support with compatibility for both **IPv4** and modern **IPv6**
+* Remote shell with multiplexing
+* Remote file manager
+* Remote process manager
+* 100% free, 100% open-source, forever
+
+…and much more to do, much more to come.
 
 ## The Protocol
 
@@ -54,22 +64,22 @@ The only limitation is that the overall transfer time increases with the number 
 
 Sometimes an action can take a considerable amount of time to complete (e.g., file or registry searches, process dumps, etc.). Executing such actions directly from the Session Handler, as is done for standard commands (e.g., killing or list process), can seriously and negatively impact the responsiveness of other actions that require low latency (e.g., retrieving process lists, file lists, or service lists).
 
-To address this issue, I implemented a task management system using Delphi's Parallel Programming Library (PPL). This system is responsible for registering and scheduling tasks while providing the Server with continuous feedback on task status (waiting, running, succeeded, or failed). This approach allows long-running operations to execute in the background, scheduled for optimal timing, without compromising the program’s responsiveness.
+To address this issue, I implemented a task management system using Delphi's Parallel Programming Library (PPL). This system is responsible for registering and scheduling tasks while providing the Server with continuous feedback on task status (waiting, running, succeeded, or failed). This approach allows long-running operations to execute in the background, scheduled for optimal timing, without compromising the program's responsiveness.
 
 Once a task completes successfully, the Server receives and records its result in its task manager. The user can then access the results at any time, for example, to download a dumped file or perform further actions.
 
 ### Multiplexed Remote Shell
 
 One of the most important features for remote management is access to a shell. It is therefore natural that Optix included this feature from its very first version, fully integrated into its protocol and managed by the Session Handler. A single remote shell session is often insufficient, as multiple shell windows are frequently needed to perform concurrent actions.
-Optix allows opening multiple remote shell sessions either through tabs within the same window or by opening multiple windows with separate shell instances for the same session. This is achieved using the Session Handler shell orchestration without sacrificing responsiveness or performance. Each shell’s input and output are correctly dispatched to their respective processes, with support for interrupts (CTRL+C) to terminate long-running tasks. Notably, this design does not require a secondary socket or thread, which reduces resource consumption, simplifies management, and minimizes the risk of errors when handling multiple threads per client session.
+Optix allows opening multiple remote shell sessions either through tabs within the same window or by opening multiple windows with separate shell instances for the same session. This is achieved using the Session Handler shell orchestration without sacrificing responsiveness or performance. Each shell's input and output are correctly dispatched to their respective processes, with support for interrupts (`CTRL+C`) to terminate long-running tasks. Notably, this design does not require a secondary socket or thread, which reduces resource consumption, simplifies management, and minimizes the risk of errors when handling multiple threads per client session.
 
-The only minor drawback is a slight latency in shell output display, as each shell instance’s output is polled at regular intervals to maintain thread responsiveness. This does not pose a significant issue, though further optimization could be considered if lower latency for shell output dispatching becomes necessary.
+The only minor drawback is a slight latency in shell output display, as each shell instance's output is polled at regular intervals to maintain thread responsiveness. This does not pose a significant issue, though further optimization could be considered if lower latency for shell output dispatching becomes necessary.
 
 ## Conclusion
 
-To conclude on the protocol, these four points represent the program’s core pillars and were essential to establishing Optix as a solid solution from its first release candidate. They ensure safe, thread-managed command/response processes, support for multi-file transfers, processing of long-running actions with constant feedback, and parallel shell session access.
+To conclude on the protocol, these four points represent the program's core pillars and were essential to establishing Optix as a solid solution from its first release candidate. They ensure safe, thread-managed command/response processes, support for multi-file transfers, processing of long-running actions with constant feedback, and parallel shell session access.
 
-The file management system also demonstrates a component of the protocol called Workers. Unlike my previous programs, Optix aims to minimize the number of required connections and threads per client session. However, relying solely on the Session Handler (main socket + thread) is sometimes insufficient. For instance, file transfers, though technically possible over the main connection, would excessively degrade the Session Handler’s performance. In such cases, it is necessary to register a Worker. A Worker is a dedicated thread with its own socket connection, tied to an existing client session. It remains active as long as the main client session remains. This design also anticipates future features, such as Remote Desktop, which would require its own dedicated Worker thread.
+The file management system also demonstrates a component of the protocol called Workers. Unlike my previous programs, Optix aims to minimize the number of required connections and threads per client session. However, relying solely on the Session Handler (main socket + thread) is sometimes insufficient. For instance, file transfers, though technically possible over the main connection, would excessively degrade the Session Handler's performance. In such cases, it is necessary to register a Worker. A Worker is a dedicated thread with its own socket connection, tied to an existing client session. It remains active as long as the main client session remains. This design also anticipates future features, such as Remote Desktop, which would require its own dedicated Worker thread.
 
 In conclusion, Optix is architected to support future growth and feature expansion. Only minor improvements to the protocol, such as optimizations or code readability enhancements, may be needed over time.
 
@@ -80,6 +90,12 @@ In conclusion, Optix is architected to support future growth and feature expansi
 ![Server Control Center](Assets/sshot-1.png)
 
 The server is the command-and-control component of the system. It is the program used to manage and take control of remote systems, referred to as clients.
+
+#### Multi-listener
+
+![Server Multi-Listener](Assets/sshot-9.png)
+
+The multi-listener feature allows the server to listen on multiple ports simultaneously, ensuring flexibility when clients are configured to connect through different ports. It is particularly useful in environments where services must be accessible over both IPv4 and IPv6, even on the same port.
 
 ### Client GUI
 
@@ -93,7 +109,7 @@ The Client GUI allows users to connect to one or multiple servers simultaneously
 
 ![Client Template](Assets/sshot-3.png)
 
-The client, available only as a minimal template, is by default a console application that connects to a remote server defined statically in the code. This component is neither distributed as binaries nor provided with an easy way to patch its configuration. It is entirely the user’s responsibility to modify the relevant parts of the code to suit their specific needs.
+The client, available only as a minimal template, is by default a console application that connects to a remote server defined statically in the code. This component is neither distributed as binaries nor provided with an easy way to patch its configuration. It is entirely the user's responsibility to modify the relevant parts of the code to suit their specific needs.
 
 As stated in the introduction, Optix will never facilitate program misuse and does not provide any code intended for such purposes. Any modifications made to the code are solely the responsibility of the user and fall outside the scope of my concern.
 
@@ -113,11 +129,11 @@ As this concept may seem confusing at first, I will explain the concept of the O
 
 ![Certificate Store](Assets/sshot-4.png)
 
-Ideally, both the Client and Server should have their own certificates, although it is not strictly mandatory for them to be different. For security reasons, using distinct certificates is strongly recommended. Once the respective certificates are generated, the server’s certificate must be registered in the client’s trusted certificate store, and similarly, the client’s certificate fingerprint must be registered in the server’s trusted client certificate store.
+Ideally, both the Client and Server should have their own certificates, although it is not strictly mandatory for them to be different. For security reasons, using distinct certificates is strongly recommended. Once the respective certificates are generated, the server's certificate must be registered in the client's trusted certificate store, and similarly, the client's certificate fingerprint must be registered in the server's trusted client certificate store.
 
 ![Trusted Certificate Store](Assets/sshot-5.png)
 
-This setup ensures that the client’s certificate is recognized as valid by the server, and vice versa.
+This setup ensures that the client's certificate is recognized as valid by the server, and vice versa.
 
 It is possible to generate multiple certificates and register several trusted certificates in each store. When starting the server or adding a client, you must specify the certificate to use, ensuring it matches the certificate expected by the remote peer.
 
@@ -196,13 +212,27 @@ Stability is my top priority; new features come second.
 
 ## Changelogs
 
-### 1.0.0 Alpha 1
+### 1.0.0 (Sept 2025)
 
-- First release ever.
+* **Column sorting:** Improved data navigation with sortable columns.
+* **ZLib data compression:** Optimized performance through compression of Optix packets (JSON commands and responses).
+* **File manager enhancements:** Added backward/forward navigation for easier file browsing, and go to location.
+* **Execute-only folders:** Introduced a dedicated folder icon to clearly identify execute-only directories.
+* **Multi-listener support:** Manage multiple servers with saved configurations and automatic startup.
+* **IPv6 compatibility:** Full support for modern IPv6 networking alongside IPv4.
+* **Code improvements:** General optimizations and refinements for better stability and maintainability.
+
+### 1.0.0 Alpha 1 (August 2025)
+
+* First release ever.
 
 ## Dependencies
 
-OptixGate (Server) and the Client GUI both require the Virtual Treeview component from JAM Software; it is recommended to use the latest available version. OptixGate additionally requires OMultiPanel to be compiled, which is necessary for Remote Shell panel splitting. All parts of the program also use the X-SuperObject library from vkrapotkin.
+OptixGate (Server) and the Client GUI both require the [Virtual Treeview component from JAM Software](https://www.jam-software.com/virtual-treeview); it is recommended to use the latest available version. OptixGate additionally requires OMultiPanel to be compiled, which is necessary for Remote Shell panel splitting. [XSuperObject](https://github.com/onryldz/x-superobject) library from vkrapotkin and [OMultiPanel](https://sourceforge.net/projects/omultipanel/) from Ondřej Pokorný are also used.  
+
+*You will find the third-party Delphi libraries used in the project source code, matching the exact versions I worked with, in the folder `Libraries > Delphi`.*
+
+It is recommended to use the latest version of Delphi. You can install the [Delphi Community Edition](https://www.embarcadero.com/products/delphi/starter/free-download), which is available free of charge and fully sufficient to compile the entire project.
 
 For OpenSSL support, it is recommended to use the distributed DLLs provided in the Library folder. You may use your own compiled version at your own risk. The OpenSSL version should be at least equal to or higher than the version included in the project, though compatibility is not guaranteed.
 
@@ -224,7 +254,7 @@ Modifying or redistributing the code is done entirely at your own responsibility
 
 Use of this software and code constitutes acceptance of this disclaimer. If you do not agree to these terms, you should not use the software and code.
 
-  The GPLv3 license allows anyone to use, modify, and distribute the software freely, as long as any derivative works are also shared under the same license. It requires that source code be made available when distributing binaries, provides no warranty or liability for the author, and includes protections against patent claims and hardware restrictions that prevent user modifications. Commercial use is permitted, provided all GPLv3 obligations are met.
+> The GPLv3 license allows anyone to use, modify, and distribute the software freely, as long as any derivative works are also shared under the same license. It requires that **source code be made available when distributing binaries**, provides no warranty or liability for the author, and includes protections against patent claims and hardware restrictions that prevent user modifications. Commercial use is permitted, provided all GPLv3 obligations are met.
 
 ## Contact
 

@@ -41,17 +41,6 @@
 {                                                                              }
 {******************************************************************************}
 
-{
-  Current Release Draft Changelog [Done]:
-    - Column sorting
-    - ZLib Data Compression for Optix Packets (JSON Commands / Response)
-    - File manager: browser backward / forward added
-    - Execute-only folder materialized by a specific folder icon
-    - Multi server + Saved Servers + Auto Start
-    - Ipv6 support
-    - Code Improvement
-}
-
 unit uFormMain;
 
 interface
