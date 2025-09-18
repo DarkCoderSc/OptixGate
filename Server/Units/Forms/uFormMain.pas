@@ -41,6 +41,14 @@
 {                                                                              }
 {******************************************************************************}
 
+{
+
+  Current changelog draft:
+    - File manager: Folder Tree
+
+
+}
+
 unit uFormMain;
 
 interface
