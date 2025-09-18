@@ -45,8 +45,7 @@
 
   Current changelog draft:
     - File manager: Folder Tree
-
-
+    - Protocol Improvement
 }
 
 unit uFormMain;
@@ -174,6 +173,7 @@ type
     function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
     function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
     function GetControlForm(const AControlForm : TBaseFormControl; const AClass : TClass) : TBaseFormControl; overload;
+    function GetControlForms(const ASourceControlForm : TBaseFormControl; const AClassFamily : TClass) : TList<TBaseFormControl>;
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
@@ -290,6 +290,30 @@ begin
 
   ///
   result := GetControlForm(pNode, AClass);
+end;
+
+function TFormMain.GetControlForms(const ASourceControlForm : TBaseFormControl; const AClassFamily : TClass) : TList<TBaseFormControl>;
+begin
+  result := nil;
+  ///
+
+  if not Assigned(ASourceControlForm) then
+    Exit();
+
+  var pNode := GetNodeByControlForm(ASourceControlForm);
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PTreeData(pNode.GetData);
+  if not Assigned(pData) or not Assigned(pData^.Forms) then
+    Exit();
+
+  result := TList<TBaseFormControl>.Create();
+
+  for var AForm in pData^.Forms do begin
+    if AForm is AClassFamily then
+      result.Add(AForm);
+  end;
 end;
 
 function TFormMain.ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;

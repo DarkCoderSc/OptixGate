@@ -127,7 +127,7 @@ begin
   result := TSuperObject.Create();
   ///
 
-  result.S['PacketClass'] := self.ClassName;
+  result.S['PacketClass'] := ClassName;
   result.S['SessionId']   := FSessionId.ToString();
   result.S['WindowGUID']  := FWindowGUID.ToString();
 end;

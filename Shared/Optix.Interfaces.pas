@@ -59,6 +59,10 @@ type
     procedure DeSerialize(const ASerializedObject : ISuperObject);
   end;
 
+  IOptixAction = Interface(IInterface)
+    procedure DoAction();
+  End;
+
 implementation
 
 end.

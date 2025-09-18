@@ -248,6 +248,7 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Units\Configs\Optix.Config.Servers.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -299,13 +300,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Optix.inc" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win32\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="bins\OpenSSL\Win32\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -320,12 +315,6 @@
                 <DeployFile LocalName="bins\OpenSSL\Win64\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\OptixGate_OpenSSL.rsm" Configuration="Debug" Class="DebugSymbols">
-                    <Platform Name="Win64">
-                        <RemoteName>OptixGate_OpenSSL.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

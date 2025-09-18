@@ -110,7 +110,8 @@ uses
   uFormTrustedCertificates in 'Units\Forms\uFormTrustedCertificates.pas' {FormTrustedCertificates},
   Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas',
   uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
-  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas';
+  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas',
+  Optix.Func.Commands.ActionResponse in '..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas';
 
 {$R *.res}
 {$R data.res}

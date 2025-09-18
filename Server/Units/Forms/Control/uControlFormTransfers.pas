@@ -53,7 +53,8 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
 
-  VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
+  XSuperObject, VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees.AncestorVCL,
 
   __uBaseFormControl__,
 
@@ -125,6 +126,8 @@ type
     procedure OnTransferBegins(Sender : TObject; const ATransferId : TGUID; const AFileSize : Int64);
     procedure OnTransferUpdate(Sender : TObject; const ATransferId : TGUID; const AWorkCount : Int64; var ACanceled : Boolean);
     procedure OnTransferEnds(Sender : TObject; const ATransferId : TGUID);
+
+    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
   end;
 
 var
@@ -136,13 +139,37 @@ implementation
 uses
   System.IOUtils, System.Math, System.DateUtils,
 
-  uFormMain,
+  uFormMain, uControlFormFileManager,
 
   Optix.Func.Commands, Optix.Helper, VCL.FileCtrl, Optix.FileSystem.Helper, Optix.Exceptions, Optix.Constants,
-  Optix.VCL.Helper;
+  Optix.VCL.Helper, Optix.Func.Commands.ActionResponse;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+procedure TControlFormTransfers.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+begin
+  inherited;
+  ///
+
+  if AClassName = TOptixRequestUploadedFileInformation.ClassName then begin
+    var AForms := FormMain.GetControlForms(self, TControlFormFileManager);
+    if not Assigned(AForms) then
+      Exit();
+    try
+      var APacket := TOptixRequestUploadedFileInformation.Create(ASerializedPacket);
+      try
+        if Assigned(APacket.FileInformation) then
+          for var AForm in AForms do
+            TControlFormFileManager(AForm).RegisterNewFile(ExtractFilePath(APacket.FileName), APacket.FileInformation);
+      finally
+        FreeAndNil(APacket);
+      end;
+    finally
+      FreeAndNil(AForms);
+    end;
+  end;
+end;
 
 procedure TControlFormTransfers.OnTransferBegins(Sender : TObject; const ATransferId : TGUID; const AFileSize : Int64);
 begin
@@ -211,8 +238,12 @@ begin
   try
     if pData^.State = tsCancelRequest then
       pData^.State := tsCanceled
-    else
+    else begin
       pData^.State := tsEnded;
+
+      ///
+      SendCommand(TOptixRequestUploadedFileInformation.Create(pData^.DestinationFilePath, False));
+    end;
   finally
     VST.EndUpdate();
   end;

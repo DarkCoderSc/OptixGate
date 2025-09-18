@@ -26,7 +26,7 @@ object ControlFormFileManager: TControlFormFileManager
     Align = alTop
     ReadOnly = True
     TabOrder = 0
-    ExplicitWidth = 459
+    ExplicitWidth = 638
   end
   object PanelActions: TPanel
     AlignWithMargins = True
@@ -41,7 +41,7 @@ object ControlFormFileManager: TControlFormFileManager
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 459
+    ExplicitWidth = 638
     object ButtonHome: TSpeedButton
       AlignWithMargins = True
       Left = 0
@@ -133,7 +133,6 @@ object ControlFormFileManager: TControlFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
-      ExplicitLeft = 440
       ExplicitHeight = 15
     end
     object ButtonBack: TSpeedButton
@@ -208,10 +207,8 @@ object ControlFormFileManager: TControlFormFileManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
-    ExplicitLeft = 106
-    ExplicitTop = 200
-    ExplicitWidth = 185
-    ExplicitHeight = 41
+    ExplicitWidth = 646
+    ExplicitHeight = 348
     DesignSize = (
       656
       380)

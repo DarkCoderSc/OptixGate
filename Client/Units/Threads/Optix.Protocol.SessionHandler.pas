@@ -45,9 +45,17 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
-uses System.Classes, Generics.Collections, XSuperObject, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer, Optix.Func.Commands, Optix.Task,
-     Optix.Actions.ProcessHandler;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Generics.Collections,
+
+  XSuperObject,
+
+  Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer,
+  Optix.Func.Commands, Optix.Task, Optix.Actions.ProcessHandler;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TShellAction = (
@@ -111,9 +119,16 @@ type
 
 implementation
 
-uses Winapi.Windows, Optix.Func.SessionInformation, System.SysUtils, Optix.Func.Enum.Process, Optix.Actions.Process,
-     Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump, Optix.Func.Shell;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.StrUtils,
 
+  Winapi.Windows,
+
+  Optix.Func.SessionInformation, Optix.Func.Enum.Process, Optix.Actions.Process, Optix.Func.LogNotifier,
+  Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump, Optix.Func.Shell,
+  Optix.Func.Commands.ActionResponse;
+// ---------------------------------------------------------------------------------------------------------------------
 
 { TOptixSessionHandlerThread.Initialize }
 procedure TOptixSessionHandlerThread.Initialize();
@@ -457,7 +472,17 @@ begin
         StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
       end
       // ---------------------------------------------------------------------------------------------------------------
-      
+      else if AClassName = TOptixRequestUploadedFileInformation.ClassName then begin
+        Améliorer le protocole, rendre un certain nombre de choses plus génériques (ex. : RTTI / Registry / Class Factories)
+        etc...
+
+        var AResponse := TOptixRequestUploadedFileInformation.Create(ASerializedPacket);
+
+        AResponse.DoAction();
+
+        ///
+        AddPacket(AResponse);
+      end;
       // ---------------------------------------------------------------------------------------------------------------
 
       // ---------------------------------------------------------------------------------------------------------------

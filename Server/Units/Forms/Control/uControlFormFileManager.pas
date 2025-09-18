@@ -75,6 +75,9 @@ type
     DriveInformation : TDriveInformation;
     FileInformation  : TFileInformation;
     ImageIndex       : Integer;
+
+    {@M}
+    function Name() : String;
   end;
   PFileTreeData = ^TFileTreeData;
 
@@ -178,6 +181,7 @@ type
     procedure RefreshDrives(const APushToHistory : Boolean = True);
     procedure RefreshFiles();
     function GetFolderImageIndex(const AFolderAccess : TFileAccessAttributes) : Integer;
+    function GetNodeByFileName(const AFileName : String) : PVirtualNode;
   protected
     {@M}
     function GetContextDescription() : String; override;
@@ -188,6 +192,7 @@ type
   public
     {@M}
     procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure RegisterNewFile(const APath : String; const AFileInformation : TFileInformation);
 
     {@C}
     constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); override;
@@ -208,6 +213,75 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+(* TFileTreeData *)
+
+function TFileTreeData.Name() : String;
+begin
+  result := '';
+  ///
+
+  if Assigned(DriveInformation) then
+    result := DriveInformation.Letter
+  else if Assigned(FileInformation) then
+    result := FileInformation.Name;
+end;
+
+(* TControlFormFileManager *)
+
+function TControlFormFileManager.GetNodeByFileName(const AFileName : String) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  for var pNode in VSTFiles.Nodes do begin
+    var pData := PFileTreeData(pNode.GetData);
+    ///
+
+    if String.Compare(pData^.Name, AFileName, True) = 0 then begin
+      result := pNode;
+
+      break;
+    end;
+  end;
+end;
+
+procedure TControlFormFileManager.RegisterNewFile(const APath : String; const AFileInformation : TFileInformation);
+begin
+  if not Assigned(AFileInformation) then
+    Exit();
+  ///
+
+  if String.Compare(
+    IncludeTrailingPathDelimiter(APath),
+    IncludeTrailingPathDelimiter(EditPath.Text),
+    True
+  ) <> 0 then
+    Exit();
+
+  VSTFiles.BeginUpdate();
+  try
+    var pNode := GetNodeByFileName(AFileInformation.Name);
+    if not Assigned(pNode) then
+      pNode := VSTFiles.AddChild(nil);
+
+    var pData := PFileTreeData(pNode.GetData);
+
+    pData^.FileInformation := TFileInformation.Create();
+    pData^.FileInformation.Assign(AFileInformation);
+
+    if AFileInformation.IsDirectory then
+      pData^.ImageIndex := SystemFolderIcon()
+    else
+      pData^.ImageIndex := SystemFileIcon(pData^.Name, True);
+  finally
+    VSTFiles.EndUpdate();
+  end;
+
+  ///
+  if AFileInformation.IsDirectory then
+    RegisterFolderInTree(APath, AFileInformation.Name);
+end;
 
 function TControlFormFileManager.GetFolderImageIndex(const AFolderAccess : TFileAccessAttributes) : Integer;
 begin
@@ -329,7 +403,7 @@ begin
     AFolders.Add(AFolder, []);
 
     ///
-    RegisterFoldersInTree(ABasePath, AFolders);
+    RegisterFoldersInTree(IncludeTrailingPathDelimiter(ABasePath), AFolders);
   finally
     if Assigned(AFolders) then
       FreeAndNil(AFolders);

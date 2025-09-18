@@ -45,7 +45,16 @@ unit Optix.Func.Commands;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces, XSuperObject, Optix.Protocol.Packet;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Winapi.Windows,
+
+  XSuperObject,
+
+  Optix.Interfaces, Optix.Protocol.Packet;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixCommand = class(TOptixPacket);

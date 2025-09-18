@@ -93,7 +93,8 @@ uses
   Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
   Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
-  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas';
+  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas',
+  Optix.Func.Commands.ActionResponse in '..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas';
 
 begin
   IsMultiThread := True;
