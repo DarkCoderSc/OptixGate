@@ -53,57 +53,14 @@ uses
 
   XSuperObject,
 
-  Optix.Interfaces, Optix.Protocol.Packet;
+  Optix.Interfaces, Optix.Func.Commands.Base;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixCommand = class(TOptixPacket);
-
   // Simple Commands
   TOptixCommandTerminate = class(TOptixCommand);
   TOptixCommandRefreshProcess = class(TOptixCommand);
   TOptixCommandRefreshDrives = class(TOptixCommand);
-
-  // Parameterized Commands
-  TOptixCommandProcess = class(TOptixCommand)
-  private
-    FProcessId : Cardinal;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-  public
-    {@C}
-    constructor Create(const AProcessId : Cardinal) overload;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@G}
-    property ProcessId : Cardinal read FProcessId;
-  end;
-
-  TOptixCommandKillProcess = class(TOptixCommandProcess);
-
-  TOptixCommandProcessDump = class(TOptixCommandProcess)
-  private
-    FDestTempPath : Boolean;
-    FDestFilePath : String;
-    FTypesValue   : DWORD;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-  public
-    {@C}
-    constructor Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD); overload;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@G}
-    property DestTempPath : Boolean read FDestTempPath;
-    property DestFilePath : String  read FDestFilePath;
-    property TypesValue   : DWORD   read FTypesValue;
-  end;
 
   TOptixCommandRefreshFiles = class(TOptixCommand)
   private
@@ -201,35 +158,6 @@ type
 
 implementation
 
-(* TOptixCommandProcess *)
-
-{ TOptixCommandProcess.Create }
-constructor TOptixCommandProcess.Create(const AProcessId : Cardinal);
-begin
-  inherited Create();
-  ///
-
-  FProcessId := AProcessId;
-end;
-
-{ TOptixCommandProcess.Serialize }
-function TOptixCommandProcess.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.I['ProcessId'] := FProcessId;
-end;
-
-{ TOptixCommandProcess.DeSerialize }
-procedure TOptixCommandProcess.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FProcessId := ASerializedObject.I['ProcessId'];
-end;
-
 (* TOptixCommandRefreshFiles *)
 
 { TOptixCommandRefreshFiles.Create }
@@ -309,45 +237,6 @@ begin
   ///
 
   FFileSize := ASerializedObject.I['FileSize'];
-end;
-
-(* TOptixCommandProcessDump *)
-
-{ TOptixCommandProcessDump.Create }
-constructor TOptixCommandProcessDump.Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD);
-begin
-  inherited Create(AProcessId);
-  ///
-
-  FDestTempPath := String.IsNullOrWhiteSpace(ADestFilePath);
-  if not FDestTempPath then
-    FDestFilePath := ADestFilePath.Trim()
-  else
-    FDestFilePath := '';
-
-  FTypesValue := ATypesValue;
-end;
-
-{ TOptixCommandProcessDump.Serialize }
-function TOptixCommandProcessDump.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.B['DestTempPath'] := FDestTempPath;
-  result.S['DestFilePath'] := FDestFilePath;
-  result.I['TypesValue']   := FTypesValue;
-end;
-
-{ TOptixCommandProcessDump.DeSerialize }
-procedure TOptixCommandProcessDump.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FDestTempPath := ASerializedObject.B['DestTempPath'];
-  FDestFilePath := ASerializedObject.S['DestFilePath'];
-  FTypesValue   := ASerializedObject.I['TypesValue'];
 end;
 
 (* TOptixShellInstance *)

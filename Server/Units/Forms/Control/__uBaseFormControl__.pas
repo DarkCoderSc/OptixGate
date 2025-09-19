@@ -45,7 +45,20 @@ unit __uBaseFormControl__;
 
 interface
 
-uses VCL.Forms, VCL.Controls, System.Classes, Winapi.Messages, XSuperObject, Optix.Func.Commands, Generics.Collections;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Generics.Collections,
+
+  Winapi.Messages,
+
+  VCL.Forms, VCL.Controls,
+
+  XSuperObject,
+
+  Optix.Func.Commands.Base;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormControlState = (
@@ -143,7 +156,14 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, uFormMain, uControlFormTransfers;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows,
+
+  uFormMain, uControlFormTransfers;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* Local *)
 

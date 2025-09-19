@@ -137,7 +137,6 @@
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
         <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Types.pas"/>
-        <DCCReference Include="Units\Actions\Optix.Actions.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Classes.pas"/>
@@ -147,11 +146,13 @@
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
-        <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <DCCReference Include="Units\Actions\Optix.Actions.ProcessHandler.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="Units\Optix.Client.Entrypoint.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Base.pas"/>
+        <DCCReference Include="..\Shared\Optix.ClassesRegistry.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

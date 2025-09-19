@@ -41,14 +41,30 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Task;
+unit Optix.Func.Commands.Base;
 
 interface
 
-uses Generics.Collections, XSuperObject, System.Classes, System.Threading, Optix.Protocol.Packet, Optix.Func.Commands,
-     Optix.Interfaces;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils, System.Threading,
+
+  XSuperObject,
+
+  Optix.Func.Enum.FileSystem, Optix.Protocol.Packet, Optix.Interfaces;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
+  TOptixCommand = class(TOptixPacket);
+
+  TOptixCommandAction = class(TOptixCommand)
+  public
+    {@M}
+    procedure DoAction(); virtual; abstract;
+  end;
+
+  TOptixCommandActionResponse = class(TOptixCommandAction);
+
   TOptixTaskState = (
     otsPending,
     otsRunning,
@@ -150,9 +166,15 @@ type
     property RunningAware : Boolean read FRunningAware write FRunningAware;
   end;
 
+  TOptixCommandTask = class(TOptixCommand)
+  public
+    {@M}
+    function CreateTask(const ACommand : TOptixCommand) : TOptixTask; virtual; abstract;
+  end;
+
 implementation
 
-uses Winapi.Windows, System.SysUtils, Optix.Task.ProcessDump;
+uses Winapi.Windows, Optix.Task.ProcessDump;
 
 (* TOptixTaskCallback *)
 

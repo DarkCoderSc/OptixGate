@@ -54,7 +54,7 @@ uses
   XSuperObject,
 
   Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer,
-  Optix.Func.Commands, Optix.Task, Optix.Actions.ProcessHandler;
+  Optix.Func.Commands, Optix.Func.Commands.Base, Optix.Actions.ProcessHandler;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -121,13 +121,12 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.StrUtils,
+  System.SysUtils, System.StrUtils, System.Rtti,
 
   Winapi.Windows,
 
-  Optix.Func.SessionInformation, Optix.Func.Enum.Process, Optix.Actions.Process, Optix.Func.LogNotifier,
-  Optix.Func.Enum.FileSystem, Optix.Thread, Optix.Task.ProcessDump, Optix.Func.Shell,
-  Optix.Func.Commands.ActionResponse;
+  Optix.Func.SessionInformation, Optix.Func.Enum.Process, Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem,
+  Optix.Thread, Optix.Task.ProcessDump, Optix.Func.Shell, Optix.ClassesRegistry;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TOptixSessionHandlerThread.Initialize }
@@ -402,27 +401,41 @@ begin
     AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
 
   var AOptixPacket : TOptixPacket := nil;
-  var AHandleMemory : Boolean := False;
+  var AHandleMemory : Boolean := False; // TODO: Remove that when migration (Generic) finished
   try
     try
+      AOptixPacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [TValue.From<ISuperObject>(ASerializedPacket)]));
+      if Assigned(AOptixPacket) then begin
+        // Optix Action Command (& Response)
+        if AOptixPacket is TOptixCommandAction then begin
+          TOptixCommandActionResponse(AOptixPacket).DoAction();
+
+          // For Action & Response
+          if AOptixPacket is TOptixCommandActionResponse then begin
+            AHandleMemory := True;
+
+            ///
+            AddPacket(AOptixPacket);
+          end;
+          // Optix Task Command
+        end else if AOptixPacket is TOptixCommandTask then begin
+          AHandleMemory := True;
+
+          var ATask := TOptixCommandTask(AOptixPacket).CreateTask(TOptixCommand(AOptixPacket));
+
+          RegisterAndStartNewTask(ATask);
+        end;
+      end;
+
+      Continuer l'implémentation "générique", y compris à l'intérieur des tasks, afin de rendre l'ensemble le plus
+      générique possible, y compris coté serveur + l'implémenter sur le client GUI.
+
       // ---------------------------------------------------------------------------------------------------------------
       if AClassName = TOptixCommandTerminate.ClassName then
         Terminate
       // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixCommandRefreshProcess.ClassName then
         AddPacket(TProcessList.Create(AWindowGUID))
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandKillProcess.ClassName then begin
-        AHandleMemory := True;
-        ///
-
-        AOptixPacket := TOptixCommandKillProcess.Create(ASerializedPacket);
-
-        TProcessActions.TerminateProcess(TOptixCommandKillProcess(AOptixPacket).ProcessId);
-
-        ///
-        AddPacket(AOptixPacket); // Callback
-      end
       // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixCommandRefreshDrives.ClassName then
         AddPacket(TDriveList.Create(AWindowGUID))
@@ -438,15 +451,6 @@ begin
       // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixCommandUploadFile.ClassName then
         RegisterNewFileTransfer(TOptixCommandUploadFile.Create(ASerializedPacket))
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandProcessDump.ClassName then begin
-        AHandleMemory := True;
-        ///
-
-        AOptixPacket := TOptixCommandProcessDump.Create(ASerializedPacket);
-
-        RegisterAndStartNewTask(TOptixProcessDumpTask.Create(TOptixCommandProcessDump(AOptixPacket)));
-      end
       // ---------------------------------------------------------------------------------------------------------------
       else if AClassName = TOptixStartShellInstance.ClassName then begin
         AOptixPacket := TOptixStartShellInstance.Create(ASerializedPacket);
@@ -472,17 +476,7 @@ begin
         StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
       end
       // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixRequestUploadedFileInformation.ClassName then begin
-        Améliorer le protocole, rendre un certain nombre de choses plus génériques (ex. : RTTI / Registry / Class Factories)
-        etc...
-
-        var AResponse := TOptixRequestUploadedFileInformation.Create(ASerializedPacket);
-
-        AResponse.DoAction();
-
-        ///
-        AddPacket(AResponse);
-      end;
+      
       // ---------------------------------------------------------------------------------------------------------------
 
       // ---------------------------------------------------------------------------------------------------------------

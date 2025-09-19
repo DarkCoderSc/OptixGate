@@ -80,7 +80,6 @@ uses
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
   Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
   Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
   Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
   Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
@@ -90,11 +89,13 @@ uses
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
   Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas',
-  Optix.Func.Commands.ActionResponse in '..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas';
+  Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
+  Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
+  Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
+  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas';
 
 begin
   IsMultiThread := True;

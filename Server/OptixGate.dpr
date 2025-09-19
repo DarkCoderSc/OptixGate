@@ -74,7 +74,6 @@ uses
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
@@ -100,7 +99,10 @@ uses
   uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
   uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
   Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas',
-  Optix.Func.Commands.ActionResponse in '..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas';
+  Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
+  Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
+  Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
+  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas';
 
 {$R *.res}
 {$R data.res}
@@ -121,7 +123,6 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormServers, FormServers);
-
   ///
   Application.Run;
 end.

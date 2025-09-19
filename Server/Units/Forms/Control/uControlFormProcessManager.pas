@@ -150,8 +150,8 @@ uses
 
   uFormMain,
 
-  Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper,
-  Optix.Protocol.Packet;
+  Optix.Func.Commands.Process, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants,
+  Optix.VCL.Helper, Optix.Protocol.Packet, Optix.Func.Commands;
  // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}

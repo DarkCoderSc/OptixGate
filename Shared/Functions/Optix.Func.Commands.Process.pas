@@ -41,7 +41,7 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Commands.ActionResponse;
+unit Optix.Func.Commands.Process;
 
 interface
 
@@ -49,160 +49,168 @@ interface
 uses
   System.Classes, System.SysUtils,
 
+  Winapi.Windows,
+
   XSuperObject,
 
-  Optix.Func.Commands, Optix.Func.Enum.FileSystem, Optix.Interfaces;
+  Optix.Func.Commands.Base;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixCommandActionResponse = class(TOptixCommand, IOptixAction)
+  {@TEMPLATE}
+  TOptixCommandProcess = class(TOptixCommandAction)
   private
-    FDone : Boolean;
+    FProcessId : Cardinal;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
-    {@M}
-    procedure DoAction(); virtual;
+    {@C}
+    constructor Create(const AProcessId : Cardinal) overload;
 
+    {@M}
     function Serialize() : ISuperObject; override;
 
-    {@C}
-    constructor Create(); override;
+    {@G}
+    property ProcessId : Cardinal read FProcessId;
   end;
 
-  TOptixRequestFileInformation = class(TOptixCommandActionResponse)
-  private
-    FFileName        : String;
-    FIsDirectory     : Boolean;
-
-    FFileInformation : TFileInformation;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  TOptixCommandKillProcess = class(TOptixCommandProcess)
   public
     {@M}
     procedure DoAction(); override;
-
-    function Serialize() : ISuperObject; override;
-
-    {@C}
-    constructor Create(); reintroduce; override;
-    constructor Create(const AFileName : String; const AIsDirectory : Boolean); overload;
-    destructor Destroy(); override;
-
-    {@G}
-    property FileName        : String           read FFileName;
-    property IsDirectory     : Boolean          read FIsDirectory;
-    property FileInformation : TFileInformation read FFileInformation;
   end;
 
-  TOptixRequestUploadedFileInformation = class(TOptixRequestFileInformation);
+  TOptixCommandProcessDump = class(TOptixCommandTask)
+  private
+    FProcessId    : Cardinal;
+    FDestTempPath : Boolean;
+    FDestFilePath : String;
+    FTypesValue   : DWORD;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@C}
+    constructor Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD); overload;
+
+    {@M}
+    function Serialize() : ISuperObject; override;
+    function CreateTask(const ACommand : TOptixCommand) : TOptixTask; override;
+
+    {@G}
+    property ProcessId    : Cardinal read FProcessId;
+    property DestTempPath : Boolean  read FDestTempPath;
+    property DestFilePath : String   read FDestFilePath;
+    property TypesValue   : DWORD    read FTypesValue;
+  end;
 
 implementation
 
-(* TOptixCommandActionResponse *)
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.Process.Helper, Optix.Task.ProcessDump;
+// ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixCommandActionResponse.Create }
-constructor TOptixCommandActionResponse.Create();
+(***********************************************************************************************************************
+
+  TOptixCommandProcess
+
+***********************************************************************************************************************)
+
+{ TOptixCommandProcess.Create }
+constructor TOptixCommandProcess.Create(const AProcessId : Cardinal);
 begin
   inherited Create();
   ///
 
-  FDone := False;
+  FProcessId := AProcessId;
 end;
 
-{ TOptixCommandActionResponse.DoAction }
-procedure TOptixCommandActionResponse.DoAction();
-begin
-  ///
-end;
-
-{ TOptixCommandActionResponse.Serialize }
-function TOptixCommandActionResponse.Serialize() : ISuperObject;
+{ TOptixCommandProcess.Serialize }
+function TOptixCommandProcess.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
 
-  result.B['Done']:= FDone;
+  result.I['ProcessId'] := FProcessId;
 end;
 
-{ TOptixCommandActionResponse.DeSerialize }
-procedure TOptixCommandActionResponse.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixCommandProcess.DeSerialize }
+procedure TOptixCommandProcess.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
 
-  FDone := ASerializedObject.B['Done'];
+  FProcessId := ASerializedObject.I['ProcessId'];
 end;
 
-(* TOptixRequestFileInformation *)
+(***********************************************************************************************************************
 
-{ TOptixRequestFileInformation.Create }
-constructor TOptixRequestFileInformation.Create();
+  TOptixCommandKillProcess
+
+***********************************************************************************************************************)
+
+{ TOptixCommandKillProcess.DoAction }
+procedure TOptixCommandKillProcess.DoAction();
+begin
+  TProcessHelper.TerminateProcess(FProcessId);
+end;
+
+(***********************************************************************************************************************
+
+  TOptixCommandProcessDump
+
+***********************************************************************************************************************)
+
+{ TOptixCommandProcessDump.Create }
+constructor TOptixCommandProcessDump.Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD);
 begin
   inherited Create();
   ///
 
-  FFileInformation := nil;
+  FProcessId := AProcessId;
+
+  FDestTempPath := String.IsNullOrWhiteSpace(ADestFilePath);
+  if not FDestTempPath then
+    FDestFilePath := ADestFilePath.Trim()
+  else
+    FDestFilePath := '';
+
+  FTypesValue := ATypesValue;
 end;
 
-{ TOptixRequestFileInformation.Create }
-constructor TOptixRequestFileInformation.Create(const AFileName : String; const AIsDirectory : Boolean);
+{ TOptixCommandProcessDump.CreateTask }
+function TOptixCommandProcessDump.CreateTask(const ACommand : TOptixCommand) : TOptixTask;
 begin
-  Create();
-  ///
-
-  FFileName    := AFileName;
-  FIsDirectory := AIsDirectory;
+  if Assigned(ACommand) then
+    result := TOptixProcessDumpTask.Create(ACommand)
+  else
+    result := nil;
 end;
 
-{ TOptixRequestFileInformation.Destroy }
-destructor TOptixRequestFileInformation.Destroy();
-begin
-  if Assigned(FFileInformation) then
-    FreeAndNil(FFileInformation);
-
-  ///
-  inherited Destroy();
-end;
-
-{ TOptixRequestFileInformation.DoAction }
-procedure TOptixRequestFileInformation.DoAction();
-begin
-  inherited;
-  ///
-
-  FFileInformation := TFileInformation.Create(FFileName, FIsDirectory);
-
-  ///
-  FDone := True;
-end;
-
-{ TOptixRequestFileInformation.Serialize }
-function TOptixRequestFileInformation.Serialize() : ISuperObject;
+{ TOptixCommandProcessDump.Serialize }
+function TOptixCommandProcessDump.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
 
-  result.S['FileName']    := FFileName;
-  result.B['IsDirectory'] := FIsDirectory;
-
-  if FDone and Assigned(FFileInformation) then
-    result.O['FileInformation'] := FFileInformation.Serialize();
+  result.I['ProcessId']    := FProcessId;
+  result.B['DestTempPath'] := FDestTempPath;
+  result.S['DestFilePath'] := FDestFilePath;
+  result.I['TypesValue']   := FTypesValue;
 end;
 
-{ TOptixRequestFileInformation.DeSerialize }
-procedure TOptixRequestFileInformation.DeSerialize(const ASerializedObject : ISuperObject);
+{ TOptixCommandProcessDump.DeSerialize }
+procedure TOptixCommandProcessDump.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
   ///
 
-  FFileName    := ASerializedObject.S['FileName'];
-  FIsDirectory := ASerializedObject.B['IsDirectory'];
-
-  if ASerializedObject.Contains('FileInformation') then
-    FFileInformation := TFileInformation.Create(ASerializedObject.O['FileInformation']);
+  FProcessId    := ASerializedObject.I['ProcessId'];
+  FDestTempPath := ASerializedObject.B['DestTempPath'];
+  FDestFilePath := ASerializedObject.S['DestFilePath'];
+  FTypesValue   := ASerializedObject.I['TypesValue'];
 end;
 
 end.

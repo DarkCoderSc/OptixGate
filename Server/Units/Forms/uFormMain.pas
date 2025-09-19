@@ -67,7 +67,7 @@ uses
   __uBaseFormControl__,
 
   Optix.Thread, Optix.Protocol.Preflight, Optix.Protocol.Server, Optix.Sockets.Helper, Optix.Func.SessionInformation,
-  Optix.Protocol.SessionHandler, Optix.Func.Commands;
+  Optix.Protocol.SessionHandler, Optix.Func.Commands.Base, Optix.Func.Commands;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -198,7 +198,7 @@ uses
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
-  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.Task
+  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 

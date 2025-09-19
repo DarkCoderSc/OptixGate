@@ -70,6 +70,7 @@ type
     class function GetProcessCommandLine(const AProcessId : Cardinal) : String; static;
     class function TryGetProcessCommandLine(const AProcessId : Cardinal) : String; static;
     class function MiniDumpWriteDump(const ATargetProcessId : Cardinal; const ATypesValue : DWORD; AOutputFilePath : String = '') : String; static;
+    class procedure TerminateProcess(const AProcessId : Cardinal); static;
   end;
 
   function ElevatedStatusToString(const AValue : TElevatedStatus) : String;
@@ -422,5 +423,20 @@ begin
     CloseHandle(hProcess);
   end;
 end;
+
+{ TProcessHelper.TerminateProcess }
+class procedure TProcessHelper.TerminateProcess(const AProcessId : Cardinal);
+begin
+  var hProcess := OpenProcess(PROCESS_TERMINATE, False, AProcessId);
+  if hProcess = 0 then
+    raise EWindowsException.Create('OpenProcess');
+  try
+    if not Winapi.Windows.TerminateProcess(hProcess, 0) then
+      raise EWindowsException.Create('TerminateProcess');
+  finally
+    CloseHandle(hProcess);
+  end;
+end;
+
 
 end.

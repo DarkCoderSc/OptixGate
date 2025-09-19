@@ -41,34 +41,121 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Actions.Process;
+unit Optix.Func.Commands.FileSystem;
 
 interface
 
-uses Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Winapi.Windows,
+
+  XSuperObject,
+
+  Optix.Func.Commands.Base, Optix.Func.Enum.FileSystem;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TProcessActions = class
+  TOptixRequestFileInformation = class(TOptixCommandActionResponse)
+  private
+    FFileName        : String;
+    FIsDirectory     : Boolean;
+
+    FFileInformation : TFileInformation;
+  protected
     {@M}
-    class procedure TerminateProcess(const AProcessId : Cardinal); static;
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    procedure DoAction(); override;
+
+    function Serialize() : ISuperObject; override;
+
+    {@C}
+    constructor Create(); reintroduce; override;
+    constructor Create(const AFileName : String; const AIsDirectory : Boolean); overload;
+    destructor Destroy(); override;
+
+    {@G}
+    property FileName        : String           read FFileName;
+    property IsDirectory     : Boolean          read FIsDirectory;
+    property FileInformation : TFileInformation read FFileInformation;
   end;
+
+  {@ALIASES: TOptixRequestFileInformation}
+  TOptixRequestUploadedFileInformation = class(TOptixRequestFileInformation);
 
 implementation
 
-uses Optix.Exceptions;
+(***********************************************************************************************************************
 
-{ TProcessActions.TerminateProcess }
-class procedure TProcessActions.TerminateProcess(const AProcessId : Cardinal);
+  TOptixRequestFileInformation
+
+(**********************************************************************************************************************)
+
+{ TOptixRequestFileInformation.Create }
+constructor TOptixRequestFileInformation.Create();
 begin
-  var hProcess := OpenProcess(PROCESS_TERMINATE, False, AProcessId);
-  if hProcess = 0 then
-    raise EWindowsException.Create('OpenProcess');
-  try
-    if not Winapi.Windows.TerminateProcess(hProcess, 0) then
-      raise EWindowsException.Create('TerminateProcess');
-  finally
-    CloseHandle(hProcess);
-  end;
+  inherited Create();
+  ///
+
+  FFileInformation := nil;
+end;
+
+{ TOptixRequestFileInformation.Create }
+constructor TOptixRequestFileInformation.Create(const AFileName : String; const AIsDirectory : Boolean);
+begin
+  Create();
+  ///
+
+  FFileName    := AFileName;
+  FIsDirectory := AIsDirectory;
+end;
+
+{ TOptixRequestFileInformation.Destroy }
+destructor TOptixRequestFileInformation.Destroy();
+begin
+  if Assigned(FFileInformation) then
+    FreeAndNil(FFileInformation);
+
+  ///
+  inherited Destroy();
+end;
+
+{ TOptixRequestFileInformation.DoAction }
+procedure TOptixRequestFileInformation.DoAction();
+begin
+  inherited;
+  ///
+
+  FFileInformation := TFileInformation.Create(FFileName, FIsDirectory);
+end;
+
+{ TOptixRequestFileInformation.Serialize }
+function TOptixRequestFileInformation.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['FileName']    := FFileName;
+  result.B['IsDirectory'] := FIsDirectory;
+
+  if Assigned(FFileInformation) then
+    result.O['FileInformation'] := FFileInformation.Serialize();
+end;
+
+{ TOptixRequestFileInformation.DeSerialize }
+procedure TOptixRequestFileInformation.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FFileName    := ASerializedObject.S['FileName'];
+  FIsDirectory := ASerializedObject.B['IsDirectory'];
+
+  if ASerializedObject.Contains('FileInformation') then
+    FFileInformation := TFileInformation.Create(ASerializedObject.O['FileInformation']);
 end;
 
 end.

@@ -173,7 +173,6 @@
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
-        <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
@@ -228,7 +227,10 @@
             <Form>FormServers</Form>
         </DCCReference>
         <DCCReference Include="Units\Configs\Optix.Config.Servers.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ActionResponse.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Base.pas"/>
+        <DCCReference Include="..\Shared\Optix.ClassesRegistry.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

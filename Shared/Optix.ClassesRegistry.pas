@@ -41,134 +41,104 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Task.ProcessDump;
+unit Optix.ClassesRegistry;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  XSuperObject, Optix.Func.Commands.Base;
+  System.Classes, System.SysUtils, System.Rtti, System.TypInfo,
+
+  Generics.Collections;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixProcessDumpTask = class(TOptixTask)
-  protected
-    {@M}
-    function TaskCode() : TOptixTaskResult; override;
-  end;
-
-  TOptixProcessDumpTaskResult = class(TOptixTaskResult)
+  TClassesRegistry = class
   private
-    FOutputFilePath    : String;
-    FDumpedProcessId   : Cardinal;
-    FDumpedProcessName : String;
-
-    {@M}
-    function GetProcessDisplayName() : String;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-    function GetExtendedDescription() : String; override;
+    class var FRegisteredClasses : TDictionary<String, TClass>;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
     {@C}
-    constructor Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal); overload;
+    class constructor Create();
+    class destructor Destroy();
 
-    {@G}
-    property OutputFilePath    : String   read FOutputFilePath;
-    property DumpedProcessId   : Cardinal read FDumpedProcessId;
-    property DumpedProcessName : String   read FDumpedProcessName;
-    property Displayname       : String   read GetProcessDisplayName;
+    {@M}
+    class function CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject; static;
+    class procedure RegisterClass(const AClass : TClass);
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.IOUtils,
-
-  Winapi.Windows,
-
-  Optix.Func.Commands.Process, Optix.Process.Helper;
+  Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(* TOptixProcessDumpTask *)
+{ TClassesRegistry.Create }
+class constructor TClassesRegistry.Create();
+begin
+  FRegisteredClasses := TDictionary<String, TClass>.Create();
+end;
 
-{ TOptixProcessDumpTask.TaskCode }
-function TOptixProcessDumpTask.TaskCode() : TOptixTaskResult;
+{ TClassesRegistry.Destroy }
+class destructor TClassesRegistry.Destroy();
+begin
+  if Assigned(FRegisteredClasses) then
+    FreeAndNil(FRegisteredClasses);
+end;
+
+{ TClassesRegistry.CreateInstance }
+class function TClassesRegistry.CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject;
 begin
   result := nil;
   ///
 
-  if not Assigned(FCommand) or (not (FCommand is TOptixCommandProcessDump)) then
+  if not Assigned(FRegisteredClasses) or (FRegisteredClasses.Count = 0) then
     Exit();
-
-  var AOutputFilePath := TProcessHelper.MiniDumpWriteDump(
-    TOptixCommandProcessDump(FCommand).ProcessId,
-    TOptixCommandProcessDump(FCommand).TypesValue,
-    TOptixCommandProcessDump(FCommand).DestFilePath,
-  );
-
-  ///
-  result := TOptixProcessDumpTaskResult.Create(AOutputFilePath, TOptixCommandProcessDump(FCommand).ProcessId);
-end;
-
-(* TOptixProcessDumpTaskResult *)
-
-{ TOptixProcessDumpTaskResult.Create }
-constructor TOptixProcessDumpTaskResult.Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal);
-begin
-  inherited Create();
   ///
 
-  FOutputFilePath    := AOutputFileName;
-  FDumpedProcessId   := ADumpedProcessId;
-  FDumpedProcessName := TPath.GetFileName(TProcessHelper.TryGetProcessImagePath(FDumpedProcessId));
-end;
-
-{ TOptixProcessDumpTaskResult.GetProcessDisplayName }
-function TOptixProcessDumpTaskResult.GetProcessDisplayName() : String;
-begin
-  if String.IsNullOrWhiteSpace(FDumpedProcessName) then
-    result := IntToStr(FDumpedProcessId)
-  else
-    result := Format('%d (%s)', [
-      FDumpedProcessId,
-      FDumpedProcessName
-    ]);
-end;
-
-{ TOptixProcessDumpTaskResult.GetExtendedDescription }
-function TOptixProcessDumpTaskResult.GetExtendedDescription() : String;
-begin
-  result := Format('%s successfully dumped to "%s"', [
-    GetProcessDisplayName(),
-    FOutputFilePath
-  ]);
-end;
-
-{ TOptixProcessDumpTaskResult.DeSerialize }
-procedure TOptixProcessDumpTaskResult.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
+  var AClass : TClass;
+  if not FRegisteredClasses.TryGetValue(AClassName, AClass) then
+    Exit();
   ///
 
-  FOutputFilePath    := ASerializedObject.S['OutputFilePath'];
-  FDumpedProcessId   := ASerializedObject.I['DumpedProcessId'];
-  FDumpedProcessName := ASerializedObject.S['DumpedProcessName'];
+  var AContext: TRttiContext;
+  var AType := AContext.GetType(AClass);
+
+  for var AMethod in AType.GetMethods() do begin
+    if not AMethod.IsConstructor then
+      continue;
+    ///
+
+    var AParameters := AMethod.GetParameters();
+    if Length(AParameters) = Length(AParams) then begin
+      for var I := Low(AParameters) to High(AParameters) do begin
+        if AParams[I].IsType(AParameters[I].ParamType.Handle) then begin
+          result := AMethod.Invoke(AClass, AParams).AsObject();
+
+          break;
+        end;
+      end;
+
+      if Assigned(result) then
+        break;
+    end;
+  end;
 end;
 
-{ TOptixProcessDumpTaskResult.Serialize }
-function TOptixProcessDumpTaskResult.Serialize() : ISuperObject;
+{ TClassesRegistry.RegisterClass }
+class procedure TClassesRegistry.RegisterClass(const AClass : TClass);
 begin
-  result := inherited;
-  ///
-
-  result.S['OutputFilePath']    := FOutputFilePath;
-  result.I['DumpedProcessId']   := FDumpedProcessId;
-  result.S['DumpedProcessName'] := FDumpedProcessName;
+  if Assigned(FRegisteredClasses) and not FRegisteredClasses.ContainsKey(AClass.ClassName) then
+    FRegisteredClasses.Add(AClass.ClassName, AClass);
 end;
+
+initialization
+  // File System Commands
+  TClassesRegistry.RegisterClass(TOptixRequestFileInformation);
+  TClassesRegistry.RegisterClass(TOptixRequestUploadedFileInformation);
+
+  // System Commands
+  TClassesRegistry.RegisterClass(TOptixCommandKillProcess);
+  TClassesRegistry.RegisterClass(TOptixCommandProcessDump);
 
 end.
