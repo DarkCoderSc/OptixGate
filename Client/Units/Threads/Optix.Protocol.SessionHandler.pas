@@ -202,6 +202,25 @@ begin
   end;
 end;
 
+{ TOptixSessionHandlerThread.RegisterAndStartNewTask }
+procedure TOptixSessionHandlerThread.RegisterAndStartNewTask(const AOptixTask : TOptixTask);
+begin
+  if not Assigned(AOptixTask) or not Assigned(FTasks) then
+    Exit();
+  ///
+
+  var ATaskId := TGUID.NewGuid();
+
+  AOptixTask.SetTaskId(ATaskId);
+
+  AddPacket(TOptixTaskCallback.Create(AOptixTask));
+
+  AOptixTask.Start();
+
+  ///
+  FTasks.Add(AOptixTask);
+end;
+
 { TOptixSessionHandlerThread.PollShellInstances }
 procedure TOptixSessionHandlerThread.PollShellInstances();
 begin
@@ -306,25 +325,6 @@ begin
   // Shell Instances ---------------------------------------------------------------------------------------------------
   PollShellInstances();
   // -------------------------------------------------------------------------------------------------------------------
-end;
-
-{ TOptixSessionHandlerThread.RegisterAndStartNewTask }
-procedure TOptixSessionHandlerThread.RegisterAndStartNewTask(const AOptixTask : TOptixTask);
-begin
-  if not Assigned(AOptixTask) or not Assigned(FTasks) then
-    Exit();
-  ///
-
-  var ATaskId := TGUID.NewGuid();
-
-  AOptixTask.SetTaskId(ATaskId);
-
-  AddPacket(TOptixTaskCallback.Create(AOptixTask));
-
-  AOptixTask.Start();
-
-  ///
-  FTasks.Add(AOptixTask);
 end;
 
 { TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread }

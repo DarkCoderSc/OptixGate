@@ -84,6 +84,8 @@ object ControlFormTasks: TControlFormTasks
     Left = 160
     Top = 64
     object Action1: TMenuItem
+      Caption = 'Action'
+      OnClick = Action1Click
     end
   end
 end

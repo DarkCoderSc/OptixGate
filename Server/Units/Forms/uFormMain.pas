@@ -189,8 +189,6 @@ var
 
 implementation
 
-do generic commands server side
-
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   System.DateUtils,

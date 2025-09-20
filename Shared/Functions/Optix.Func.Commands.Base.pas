@@ -99,6 +99,7 @@ type
     {@C}
     constructor Create(); overload;
     constructor Create(const ASerializedObject : ISuperObject); overload; virtual;
+    destructor Destroy(); override;
 
     {@G}
     property Success          : Boolean read FSuccess;
@@ -133,16 +134,17 @@ type
 
   TOptixTask = class
   private
-    FId           : TGUID;
-    FTask         : IFuture<TOptixTaskResult>;
-    FRunningAware : Boolean; // Tiny trick to know if we already know, task is running (actively)
+    FId             : TGUID;
+    FTask           : IFuture<TOptixTaskResult>;
+    FSuccess        : Boolean;
+    FRunningAware   : Boolean;
+    FResultIsPulled : Boolean;
 
     {@M}
     function Execute() : TOptixTaskResult;
     function IsCompleted() : Boolean;
-    function IsSuccess() : Boolean;
     function IsRunning() : Boolean;
-    function GetResult() : TOptixTaskResult;
+    function GetResult(const APullResult : Boolean = false) : TOptixTaskResult;
   protected
     FCommand : TOptixCommand;
 
@@ -156,13 +158,13 @@ type
     {@M}
     procedure Start();
     procedure SetTaskId(const ATaskId : TGUID);
+    function PullResult() : TOptixTaskResult;
 
     {@G}
-    property Id           : TGUID            read FId;
-    property Completed    : Boolean          read IsCompleted;
-    property Running      : Boolean          read IsRunning;
-    property Success      : Boolean          read IsSuccess;
-    property Result       : TOptixTaskResult read GetResult;
+    property Id        : TGUID   read FId;
+    property Completed : Boolean read IsCompleted;
+    property Running   : Boolean read IsRunning;
+    property Success   : Boolean read FSuccess;
 
     {@G/S}
     property RunningAware : Boolean read FRunningAware write FRunningAware;
@@ -197,7 +199,8 @@ begin
   FTaskClassName := ATask.ClassName;
 
   if ATask.Completed then begin
-    FResult := ATask.Result;
+    FResult := ATask.PullResult();
+    ///
 
     if ATask.Success then
       FState := otsSuccess
@@ -217,6 +220,8 @@ end;
 { TOptixTaskCallback.Destroy }
 destructor TOptixTaskCallback.Destroy();
 begin
+  if Assigned(FResult) then
+    FreeAndNil(FResult);
 
   ///
   inherited Destroy();
@@ -228,20 +233,20 @@ begin
   inherited;
   ///
 
-  FId            := TGUID.Create(ASerializedObject.S['Id']);
-  FTaskClassName := ASerializedObject.S['TaskClassName'];
-  FState         := TOptixTaskState(ASerializedObject.I['State']);
+  FId    := TGUID.Create(ASerializedObject.S['Id']);
+  FState := TOptixTaskState(ASerializedObject.I['State']);
 
   var ASerializedResult := ASerializedObject.O['Result'];
+  if Assigned(ASerializedResult) then begin
+    if ASerializedResult.Contains('ResultClass') then begin
+      var AResultClass := ASerializedResult.S['ResultClass'];
+      ///
 
-  // TODO: Review task logic to make this part GENERIC, (!) FTaskClassName != FResult (!)
-  // -------------------------------------------------------------------------------------------------------------------
-  if FTaskClassName = TOptixProcessDumpTask.ClassName then
-    FResult := TOptixProcessDumpTaskResult.Create(ASerializedResult)
-  // -------------------------------------------------------------------------------------------------------------------
-  else
-    FResult := TOptixTaskResult.Create(ASerializedResult);
-  // -------------------------------------------------------------------------------------------------------------------
+      FResult := TOptixTaskResult(TClassesRegistry.CreateInstance(AResultClass, [
+        TValue.From<ISuperObject>(ASerializedResult)
+      ]));
+    end;
+  end;
 end;
 
 { TOptixTaskCallback.Serialize }
@@ -250,9 +255,8 @@ begin
   result := inherited;
   ///
 
-  result.S['Id']            := FId.TOString();
-  result.S['TaskClassName'] := FTaskClassName;
-  result.I['State']         := Integer(FState);
+  result.S['Id']    := FId.TOString();
+  result.I['State'] := Integer(FState);
 
   if Assigned(FResult) then
     result.O['result'] := FResult.Serialize()
@@ -293,19 +297,6 @@ begin
   result := Assigned(FTask) and (FTask.Status in [TTaskStatus.Completed, TTaskStatus.Exception]);
 end;
 
-{ TOptixTask.IsSuccess }
-function TOptixTask.IsSuccess() : Boolean;
-begin
-  result := False;
-  if not IsCompleted() then
-    Exit();
-  ///
-
-  var AResult := GetResult();
-  if Assigned(AResult) then
-    result := AResult.Success;
-end;
-
 { TOptixTask.IsRunning }
 function TOptixTask.IsRunning() : Boolean;
 begin
@@ -330,17 +321,32 @@ begin
 end;
 
 { TOptixTask.GetResult }
-function TOptixTask.GetResult() : TOptixTaskResult;
+function TOptixTask.GetResult(const APullResult : Boolean = false) : TOptixTaskResult;
 begin
   result := nil;
   ///
 
-  if IsCompleted() then
+  if IsCompleted() and not FResultIsPulled then begin
     try
-      result := FTask.Value
+      result := FTask.Value;
     except
 
     end;
+
+    if Assigned(result) then begin
+      FSuccess := result.Success;
+
+      ///
+      if APullResult then
+        FResultIsPulled := APullResult;
+    end;
+  end;
+end;
+
+{ TOptixTask.PullResult }
+function TOptixTask.PullResult() : TOptixTaskResult;
+begin
+  result := GetResult(True);
 end;
 
 { TOptixTask.Create }
@@ -349,23 +355,25 @@ begin
   inherited Create();
   ///
 
-  FId           := TGUID.Empty;
-  FTask         := nil;
-  FCommand      := ACommand;
-  FRunningAware := False;
+  FId             := TGUID.Empty;
+  FTask           := nil;
+  FCommand        := ACommand;
+  FRunningAware   := False;
+  FSuccess        := False;
+  FResultIsPulled := False;
 end;
 
 { TOptixTask.Destroy }
 destructor TOptixTask.Destroy();
 begin
-  FTask := nil;
-
   if Assigned(FCommand) then
     FreeAndNil(FCommand);
 
   var AResult := GetResult();
   if Assigned(AResult) then
     FreeAndNil(AResult);
+
+  FTask := nil;
 
   ///
   inherited Destroy();
@@ -392,6 +400,14 @@ begin
 
   if Assigned(ASerializedObject) then
     DeSerialize(ASerializedObject);
+end;
+
+{ TOptixTaskResult.Destroy }
+destructor TOptixTaskResult.Destroy();
+begin
+
+  ///
+  inherited Destroy();
 end;
 
 { TOptixTaskResult.SetTaskDuration }
@@ -458,6 +474,7 @@ begin
   result := SO();
   ///
 
+  result.S['ResultClass']      := ClassName;
   result.B['Success']          := FSuccess;
   result.S['ExceptionMessage'] := FExceptionMessage;
   result.I['TaskDuration']     := FTaskDuration;

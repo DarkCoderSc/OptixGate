@@ -71,7 +71,7 @@ implementation
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
-  Optix.Task.ProcessDump;
+  Optix.Task.ProcessDump, Optix.Func.Commands.Base;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TClassesRegistry.Create }
@@ -159,5 +159,7 @@ initialization
   TClassesRegistry.RegisterClass(TOptixStdinShellInstance);
 
   (* Tasks *)
-  TClassesRegistry.RegisterClass(TOptixProcessDumpTask);
+  TClassesRegistry.RegisterClass(TOptixTaskResult);
+  TClassesRegistry.RegisterClass(TOptixProcessDumpTaskResult);
+
 end.
