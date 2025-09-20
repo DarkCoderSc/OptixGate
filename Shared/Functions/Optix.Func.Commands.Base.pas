@@ -51,11 +51,13 @@ uses
 
   XSuperObject,
 
-  Optix.Func.Enum.FileSystem, Optix.Protocol.Packet, Optix.Interfaces;
+  Optix.FileSystem.Enum, Optix.Protocol.Packet, Optix.Interfaces;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixCommand = class(TOptixPacket);
+
+  TOptixSimpleCommand = class(TOptixCommand);
 
   TOptixCommandAction = class(TOptixCommand)
   public
@@ -174,7 +176,14 @@ type
 
 implementation
 
-uses Winapi.Windows, Optix.Task.ProcessDump;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Rtti,
+
+  Winapi.Windows,
+
+  Optix.ClassesRegistry, Optix.Task.ProcessDump;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixTaskCallback *)
 
@@ -225,8 +234,9 @@ begin
 
   var ASerializedResult := ASerializedObject.O['Result'];
 
+  // TODO: Review task logic to make this part GENERIC, (!) FTaskClassName != FResult (!)
   // -------------------------------------------------------------------------------------------------------------------
-  if TaskClassName = TOptixProcessDumpTask.ClassName then
+  if FTaskClassName = TOptixProcessDumpTask.ClassName then
     FResult := TOptixProcessDumpTaskResult.Create(ASerializedResult)
   // -------------------------------------------------------------------------------------------------------------------
   else

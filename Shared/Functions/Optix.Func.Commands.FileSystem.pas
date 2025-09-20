@@ -49,11 +49,13 @@ interface
 uses
   System.Classes, System.SysUtils,
 
+  Generics.Collections,
+
   Winapi.Windows,
 
   XSuperObject,
 
-  Optix.Func.Commands.Base, Optix.Func.Enum.FileSystem;
+  Optix.Func.Commands.Base, Optix.FileSystem.Enum, Optix.FileSystem.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -85,6 +87,89 @@ type
 
   {@ALIASES: TOptixRequestFileInformation}
   TOptixRequestUploadedFileInformation = class(TOptixRequestFileInformation);
+
+  TOptixCommandRefreshDrives = class(TOptixCommandActionResponse)
+  private
+    FList : TObjectList<TDriveInformation>;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+    procedure DoAction(); override;
+
+    {@C}
+    constructor Create(); override;
+    destructor Destroy(); override;
+
+    {@G}
+    property List : TObjectList<TDriveInformation> read FList;
+  end;
+
+  TOptixCommandRefreshFiles = class(TOptixCommandActionResponse)
+  private
+    FPath   : String;
+    FAccess : TFileAccessAttributes;
+    FIsRoot : Boolean;
+    FList   : TObjectList<TFileInformation>;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+    procedure DoAction(); override;
+
+    {@C}
+    constructor Create(); override;
+    constructor Create(const APath : String); overload;
+    destructor Destroy(); override;
+
+    {@G}
+    property Path   : String                        read FPath;
+    property List   : TObjectList<TFileInformation> read FList;
+    property Access : TFileAccessAttributes         read FAccess;
+    property IsRoot : Boolean                       read FIsRoot;
+  end;
+
+  TOptixCommandTransfer = class(TOptixCommand)
+  private
+    FTransferId : TGUID;
+
+    // FFilePath in TOptixDownloadFile -> File to download (Client)
+    // FFilePath in TOptixUploadFile   -> Uploaded destination file path (Client)
+    FFilePath : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@C}
+    constructor Create(const AFilePath : String; const ATransferId : TGUID); overload;
+
+    {@G}
+    property TransferId : TGUID  read FTransferId;
+    property FilePath   : String read FFilePath;
+  end;
+
+  TOptixCommandDownloadFile = class(TOptixCommandTransfer);
+
+  TOptixCommandUploadFile = class(TOptixCommandTransfer)
+  private
+    FFileSize : UInt64;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@G}
+    property FileSize : UInt64 read FFileSize;
+  end;
 
 implementation
 
@@ -157,5 +242,200 @@ begin
   if ASerializedObject.Contains('FileInformation') then
     FFileInformation := TFileInformation.Create(ASerializedObject.O['FileInformation']);
 end;
+
+(***********************************************************************************************************************
+
+  TOptixCommandRefreshDrives
+
+(**********************************************************************************************************************)
+
+{ TOptixCommandRefreshDrives.DoAction }
+procedure TOptixCommandRefreshDrives.DoAction();
+begin
+  TOptixEnumDrives.Enum(FList);
+end;
+
+{ TOptixCommandRefreshDrives.DeSerialize }
+procedure TOptixCommandRefreshDrives.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FList.Clear();
+
+  for var I := 0 to ASerializedObject.A['List'].Length -1 do
+    FList.Add(TDriveInformation.Create(ASerializedObject.A['List'].O[I]));
+end;
+
+{ TOptixCommandRefreshDrives.Serialize }
+function TOptixCommandRefreshDrives.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  var AJsonArray := TSuperArray.Create();
+
+  for var AItem in FList do
+    AJsonArray.Add(AItem.Serialize);
+
+  ///
+  result.A['List'] := AJsonArray;
+end;
+
+{ TOptixCommandRefreshDrives.Create }
+constructor TOptixCommandRefreshDrives.Create();
+begin
+  inherited;
+  ///
+
+  FList := TObjectList<TDriveInformation>.Create(True);
+end;
+
+{ TOptixCommandRefreshDrives.Destroy }
+destructor TOptixCommandRefreshDrives.Destroy();
+begin
+  if Assigned(FList) then
+    FreeAndNil(FList);
+
+  ///
+  inherited;
+end;
+
+(***********************************************************************************************************************
+
+  TOptixCommandRefreshFiles
+
+(**********************************************************************************************************************)
+
+{ TOptixCommandRefreshFiles.DoAction }
+procedure TOptixCommandRefreshFiles.DoAction();
+begin
+  TOptixEnumFiles.Enum(FPath, FList, FIsRoot, FAccess);
+end;
+
+{ TOptixCommandRefreshFiles.DeSerialize }
+procedure TOptixCommandRefreshFiles.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FList.Clear();
+
+  FPath   := ASerializedObject.S['Path'];
+  FAccess := StringToAccessSet(ASerializedObject.S['Access']);
+  FIsRoot := ASerializedObject.B['IsRoot'];
+
+  for var I := 0 to ASerializedObject.A['List'].Length -1 do
+    FList.Add(TFileInformation.Create(ASerializedObject.A['List'].O[I]));
+end;
+
+{ TOptixCommandRefreshFiles.Serialize }
+function TOptixCommandRefreshFiles.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  var AJsonArray := TSuperArray.Create();
+
+  for var AItem in FList do
+    AJsonArray.Add(AItem.Serialize);
+
+  ///
+  result.S['Path']   := FPath;
+  result.A['List']   := AJsonArray;
+  result.S['Access'] := AccessSetToString(FAccess);
+  result.B['IsRoot'] := FIsRoot;
+end;
+
+{ TOptixCommandRefreshFiles.Create }
+constructor TOptixCommandRefreshFiles.Create();
+begin
+  inherited;
+  ///
+
+  FList   := TObjectList<TFileInformation>.Create(True);
+end;
+
+{ TOptixCommandRefreshFiles.Create }
+constructor TOptixCommandRefreshFiles.Create(const APath : String);
+begin
+  Create();
+  ///
+
+  FPath   := APath;
+  FAccess := [];
+  FIsRoot := False;
+end;
+
+{ TOptixCommandRefreshFiles.Destroy }
+destructor TOptixCommandRefreshFiles.Destroy();
+begin
+  if Assigned(FList) then
+    FreeAndNil(FList);
+
+  ///
+  inherited;
+end;
+
+(***********************************************************************************************************************
+
+  TOptixCommandTransfer
+
+***********************************************************************************************************************)
+
+{ TOptixCommandTransfer.Create }
+constructor TOptixCommandTransfer.Create(const AFilePath : String; const ATransferId : TGUID);
+begin
+  inherited Create();
+  ///
+
+  FFilePath   := AFilePath;
+  FTransferId := ATransferId;
+end;
+
+{ TOptixCommandTransfer.Serialize }
+function TOptixCommandTransfer.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['TransferId'] := FTransferId.ToString();
+  result.S['FilePath']   := FFilePath;
+end;
+
+{ TOptixCommandTransfer.DeSerialize }
+procedure TOptixCommandTransfer.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
+  FFilePath   := ASerializedObject.S['FilePath'];
+end;
+
+(***********************************************************************************************************************
+
+  TOptixCommandUploadFile
+
+***********************************************************************************************************************)
+
+{ TOptixCommandUploadFile.Serialize }
+function TOptixCommandUploadFile.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.I['FileSize'] := FFileSize;
+end;
+
+{ TOptixCommandUploadFile.DeSerialize }
+procedure TOptixCommandUploadFile.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FFileSize := ASerializedObject.I['FileSize'];
+end;
+
 
 end.

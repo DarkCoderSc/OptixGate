@@ -54,7 +54,8 @@ uses
   XSuperObject,
 
   Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer,
-  Optix.Func.Commands, Optix.Func.Commands.Base, Optix.Actions.ProcessHandler;
+  Optix.Func.Commands, Optix.Func.Commands.Base, Optix.Actions.ProcessHandler, Optix.Func.Commands.FileSystem,
+  Optix.Func.Commands.Shell;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -125,8 +126,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Func.SessionInformation, Optix.Func.Enum.Process, Optix.Func.LogNotifier, Optix.Func.Enum.FileSystem,
-  Optix.Thread, Optix.Task.ProcessDump, Optix.Func.Shell, Optix.ClassesRegistry;
+  Optix.Func.SessionInformation, Optix.Func.LogNotifier, Optix.Thread, Optix.Func.Shell, Optix.ClassesRegistry;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TOptixSessionHandlerThread.Initialize }
@@ -400,119 +400,56 @@ begin
   if ASerializedPacket.Contains('WindowGUID') then
     AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
 
-  var AOptixPacket : TOptixPacket := nil;
-  var AHandleMemory : Boolean := False; // TODO: Remove that when migration (Generic) finished
+  var AOptixPacket  : TOptixPacket := nil;
+  var AHandleMemory : Boolean := True;
   try
     try
-      AOptixPacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [TValue.From<ISuperObject>(ASerializedPacket)]));
-      if Assigned(AOptixPacket) then begin
-        // Optix Action Command (& Response)
-        if AOptixPacket is TOptixCommandAction then begin
-          TOptixCommandActionResponse(AOptixPacket).DoAction();
+      AOptixPacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [
+        TValue.From<ISuperObject>(ASerializedPacket)
+      ]));
+      if not Assigned(AOptixPacket) then
+        Exit();
+      ///
 
-          // For Action & Response
-          if AOptixPacket is TOptixCommandActionResponse then begin
-            AHandleMemory := True;
+      // Optix Action Command (& Response)
+      if AOptixPacket is TOptixCommandAction then begin
+        TOptixCommandActionResponse(AOptixPacket).DoAction();
 
-            ///
-            AddPacket(AOptixPacket);
-          end;
-          // Optix Task Command
-        end else if AOptixPacket is TOptixCommandTask then begin
-          AHandleMemory := True;
+        // For Action & Response
+        if AOptixPacket is TOptixCommandActionResponse then begin
 
-          var ATask := TOptixCommandTask(AOptixPacket).CreateTask(TOptixCommand(AOptixPacket));
-
-          RegisterAndStartNewTask(ATask);
+          ///
+          AddPacket(AOptixPacket);
         end;
+      // Optix Task Command
+      end else if AOptixPacket is TOptixCommandTask then begin
+        var ATask := TOptixCommandTask(AOptixPacket).CreateTask(TOptixCommand(AOptixPacket));
+
+        ///
+        RegisterAndStartNewTask(ATask);
+      // Optix Transfers (Download & Upload)
+      end else if AOptixPacket is TOptixCommandTransfer then
+        RegisterNewFileTransfer(TOptixCommandTransfer(AOptixPacket))
+      // Shell Coammdns
+      else if AOptixPacket is TOptixCommandShell then begin
+        if AOptixPacket is TOptixStartShellInstance then
+          RegisterAndStartNewShellInstance(TOptixStartShellInstance(AOptixPacket))
+        else if AOptixPacket is TOptixTerminateShellInstance then
+          TerminateShellInstance(TOptixTerminateShellInstance(AOptixPacket))
+        else if AOptixPacket is TOptixBreakShellInstance then
+          BreakShellInstance(TOptixBreakShellInstance(AOptixPacket))
+        else if AOptixPacket is TOptixStdinShellInstance then
+          StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
+      // Simple Commands
+      end else if AOptixPacket is TOptixSimpleCommand then begin
+        AHandleMemory := False;
+        ///
+
+        // -------------------------------------------------------------------------------------------------------------
+        if AOptixPacket is TOptixCommandTerminate then
+          Terminate;
+        // -------------------------------------------------------------------------------------------------------------
       end;
-
-      Continuer l'implémentation "générique", y compris à l'intérieur des tasks, afin de rendre l'ensemble le plus
-      générique possible, y compris coté serveur + l'implémenter sur le client GUI.
-
-      // ---------------------------------------------------------------------------------------------------------------
-      if AClassName = TOptixCommandTerminate.ClassName then
-        Terminate
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandRefreshProcess.ClassName then
-        AddPacket(TProcessList.Create(AWindowGUID))
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandRefreshDrives.ClassName then
-        AddPacket(TDriveList.Create(AWindowGUID))
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandRefreshFiles.ClassName then begin
-        AOptixPacket := TOptixCommandRefreshFiles.Create(ASerializedPacket);
-
-        AddPacket(TFileList.Create(AWindowGUID, TOptixCommandRefreshFiles(AOptixPacket).Path));
-      end
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandDownloadFile.ClassName then
-        RegisterNewFileTransfer(TOptixCommandDownloadFile.Create(ASerializedPacket))
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixCommandUploadFile.ClassName then
-        RegisterNewFileTransfer(TOptixCommandUploadFile.Create(ASerializedPacket))
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixStartShellInstance.ClassName then begin
-        AOptixPacket := TOptixStartShellInstance.Create(ASerializedPacket);
-
-        RegisterAndStartNewShellInstance(TOptixStartShellInstance(AOptixPacket));
-      end
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixTerminateShellInstance.ClassName then begin
-        AOptixPacket := TOptixTerminateShellInstance.Create(ASerializedPacket);
-
-        TerminateShellInstance(TOptixTerminateShellInstance(AOptixPacket));
-      end
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixBreakShellInstance.ClassName then begin
-        AOptixPacket := TOptixBreakShellInstance.Create(ASerializedPacket);
-
-        BreakShellInstance(TOptixBreakShellInstance(AOptixPacket));
-      end
-      // ---------------------------------------------------------------------------------------------------------------
-      else if AClassName = TOptixStdinShellInstance.ClassName then begin
-        AOptixPacket := TOptixStdinShellInstance.Create(ASerializedPacket);
-
-        StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
-      end
-      // ---------------------------------------------------------------------------------------------------------------
-      
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-
-      // ---------------------------------------------------------------------------------------------------------------
-      // ... //
     except
       on E : Exception do
         AddPacket(TLogNotifier.Create(E.Message, AClassName, lkException));

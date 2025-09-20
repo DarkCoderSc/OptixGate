@@ -41,12 +41,20 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Enum.Process;
+unit Optix.Process.Enum;
 
 interface
 
-uses Optix.Protocol.Packet, XSuperObject, System.Classes, Generics.Collections, Optix.WinApiEx, Optix.Process.Helper,
-     Optix.Shared.Types, Optix.Shared.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Generics.Collections,
+
+  XSuperObject,
+
+  Optix.Protocol.Packet, Optix.WinApiEx, Optix.Process.Helper, Optix.Shared.Types, Optix.Shared.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TProcessInformation = class(TEnumerableItem)
@@ -98,30 +106,21 @@ type
     property CommandLine      : String          read FCommandLine;
   end;
 
-  TProcessList = class(TOptixPacket)
-  private
-    FList : TObjectList<TProcessInformation>;
-  protected
-    {@M}
-    procedure Refresh();
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-    procedure BeforeCreate(); override;
+  TOptixEnumProcess = class
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@C}
-    constructor Create(const AWindowGUID : TGUID); override;
-    destructor Destroy(); override;
-
-    {@G}
-    property List : TObjectList<TProcessInformation> read FList;
+    class procedure Enum(var AList : TObjectList<TProcessInformation>); static;
   end;
 
 implementation
 
-uses Winapi.Windows, Optix.Exceptions, System.SysUtils,
-     Optix.InformationGathering.Helper, Optix.System.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows,
+
+  Optix.Exceptions, Optix.InformationGathering.Helper, Optix.System.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TProcessInformation *)
 
@@ -244,12 +243,15 @@ begin
   FCommandLine := TProcessHelper.TryGetProcessCommandLine(FId);
 end;
 
-(* TProcessList *)
+(* TOptixEnumProcess *)
 
-{ TProcessList.Refresh }
-procedure TProcessList.Refresh();
+{ TOptixEnumProcess.Enum }
+class procedure TOptixEnumProcess.Enum(var AList : TObjectList<TProcessInformation>);
 begin
-  FList.Clear();
+  if not Assigned(AList) then
+    AList := TObjectList<TProcessInformation>.Create(True)
+  else
+    AList.Clear();
   ///
 
   var AReturnLength : DWORD;
@@ -269,7 +271,7 @@ begin
     var pNextRow := pFirstRow;
     while True do begin
       try
-        FList.Add(TProcessInformation.Create(pNextRow));
+        AList.Add(TProcessInformation.Create(pNextRow));
       except
         continue;
       end;
@@ -285,59 +287,5 @@ begin
   end;
 end;
 
-{ TProcessList.DeSerialize }
-procedure TProcessList.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FList.Clear();
-
-  for var I := 0 to ASerializedObject.A['List'].Length -1 do
-    FList.Add(TProcessInformation.Create(ASerializedObject.A['List'].O[I]));
-end;
-
-{ TProcessList.Serialize }
-function TProcessList.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  var AJsonArray := TSuperArray.Create();
-
-  for var AItem in FList do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['List'] := AJsonArray;
-end;
-
-{ TProcessList.AfterCreate }
-procedure TProcessList.BeforeCreate();
-begin
-  inherited;
-  ///
-
-  FList := TObjectList<TProcessInformation>.Create(True);
-end;
-
-{ TProcessList.Create }
-constructor TProcessList.Create(const AWindowGUID : TGUID);
-begin
-  inherited;
-  ///
-
-  self.Refresh();
-end;
-
-{ TProcessList.Destroy }
-destructor TProcessList.Destroy();
-begin
-  if Assigned(FList) then
-    FreeAndNil(FList);
-
-  ///
-  inherited;
-end;
-
 end.
+

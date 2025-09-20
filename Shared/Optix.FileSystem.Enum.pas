@@ -41,12 +41,20 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Enum.FileSystem;
+unit Optix.FileSystem.Enum;
 
 interface
 
-uses Optix.Protocol.Packet, Generics.Collections, XSuperObject, System.Classes,
-     Optix.Shared.Classes, Optix.FileSystem.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Generics.Collections,
+
+  XSuperObject,
+
+  Optix.Protocol.Packet, Optix.Shared.Classes, Optix.FileSystem.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   // Drives ------------------------------------------------------------------------------------------------------------
@@ -84,24 +92,9 @@ type
     property UsedPercentage : Byte       read GetUsedPercentage;
   end;
 
-  TDriveList = class(TOptixPacket)
-  private
-    FList : TObjectList<TDriveInformation>;
-  protected
-    {@M}
-    procedure Refresh();
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-    procedure BeforeCreate(); override;
+  TOptixEnumDrives = class
   public
-    {@C}
-    constructor Create(const AWindowGUID : TGUID); override;
-    destructor Destroy(); override;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@G}
-    property List : TObjectList<TDriveInformation> read FList;
+    class procedure Enum(var AList : TObjectList<TDriveInformation>); static;
   end;
 
   // Files -------------------------------------------------------------------------------------------------------------
@@ -144,43 +137,27 @@ type
     property LastAccessDate   : TDateTime             read FLastAccessDate;
   end;
 
-  TFileList = class(TOptixPacket)
-  private
-    FPath   : String;
-    FAccess : TFileAccessAttributes;
-    FIsRoot : Boolean;
-    FList   : TObjectList<TFileInformation>;
-  protected
-    {@M}
-    procedure Refresh();
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
-    procedure BeforeCreate(); override;
+  TOptixEnumFiles = class
   public
-    {@C}
-    constructor Create(const AWindowGUID : TGUID; const APath : String); overload;
-    destructor Destroy(); override;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
-
-    {@G}
-    property List   : TObjectList<TFileInformation> read FList;
-    property Path   : String                        read FPath;
-    property Access : TFileAccessAttributes         read FAccess;
-    property IsRoot : Boolean                       read FIsRoot;
+    class procedure Enum(APath : String; var AList : TObjectList<TFileInformation>; var AIsRoot : Boolean; var AAccess : TFileAccessAttributes); static;
   end;
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-//----------------------------------------------------------------------------------------------------------------------
-//
-//  Drives
-//
-//----------------------------------------------------------------------------------------------------------------------
+  Winapi.Windows,
 
-(* TDriveInformation *)
+  Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+
+(***********************************************************************************************************************
+
+  TDriveInformation
+
+***********************************************************************************************************************)
 
 { TDriveInformation.DeSerialize }
 procedure TDriveInformation.DeSerialize(const ASerializedObject : ISuperObject);
@@ -264,40 +241,19 @@ begin
   result := FTotalSize - FFreeSize;
 end;
 
-(* TDriveList *)
+(***********************************************************************************************************************
 
-{ TDriveList.AfterCreate }
-procedure TDriveList.BeforeCreate();
+  TOptixEnumDrives
+
+***********************************************************************************************************************)
+
+{ TOptixEnumDrives.Enum }
+class procedure TOptixEnumDrives.Enum(var AList : TObjectList<TDriveInformation>);
 begin
-  inherited;
-  ///
-
-  FList := TObjectList<TDriveInformation>.Create(True);
-end;
-
-{ TDriveList.Create }
-constructor TDriveList.Create(const AWindowGUID : TGUID);
-begin
-  inherited;
-  ///
-
-  self.Refresh();
-end;
-
-{ TDriveList.Destroy }
-destructor TDriveList.Destroy();
-begin
-  if Assigned(FList) then
-    FreeAndNil(FList);
-
-  ///
-  inherited;
-end;
-
-{ TDriveList.Refresh }
-procedure TDriveList.Refresh();
-begin
-  FList.Clear();
+  if not Assigned(AList) then
+    AList := TObjectList<TDriveInformation>.Create(True)
+  else
+    AList.Clear();
   ///
 
   {$I-}
@@ -317,45 +273,16 @@ begin
 
     var ADrive := Format('%s:', [UpperCase(ALetter)]);
 
-    FList.Add(TDriveInformation.Create(ADrive, AIndex));
+    AList.Add(TDriveInformation.Create(ADrive, AIndex));
   end;
   {$I+}
 end;
 
-{ TDriveList.DeSerialize }
-procedure TDriveList.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
+(***********************************************************************************************************************
 
-  FList.Clear();
+  TFileInformation
 
-  for var I := 0 to ASerializedObject.A['List'].Length -1 do
-    FList.Add(TDriveInformation.Create(ASerializedObject.A['List'].O[I]));
-end;
-
-{ TDriveList.Serialize }
-function TDriveList.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  var AJsonArray := TSuperArray.Create();
-
-  for var AItem in FList do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['List'] := AJsonArray;
-end;
-
-//----------------------------------------------------------------------------------------------------------------------
-//
-//  Files / Directories
-//
-//----------------------------------------------------------------------------------------------------------------------
-
-(* TFileInformation *)
+***********************************************************************************************************************)
 
 { TFileInformation.GetFileTypeDescription }
 function TFileInformation.GetFileTypeDescription() : String;
@@ -442,55 +369,27 @@ begin
   end;
 end;
 
-(* TFileList *)
+(***********************************************************************************************************************
 
-{ TFileList.AfterCreate }
-procedure TFileList.BeforeCreate();
+  TOptixEnumFiles
+
+***********************************************************************************************************************)
+
+{ TOptixEnumFiles.Enum }
+class procedure TOptixEnumFiles.Enum(APath : String; var AList : TObjectList<TFileInformation>; var AIsRoot : Boolean; var AAccess : TFileAccessAttributes);
 begin
-  inherited;
+  if not Assigned(AList) then
+    AList := TObjectList<TFileInformation>.Create(True)
+  else
+    AList.Clear();
   ///
 
-  FIsRoot := False;
-  FPath   := '';
-
-  FList := TObjectList<TFileInformation>.Create(True);
-end;
-
-{ TFileList.Create }
-constructor TFileList.Create(const AWindowGUID : TGUID; const APath : String);
-begin
-  inherited Create(AWindowGUID);
-  ///
-
-  FPath := IncludeTrailingPathDelimiter(APath);
-  FAccess := [];
-
-  ///
-  self.Refresh();
-end;
-
-{ TFileList.Destroy }
-destructor TFileList.Destroy();
-begin
-  if Assigned(FList) then
-    FreeAndNil(FList);
-
-  ///
-  inherited;
-end;
-
-{ TFileList.Refresh }
-procedure TFileList.Refresh();
-begin
-  FList.Clear();
-  ///
-
-  if String.IsNullOrEmpty(FPath) then
+  if String.IsNullOrEmpty(APath) then
     Exit();
 
-  FPath := TFileSystemHelper.ExpandPath(FPath);
+  APath := TFileSystemHelper.ExpandPath(APath);
 
-  var ASearchParameter := Format('%s*.*', [FPath]);
+  var ASearchParameter := Format('%s*.*', [APath]);
 
   var AWin32FindData : TWin32FindDataW;
 
@@ -498,10 +397,10 @@ begin
   if hSearch = INVALID_HANDLE_VALUE then
     raise EWindowsException.Create('FindFirstFileW')
   else if hSearch = ERROR_FILE_NOT_FOUND then
-    raise Exception.Create(Format('No files found so far in the directory: `%s`', [FPath]));
+    raise Exception.Create(Format('No files found so far in the directory: `%s`', [APath]));
   try
-    FIsRoot := True;
-    FAccess := TFileSystemHelper.TryGetCurrentUserFileAccess(FPath);
+    AIsRoot := True;
+    AAccess := TFileSystemHelper.TryGetCurrentUserFileAccess(APath);
     repeat
       var AFileName := String(AWin32FindData.cFileName);
       if AFileName = '.' then
@@ -509,50 +408,16 @@ begin
       ///
 
       if AFileName = '..' then
-        FIsRoot := False;
+        AIsRoot := False;
 
       if (AWin32FindData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY) then begin
-        FList.Add(TFileInformation.Create(FPath + AFileName, True))
+        AList.Add(TFileInformation.Create(APath + AFileName, True))
       end else
-        FList.Add(TFileInformation.Create(FPath + AFileName, False));
+        AList.Add(TFileInformation.Create(APath + AFileName, False));
     until FindNextFileW(hSearch, AWin32FindData) = False;
   finally
     FindClose(hSearch);
   end;
-end;
-
-{ TFileList.DeSerialize }
-procedure TFileList.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FList.Clear();
-
-  for var I := 0 to ASerializedObject.A['List'].Length -1 do
-    FList.Add(TFileInformation.Create(ASerializedObject.A['List'].O[I]));
-
-  FPath   := ASerializedObject.S['Path'];
-  FAccess := StringToAccessSet(ASerializedObject.S['Access']);
-  FIsRoot := ASerializedObject.B['IsRoot'];
-end;
-
-{ TFileList.Serialize }
-function TFileList.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  var AJsonArray := TSuperArray.Create();
-
-  for var AItem in FList do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['List']   := AJsonArray;
-  result.S['Path']   := FPath;
-  result.S['Access'] := AccessSetToString(FAccess);
-  result.B['IsRoot'] := FIsRoot;
 end;
 
 end.

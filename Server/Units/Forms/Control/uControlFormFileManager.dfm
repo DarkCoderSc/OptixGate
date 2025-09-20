@@ -26,7 +26,6 @@ object ControlFormFileManager: TControlFormFileManager
     Align = alTop
     ReadOnly = True
     TabOrder = 0
-    ExplicitWidth = 638
   end
   object PanelActions: TPanel
     AlignWithMargins = True
@@ -41,7 +40,6 @@ object ControlFormFileManager: TControlFormFileManager
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 638
     object ButtonHome: TSpeedButton
       AlignWithMargins = True
       Left = 0
@@ -207,8 +205,6 @@ object ControlFormFileManager: TControlFormFileManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 646
-    ExplicitHeight = 348
     DesignSize = (
       656
       380)

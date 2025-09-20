@@ -66,7 +66,7 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Func.Enum.FileSystem, VirtualTrees.Types, Optix.FileSystem.Helper;
+   VirtualTrees.Types, Optix.FileSystem.Helper, Optix.FileSystem.Enum, Optix.Func.Commands.FileSystem;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -173,8 +173,8 @@ type
     function CanFileBeUploadedToNodeDirectory(var pData : PFileTreeData) : Boolean;
     procedure RegisterFolderInTree(const ABasePath : String; const AFolder : String);
     procedure RegisterFoldersInTree(const ABasePath : String; const AFolders : TDictionary<String, TFileAccessAttributes>);
-    procedure DisplayDrives(const AList : TDriveList);
-    procedure DisplayFiles(const AList : TFileList);
+    procedure DisplayDrives(const AList : TOptixCommandRefreshDrives);
+    procedure DisplayFiles(const AList : TOptixCommandRefreshFiles);
     procedure SetDisplayMode(const AMode : TDisplayMode);
     procedure BrowsePath(const APath : string; const APushToHistory : Boolean = True);
     procedure RefreshNavButtons();
@@ -1044,16 +1044,16 @@ begin
   var AOptixPacket : TOptixPacket := nil;
   try
     // -----------------------------------------------------------------------------------------------------------------
-    if AClassName = TDriveList.ClassName then begin
-      AOptixPacket := TDriveList.Create(ASerializedPacket);
+    if AClassName = TOptixCommandRefreshDrives.ClassName then begin
+      AOptixPacket := TOptixCommandRefreshDrives.Create(ASerializedPacket);
 
-      DisplayDrives(TDriveList(AOptixPacket));
+      DisplayDrives(TOptixCommandRefreshDrives(AOptixPacket));
     end
     // -----------------------------------------------------------------------------------------------------------------
-    else if AClassName = TFileList.ClassName then begin
-      AOptixPacket := TFileList.Create(ASerializedPacket);
+    else if AClassName = TOptixCommandRefreshFiles.ClassName then begin
+      AOptixPacket := TOptixCommandRefreshFiles.Create(ASerializedPacket);
 
-      DisplayFiles(TFileList(AOptixPacket));
+      DisplayFiles(TOptixCommandRefreshFiles(AOptixPacket));
     end;
     // -----------------------------------------------------------------------------------------------------------------
   finally
@@ -1062,7 +1062,7 @@ begin
   end;
 end;
 
-procedure TControlFormFileManager.DisplayDrives(const AList : TDriveList);
+procedure TControlFormFileManager.DisplayDrives(const AList : TOptixCommandRefreshDrives);
 begin
   SetDisplayMode(dmDrives);
   ///
@@ -1098,7 +1098,7 @@ begin
   end;
 end;
 
-procedure TControlFormFileManager.DisplayFiles(const AList : TFileList);
+procedure TControlFormFileManager.DisplayFiles(const AList : TOptixCommandRefreshFiles);
 begin
   SetDisplayMode(dmFiles);
   ///

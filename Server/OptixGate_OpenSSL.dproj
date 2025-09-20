@@ -166,9 +166,9 @@
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
         <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
+        <DCCReference Include="..\Shared\Optix.Process.Enum.pas"/>
         <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
+        <DCCReference Include="..\Shared\Optix.FileSystem.Enum.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Classes.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
@@ -251,6 +251,7 @@
         <DCCReference Include="..\Shared\Optix.ClassesRegistry.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Shell.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

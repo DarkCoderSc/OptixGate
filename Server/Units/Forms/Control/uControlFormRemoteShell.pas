@@ -113,7 +113,8 @@ implementation
 uses
   uFormMain,
 
-  Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants, Optix.VCL.Helper;
+  Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants, Optix.VCL.Helper,
+  Optix.Func.Commands.Shell;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}

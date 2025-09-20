@@ -58,7 +58,7 @@ uses
 
   __uBaseFormControl__, uControlFormDumpProcess,
 
-  Optix.Func.Enum.Process, Optix.WinApiEx;
+  Optix.Process.Enum, Optix.WinApiEx, Optix.Func.Commands.Process;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -119,7 +119,7 @@ type
     FRemoteProcessorArchitecture : TProcessorArchitecture;
 
     {@M}
-    procedure Refresh(const AProcessList : TProcessList);
+    procedure Refresh(const AProcessList : TOptixCommandRefreshProcess);
     procedure ApplyFilters(const AFilters : TFilterKinds = []);
     procedure ApplyFilterSettings();
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
@@ -150,8 +150,8 @@ uses
 
   uFormMain,
 
-  Optix.Func.Commands.Process, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants,
-  Optix.VCL.Helper, Optix.Protocol.Packet, Optix.Func.Commands;
+  Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Protocol.Packet,
+  Optix.Func.Commands;
  // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -342,7 +342,7 @@ begin
   DumpProcess1.Visible := KillProcess1.Visible;
 end;
 
-procedure TControlFormProcessManager.Refresh(const AProcessList : TProcessList);
+procedure TControlFormProcessManager.Refresh(const AProcessList : TOptixCommandRefreshProcess);
 begin
   if not Assigned(AProcessList) then
     Exit();
@@ -560,10 +560,10 @@ begin
   var AOptixPacket : TOptixPacket := nil;
   try
     // -------------------------------------------------------------------------
-    if AClassName = TProcessList.ClassName then begin
-      AOptixPacket := TProcessList.Create(ASerializedPacket);
+    if AClassName = TOptixCommandRefreshProcess.ClassName then begin
+      AOptixPacket := TOptixCommandRefreshProcess.Create(ASerializedPacket);
 
-      Refresh(TProcessList(AOptixPacket));
+      Refresh(TOptixCommandRefreshProcess(AOptixPacket));
     end
     // -------------------------------------------------------------------------
     else if AClassName = TOptixCommandKillProcess.ClassName then begin

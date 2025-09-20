@@ -51,7 +51,8 @@ uses
 
   Generics.Collections,
 
-  Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands, Optix.Protocol.Client.Handler
+  Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands, Optix.Protocol.Client.Handler,
+  Optix.Func.Commands.FileSystem
 
   {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------

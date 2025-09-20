@@ -66,9 +66,9 @@ uses
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
   Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
   Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
+  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
   Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
+  Optix.FileSystem.Enum in '..\Shared\Optix.FileSystem.Enum.pas',
   Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
@@ -102,7 +102,8 @@ uses
   Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
   Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
   Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
-  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas';
+  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
+  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas';
 
 {$R *.res}
 {$R data.res}

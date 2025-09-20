@@ -49,11 +49,13 @@ interface
 uses
   System.Classes, System.SysUtils,
 
+  Generics.Collections,
+
   Winapi.Windows,
 
   XSuperObject,
 
-  Optix.Func.Commands.Base;
+  Optix.Func.Commands.Base, Optix.Process.Enum;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -103,6 +105,25 @@ type
     property DestTempPath : Boolean  read FDestTempPath;
     property DestFilePath : String   read FDestFilePath;
     property TypesValue   : DWORD    read FTypesValue;
+  end;
+
+  TOptixCommandRefreshProcess = class(TOptixCommandActionResponse)
+  private
+    FList : TObjectList<TProcessInformation>;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+    procedure DoAction(); override;
+
+    {@C}
+    constructor Create(); override;
+    destructor Destroy(); override;
+
+    {@G}
+    property List : TObjectList<TProcessInformation> read FList;
   end;
 
 implementation
@@ -212,5 +233,65 @@ begin
   FDestFilePath := ASerializedObject.S['DestFilePath'];
   FTypesValue   := ASerializedObject.I['TypesValue'];
 end;
+
+
+(***********************************************************************************************************************
+
+  TOptixCommandRefreshProcess
+
+***********************************************************************************************************************)
+
+{ TOptixCommandRefreshProcess.Refresh }
+procedure TOptixCommandRefreshProcess.DoAction();
+begin
+  TOptixEnumProcess.Enum(FList);
+end;
+
+{ TOptixCommandRefreshProcess.DeSerialize }
+procedure TOptixCommandRefreshProcess.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FList.Clear();
+
+  for var I := 0 to ASerializedObject.A['List'].Length -1 do
+    FList.Add(TProcessInformation.Create(ASerializedObject.A['List'].O[I]));
+end;
+
+{ TOptixCommandRefreshProcess.Serialize }
+function TOptixCommandRefreshProcess.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  var AJsonArray := TSuperArray.Create();
+
+  for var AItem in FList do
+    AJsonArray.Add(AItem.Serialize);
+
+  ///
+  result.A['List'] := AJsonArray;
+end;
+
+{ TOptixCommandRefreshProcess.Create }
+constructor TOptixCommandRefreshProcess.Create();
+begin
+  inherited;
+  ///
+
+  FList := TObjectList<TProcessInformation>.Create(True);
+end;
+
+{ TOptixCommandRefreshProcess.Destroy }
+destructor TOptixCommandRefreshProcess.Destroy();
+begin
+  if Assigned(FList) then
+    FreeAndNil(FList);
+
+  ///
+  inherited;
+end;
+
 
 end.

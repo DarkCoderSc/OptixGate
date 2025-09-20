@@ -70,7 +70,8 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process;
+  Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
+  Optix.Task.ProcessDump;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TClassesRegistry.Create }
@@ -133,12 +134,30 @@ begin
 end;
 
 initialization
+  (* Commands *)
+
+  // General
+  TClassesRegistry.RegisterClass(TOptixCommandTerminate);
+
   // File System Commands
   TClassesRegistry.RegisterClass(TOptixRequestFileInformation);
   TClassesRegistry.RegisterClass(TOptixRequestUploadedFileInformation);
+  TClassesRegistry.RegisterClass(TOptixCommandRefreshDrives);
+  TClassesRegistry.RegisterClass(TOptixCommandRefreshFiles);
+  TClassesRegistry.RegisterClass(TOptixCommandDownloadFile);
+  TClassesRegistry.RegisterClass(TOptixCommandUploadFile);
 
-  // System Commands
+  // System & Process Commands
   TClassesRegistry.RegisterClass(TOptixCommandKillProcess);
   TClassesRegistry.RegisterClass(TOptixCommandProcessDump);
+  TClassesRegistry.RegisterClass(TOptixCommandRefreshProcess);
 
+  // Shell Commands
+  TClassesRegistry.RegisterClass(TOptixStartShellInstance);
+  TClassesRegistry.RegisterClass(TOptixTerminateShellInstance);
+  TClassesRegistry.RegisterClass(TOptixBreakShellInstance);
+  TClassesRegistry.RegisterClass(TOptixStdinShellInstance);
+
+  (* Tasks *)
+  TClassesRegistry.RegisterClass(TOptixProcessDumpTask);
 end.

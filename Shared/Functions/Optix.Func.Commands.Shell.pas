@@ -41,145 +41,128 @@
 {                                                                              }
 {******************************************************************************}
 
-unit uFrameRemoteShellInstance;
+unit Optix.Func.Commands.Shell;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.Classes, System.SysUtils,
 
-  Winapi.Windows, Winapi.Messages,
+  XSuperObject,
 
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls,
-
-  OMultiPanel,
-
-  __uBaseFormControl__;
+  Optix.Func.Commands.Base;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TFrameRemoteShellInstance = class(TFrame)
-    Shell: TRichEdit;
-    PanelCommand: TPanel;
-    Command: TRichEdit;
-    ButtonSend: TButton;
-    OMultiPanel: TOMultiPanel;
-    procedure ShellLinkClick(Sender: TCustomRichEdit; const URL: string; Button: TMouseButton);
-    procedure ButtonSendClick(Sender: TObject);
-    procedure CommandKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure CommandChange(Sender: TObject);
-  private
-    FClosed      : Boolean;
-    FInstanceId  : TGUID;
-    FControlForm : TBaseFormControl;
+  TOptixCommandShell = class(TOptixCommand);
 
+  TOptixStartShellInstance = class(TOptixCommandShell);
+
+  TOptixShellInstance = class(TOptixCommandShell)
+  private
+    FInstanceId : TGUID;
+  protected
     {@M}
-    procedure SendCommandLine();
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@M}
-    procedure AddOutput(const AOutput : String);
-    procedure Close();
+    function Serialize() : ISuperObject; override;
 
     {@C}
-    constructor Create(const AOwner : TComponent; const AControlForm : TBaseFormControl; const AInstanceId : TGUID); reintroduce;
-    destructor Destroy(); override;
+    constructor Create(const AInstanceId : TGUID); override;
 
     {@G}
     property InstanceId : TGUID read FInstanceId;
   end;
 
+  TOptixTerminateShellInstance = class(TOptixShellInstance);
+  TOptixBreakShellInstance = class(TOptixShellInstance);
+
+  TOptixStdinShellInstance = class(TOptixShellInstance)
+  private
+    FCommandLine : String;
+  protected
+    {@M}
+    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+  public
+    {@M}
+    function Serialize() : ISuperObject; override;
+
+    {@C}
+    constructor Create(const AInstanceId : TGUID; const ACommandLine : String); overload;
+
+    {@G}
+    property CommandLine : String read FCommandLine;
+  end;
+
 implementation
 
-// ---------------------------------------------------------------------------------------------------------------------
-uses
-  uFormMain, uControlFormRemoteShell,
+(***********************************************************************************************************************
 
-  Optix.Func.Commands, Optix.Helper, Optix.Constants, Optix.Func.Commands.Shell;
-// ---------------------------------------------------------------------------------------------------------------------
+  TOptixShellInstance
 
-{$R *.dfm}
+***********************************************************************************************************************)
 
-destructor TFrameRemoteShellInstance.Destroy();
+{ TOptixShellInstance.Serialize }
+function TOptixShellInstance.Serialize() : ISuperObject;
 begin
-
-  ///
-  inherited Destroy();
-end;
-
-procedure TFrameRemoteShellInstance.Close();
-begin
-  FClosed            := True;
-  ButtonSend.Enabled := False;
-  Command.Enabled    := False;
-
-  Shell.SelAttributes.Color := COLOR_TEXT_WARNING;
-  Shell.SelText := #13#10 + 'Shell Instance Closed...';
-
-  Shell.Perform(WM_VSCROLL, SB_BOTTOM, 0);
-end;
-
-procedure TFrameRemoteShellInstance.SendCommandLine();
-begin
-  if not Assigned(FControlForm) or FClosed then
-    Exit();
+  result := inherited;
   ///
 
-  FControlForm.SendCommand(TOptixStdinShellInstance.Create(FInstanceId, Command.Text));
-
-  ///
-  Command.Clear();
-  ButtonSend.Enabled := False;
+  result.S['InstanceId'] := FInstanceId.ToString();
 end;
 
-procedure TFrameRemoteShellInstance.AddOutput(const AOutput : String);
+{ TOptixShellInstance.DeSerialize }
+procedure TOptixShellInstance.DeSerialize(const ASerializedObject : ISuperObject);
 begin
-  Shell.SelStart := Length(Shell.Text);
-  Shell.SelLength := 0;
-
-  Shell.SelText := AOutput;
-
-  Shell.Perform(WM_VSCROLL, SB_BOTTOM, 0);
-end;
-
-procedure TFrameRemoteShellInstance.ButtonSendClick(Sender: TObject);
-begin
-  SendCommandLine();
-end;
-
-procedure TFrameRemoteShellInstance.CommandChange(Sender: TObject);
-begin
-  if FClosed then
-    Exit();
+  inherited;
   ///
 
-  ButtonSend.Enabled := Length(Trim(TRichEdit(Sender).Text)) > 0;
+  FInstanceId := TGUID.Create(ASerializedObject.S['InstanceId']);
 end;
 
-procedure TFrameRemoteShellInstance.CommandKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+{ TOptixShellInstance.Create }
+constructor TOptixShellInstance.Create(const AInstanceId : TGUID);
 begin
-  if (*((not (ssShift in Shift)) and *) (Key = 13) and ButtonSend.Enabled then
-    SendCommandLine();
-end;
-
-constructor TFrameRemoteShellInstance.Create(const AOwner : TComponent; const AControlForm : TBaseFormControl; const AInstanceId : TGUID);
-begin
-  inherited Create(AOwner);
+  inherited Create();
   ///
 
-  FControlForm := AControlForm;
-  FInstanceId  := AInstanceId;
-  FClosed      := False;
+  FInstanceId := AInstanceId;
 end;
 
-procedure TFrameRemoteShellInstance.ShellLinkClick(Sender: TCustomRichEdit; const URL: string; Button: TMouseButton);
+(***********************************************************************************************************************
+
+  TOptixStdinShellInstance
+
+***********************************************************************************************************************)
+
+{ TOptixStdinShellInstance.Create }
+constructor TOptixStdinShellInstance.Create(const AInstanceId : TGUID; const ACommandLine : String);
 begin
-  case Button of
-    TMouseButton.mbLeft : Open(Url);
+  inherited Create(AInstanceId);
+  ///
 
-    TMouseButton.mbRight : ;
-    TMouseButton.mbMiddle : ;
-  end;
+  FCommandLine := ACommandLine;
 end;
+
+{ TOptixStdinShellInstance.Serialize }
+function TOptixStdinShellInstance.Serialize() : ISuperObject;
+begin
+  result := inherited;
+  ///
+
+  result.S['CommandLine'] := FCommandLine;
+end;
+
+{ TOptixStdinShellInstance.DeSerialize }
+procedure TOptixStdinShellInstance.DeSerialize(const ASerializedObject : ISuperObject);
+begin
+  inherited;
+  ///
+
+  FCommandLine := ASerializedObject.S['CommandLine'];
+end;
+
 
 end.
