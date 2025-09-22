@@ -165,7 +165,6 @@
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
         <DCCReference Include="..\Client\Units\Actions\Optix.Actions.ProcessHandler.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="..\Server\Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="..\Server\Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.Constants.pas"/>

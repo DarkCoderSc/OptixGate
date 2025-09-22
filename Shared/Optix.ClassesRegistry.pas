@@ -71,7 +71,7 @@ implementation
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
-  Optix.Task.ProcessDump, Optix.Func.Commands.Base;
+  Optix.Task.ProcessDump, Optix.Func.Commands.Base, Optix.Func.SessionInformation, Optix.Func.LogNotifier;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TClassesRegistry.Create }
@@ -102,7 +102,8 @@ begin
     Exit();
   ///
 
-  var AContext: TRttiContext;
+  var AContext := TRttiContext.Create();
+
   var AType := AContext.GetType(AClass);
 
   for var AMethod in AType.GetMethods() do begin
@@ -138,6 +139,7 @@ initialization
 
   // General
   TClassesRegistry.RegisterClass(TOptixCommandTerminate);
+  TClassesRegistry.RegisterClass(TOptixSessionInformation);
 
   // File System Commands
   TClassesRegistry.RegisterClass(TOptixRequestFileInformation);
@@ -157,9 +159,16 @@ initialization
   TClassesRegistry.RegisterClass(TOptixTerminateShellInstance);
   TClassesRegistry.RegisterClass(TOptixBreakShellInstance);
   TClassesRegistry.RegisterClass(TOptixStdinShellInstance);
+  TClassesRegistry.RegisterClass(TOptixShellOutput);
+
+  // Logs
+  TClassesRegistry.RegisterClass(TLogNotifier);
+  TClassesRegistry.RegisterClass(TLogTransferException);
+
 
   (* Tasks *)
   TClassesRegistry.RegisterClass(TOptixTaskResult);
+  TClassesRegistry.RegisterClass(TOptixTaskCallback);
   TClassesRegistry.RegisterClass(TOptixProcessDumpTaskResult);
 
 end.

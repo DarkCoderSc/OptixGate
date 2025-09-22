@@ -45,7 +45,7 @@ unit Optix.Protocol.Server;
 
 interface
 
-uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject, Generics.Collections, Optix.Sockets.Helper,
+uses System.Classes, System.SyncObjs, Winapi.Winsock2, Generics.Collections, Optix.Sockets.Helper,
      Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight
      {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
 

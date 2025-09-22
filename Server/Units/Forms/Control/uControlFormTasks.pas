@@ -54,11 +54,10 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
-  XSuperObject,
 
   __uBaseFormControl__,
 
-  Optix.Func.Commands.Base;
+  Optix.Func.Commands.Base, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -97,7 +96,7 @@ type
     function GetSelectedSucceededTaskCallBack() : TOptixTaskCallBack;
   public
     {@M}
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
   end;
 
 var
@@ -209,13 +208,16 @@ begin
   end;
 end;
 
-procedure TControlFormTasks.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormTasks.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
-  if not Assigned(ASerializedPacket) or (AClassName <> TOptixTaskCallback.ClassName) then
+  inherited;
+  ///
+
+  if not (AOptixPacket is TOptixTaskCallback) then
     Exit();
   ///
 
-  var ATaskResult := TOptixTaskCallback.Create(ASerializedPacket);
+  var ATaskResult := TOptixTaskCallback(AOptixPacket);
   var pNode := GetNodeByTaskId(ATaskResult.Id);
   var pData : PTreeData;
 
@@ -237,6 +239,8 @@ begin
       FreeAndNil(pData^.TaskCallBack);
 
     pData^.TaskCallBack := ATaskResult;
+
+    AHandleMemory := True;
 
     if (pData^.TaskCallBack.State = otsFailed) or (pData^.TaskCallBack.State = otsSuccess) then begin
       pData^.Ended := Now;

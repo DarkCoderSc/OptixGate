@@ -45,40 +45,66 @@ unit Optix.Func.SessionInformation;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.SysUtils, Optix.Interfaces,
-     XSuperObject, Optix.Protocol.Packet, Optix.InformationGathering.Helper,
-     Optix.Process.Helper, Optix.WinApiEx;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Winapi.Windows,
+
+  XSuperObject,
+
+  Optix.InformationGathering.Helper, Optix.Process.Helper, Optix.WinApiEx, Optix.Func.Commands.Base,
+  Optix.Shared.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixSessionInformation = class(TOptixPacket)
+  TOptixSessionInformation = class(TOptixCommandActionResponse)
   private
-    FWindowsVersion      : String;
-    FUsername            : String;
-    FUserSid             : String;
-    FComputer            : String;
-    FProcessId           : Cardinal;
-    FImagePath           : String;
-    FArchitecture        : TProcessorArchitecture;
+    [OptixSerializableAttribute]
+    FWindowsVersion : String;
+
+    [OptixSerializableAttribute]
+    FUsername : String;
+
+    [OptixSerializableAttribute]
+    FUserSid : String;
+
+    [OptixSerializableAttribute]
+    FComputer : String;
+
+    [OptixSerializableAttribute]
+    FProcessId : Cardinal;
+
+    [OptixSerializableAttribute]
+    FImagePath : String;
+
+    [OptixSerializableAttribute]
+    FArchitecture : TProcessorArchitecture;
+
+    [OptixSerializableAttribute]
     FWindowsArchitecture : TProcessorArchitecture;
-    FElevatedStatus      : TElevatedStatus;
-    FLangroup            : String;
-    FDomainName          : String;
-    FIsInAdminGroup      : Boolean;
+
+    [OptixSerializableAttribute]
+    FElevatedStatus : TElevatedStatus;
+
+    [OptixSerializableAttribute]
+    FLangroup : String;
+
+    [OptixSerializableAttribute]
+    FDomainName : String;
+
+    [OptixSerializableAttribute]
+    FIsInAdminGroup : Boolean;
 
     {@M}
     function GetProcessDetail() : String;
     function GetElevatedStatusString() : String;
     function CheckIfSystemUser() : Boolean;
-  protected
-    {@M}
-    procedure Refresh();
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
-    constructor Create(); override;
+    procedure DoAction(); override;
 
     {@M}
-    function Serialize() : ISuperObject; override;
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
@@ -102,8 +128,8 @@ type
 
 implementation
 
-{ TOptixSessionInformation.Refresh }
-procedure TOptixSessionInformation.Refresh();
+{ TOptixSessionInformation.DoAction }
+procedure TOptixSessionInformation.DoAction();
 begin
   FWindowsVersion      := TOSVersion.ToString();
   FArchitecture        := TOptixInformationGathering.CurrentProcessArchitecture;
@@ -117,58 +143,6 @@ begin
   FDomainName          := TOptixInformationGathering.GetDomainName;
   FIsInAdminGroup      := TOptixInformationGathering.TryIsCurrentUserInAdminGroup();
   FWindowsArchitecture := TOptixInformationGathering.GetWindowsArchitecture();
-end;
-
-{ TOptixSessionInformation.Create }
-constructor TOptixSessionInformation.Create();
-begin
-  inherited;
-  ///
-
-  Refresh();
-end;
-
-{ TOptixSessionInformation.Serialize }
-function TOptixSessionInformation.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['Username']            := FUsername;
-  result.S['UserSid']             := FUserSid;
-  result.S['Computer']            := FComputer;
-  result.S['WindowsVersion']      := FWindowsVersion;
-  result.I['ProcessId']           := FProcessId;
-  result.I['Architecture']        := Integer(FArchitecture);
-  result.S['ImagePath']           := FImagePath;
-  result.I['ElevatedStatus']      := Integer(FElevatedStatus);
-  result.S['Langroup']            := FLangroup;
-  result.S['DomainName']          := FDomainName;
-  result.B['IsInAdminGroup']      := FIsInAdminGroup;
-  result.I['WindowsArchitecture'] := Cardinal(FWindowsArchitecture);
-end;
-
-{ TOptixSessionInformation.DeSerialize }
-procedure TOptixSessionInformation.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  if not Assigned(ASerializedObject) then
-    Exit();
-
-  FUsername            := ASerializedObject.S['Username'];
-  FUserSid             := ASerializedObject.S['UserSid'];
-  FComputer            := ASerializedObject.S['Computer'];
-  FWindowsVersion      := ASerializedObject.S['WindowsVersion'];
-  FProcessId           := ASerializedObject.I['ProcessId'];
-  FArchitecture        := TProcessorArchitecture(ASerializedObject.I['Architecture']);
-  FImagePath           := ASerializedObject.S['ImagePath'];
-  FElevatedStatus      := TElevatedStatus(ASerializedObject.I['ElevatedStatus']);
-  FLangroup            := ASerializedObject.S['Langroup'];
-  FDomainName          := ASerializedObject.S['DomainName'];
-  FIsInAdminGroup      := ASerializedObject.B['IsInAdminGroup'];
-  FWindowsArchitecture := TProcessorArchitecture(ASerializedObject.I['WindowsArchitecture']);
 end;
 
 { TOptixSessionInformation.DeSerialize }

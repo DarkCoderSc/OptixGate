@@ -61,12 +61,13 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.ToolWin, Vcl.Buttons, Vcl.Menus, Vcl.StdCtrls,
   Vcl.ExtCtrls,
 
-  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, XSuperObject,
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
   OMultiPanel,
 
   __uBaseFormControl__,
 
-   VirtualTrees.Types, Optix.FileSystem.Helper, Optix.FileSystem.Enum, Optix.Func.Commands.FileSystem;
+   VirtualTrees.Types, Optix.FileSystem.Helper, Optix.FileSystem.Enum, Optix.Func.Commands.FileSystem,
+   Optix.Protocol.Packet;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -191,7 +192,7 @@ type
     function RequestFileUpload(ALocalFilePath : String; const ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; reintroduce;
   public
     {@M}
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
     procedure RegisterNewFile(const APath : String; const AFileInformation : TFileInformation);
 
     {@C}
@@ -209,7 +210,7 @@ uses
 
   uFormMain,
 
-  Optix.Func.Commands, Optix.Protocol.Packet, Optix.Helper, Optix.Constants, Optix.VCL.Helper;
+  Optix.Func.Commands, Optix.Helper, Optix.Constants, Optix.VCL.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -1036,30 +1037,18 @@ begin
   CellText := DefaultIfEmpty(CellText);
 end;
 
-procedure TControlFormFileManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormFileManager.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   inherited;
   ///
 
-  var AOptixPacket : TOptixPacket := nil;
-  try
-    // -----------------------------------------------------------------------------------------------------------------
-    if AClassName = TOptixCommandRefreshDrives.ClassName then begin
-      AOptixPacket := TOptixCommandRefreshDrives.Create(ASerializedPacket);
-
-      DisplayDrives(TOptixCommandRefreshDrives(AOptixPacket));
-    end
-    // -----------------------------------------------------------------------------------------------------------------
-    else if AClassName = TOptixCommandRefreshFiles.ClassName then begin
-      AOptixPacket := TOptixCommandRefreshFiles.Create(ASerializedPacket);
-
-      DisplayFiles(TOptixCommandRefreshFiles(AOptixPacket));
-    end;
-    // -----------------------------------------------------------------------------------------------------------------
-  finally
-    if Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
-  end;
+  // -------------------------------------------------------------------------------------------------------------------
+  if AOptixPacket is TOptixCommandRefreshDrives then
+    DisplayDrives(TOptixCommandRefreshDrives(AOptixPacket))
+  // -------------------------------------------------------------------------------------------------------------------
+  else if AOptixPacket is TOptixCommandRefreshFiles then
+    DisplayFiles(TOptixCommandRefreshFiles(AOptixPacket));
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
 procedure TControlFormFileManager.DisplayDrives(const AList : TOptixCommandRefreshDrives);

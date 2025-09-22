@@ -90,7 +90,6 @@ uses
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas',
   Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
   Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',

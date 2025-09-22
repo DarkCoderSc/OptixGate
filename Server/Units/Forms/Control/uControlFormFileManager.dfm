@@ -117,7 +117,7 @@ object ControlFormFileManager: TControlFormFileManager
       Left = 619
       Top = 10
       Width = 21
-      Height = 20
+      Height = 15
       Margins.Left = 8
       Margins.Top = 10
       Margins.Right = 8
@@ -131,7 +131,6 @@ object ControlFormFileManager: TControlFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
-      ExplicitHeight = 15
     end
     object ButtonBack: TSpeedButton
       AlignWithMargins = True
@@ -205,6 +204,7 @@ object ControlFormFileManager: TControlFormFileManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
+    ExplicitWidth = 666
     DesignSize = (
       656
       380)

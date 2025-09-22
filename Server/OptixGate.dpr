@@ -74,7 +74,6 @@ uses
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',

@@ -58,7 +58,7 @@ uses
 
 type
   // Drives ------------------------------------------------------------------------------------------------------------
-  TDriveInformation = class(TEnumerableItem)
+  TDriveInformation = class(TOptixSerializableObject)
   private
     FLetter    : String;
     FName      : String;
@@ -98,7 +98,7 @@ type
   end;
 
   // Files -------------------------------------------------------------------------------------------------------------
-  TFileInformation = class(TEnumerableItem)
+  TFileInformation = class(TOptixSerializableObject)
   public
     {@M}
     function GetFileTypeDescription() : String;
@@ -205,9 +205,6 @@ end;
 { TDriveInformation.Create }
 constructor TDriveInformation.Create(const ADrive : String; const AIndex : Integer);
 begin
-  inherited Create();
-  ///
-
   FLetter := ADrive;
 
   TFileSystemHelper.TryGetDriveInformation(FLetter, FName, FFormat, FType);
@@ -351,14 +348,11 @@ end;
 { TFileInformation.Create }
 constructor TFileInformation.Create(const AFilePath : String; const AIsDirectory : Boolean);
 begin
-  inherited Create();
-  ///
-
-  FName            := ExtractFileName(AFilePath);
-  FIsDirectory     := AIsDirectory;
-  FACL_SSDL        := TFileSystemHelper.TryGetFileACLString(AFilePath);
-  FAccess          := TFileSystemHelper.TryGetCurrentUserFileAccess(AFilePath);
-  FDateAreValid    := TFileSystemHelper.TryGetFileTime(AFilePath, FCreatedDate, FLastModifiedDate, FLastAccessDate);
+  FName         := ExtractFileName(AFilePath);
+  FIsDirectory  := AIsDirectory;
+  FACL_SSDL     := TFileSystemHelper.TryGetFileACLString(AFilePath);
+  FAccess       := TFileSystemHelper.TryGetCurrentUserFileAccess(AFilePath);
+  FDateAreValid := TFileSystemHelper.TryGetFileTime(AFilePath, FCreatedDate, FLastModifiedDate, FLastAccessDate);
 
   if not FIsDirectory then begin
     FTypeDescription := TFileSystemHelper.GetFileTypeDescription(AFilePath);

@@ -78,7 +78,6 @@ uses
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
   Optix.Actions.ProcessHandler in '..\Client\Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.VCL.Helper in '..\Server\Units\Optix.VCL.Helper.pas',
   Optix.Helper in '..\Server\Units\Optix.Helper.pas',
   Optix.Constants in 'Units\Optix.Constants.pas',

@@ -53,12 +53,12 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Menus,
 
-  XSuperObject, VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
+  VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
   VirtualTrees.AncestorVCL,
 
   __uBaseFormControl__,
 
-  Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier;
+  Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -127,7 +127,7 @@ type
     procedure OnTransferUpdate(Sender : TObject; const ATransferId : TGUID; const AWorkCount : Int64; var ACanceled : Boolean);
     procedure OnTransferEnds(Sender : TObject; const ATransferId : TGUID);
 
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
   end;
 
 var
@@ -147,28 +147,29 @@ uses
 
 {$R *.dfm}
 
-procedure TControlFormTransfers.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormTransfers.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   inherited;
   ///
 
-  if AClassName = TOptixRequestUploadedFileInformation.ClassName then begin
+  // -------------------------------------------------------------------------------------------------------------------
+  if AOptixPacket is TOptixRequestUploadedFileInformation then begin
     var AForms := FormMain.GetControlForms(self, TControlFormFileManager);
     if not Assigned(AForms) then
       Exit();
     try
-      var APacket := TOptixRequestUploadedFileInformation.Create(ASerializedPacket);
-      try
-        if Assigned(APacket.FileInformation) then
-          for var AForm in AForms do
-            TControlFormFileManager(AForm).RegisterNewFile(ExtractFilePath(APacket.FileName), APacket.FileInformation);
-      finally
-        FreeAndNil(APacket);
-      end;
+      var AFileInformation := TOptixRequestUploadedFileInformation(AOptixPacket);
+      if Assigned(AFileInformation.FileInformation) then
+        for var AForm in AForms do
+          TControlFormFileManager(AForm).RegisterNewFile(
+            ExtractFilePath(AFileInformation.FileName),
+            AFileInformation.FileInformation
+          );
     finally
       FreeAndNil(AForms);
     end;
   end;
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
 procedure TControlFormTransfers.OnTransferBegins(Sender : TObject; const ATransferId : TGUID; const AFileSize : Int64);

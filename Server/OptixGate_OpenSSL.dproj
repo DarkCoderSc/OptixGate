@@ -174,7 +174,6 @@
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas"/>
         <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas"/>
         <DCCReference Include="..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas"/>

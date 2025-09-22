@@ -45,59 +45,183 @@ unit Optix.Shared.Classes;
 
 interface
 
-uses System.Classes, Optix.Interfaces, XSuperObject;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  XSuperObject,
+
+  Optix.Interfaces;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TEnumerableItem = class(TInterfacedPersistent, IOptixSerializable)
+  OptixSerializableAttribute = class(TCustomAttribute);
+
+  TOptixSerializableObject = class(TInterfacedPersistent, IOptixSerializable)
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
   public
-    constructor Create(const ASerializedObject : ISuperObject = nil); overload;
-    constructor Create(const ASource : TPersistent); overload;
-
     {@M}
     function Serialize() : ISuperObject; virtual;
+
+    {@C}
+    constructor Create(); overload; virtual;
+    constructor Create(const ASerializedObject : ISuperObject); overload; virtual;
   end;
 
 implementation
 
-(* TEnumerableItem *)
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows,
 
-{ TEnumerableItem.DeSerialize }
-procedure TEnumerableItem.DeSerialize(const ASerializedObject : ISuperObject);
+  System.Rtti, System.TypInfo, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+
+{ TOptixSerializableObject.Serialize }
+function TOptixSerializableObject.Serialize() : ISuperObject;
+begin
+  result := SO();
+  ///
+
+  var AContext := TRttiContext.Create();
+  var AType := AContext.GetType(ClassType);
+
+  for var AField in AType.GetFields() do begin
+    for var AFieldAttribute in AField.GetAttributes() do begin
+      if not (AFieldAttribute is OptixSerializableAttribute) then
+        continue;
+      ///
+
+      case AField.FieldType.TypeKind of
+        // Handle compatible records -----------------------------------------------------------------------------------
+        tkRecord : begin
+          // TGUID -----------------------------------------------------------------------------------------------------
+          if AField.FieldType.Handle = TypeInfo(TGUID) then
+            result.S[AField.Name] := AField.GetValue(self).AsType<TGUID>.ToString();
+          // -----------------------------------------------------------------------------------------------------------
+        end;
+
+        // Objects -----------------------------------------------------------------------------------------------------
+        tkClass : begin
+          var AFieldClass := AField.FieldType.AsInstance.MetaclassType;
+          var AObject := AField.GetValue(self).AsObject;
+          if not Assigned(AObject) then
+            continue;
+          ///
+
+          // Serializable Object ---------------------------------------------------------------------------------------
+          if AFieldClass.InheritsFrom(TOptixSerializableObject) then begin
+            var ASerializableObject := AObject as TOptixSerializableObject;
+
+            ///
+            result.O[AField.Name] := ASerializableObject.Serialize();
+          end;
+          // -----------------------------------------------------------------------------------------------------------
+        end;
+        // Sets --------------------------------------------------------------------------------------------------------
+        tkSet :
+          result.S[AField.Name] := SetToString(AField.FieldType.Handle, AField.GetValue(self).GetReferenceToRawData);
+        // Integers ----------------------------------------------------------------------------------------------------
+        tkInteger, tkFloat, tkInt64 :
+          result.I[AField.Name] := AField.GetValue(self).AsInteger();
+        // Enum --------------------------------------------------------------------------------------------------------
+        tkEnumeration :
+          result.I[AField.Name] := AField.GetValue(self).AsOrdinal();
+        // Strings -----------------------------------------------------------------------------------------------------
+        tkChar, tkString, tkWChar, tkLString, tkWString, tkUString :
+          result.S[AField.Name] := AField.GetValue(self).AsString();
+        // -------------------------------------------------------------------------------------------------------------
+      end;
+    end;
+  end;
+end;
+
+continuer l'implémentation de la serialization (semi-auto), ajouter le support de TDateTime
+
+{ TOptixSerializableObject.DeSerialize }
+procedure TOptixSerializableObject.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   if not Assigned(ASerializedObject) then
     Exit();
   ///
 
+  var AContext := TRttiContext.Create();
+  var AType := AContext.GetType(ClassType);
+
+  for var APair in ASerializedObject.AsObject() do begin
+    var AField := AType.GetField(APair.Name);
+    if not Assigned(AField) or not Assigned(AField.GetAttribute(OptixSerializableAttribute)) then
+      continue;
+    ///
+
+    case AField.FieldType.TypeKind of
+      // Handle compatible records -------------------------------------------------------------------------------------
+      tkRecord : begin
+        // TGUID -------------------------------------------------------------------------------------------------------
+        if AField.FieldType.Handle = TypeInfo(TGUID) then
+          AField.SetValue(self, TValue.From<TGUID>(TGUID.Create(APair.AsString)));
+        // -------------------------------------------------------------------------------------------------------------
+      end;
+
+      // Objects -------------------------------------------------------------------------------------------------------
+      tkClass : begin
+        var AFieldClass := AField.FieldType.AsInstance.MetaclassType;
+        var AObject := AField.GetValue(self).AsObject;
+        if not Assigned(AObject) then
+          continue;
+        ///
+
+        // Serializable Object -----------------------------------------------------------------------------------------
+        if AFieldClass.InheritsFrom(TOptixSerializableObject) then begin
+          var ASerializableObject := AObject as TOptixSerializableObject;
+
+          ///
+          ASerializableObject.DeSerialize(APair.AsObject);
+        end;
+        // -------------------------------------------------------------------------------------------------------------
+      end;
+
+      // Variants ------------------------------------------------------------------------------------------------------
+      tkInteger, tkChar, tkFloat, tkString, tkWChar, tkLString, tkWString, tkVariant, tkInt64, tkUString :
+        AField.SetValue(self, TValue.FromVariant(APair.AsVariant));
+
+      // Enums ---------------------------------------------------------------------------------------------------------
+      tkEnumeration : begin
+        var ATypeData := GetTypeData(AField.FieldType.Handle);
+        if (APair.AsInteger >= ATypeData^.MinValue) and (APair.AsInteger <= ATypeData^.MaxValue) then
+          AField.SetValue(self, TValue.FromOrdinal(AField.FieldType.Handle, APair.AsInteger));
+      end;
+
+      // Sets ----------------------------------------------------------------------------------------------------------
+      tkSet :
+        try
+          StringToSet(AField.FieldType.Handle, APair.AsString, Pointer(NativeUInt(self) + AField.Offset));
+        except
+        end;
+      // ---------------------------------------------------------------------------------------------------------------
+    end;
+  end;
 end;
 
-{ TEnumerableItem.Serialize }
-function TEnumerableItem.Serialize() : ISuperObject;
+{ TOptixSerializableObject.Create }
+constructor TOptixSerializableObject.Create();
 begin
-  result := TSuperObject.Create();
+  inherited;
   ///
 
-  // ??? RTTI ???
+
 end;
 
-{ TEnumerableItem.Create }
-constructor TEnumerableItem.Create(const ASerializedObject : ISuperObject = nil);
+{ TOptixSerializableObject.Create }
+constructor TOptixSerializableObject.Create(const ASerializedObject : ISuperObject);
 begin
-  inherited Create();
+  Create();
   ///
 
   if Assigned(ASerializedObject) then
     DeSerialize(ASerializedObject);
 end;
-
-{ TEnumerableItem.Create }
-constructor TEnumerableItem.Create(const ASource : TPersistent);
-begin
-  if Assigned(ASource) then
-    Assign(ASource);
-end;
-
 
 end.

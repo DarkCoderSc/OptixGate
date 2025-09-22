@@ -55,9 +55,7 @@ uses
 
   VCL.Forms, VCL.Controls,
 
-  XSuperObject,
-
-  Optix.Func.Commands.Base;
+  Optix.Func.Commands.Base, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -136,7 +134,7 @@ type
   public
     {@M}
     procedure SendCommand(const ACommand : TOptixCommand);
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); virtual;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); virtual;
     procedure PurgeRequest(); virtual;
 
     {@C}
@@ -249,13 +247,17 @@ begin
 end;
 
 { TBaseFormControl.CreateParams }
-procedure TBaseFormControl.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TBaseFormControl.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
+  if not Assigned(AOptixPacket) then
+    Exit();
+  ///
+
+  AHandleMemory := False;
+
   FFormInformation.HasUnseenData        := True;
   FFormInformation.HasReceivedData      := True;
   FFormInformation.LastReceivedDataTime := Now;
-  ///
-
 end;
 
 { TBaseFormControl.CreateParams }

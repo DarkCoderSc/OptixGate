@@ -191,14 +191,14 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.DateUtils,
+  System.DateUtils, System.Rtti,
 
   uControlFormProcessManager, uControlFormLogs, uFormAbout, uControlFormTransfers, uControlFormControlForms,
   uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
-  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer
+  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.ClassesRegistry
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -732,67 +732,67 @@ end;
 procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
 begin
   if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') or
-     not ASerializedPacket.Contains('WindowGUID') or
+     not ASerializedPacket.Contains('PacketClass') or not ASerializedPacket.Contains('WindowGUID') or
      not ASerializedPacket.Contains('SessionId') then
       Exit();
   ///
 
-  // TODO: make it more generic (Class Registry or RTTI)
+  allocconsole();
+  writeln(ASerializedPacket.AsJson(True));
+  writeln('---------');
+
   var AClassName := ASerializedPacket.S['PacketClass'];
-  var AHandleMemory := False;
-
   var AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
-  var ASessionId := TGUID.Create(ASerializedPacket.S['SessionId']);
-
-  // var pNode := GetNodeBySessionId(ASessionId);
-  var pNode := GetNodeByHandler(Sender);
 
   var AOptixPacket : TOptixPacket := nil;
+  var AHandleMemory := False;
   try
     try
-      if AWindowGUID.IsEmpty then begin
-        { Responses -------------------------------------------------------------------------------------------------- }
-        if AClassName = TOptixSessionInformation.ClassName then begin
-          AOptixPacket := TOptixSessionInformation.Create(ASerializedPacket);
+      AOptixPacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [
+        TValue.From<ISuperObject>(ASerializedPacket)
+      ]));
+      if not Assigned(AOptixPacket) then
+        raise Exception.Create(Format('Unknown or Unregistered Packet Class=[%s]', [AClassName]));
+      ///
 
-          // Dispatch to data handler
-          if AOptixPacket is TOptixSessionInformation then begin
-            AHandleMemory := True;
+      if AOptixPacket is TOptixSessionInformation then begin
+        AHandleMemory := True;
 
-            ///
-            RegisterSession(Sender, TOptixSessionInformation(AOptixPacket));
-          end;
-        end
-        // -------------------------------------------------------------------------------------------------------------
-        else if (AClassName = TLogNotifier.ClassName) or (AClassName = TLogTransferException.ClassName) then begin
-          var ALogsForm := GetControlForm(pNode, TControlFormLogs);
-          if Assigned(ALogsForm) then
-            ALogsForm.ReceivePacket(AClassName, ASerializedPacket);
-        end
-        // -------------------------------------------------------------------------------------------------------------
-        else if (AClassName = TOptixTaskCallback.ClassName) then begin
-          var ATaskForm := GetControlForm(pNode, TControlFormTasks);
-          if Assigned(ATaskForm) then
-            ATaskForm.ReceivePacket(AClassName, ASerializedPacket);
-        end;
-        // -------------------------------------------------------------------------------------------------------------
-        // ... //
-        // else if ...
-        // ... //
+        ///
+        RegisterSession(Sender, TOptixSessionInformation(AOptixPacket));
       end else begin
-        { Windowed Responses ----------------------------------------------------------------------------------------- }
-        var AControlForm := GetControlForm(pNode, AWindowGUID);
-        if Assigned(AControlForm) then
-          AControlForm.ReceivePacket(AClassName, ASerializedPacket);
-        // -------------------------------------------------------------------------------------------------------------
+        var pNode := GetNodeByHandler(Sender);
+        if not Assigned(pNode) then
+          Exit();
+        ///
+
+        if AWindowGUID.IsEmpty then begin
+          // -----------------------------------------------------------------------------------------------------------
+          if (AOptixPacket is TLogNotifier) or (AOptixPacket is TLogTransferException) then begin
+            var ALogsForm := GetControlForm(pNode, TControlFormLogs);
+            if Assigned(ALogsForm) then
+              ALogsForm.ReceivePacket(AOptixPacket, AHandleMemory);
+          // -----------------------------------------------------------------------------------------------------------
+          end else if AOptixPacket is TOptixTaskCallback then begin
+            var ATaskForm := GetControlForm(pNode, TControlFormTasks);
+            if Assigned(ATaskForm) then
+              ATaskForm.ReceivePacket(AOptixPacket, AHandleMemory);
+          end;
+          // -----------------------------------------------------------------------------------------------------------
+        end else begin
+          var AControlForm := GetControlForm(pNode, AWindowGUID);
+          if Assigned(AControlForm) then
+            AControlForm.ReceivePacket(AOptixPacket, AHandleMemory);
+        end;
       end;
     finally
       if not AHandleMemory and Assigned(AOptixPacket) then
         FreeAndNil(AOptixPacket);
     end;
   except
-    // TODO: log packet errors
+    on E : Exception do begin
+      // TODO: log packet errors
+    end;
   end;
 end;
 

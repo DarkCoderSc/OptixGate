@@ -54,9 +54,9 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.Menus, Vcl.StdCtrls, Vcl.Buttons, Vcl.ExtCtrls,
   Vcl.ActnList,
 
-  XSuperObject,
+  __uBaseFormControl__, uFrameRemoteShellInstance,
 
-  __uBaseFormControl__, uFrameRemoteShellInstance;
+  Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -100,7 +100,7 @@ type
     function IsActivePageShellInstanceActive() : Boolean;
   public
     {@M}
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
     procedure PurgeRequest(); override;
   end;
 
@@ -113,8 +113,7 @@ implementation
 uses
   uFormMain,
 
-  Optix.Func.Commands, Optix.Protocol.Packet, Optix.Func.Shell, Optix.Constants, Optix.VCL.Helper,
-  Optix.Func.Commands.Shell;
+  Optix.Func.Commands, Optix.Func.Commands.Shell, Optix.Constants, Optix.VCL.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -212,35 +211,24 @@ begin
   ButtonNewInstanceClick(ButtonNewInstance);
 end;
 
-procedure TControlFormRemoteShell.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormRemoteShell.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   inherited;
   ///
 
-  var AOptixPacket : TOptixPacket := nil;
-  try
-    // -----------------------------------------------------------------------------------------------------------------
-    if AClassName = TOptixShellOutput.ClassName then begin
-      AOptixPacket := TOptixShellOutput.Create(ASerializedPacket);
+  // -------------------------------------------------------------------------------------------------------------------
+  if AOptixPacket is TOptixShellOutput then begin
+    var AFrame := GetFrameByInstanceId(TOptixShellOutput(AOptixPacket).InstanceId);
+    if not Assigned(AFrame) then
+      AFrame := StartShellInstance(TOptixShellOutput(AOptixPacket).InstanceId);
+    ///
 
-      var AFrame := GetFrameByInstanceId(TOptixShellOutput(AOptixPacket).InstanceId);
-      if not Assigned(AFrame) then
-        AFrame := StartShellInstance(TOptixShellOutput(AOptixPacket).InstanceId);
-      ///
-
-      AFrame.AddOutput(TOptixShellOutput(AOptixPacket).Output);
-    end
-    // -----------------------------------------------------------------------------------------------------------------
-    else if AClassName = TOptixTerminateShellInstance.ClassName then begin
-      AOptixPacket := TOptixTerminateShellInstance.Create(ASerializedPacket);
-
-      CloseShellInstance(TOptixTerminateShellInstance(AOptixPacket).InstanceId);
-    end;
-    // -----------------------------------------------------------------------------------------------------------------
-  finally
-    if Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
-  end;
+    AFrame.AddOutput(TOptixShellOutput(AOptixPacket).Output);
+  end
+  // -------------------------------------------------------------------------------------------------------------------
+  else if AOptixPacket is TOptixTerminateShellInstance then
+    CloseShellInstance(TOptixTerminateShellInstance(AOptixPacket).InstanceId);
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
 procedure TControlFormRemoteShell.RenameTab1Click(Sender: TObject);

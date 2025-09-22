@@ -57,7 +57,7 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TProcessInformation = class(TEnumerableItem)
+  TProcessInformation = class(TOptixSerializableObject)
   private
     FName             : String;
     FImagePath        : String;

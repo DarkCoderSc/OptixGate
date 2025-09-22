@@ -74,7 +74,6 @@ uses
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
   Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
   Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
