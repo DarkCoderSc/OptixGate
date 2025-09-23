@@ -406,8 +406,8 @@ begin
   var AClassName := ASerializedPacket.S['PacketClass'];
 
   var AWindowGUID := TGUID.Empty;
-  if ASerializedPacket.Contains('WindowGUID') then
-    AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
+  if ASerializedPacket.Contains('FWindowGUID') then
+    AWindowGUID := TGUID.Create(ASerializedPacket.S['FWindowGUID']);
 
   var AOptixPacket  : TOptixPacket := nil;
   var AHandleMemory : Boolean := True;

@@ -51,7 +51,7 @@ uses
 
   XSuperObject,
 
-  Optix.FileSystem.Enum, Optix.Protocol.Packet, Optix.Interfaces;
+  Optix.FileSystem.Enum, Optix.Interfaces, Optix.Shared.Classes, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -77,28 +77,32 @@ type
 
   TOptixTask = class;
 
-  TOptixTaskResult = class(TInterfacedPersistent, IOptixSerializable)
+  TOptixTaskResult = class(TOptixPacket)
   private
-    FSuccess          : Boolean;
+    [OptixSerializableAttribute]
+    FSuccess : Boolean;
+
+    [OptixSerializableAttribute]
     FExceptionMessage : String;
-    FTaskDuration     : UInt64;
+
+    [OptixSerializableAttribute]
+    FTaskDuration : UInt64;
 
     {@M}
     function GetDescription() : String;
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
     function GetExtendedDescription() : String; virtual;
   public
     {@M}
     procedure SetTaskDuration(const AValue : UInt64);
     procedure TaskFailed(const AExceptionMessage : String);
     procedure TaskSucceed();
-    function Serialize() : ISuperObject; virtual;
+    function Serialize() : ISuperObject; override;
 
     {@C}
-    constructor Create(); overload;
-    constructor Create(const ASerializedObject : ISuperObject); overload; virtual;
+    constructor Create(); override;
+    constructor Create(const ASerializedObject : ISuperObject); override;
     destructor Destroy(); override;
 
     {@G}
@@ -110,10 +114,16 @@ type
 
   TOptixTaskCallback = class(TOptixPacket)
   private
-    FId            : TGUID;
+    [OptixSerializableAttribute]
+    FId : TGUID;
+
+    [OptixSerializableAttribute]
     FTaskClassName : String;
-    FState         : TOptixTaskState;
-    FResult        : TOptixTaskResult;
+
+    [OptixSerializableAttribute]
+    FState : TOptixTaskState;
+
+    FResult  : TOptixTaskResult;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
@@ -233,9 +243,6 @@ begin
   inherited;
   ///
 
-  FId    := TGUID.Create(ASerializedObject.S['Id']);
-  FState := TOptixTaskState(ASerializedObject.I['State']);
-
   var ASerializedResult := ASerializedObject.O['Result'];
   if Assigned(ASerializedResult) then begin
     if ASerializedResult.Contains('ResultClass') then begin
@@ -254,9 +261,6 @@ function TOptixTaskCallback.Serialize() : ISuperObject;
 begin
   result := inherited;
   ///
-
-  result.S['Id']    := FId.TOString();
-  result.I['State'] := Integer(FState);
 
   if Assigned(FResult) then
     result.O['result'] := FResult.Serialize()
@@ -460,24 +464,13 @@ begin
   FExceptionMessage := '';
 end;
 
-{ TOptixTaskResult.DeSerialize }
-procedure TOptixTaskResult.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  FSuccess          := ASerializedObject.B['Success'];
-  FExceptionMessage := ASerializedObject.S['ExceptionMessage'];
-  FTaskDuration     := ASerializedObject.I['TaskDuration'];
-end;
-
 { TOptixTaskResult.Serialize }
 function TOptixTaskResult.Serialize() : ISuperObject;
 begin
-  result := SO();
+  result := inherited;
   ///
 
   result.S['ResultClass']      := ClassName;
-  result.B['Success']          := FSuccess;
-  result.S['ExceptionMessage'] := FExceptionMessage;
-  result.I['TaskDuration']     := FTaskDuration;
 end;
 
 end.

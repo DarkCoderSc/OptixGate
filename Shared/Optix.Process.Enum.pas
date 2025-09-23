@@ -59,30 +59,53 @@ uses
 type
   TProcessInformation = class(TOptixSerializableObject)
   private
-    FName             : String;
-    FImagePath        : String;
-    FId               : Cardinal;
-    FParentId         : Cardinal;
-    FUsername         : String;
-    FDomain           : String;
-    FUserSid          : String;
-    FElevated         : TElevatedStatus;
-    FSessionId        : Cardinal;
-    FThreadCount      : Cardinal;
-    FCreatedTime      : TDateTime;
+    [OptixSerializableAttribute]
+    FName : String;
+
+    [OptixSerializableAttribute]
+    FImagePath : String;
+
+    [OptixSerializableAttribute]
+    FId : Cardinal;
+
+    [OptixSerializableAttribute]
+    FParentId : Cardinal;
+
+    [OptixSerializableAttribute]
+    FUsername : String;
+
+    [OptixSerializableAttribute]
+    FDomain : String;
+
+    [OptixSerializableAttribute]
+    FUserSid : String;
+
+    [OptixSerializableAttribute]
+    FElevated : TElevatedStatus;
+
+    [OptixSerializableAttribute]
+    FSessionId : Cardinal;
+
+    [OptixSerializableAttribute]
+    FThreadCount : Cardinal;
+
+    [OptixSerializableAttribute]
+    FCreatedTime : TDateTime;
+
+    [OptixSerializableAttribute]
     FCurrentProcessId : Cardinal;
-    FIsWow64Process   : TBoolResult;
-    FCommandLine      : String;
+
+    [OptixSerializableAttribute]
+    FIsWow64Process : TBoolResult;
+
+    [OptixSerializableAttribute]
+    FCommandLine : String;
 
     {@}
     function EvaluateIfCurrentProcess() : Boolean;
     function CheckIfSystemUser() : Boolean;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@M}
-    function Serialize() : ISuperObject; override;
     procedure Assign(ASource : TPersistent); override;
 
     {@C}
@@ -128,54 +151,6 @@ uses
 function TProcessInformation.CheckIfSystemUser() : Boolean;
 begin
   result := String.Compare(FUserSid, 'S-1-5-18', True) =  0;
-end;
-
-{ TProcessInformation.DeSerialize }
-procedure TProcessInformation.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  if not Assigned(ASerializedObject) then
-    Exit();
-  ///
-
-  inherited;
-  ///
-
-  FName             := ASerializedObject.S['Name'];
-  FImagePath        := ASerializedObject.S['ImagePath'];
-  FId               := ASerializedObject.I['Id'];
-  FParentId         := ASerializedObject.I['ParentId'];
-  FUsername         := ASerializedObject.S['Username'];
-  FDomain           := ASerializedObject.S['Domain'];
-  FUserSid          := ASerializedObject.S['UserSid'];
-  FElevated         := TElevatedStatus(ASerializedObject.I['Elevated']);
-  FSessionId        := ASerializedObject.I['SessionId'];
-  FThreadCount      := ASerializedObject.I['ThreadCount'];
-  FCreatedTime      := ASerializedObject.D['CreatedTime'];
-  FCurrentProcessId := ASerializedObject.I['CurrentProcessId'];
-  FIsWow64Process   := TBoolResult(ASerializedObject.I['IsWow64Process']);
-  FCommandLine      := ASerializedObject.S['CommandLine'];
-end;
-
-{ TProcessInformation.Serialize }
-function TProcessInformation.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['Name']             := FName;
-  result.S['ImagePath']        := FImagePath;
-  result.I['Id']               := FId;
-  result.I['ParentId']         := FParentId;
-  result.S['Username']         := FUsername;
-  result.S['Domain']           := FDomain;
-  result.S['UserSid']          := FUserSid;
-  result.I['Elevated']         := Cardinal(FElevated);
-  result.I['SessionId']        := FSessionId;
-  result.I['ThreadCount']      := FThreadCount;
-  result.D['CreatedTime']      := FCreatedTime;
-  result.I['CurrentProcessId'] := FCurrentProcessId;
-  result.I['IsWow64Process']   := Cardinal(FIsWow64Process);
-  result.S['CommandLine']      := FCommandLine;
 end;
 
 { TProcessInformation.Assign }

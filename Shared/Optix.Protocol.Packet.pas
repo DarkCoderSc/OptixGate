@@ -56,30 +56,16 @@ uses
 
 type
   TOptixPacket = class(TOptixSerializableObject)
-  private
-    FSessionId  : TGUID;
   protected
+    [OptixSerializableAttribute]
     FWindowGUID : TGUID;
-
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@M}
     function Serialize() : ISuperObject; override;
 
-    {@C}
-    constructor Create(); override;
-
     {@G/S}
     property WindowGUID : TGUID read FWindowGUID write FWindowGUID;
-
-    {@G}
-    property SessionId : TGUID read FSessionId;
   end;
-
-  {$IFDEF CLIENT}
-  var SESSION_ID : TGUID;
-  {$ENDIF}
 
 implementation
 
@@ -90,19 +76,6 @@ uses
 
 (* TOptixPacket *)
 
-{ TOptixPacket.Create }
-constructor TOptixPacket.Create();
-begin
-  inherited;
-  ///
-
-  {$IFDEF CLIENT}
-  FSessionId := SESSION_ID;
-  {$ELSE}
-  FSessionId := TGUID.Empty();
-  {$ENDIF}
-end;
-
 { TOptixPacket.Serialize }
 function TOptixPacket.Serialize() : ISuperObject;
 begin
@@ -110,28 +83,6 @@ begin
   ///
 
   result.S['PacketClass'] := ClassName;
-  result.S['SessionId']   := FSessionId.ToString();
-  result.S['WindowGUID']  := FWindowGUID.ToString();
 end;
-
-{ TOptixPacket.DeSerialize }
-procedure TOptixPacket.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  {$IFDEF SERVER}
-  FSessionId := TGUID.Create(ASerializedObject.S['SessionId']);
-  {$ENDIF}
-
-  FWindowGUID := TGUID.Create(ASerializedObject.S['WindowGUID']);
-end;
-
-(* __INIT__ *)
-
-initialization
-  {$IFDEF CLIENT}
-  SESSION_ID := TOptixInformationGathering.GetUserUID();
-  {$ENDIF}
 
 end.

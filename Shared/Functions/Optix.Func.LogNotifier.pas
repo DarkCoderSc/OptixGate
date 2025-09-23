@@ -45,7 +45,14 @@ unit Optix.Func.LogNotifier;
 
 interface
 
-uses Optix.Protocol.Packet, System.SysUtils, XSuperObject;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  XSuperObject,
+
+  Optix.Func.Commands.Base, Optix.Shared.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TLogKind = (
@@ -54,21 +61,22 @@ type
     (* ... *)
   );
 
-  TLogNotifier = class(TOptixPacket)
+  TLogNotifier = class(TOptixCommand)
   private
-    FMessage    : String;
-    FContext    : String;
-    FKind       : TLogKind;
+    [OptixSerializableAttribute]
+    FMessage : String;
+
+    [OptixSerializableAttribute]
+    FContext : String;
+
+    [OptixSerializableAttribute]
+    FKind : TLogKind;
   protected
     {@M}
     function GetDetailedMessage() : String; virtual;
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
     constructor Create(const AMessage : String; const AContext : String; const AKind : TLogKind); overload;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
 
     {@G}
     property Kind            : TLogKind read FKind;
@@ -79,17 +87,14 @@ type
 
   TLogTransferException = class(TLogNotifier)
   private
+    [OptixSerializableAttribute]
     FTransferId : TGUID;
   protected
     {@M}
     function GetDetailedMessage() : String; override;
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
     constructor Create(const ATransferId : TGUID; const AMessage : String; const AContext : String = ''); overload;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
 
     {@}
     property TransferId : TGUID read FTransferId;
@@ -112,32 +117,10 @@ begin
   FContext := AContext;
 end;
 
-{ TLogNotifier.Serialize }
-function TLogNotifier.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.I['Kind']    := Cardinal(FKind);
-  result.S['Message'] := FMessage;
-  result.S['Context'] := FContext;
-end;
-
 { TLogNotifier.GetDetailedMessage }
 function TLogNotifier.GetDetailedMessage() : String;
 begin
   result := FMessage;
-end;
-
-{ TLogNotifier.DeSerialize }
-procedure TLogNotifier.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FKind    := TLogKind(ASerializedObject.I['Kind']);
-  FMessage := ASerializedObject.S['Message'];
-  FContext := ASerializedObject.S['Context'];
 end;
 
 (* TLogKind *)
@@ -170,24 +153,6 @@ begin
     FTransferId.ToString,
     FMessage
   ]);
-end;
-
-{ TLogTransferException.DeSerialize }
-procedure TLogTransferException.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
-end;
-
-{ TLogTransferException.Serialize }
-function TLogTransferException.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['TransferId'] := FTransferId.TOString();
 end;
 
 end.

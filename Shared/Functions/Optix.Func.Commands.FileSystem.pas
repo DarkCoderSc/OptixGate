@@ -55,27 +55,26 @@ uses
 
   XSuperObject,
 
-  Optix.Func.Commands.Base, Optix.FileSystem.Enum, Optix.FileSystem.Helper;
+  Optix.Func.Commands.Base, Optix.FileSystem.Enum, Optix.FileSystem.Helper, Optix.Shared.Classes;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixRequestFileInformation = class(TOptixCommandActionResponse)
   private
-    FFileName        : String;
-    FIsDirectory     : Boolean;
+    [OptixSerializableAttribute]
+    FFileName : String;
 
+    [OptixSerializableAttribute]
+    FIsDirectory : Boolean;
+
+    [OptixSerializableAttribute]
     FFileInformation : TFileInformation;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@M}
     procedure DoAction(); override;
 
-    function Serialize() : ISuperObject; override;
-
     {@C}
-    constructor Create(); reintroduce; override;
+    constructor Create(); override;
     constructor Create(const AFileName : String; const AIsDirectory : Boolean); overload;
     destructor Destroy(); override;
 
@@ -109,10 +108,16 @@ type
 
   TOptixCommandRefreshFiles = class(TOptixCommandActionResponse)
   private
-    FPath   : String;
+    [OptixSerializableAttribute]
+    FPath : String;
+
+    [OptixSerializableAttribute]
     FAccess : TFileAccessAttributes;
+
+    [OptixSerializableAttribute]
     FIsRoot : Boolean;
-    FList   : TObjectList<TFileInformation>;
+
+    FList : TObjectList<TFileInformation>;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
@@ -135,18 +140,14 @@ type
 
   TOptixCommandTransfer = class(TOptixCommand)
   private
+    [OptixSerializableAttribute]
     FTransferId : TGUID;
 
     // FFilePath in TOptixDownloadFile -> File to download (Client)
     // FFilePath in TOptixUploadFile   -> Uploaded destination file path (Client)
+    [OptixSerializableAttribute]
     FFilePath : String;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
     {@C}
     constructor Create(const AFilePath : String; const ATransferId : TGUID); overload;
 
@@ -159,14 +160,9 @@ type
 
   TOptixCommandUploadFile = class(TOptixCommandTransfer)
   private
+    [OptixSerializableAttribute]
     FFileSize : UInt64;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
     {@G}
     property FileSize : UInt64 read FFileSize;
   end;
@@ -185,7 +181,7 @@ begin
   inherited Create();
   ///
 
-  FFileInformation := nil;
+  FFileInformation := TFileInformation.Create();
 end;
 
 { TOptixRequestFileInformation.Create }
@@ -214,33 +210,10 @@ begin
   inherited;
   ///
 
-  FFileInformation := TFileInformation.Create(FFileName, FIsDirectory);
-end;
-
-{ TOptixRequestFileInformation.Serialize }
-function TOptixRequestFileInformation.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['FileName']    := FFileName;
-  result.B['IsDirectory'] := FIsDirectory;
-
   if Assigned(FFileInformation) then
-    result.O['FileInformation'] := FFileInformation.Serialize();
-end;
+    FreeAndNil(FFileInformation);
 
-{ TOptixRequestFileInformation.DeSerialize }
-procedure TOptixRequestFileInformation.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FFileName    := ASerializedObject.S['FileName'];
-  FIsDirectory := ASerializedObject.B['IsDirectory'];
-
-  if ASerializedObject.Contains('FileInformation') then
-    FFileInformation := TFileInformation.Create(ASerializedObject.O['FileInformation']);
+  FFileInformation := TFileInformation.Create(FFileName, FIsDirectory);
 end;
 
 (***********************************************************************************************************************
@@ -321,10 +294,6 @@ begin
 
   FList.Clear();
 
-  FPath   := ASerializedObject.S['Path'];
-  FAccess := StringToAccessSet(ASerializedObject.S['Access']);
-  FIsRoot := ASerializedObject.B['IsRoot'];
-
   for var I := 0 to ASerializedObject.A['List'].Length -1 do
     FList.Add(TFileInformation.Create(ASerializedObject.A['List'].O[I]));
 end;
@@ -341,10 +310,7 @@ begin
     AJsonArray.Add(AItem.Serialize);
 
   ///
-  result.S['Path']   := FPath;
-  result.A['List']   := AJsonArray;
-  result.S['Access'] := AccessSetToString(FAccess);
-  result.B['IsRoot'] := FIsRoot;
+  result.A['List'] := AJsonArray;
 end;
 
 { TOptixCommandRefreshFiles.Create }
@@ -392,50 +358,5 @@ begin
   FFilePath   := AFilePath;
   FTransferId := ATransferId;
 end;
-
-{ TOptixCommandTransfer.Serialize }
-function TOptixCommandTransfer.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['TransferId'] := FTransferId.ToString();
-  result.S['FilePath']   := FFilePath;
-end;
-
-{ TOptixCommandTransfer.DeSerialize }
-procedure TOptixCommandTransfer.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FTransferId := TGUID.Create(ASerializedObject.S['TransferId']);
-  FFilePath   := ASerializedObject.S['FilePath'];
-end;
-
-(***********************************************************************************************************************
-
-  TOptixCommandUploadFile
-
-***********************************************************************************************************************)
-
-{ TOptixCommandUploadFile.Serialize }
-function TOptixCommandUploadFile.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.I['FileSize'] := FFileSize;
-end;
-
-{ TOptixCommandUploadFile.DeSerialize }
-procedure TOptixCommandUploadFile.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FFileSize := ASerializedObject.I['FileSize'];
-end;
-
 
 end.

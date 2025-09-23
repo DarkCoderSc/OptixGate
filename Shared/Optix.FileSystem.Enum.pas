@@ -60,25 +60,32 @@ type
   // Drives ------------------------------------------------------------------------------------------------------------
   TDriveInformation = class(TOptixSerializableObject)
   private
-    FLetter    : String;
-    FName      : String;
-    FFormat    : String;
-    FType      : TDriveType;
+    [OptixSerializableAttribute]
+    FLetter : String;
+
+    [OptixSerializableAttribute]
+    FName : String;
+
+    [OptixSerializableAttribute]
+    FFormat : String;
+
+    [OptixSerializableAttribute]
+    FType : TDriveType;
+
+    [OptixSerializableAttribute]
     FTotalSize : Int64;
-    FFreeSize  : Int64;
+
+    [OptixSerializableAttribute]
+    FFreeSize : Int64;
 
     {@G}
     function GetUsedPercentage() : Byte;
     function GetUsedSize() : Int64;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
     constructor Create(const ADrive : String; const AIndex : Integer); overload;
 
     {@M}
-    function Serialize() : ISuperObject; override;
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
@@ -99,29 +106,42 @@ type
 
   // Files -------------------------------------------------------------------------------------------------------------
   TFileInformation = class(TOptixSerializableObject)
-  public
-    {@M}
-    function GetFileTypeDescription() : String;
-  protected
-    FName             : String;
-    FIsDirectory      : Boolean;
-    FACL_SSDL         : String;
-    FAccess           : TFileAccessAttributes;
-    FTypeDescription  : String;
-    FSize             : Int64;
-    FDateAreValid     : Boolean;
-    FCreatedDate      : TDateTime;
-    FLastModifiedDate : TDateTime;
-    FLastAccessDate   : TDateTime;
+  private
+    [OptixSerializableAttribute]
+    FName : String;
 
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    [OptixSerializableAttribute]
+    FIsDirectory : Boolean;
+
+    [OptixSerializableAttribute]
+    FACL_SSDL : String;
+
+    [OptixSerializableAttribute]
+    FAccess : TFileAccessAttributes;
+
+    [OptixSerializableAttribute]
+    FTypeDescription : String;
+
+    [OptixSerializableAttribute]
+    FSize : Int64;
+
+    [OptixSerializableAttribute]
+    FDateAreValid : Boolean;
+
+    [OptixSerializableAttribute]
+    FCreatedDate : TDateTime;
+
+    [OptixSerializableAttribute]
+    FLastModifiedDate : TDateTime;
+
+    [OptixSerializableAttribute]
+    FLastAccessDate : TDateTime;
   public
     {@C}
     constructor Create(const AFilePath : String; const AIsDirectory : Boolean); overload;
 
     {@M}
-    function Serialize() : ISuperObject; override;
+    function GetFileTypeDescription() : String;
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
@@ -158,35 +178,6 @@ uses
   TDriveInformation
 
 ***********************************************************************************************************************)
-
-{ TDriveInformation.DeSerialize }
-procedure TDriveInformation.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  if not Assigned(ASerializedObject) then
-    Exit();
-  ///
-
-  FLetter    := ASerializedObject.S['Letter'];
-  FName      := ASerializedObject.S['Name'];
-  FFormat    := ASerializedObject.S['Format'];
-  FType      := TDriveType(ASerializedObject.I['Type']);
-  FTotalSize := ASerializedObject.I['TotalSize'];
-  FFreeSize  := ASerializedObject.I['FreeSize'];
-end;
-
-{ TDriveInformation.Serialize }
-function TDriveInformation.Serialize() : ISuperObject;
-begin
-  result := TSuperObject.Create();
-  ///
-
-  result.S['Letter']    := FLetter;
-  result.S['Name']      := FName;
-  result.S['Format']    := FFormat;
-  result.I['Type']      := Cardinal(FType);
-  result.I['TotalSize'] := FTotalSize;
-  result.I['FreeSize']  := FFreeSize;
-end;
 
 { TDriveInformation.Assign }
 procedure TDriveInformation.Assign(ASource : TPersistent);
@@ -288,43 +279,6 @@ begin
     result := 'Directory'
   else
     result := FTypeDescription;
-end;
-
-{ TFileInformation.DeSerialize }
-procedure TFileInformation.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  if not Assigned(ASerializedObject) then
-    Exit();
-  ///
-
-  FName             := ASerializedObject.S['Name'];
-  FIsDirectory      := ASerializedObject.B['IsDirectory'];
-  FACL_SSDL         := ASerializedObject.S['ACL_SSDL'];
-  FTypeDescription  := ASerializedObject.S['TypeDescription'];
-  FSize             := ASerializedObject.I['Size'];
-  FDateAreValid     := ASerializedObject.B['DateAreValid'];
-  FCreatedDate      := ASerializedObject.D['CreatedDate'];
-  FLastModifiedDate := ASerializedObject.D['LastModifiedDate'];
-  FLastAccessDate   := ASerializedObject.D['LastAccessDate'];
-  FAccess           := StringToAccessSet(ASerializedObject.S['Access']);
-end;
-
-{ TFileInformation.Serialize }
-function TFileInformation.Serialize() : ISuperObject;
-begin
-  result := TSuperObject.Create();
-  ///
-
-  result.S['Name']             := FName;
-  result.B['IsDirectory']      := FIsDirectory;
-  result.S['ACL_SSDL']         := FACL_SSDL;
-  result.S['TypeDescription']  := FTypeDescription;
-  result.I['Size']             := FSize;
-  result.B['DateAreValid']     := FDateAreValid;
-  result.D['CreatedDate']      := FCreatedDate;
-  result.D['LastModifiedDate'] := FLastModifiedDate;
-  result.D['LastAccessDate']   := FLastAccessDate;
-  result.S['Access']           := AccessSetToString(FAccess);
 end;
 
 { TFileInformation.Assign }

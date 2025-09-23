@@ -123,22 +123,17 @@ begin
         // Sets --------------------------------------------------------------------------------------------------------
         tkSet :
           result.S[AField.Name] := SetToString(AField.FieldType.Handle, AField.GetValue(self).GetReferenceToRawData);
-        // Integers ----------------------------------------------------------------------------------------------------
-        tkInteger, tkFloat, tkInt64 :
-          result.I[AField.Name] := AField.GetValue(self).AsInteger();
         // Enum --------------------------------------------------------------------------------------------------------
         tkEnumeration :
           result.I[AField.Name] := AField.GetValue(self).AsOrdinal();
-        // Strings -----------------------------------------------------------------------------------------------------
-        tkChar, tkString, tkWChar, tkLString, tkWString, tkUString :
-          result.S[AField.Name] := AField.GetValue(self).AsString();
+        // Variants -----------------------------------------------------------------------------------------------------
+        tkInteger, tkFloat, tkInt64, tkChar, tkString, tkWChar, tkLString, tkWString, tkUString :
+          result.V[AField.Name] := AField.GetValue(self).AsVariant();
         // -------------------------------------------------------------------------------------------------------------
       end;
     end;
   end;
 end;
-
-continuer l'implémentation de la serialization (semi-auto), ajouter le support de TDateTime
 
 { TOptixSerializableObject.DeSerialize }
 procedure TOptixSerializableObject.DeSerialize(const ASerializedObject : ISuperObject);
@@ -197,7 +192,7 @@ begin
       // Sets ----------------------------------------------------------------------------------------------------------
       tkSet :
         try
-          StringToSet(AField.FieldType.Handle, APair.AsString, Pointer(NativeUInt(self) + AField.Offset));
+          StringToSet(AField.FieldType.Handle, APair.AsString, Pointer(NativeUInt(self) + NativeUInt(AField.Offset)));
         except
         end;
       // ---------------------------------------------------------------------------------------------------------------

@@ -41,13 +41,6 @@
 {                                                                              }
 {******************************************************************************}
 
-{
-
-  Current changelog draft:
-    - File manager: Folder Tree
-    - Protocol Improvement
-}
-
 unit uFormMain;
 
 interface
@@ -377,26 +370,6 @@ procedure TFormMain.Server1Click(Sender: TObject);
 begin
   FormServers.Show();
 end;
-
-//procedure TFormMain.SendCommand(const ASessionId : TGUID; const ACommand : TOptixCommand);
-//begin
-//  SendCommand(GetNodeBySessionId(ASessionId), ACommand);
-//end;
-
-//function TFormMain.GetNodeBySessionId(const ASessionId : TGUID) : PVirtualNode;
-//begin
-//  result := nil;
-//  ///
-//
-//  for var pNode in VST.Nodes do begin
-//    var pData := PTreeData(pNode.GetData);
-//    if Assigned(pData^.SessionInformation) and (pData^.SessionInformation.SessionId = ASessionId) then begin
-//      result := pNode;
-//
-//      break;
-//    end;
-//  end;
-//end;
 
 procedure TFormMain.hreads1Click(Sender: TObject);
 begin
@@ -732,17 +705,13 @@ end;
 procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
 begin
   if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') or not ASerializedPacket.Contains('WindowGUID') or
-     not ASerializedPacket.Contains('SessionId') then
+     not ASerializedPacket.Contains('PacketClass') or
+     not ASerializedPacket.Contains('FWindowGUID') then
       Exit();
   ///
 
-  allocconsole();
-  writeln(ASerializedPacket.AsJson(True));
-  writeln('---------');
-
   var AClassName := ASerializedPacket.S['PacketClass'];
-  var AWindowGUID := TGUID.Create(ASerializedPacket.S['WindowGUID']);
+  var AWindowGUID := TGUID.Create(ASerializedPacket.S['FWindowGUID']);
 
   var AOptixPacket : TOptixPacket := nil;
   var AHandleMemory := False;

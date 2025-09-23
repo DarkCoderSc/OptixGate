@@ -55,29 +55,24 @@ uses
 
   XSuperObject,
 
-  Optix.Func.Commands.Base, Optix.Process.Enum;
+  Optix.Func.Commands.Base, Optix.Process.Enum, Optix.Shared.Classes;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   {@TEMPLATE}
-  TOptixCommandProcess = class(TOptixCommandAction)
+  TOptixCommandAndResponseProcess = class(TOptixCommandActionResponse)
   private
+    [OptixSerializableAttribute]
     FProcessId : Cardinal;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
     {@C}
     constructor Create(const AProcessId : Cardinal) overload;
-
-    {@M}
-    function Serialize() : ISuperObject; override;
 
     {@G}
     property ProcessId : Cardinal read FProcessId;
   end;
 
-  TOptixCommandKillProcess = class(TOptixCommandProcess)
+  TOptixCommandKillProcess = class(TOptixCommandAndResponseProcess)
   public
     {@M}
     procedure DoAction(); override;
@@ -85,19 +80,22 @@ type
 
   TOptixCommandProcessDump = class(TOptixCommandTask)
   private
-    FProcessId    : Cardinal;
+    [OptixSerializableAttribute]
+    FProcessId : Cardinal;
+
+    [OptixSerializableAttribute]
     FDestTempPath : Boolean;
+
+    [OptixSerializableAttribute]
     FDestFilePath : String;
-    FTypesValue   : DWORD;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+
+    [OptixSerializableAttribute]
+    FTypesValue : DWORD;
   public
     {@C}
     constructor Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD); overload;
 
     {@M}
-    function Serialize() : ISuperObject; override;
     function CreateTask(const ACommand : TOptixCommand) : TOptixTask; override;
 
     {@G}
@@ -135,35 +133,17 @@ uses
 
 (***********************************************************************************************************************
 
-  TOptixCommandProcess
+  TOptixCommandAndResponseProcess
 
 ***********************************************************************************************************************)
 
-{ TOptixCommandProcess.Create }
-constructor TOptixCommandProcess.Create(const AProcessId : Cardinal);
+{ TOptixCommandAndResponseProcess.Create }
+constructor TOptixCommandAndResponseProcess.Create(const AProcessId : Cardinal);
 begin
   inherited Create();
   ///
 
   FProcessId := AProcessId;
-end;
-
-{ TOptixCommandProcess.Serialize }
-function TOptixCommandProcess.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.I['ProcessId'] := FProcessId;
-end;
-
-{ TOptixCommandProcess.DeSerialize }
-procedure TOptixCommandProcess.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FProcessId := ASerializedObject.I['ProcessId'];
 end;
 
 (***********************************************************************************************************************
@@ -209,31 +189,6 @@ begin
   else
     result := nil;
 end;
-
-{ TOptixCommandProcessDump.Serialize }
-function TOptixCommandProcessDump.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.I['ProcessId']    := FProcessId;
-  result.B['DestTempPath'] := FDestTempPath;
-  result.S['DestFilePath'] := FDestFilePath;
-  result.I['TypesValue']   := FTypesValue;
-end;
-
-{ TOptixCommandProcessDump.DeSerialize }
-procedure TOptixCommandProcessDump.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FProcessId    := ASerializedObject.I['ProcessId'];
-  FDestTempPath := ASerializedObject.B['DestTempPath'];
-  FDestFilePath := ASerializedObject.S['DestFilePath'];
-  FTypesValue   := ASerializedObject.I['TypesValue'];
-end;
-
 
 (***********************************************************************************************************************
 

@@ -56,7 +56,6 @@ type
   TOptixPreflightRequest = record
     ProtocolVersion : String[50];
     ClientKind      : TClientKind;
-    SessionId       : TGUID;
     HandlerId       : TGUID;
 
     {$IFDEF CLIENT}
@@ -74,7 +73,6 @@ uses Optix.Protocol.Packet;
 class operator TOptixPreflightRequest.Initialize(out ADestRecord : TOptixPreflightRequest);
 begin
   ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;
-  ADestRecord.SessionId       := SESSION_ID;
   ADestRecord.HandlerId       := TGUID.Empty;
 end;
 {$ENDIF}
