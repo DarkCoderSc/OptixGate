@@ -18,17 +18,17 @@ It is important to distinguish between a Remote Access Tool and a related catego
 
 ⚠️ *Optix will not, and will never, implement code that facilitates such usage. This includes features intended solely for malicious purposes, evasion or stealth techniques, client configuration patching, and persistence mechanisms. If you are conducting a penetration test and require such features, it is your responsibility to implement them and compile your own version.*
 
-The programming language used in this project is Delphi. In recent years, Embarcadero made a significant decision by offering a completely free edition of Delphi for open-source projects and students. You can now use the latest version of the IDE for free, provided you comply with their usage terms.
-
 Finally, Optix is a reference to an old Remote Access Trojan of the same name from the early 2000s, and the program's logo is also a direct reference to it. The connection is a tribute, which is a recurring theme in many of my projects.
 
 ---
 
-![Sponsored by Embarcadero](assets/sponsored_embarcadero.png)
+![Sponsored by Embarcadero](Assets/sponsored_embarcadero.png)
 
-Optix Gate is proudly sponsored by Embarcadero, the company behind Delphi / C++ Builder and many other groundbreaking developer tools. I'm deeply grateful for their invaluable support, which makes this open-source project possible.
+Optix Gate is sponsored by Embarcadero, the company behind Delphi, C++ Builder, and many other groundbreaking developer tools. Their invaluable support makes this open-source project possible, and I am deeply grateful for their commitment.
 
-Although Optix Gate is developed using the latest professional version of Delphi (currently `13`), it has been designed to work seamlessly with the latest Community Edition (CE), which is completely free. You can download and install Delphi CE at no cost [here](https://www.embarcadero.com/products/delphi/starter/free-download).
+The project is developed in Delphi. In recent years, Embarcadero has made a significant move by offering a completely [free Community Edition of Delphi](https://www.embarcadero.com/products/delphi/starter/free-download) for students and open-source projects. This edition provides access to the latest version of the IDE at no cost, as long as you comply with their licensing terms.
+
+*While Optix Gate is built using the latest professional version of Delphi (currently 13), it has been carefully designed to work seamlessly with the free Community Edition.*
 
 ---
 
@@ -200,7 +200,7 @@ This approach reflects the ambition to provide users with clear, actionable insi
 
 ### Remote Shell
 
-![Remote Shell](Assets/sshot-9.png)
+![Remote Shell](Assets/sshot-14.png)
 
 As extensively discussed in the protocol section, this is a core feature for remote system management. It supports unlimited parallel sessions as well as interrupts to terminate long-running commands.
 
