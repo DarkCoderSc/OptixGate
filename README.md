@@ -24,7 +24,7 @@ Finally, Optix is a reference to an old Remote Access Trojan of the same name fr
 
 ---
 
-![Sponsored by Embarcadero](assets/sponsored_embarcadero.png)
+![Sponsored by Embarcadero](Assets/sponsored_embarcadero.png)
 
 Optix Gate is proudly sponsored by Embarcadero, the company behind Delphi / C++ Builder and many other groundbreaking developer tools. I'm deeply grateful for their invaluable support, which makes this open-source project possible.
 
