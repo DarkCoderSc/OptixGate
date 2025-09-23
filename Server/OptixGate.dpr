@@ -66,16 +66,14 @@ uses
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
   Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
   Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
+  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
   Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
+  Optix.FileSystem.Enum in '..\Shared\Optix.FileSystem.Enum.pas',
   Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Protocol.Server in 'Units\Threads\Optix.Protocol.Server.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
@@ -99,7 +97,12 @@ uses
   uFrameRemoteShellInstance in 'Units\Frames\uFrameRemoteShellInstance.pas' {FrameRemoteShellInstance: TFrame},
   uFormListen in 'Units\Forms\uFormListen.pas' {FormListen},
   uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
-  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas';
+  Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas',
+  Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
+  Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
+  Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
+  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
+  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas';
 
 {$R *.res}
 {$R data.res}
@@ -120,7 +123,6 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormServers, FormServers);
-
   ///
   Application.Run;
 end.

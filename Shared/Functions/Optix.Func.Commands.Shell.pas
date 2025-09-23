@@ -41,26 +41,62 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Func.Shell;
+unit Optix.Func.Commands.Shell;
 
 interface
 
-uses System.Classes, System.SysUtils, XSuperObject, Optix.Protocol.Packet;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  XSuperObject,
+
+  Optix.Func.Commands.Base, Optix.Shared.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixShellOutput = class(TOptixPacket)
+  TOptixCommandShell = class(TOptixCommand);
+
+  TOptixStartShellInstance = class(TOptixCommandShell);
+
+  TOptixShellInstance = class(TOptixCommandShell)
   private
+    [OptixSerializableAttribute]
     FInstanceId : TGUID;
-    FOutput     : String;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
+    {@C}
+    constructor Create(const AInstanceId : TGUID);
+
+    {@G}
+    property InstanceId : TGUID read FInstanceId;
+  end;
+
+  TOptixTerminateShellInstance = class(TOptixShellInstance);
+  TOptixBreakShellInstance = class(TOptixShellInstance);
+
+  TOptixStdinShellInstance = class(TOptixShellInstance)
+  private
+    [OptixSerializableAttribute]
+    FCommandLine : String;
+  public
 
     {@C}
-    constructor Create(const AWindowGUID : TGUID; const AOutput : String; const AInstanceId : TGUID); overload;
+    constructor Create(const AInstanceId : TGUID; const ACommandLine : String); overload;
+
+    {@G}
+    property CommandLine : String read FCommandLine;
+  end;
+
+  TOptixShellOutput = class(TOptixCommand)
+  private
+    [OptixSerializableAttribute]
+    FInstanceId : TGUID;
+
+    [OptixSerializableAttribute]
+    FOutput : String;
+  public
+    {@C}
+    constructor Create(const AGroupId : TGUID; const AOutput : String; const AInstanceId : TGUID);
 
     {@G}
     property InstanceId : TGUID  read FInstanceId;
@@ -69,37 +105,51 @@ type
 
 implementation
 
-(* TOptixShellOutput *)
+(***********************************************************************************************************************
+
+  TOptixShellInstance
+
+***********************************************************************************************************************)
+
+{ TOptixShellInstance.Create }
+constructor TOptixShellInstance.Create(const AInstanceId : TGUID);
+begin
+  inherited Create();
+  ///
+
+  FInstanceId := AInstanceId;
+end;
+
+(***********************************************************************************************************************
+
+  TOptixStdinShellInstance
+
+***********************************************************************************************************************)
+
+{ TOptixStdinShellInstance.Create }
+constructor TOptixStdinShellInstance.Create(const AInstanceId : TGUID; const ACommandLine : String);
+begin
+  inherited Create(AInstanceId);
+  ///
+
+  FCommandLine := ACommandLine;
+end;
+
+(***********************************************************************************************************************
+
+  TOptixShellOutput
+
+***********************************************************************************************************************)
 
 { TOptixShellOutput.Create }
-constructor TOptixShellOutput.Create(const AWindowGUID : TGUID; const AOutput : String; const AInstanceId : TGUID);
+constructor TOptixShellOutput.Create(const AGroupId : TGUID; const AOutput : String; const AInstanceId : TGUID);
 begin
-  inherited Create(AWindowGUID);
+  inherited Create();
   ///
 
   FOutput     := AOutput;
   FInstanceId := AInstanceId;
+  FWindowGUID := AGroupId;
 end;
-
-{ TOptixShellOutput.DeSerialize }
-procedure TOptixShellOutput.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FOutput     := ASerializedObject.S['Output'];
-  FInstanceId := TGUID.Create(ASerializedObject.S['InstanceId']);
-end;
-
-{ TOptixShellOutput.Serialize }
-function TOptixShellOutput.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['Output']     := FOutput;
-  result.S['InstanceId'] := FInstanceId.ToString();
-end;
-
 
 end.

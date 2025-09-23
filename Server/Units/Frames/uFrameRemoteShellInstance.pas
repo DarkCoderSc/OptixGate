@@ -45,9 +45,18 @@ unit uFrameRemoteShellInstance;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, __uBaseFormControl__, OMultiPanel;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls,
+
+  OMultiPanel,
+
+  __uBaseFormControl__;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFrameRemoteShellInstance = class(TFrame)
@@ -82,7 +91,12 @@ type
 
 implementation
 
-uses uFormMain, uControlFormRemoteShell, Optix.Func.Commands, Optix.Helper, Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain, uControlFormRemoteShell,
+
+  Optix.Func.Commands, Optix.Helper, Optix.Constants, Optix.Func.Commands.Shell;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 

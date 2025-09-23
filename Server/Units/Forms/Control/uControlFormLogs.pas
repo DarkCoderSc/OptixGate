@@ -52,13 +52,12 @@ uses
   Winapi.Windows, Winapi.Messages,
 
   VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees,
-  XSuperObject,
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
 
   __uBaseFormControl__,
 
-  Optix.Func.LogNotifier;
+  Optix.Func.LogNotifier, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -94,7 +93,7 @@ type
     procedure AddLog(const AMessage, AContext : String; const AKind : TLogKind);
   public
     {@M}
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
   end;
 
 var
@@ -108,7 +107,7 @@ uses
 
   uFormMain, uControlFormTransfers,
 
-  Optix.Helper, Optix.Protocol.Packet, Optix.Constants, Optix.VCL.Helper;
+  Optix.Helper, Optix.Constants, Optix.VCL.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -133,24 +132,18 @@ begin
   VST.Clear();
 end;
 
-procedure TControlFormLogs.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormLogs.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   inherited;
-  ///
-
-  if not Assigned(ASerializedPacket) then
-    Exit();
   ///
 
   var ALogNotifier : TLogNotifier := nil;
   try
     // -----------------------------------------------------------------------------------------------------------------
-    if (AClassName = TLogNotifier.ClassName) then
-      ALogNotifier := TLogNotifier.Create(ASerializedPacket)
+    if AOptixPacket is TLogNotifier then
+      ALogNotifier := TLogNotifier(AOptixPacket)
     // -----------------------------------------------------------------------------------------------------------------
-    else if (AClassName = TLogTransferException.ClassName) then begin
-      ALogNotifier := TLogTransferException.Create(ASerializedPacket);
-
+    else if AOptixPacket is TLogTransferException then begin
       // Notify concerned transfer
       var ATransfersForm := TControlFormTransfers(FormMain.GetControlForm(self, TControlFormTransfers));
       if Assigned(aTransfersForm) then
@@ -158,12 +151,8 @@ begin
     end;
     // -----------------------------------------------------------------------------------------------------------------
   finally
-    if Assigned(ALogNotifier) then begin
+    if Assigned(ALogNotifier) then
       AddLog(ALogNotifier.DetailedMessage, ALogNotifier.Context, ALogNotifier.Kind);
-
-      ///
-      FreeAndNil(ALogNotifier);
-    end;
   end;
 
   ///

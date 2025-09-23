@@ -45,7 +45,10 @@ unit Optix.Task.ProcessDump;
 
 interface
 
-uses XSuperObject, Optix.Task;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  XSuperObject, Optix.Func.Commands.Base;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixProcessDumpTask = class(TOptixTask)
@@ -82,7 +85,14 @@ type
 
 implementation
 
-uses System.SysUtils, System.IOUtils, Winapi.Windows, Optix.Func.Commands, Optix.Process.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.IOUtils,
+
+  Winapi.Windows,
+
+  Optix.Func.Commands.Process, Optix.Process.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixProcessDumpTask *)
 

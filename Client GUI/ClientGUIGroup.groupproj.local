@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <BorlandProject>
 	<Transactions>
-    <Transaction>2025/08/15 09:04:51.000.443,C:\Users\jples\Desktop\OptixGate\Client GUI\ClientGUIGroup.groupproj=C:\Users\jples\Documents\Embarcadero\Studio\Projects\ProjectGroup1.groupproj</Transaction>
+    <Transaction>2025/08/15 09:04:51.000.443,C:\Users\jples\Documents\Embarcadero\Studio\Projects\ProjectGroup1.groupproj=C:\Users\jples\Desktop\OptixGate\Client GUI\ClientGUIGroup.groupproj</Transaction>
   </Transactions>
 	<Default.Personality>
-		<Projects ActiveProject="C:\Users\jples\Desktop\OptixGate\Client GUI\Client_GUI.dproj"/>
+		<Projects ActiveProject="C:\Users\jples\Desktop\OptixGate\Client GUI\Client_GUI_OpenSSL.dproj"/>
 	</Default.Personality>
 </BorlandProject>

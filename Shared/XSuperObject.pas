@@ -42,7 +42,8 @@ uses
   XSuperJSON,
   System.RTTI,
   System.TypInfo,
-  Generics.Collections;
+  Generics.Collections,
+  Winapi.Windows;
 
   const CharIndex = Low(String);
 type
@@ -1130,7 +1131,8 @@ begin
      case VTyp of
        varString, varUString:
           S[V] := Value;
-       varInt64, varInteger, varByte:
+       // JPL : Support more numerical formats.
+       varInt64, varInteger, varByte, varSingle, varSmallint, varShortInt, varWord, varLongWord, varUInt64:
           I[V] := Value;
        varDouble, varCurrency:
           F[V] := Value;

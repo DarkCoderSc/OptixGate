@@ -22,6 +22,16 @@ The programming language used in this project is Delphi. In recent years, Embarc
 
 Finally, Optix is a reference to an old Remote Access Trojan of the same name from the early 2000s, and the program's logo is also a direct reference to it. The connection is a tribute, which is a recurring theme in many of my projects.
 
+---
+
+![Sponsored by Embarcadero](assets/sponsored_embarcadero.png)
+
+Optix Gate is proudly sponsored by Embarcadero, the company behind Delphi / C++ Builder and many other groundbreaking developer tools. I'm deeply grateful for their invaluable support, which makes this open-source project possible.
+
+Although Optix Gate is developed using the latest professional version of Delphi (currently `13`), it has been designed to work seamlessly with the latest Community Edition (CE), which is completely free. You can download and install Delphi CE at no cost [here](https://www.embarcadero.com/products/delphi/starter/free-download).
+
+---
+
 ## Key Features
 
 * Multi-threaded and parallelized environment for managing multiple clients simultaneously
@@ -211,6 +221,12 @@ Many additional actions are planned for existing features, and several new capab
 Stability is my top priority; new features come second.
 
 ## Changelogs
+
+### 1.1.0 (Sept 2025)
+
+* **Folder Tree View Added to File Manager:** The browsed folder tree is now optionally available in the file manager (default: enabled).
+* **File Upload Feedback Added:** When a file is uploaded, all file manager windows are notified if the new file matches the current directory (reactive update).
+* **Significant Protocol Improvements:** While not directly visible in the compiled version, the underlying code has been greatly enhanced. Optix command dispatching is now handled generically, and command/response serialization and deserialization are partially automated using the power of Delphi RTTI for most basic object and property types. This considerably reduces the time required to implement new commands and responses, minimizes potential implementation errors, and makes the project much easier to expand.
 
 ### 1.0.0 (Sept 2025)
 

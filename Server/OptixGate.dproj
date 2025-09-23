@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{A5E90304-CC8B-4E79-BEA2-7122494D036C}</ProjectGuid>
-        <ProjectVersion>20.1</ProjectVersion>
+        <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
@@ -165,16 +165,14 @@
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
         <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.Process.pas"/>
+        <DCCReference Include="..\Shared\Optix.Process.Enum.pas"/>
         <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Enum.FileSystem.pas"/>
+        <DCCReference Include="..\Shared\Optix.FileSystem.Enum.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Classes.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
-        <DCCReference Include="..\Shared\Tasks\Optix.Task.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Shell.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Server.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
@@ -228,6 +226,11 @@
             <Form>FormServers</Form>
         </DCCReference>
         <DCCReference Include="Units\Configs\Optix.Config.Servers.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Base.pas"/>
+        <DCCReference Include="..\Shared\Optix.ClassesRegistry.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Shell.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -251,25 +254,10 @@
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
-            <Deployment Version="4">
-                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="Win32\Release\OptixGate.exe" Configuration="Release" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>OptixGate.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="bins\NoSSL\Win32\Debug\OptixGate.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>OptixGate.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
+            <Deployment Version="5">
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile"/>
+                <DeployFile LocalName="Win32\Release\OptixGate.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="bins\NoSSL\Win32\Debug\OptixGate.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>
@@ -280,16 +268,6 @@
                     </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="AndroidClasses">
-                    <Platform Name="Android">
-                        <RemoteDir>classes</RemoteDir>
-                        <Operation>64</Operation>
-                    </Platform>
-                    <Platform Name="Android64">
-                        <RemoteDir>classes</RemoteDir>
-                        <Operation>64</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="AndroidFileProvider">
@@ -391,6 +369,16 @@
                     </Platform>
                     <Platform Name="Android64">
                         <RemoteDir>res\values-v31</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                </DeployClass>
+                <DeployClass Name="AndroidSplashStylesV35">
+                    <Platform Name="Android">
+                        <RemoteDir>res\values-v35</RemoteDir>
+                        <Operation>1</Operation>
+                    </Platform>
+                    <Platform Name="Android64">
+                        <RemoteDir>res\values-v35</RemoteDir>
                         <Operation>1</Operation>
                     </Platform>
                 </DeployClass>

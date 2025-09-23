@@ -41,48 +41,134 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.Packet;
+unit Optix.ClassesRegistry;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils, System.Rtti, System.TypInfo,
 
-  XSuperObject,
-
-  Optix.Shared.Classes, Optix.Interfaces;
+  Generics.Collections;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixPacket = class(TOptixSerializableObject)
-  protected
-    [OptixSerializableAttribute]
-    FWindowGUID : TGUID;
+  TClassesRegistry = class
+  private
+    class var FRegisteredClasses : TDictionary<String, TClass>;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
+    {@C}
+    class constructor Create();
+    class destructor Destroy();
 
-    {@G/S}
-    property WindowGUID : TGUID read FWindowGUID write FWindowGUID;
+    {@M}
+    class function CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject; static;
+    class procedure RegisterClass(const AClass : TClass);
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.InformationGathering.Helper;
+  Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
+  Optix.Task.ProcessDump, Optix.Func.Commands.Base, Optix.Func.SessionInformation, Optix.Func.LogNotifier;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(* TOptixPacket *)
-
-{ TOptixPacket.Serialize }
-function TOptixPacket.Serialize() : ISuperObject;
+{ TClassesRegistry.Create }
+class constructor TClassesRegistry.Create();
 begin
-  result := inherited;
+  FRegisteredClasses := TDictionary<String, TClass>.Create();
+end;
+
+{ TClassesRegistry.Destroy }
+class destructor TClassesRegistry.Destroy();
+begin
+  if Assigned(FRegisteredClasses) then
+    FreeAndNil(FRegisteredClasses);
+end;
+
+{ TClassesRegistry.CreateInstance }
+class function TClassesRegistry.CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject;
+begin
+  result := nil;
   ///
 
-  result.S['PacketClass'] := ClassName;
+  if not Assigned(FRegisteredClasses) or (FRegisteredClasses.Count = 0) then
+    Exit();
+  ///
+
+  var AClass : TClass;
+  if not FRegisteredClasses.TryGetValue(AClassName, AClass) then
+    Exit();
+  ///
+
+  var AContext := TRttiContext.Create();
+
+  var AType := AContext.GetType(AClass);
+
+  for var AMethod in AType.GetMethods() do begin
+    if not AMethod.IsConstructor then
+      continue;
+    ///
+
+    var AParameters := AMethod.GetParameters();
+    if Length(AParameters) = Length(AParams) then begin
+      for var I := Low(AParameters) to High(AParameters) do begin
+        if AParams[I].IsType(AParameters[I].ParamType.Handle) then begin
+          result := AMethod.Invoke(AClass, AParams).AsObject();
+
+          break;
+        end;
+      end;
+
+      if Assigned(result) then
+        break;
+    end;
+  end;
 end;
+
+{ TClassesRegistry.RegisterClass }
+class procedure TClassesRegistry.RegisterClass(const AClass : TClass);
+begin
+  if Assigned(FRegisteredClasses) and not FRegisteredClasses.ContainsKey(AClass.ClassName) then
+    FRegisteredClasses.Add(AClass.ClassName, AClass);
+end;
+
+initialization
+  (* Commands *)
+
+  // General
+  TClassesRegistry.RegisterClass(TOptixCommandTerminate);
+  TClassesRegistry.RegisterClass(TOptixSessionInformation);
+
+  // File System Commands
+  TClassesRegistry.RegisterClass(TOptixRequestFileInformation);
+  TClassesRegistry.RegisterClass(TOptixRequestUploadedFileInformation);
+  TClassesRegistry.RegisterClass(TOptixCommandRefreshDrives);
+  TClassesRegistry.RegisterClass(TOptixCommandRefreshFiles);
+  TClassesRegistry.RegisterClass(TOptixCommandDownloadFile);
+  TClassesRegistry.RegisterClass(TOptixCommandUploadFile);
+
+  // System & Process Commands
+  TClassesRegistry.RegisterClass(TOptixCommandKillProcess);
+  TClassesRegistry.RegisterClass(TOptixCommandProcessDump);
+  TClassesRegistry.RegisterClass(TOptixCommandRefreshProcess);
+
+  // Shell Commands
+  TClassesRegistry.RegisterClass(TOptixStartShellInstance);
+  TClassesRegistry.RegisterClass(TOptixTerminateShellInstance);
+  TClassesRegistry.RegisterClass(TOptixBreakShellInstance);
+  TClassesRegistry.RegisterClass(TOptixStdinShellInstance);
+  TClassesRegistry.RegisterClass(TOptixShellOutput);
+
+  // Logs
+  TClassesRegistry.RegisterClass(TLogNotifier);
+  TClassesRegistry.RegisterClass(TLogTransferException);
+
+
+  (* Tasks *)
+  TClassesRegistry.RegisterClass(TOptixTaskResult);
+  TClassesRegistry.RegisterClass(TOptixTaskCallback);
+  TClassesRegistry.RegisterClass(TOptixProcessDumpTaskResult);
 
 end.

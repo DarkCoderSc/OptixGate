@@ -54,11 +54,10 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, Vcl.Menus,
 
   VirtualTrees, VirtualTrees.AncestorVCL, VirtualTrees.Types, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree,
-  XSuperObject,
 
   __uBaseFormControl__, uControlFormDumpProcess,
 
-  Optix.Func.Enum.Process, Optix.WinApiEx;
+  Optix.Process.Enum, Optix.WinApiEx, Optix.Func.Commands.Process, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -119,7 +118,7 @@ type
     FRemoteProcessorArchitecture : TProcessorArchitecture;
 
     {@M}
-    procedure Refresh(const AProcessList : TProcessList);
+    procedure Refresh(const AProcessList : TOptixCommandRefreshProcess);
     procedure ApplyFilters(const AFilters : TFilterKinds = []);
     procedure ApplyFilterSettings();
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
@@ -133,7 +132,7 @@ type
     procedure OnFirstShow(); override;
   public
     {@M}
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
 
     {@C}
     constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); reintroduce;
@@ -150,8 +149,7 @@ uses
 
   uFormMain,
 
-  Optix.Func.Commands, Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper,
-  Optix.Protocol.Packet;
+  Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Func.Commands;
  // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -342,7 +340,7 @@ begin
   DumpProcess1.Visible := KillProcess1.Visible;
 end;
 
-procedure TControlFormProcessManager.Refresh(const AProcessList : TProcessList);
+procedure TControlFormProcessManager.Refresh(const AProcessList : TOptixCommandRefreshProcess);
 begin
   if not Assigned(AProcessList) then
     Exit();
@@ -356,7 +354,8 @@ begin
       var pNode := VST.AddChild(nil);
       var pData := PTreeData(pNode.GetData);
 
-      pData^.ProcessInformation := TProcessInformation.Create(AProcessInformation);
+      pData^.ProcessInformation := TProcessInformation.Create();
+      pData^.ProcessInformation.Assign(AProcessInformation);
     end;
   finally
     ApplyFilterSettings();
@@ -552,30 +551,18 @@ begin
   end;
 end;
 
-procedure TControlFormProcessManager.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormProcessManager.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   inherited;
   ///
 
-  var AOptixPacket : TOptixPacket := nil;
-  try
-    // -------------------------------------------------------------------------
-    if AClassName = TProcessList.ClassName then begin
-      AOptixPacket := TProcessList.Create(ASerializedPacket);
-
-      Refresh(TProcessList(AOptixPacket));
-    end
-    // -------------------------------------------------------------------------
-    else if AClassName = TOptixCommandKillProcess.ClassName then begin
-      AOptixPacket := TOptixCommandKillProcess.Create(ASerializedPacket);
-
-      RemoveProcess(TOptixCommandKillProcess(AOptixPacket).ProcessId);
-    end;
-    // -------------------------------------------------------------------------
-  finally
-    if Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
-  end;
+  // -------------------------------------------------------------------------------------------------------------------
+  if AOptixPacket is TOptixCommandRefreshProcess then
+    Refresh(TOptixCommandRefreshProcess(AOptixPacket))
+  // -------------------------------------------------------------------------------------------------------------------
+  else if AOptixPacket is TOptixCommandKillProcess then
+    RemoveProcess(TOptixCommandKillProcess(AOptixPacket).ProcessId);
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
 end.

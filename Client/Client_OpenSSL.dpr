@@ -72,7 +72,7 @@ uses
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
   Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Enum.Process in '..\Shared\Functions\Optix.Func.Enum.Process.pas',
+  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
@@ -80,9 +80,8 @@ uses
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
   Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
   Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Actions.Process in 'Units\Actions\Optix.Actions.Process.pas',
   Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Func.Enum.FileSystem in '..\Shared\Functions\Optix.Func.Enum.FileSystem.pas',
+  Optix.FileSystem.Enum in '..\Shared\Optix.FileSystem.Enum.pas',
   Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
   Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
@@ -90,10 +89,13 @@ uses
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Task in '..\Shared\Tasks\Optix.Task.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Func.Shell in '..\Shared\Functions\Optix.Func.Shell.pas',
-  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas';
+  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas',
+  Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
+  Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
+  Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
+  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
+  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas';
 
 begin
   IsMultiThread := True;

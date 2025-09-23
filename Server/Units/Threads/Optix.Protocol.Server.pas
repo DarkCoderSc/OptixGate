@@ -45,9 +45,17 @@ unit Optix.Protocol.Server;
 
 interface
 
-uses System.Classes, System.SyncObjs, Winapi.Winsock2, XSuperObject, Generics.Collections, Optix.Sockets.Helper,
-     Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight
-     {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SyncObjs,
+
+  Generics.Collections,
+
+  Winapi.Winsock2,
+
+  Optix.Sockets.Helper, Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight
+  {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixServerThread = class;
@@ -63,7 +71,7 @@ type
   TOnRegisterWorker = procedure(
     Sender            : TOptixServerThread;
     const AClient     : TClientSocket;
-    const ASessionId  : TGUID;
+    const AHandlerId  : TGUID;
     const AWorkerKind : TClientKind
   ) of object;
 
@@ -122,8 +130,15 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils, Optix.Protocol.Exceptions, Optix.Protocol.Worker.FileTransfer,
-     Optix.Protocol.Client{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows,
+
+  Optix.Protocol.Exceptions, Optix.Protocol.Worker.FileTransfer, Optix.Protocol.Client
+  {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixServerThread *)
 

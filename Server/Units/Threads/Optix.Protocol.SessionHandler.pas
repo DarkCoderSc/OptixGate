@@ -45,8 +45,16 @@ unit Optix.Protocol.SessionHandler;
 
 interface
 
-uses System.Classes, Optix.Protocol.Client.Handler, Optix.Protocol.Packet,
-     XSuperObject, Optix.Sockets.Helper, Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows,
+
+  XSuperObject,
+
+  Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Sockets.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixSessionHandlerThread = class;

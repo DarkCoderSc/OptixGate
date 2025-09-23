@@ -54,11 +54,10 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
-  XSuperObject,
 
   __uBaseFormControl__,
 
-  Optix.Task;
+  Optix.Func.Commands.Base, Optix.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -87,17 +86,17 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure FormDestroy(Sender: TObject);
-    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);  private
+    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure Action1Click(Sender: TObject);
     { Private declarations }
   private
     {@M}
     function GetNodeByTaskId(const ATaskId : TGUID) : PVirtualNode;
     function GetSelectedTaskCallBack(const AFilterState : TOptixTaskStates = []) : TOptixTaskCallBack;
     function GetSelectedSucceededTaskCallBack() : TOptixTaskCallBack;
-    procedure DownloadProcessDumpFile(Sender : TObject);
   public
     {@M}
-    procedure ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject); override;
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
   end;
 
 var
@@ -160,34 +159,36 @@ begin
   result := GetSelectedTaskCallBack([otsSuccess]);
 end;
 
-procedure TControlFormTasks.DownloadProcessDumpFile(Sender : TObject);
+procedure TControlFormTasks.Action1Click(Sender: TObject);
 begin
   var ACallBack := GetSelectedSucceededTaskCallBack();
-  if not Assigned(ACallBack) or not Assigned(ACallBack.Result) and (ACallBack.Result is TOptixProcessDumpTaskResult) then
+  if not Assigned(ACallBack) or not Assigned(ACallBack.Result) then
     Exit();
   ///
 
-  var ADirectory := '';
+  // -------------------------------------------------------------------------------------------------------------------
+  if ACallBack.Result is TOptixProcessDumpTaskResult then begin
+    var ADirectory := '';
 
-  if not SelectDirectory('Select destination', '', ADirectory) then
-    Exit();
+    if not SelectDirectory('Select destination', '', ADirectory) then
+      Exit();
 
-  RequestFileDownload(
-    TOptixProcessDumpTaskResult(ACallBack.Result).OutputFilePath,
-    IncludeTrailingPathDelimiter(ADirectory) + TOptixProcessDumpTaskResult(ACallBack.Result).DisplayName + '.dmp',
-    'Process Dump'
-  );
+    RequestFileDownload(
+      TOptixProcessDumpTaskResult(ACallBack.Result).OutputFilePath,
+      IncludeTrailingPathDelimiter(ADirectory) + TOptixProcessDumpTaskResult(ACallBack.Result).DisplayName + '.dmp',
+      'Process Dump'
+    );
+  end;
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
 procedure TControlFormTasks.PopupMenuPopup(Sender: TObject);
 begin
   Action1.Visible := False;
-  Action1.Caption := '';
-  Action1.OnClick := nil;
   ///
 
-  var ACallBack := GetSelectedTaskCallBack([]);
-  if not Assigned(ACallBack) then
+  var ACallBack := GetSelectedSucceededTaskCallBack();
+  if not Assigned(ACallBack) or not Assigned(ACallBack.Result) then
     Exit();
 
   case ACallBack.State of
@@ -195,22 +196,28 @@ begin
     otsRunning :;
     otsFailed  :;
     otsSuccess : begin
-      if ACallBack.TaskClassName = TOptixProcessDumpTask.ClassName then begin
-        Action1.Visible := True;
-        Action1.Caption := 'Download Process Dump File';
-        Action1.OnClick := DownloadProcessDumpFile;
-      end;
+      Action1.Visible := True;
+      // ---------------------------------------------------------------------------------------------------------------
+      if ACallBack.Result is TOptixProcessDumpTaskResult then
+        Action1.Caption := 'Download Process Dump File'
+      // ---------------------------------------------------------------------------------------------------------------
+      else
+        Action1.Visible := False;
+      // ---------------------------------------------------------------------------------------------------------------
     end;
   end;
 end;
 
-procedure TControlFormTasks.ReceivePacket(const AClassName : String; const ASerializedPacket : ISuperObject);
+procedure TControlFormTasks.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
-  if not Assigned(ASerializedPacket) or (AClassName <> TOptixTaskCallback.ClassName) then
+  inherited;
+  ///
+
+  if not (AOptixPacket is TOptixTaskCallback) then
     Exit();
   ///
 
-  var ATaskResult := TOptixTaskCallback.Create(ASerializedPacket);
+  var ATaskResult := TOptixTaskCallback(AOptixPacket);
   var pNode := GetNodeByTaskId(ATaskResult.Id);
   var pData : PTreeData;
 
@@ -232,6 +239,8 @@ begin
       FreeAndNil(pData^.TaskCallBack);
 
     pData^.TaskCallBack := ATaskResult;
+
+    AHandleMemory := True;
 
     if (pData^.TaskCallBack.State = otsFailed) or (pData^.TaskCallBack.State = otsSuccess) then begin
       pData^.Ended := Now;
