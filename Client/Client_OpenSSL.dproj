@@ -4,7 +4,7 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">Client_OpenSSL</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -177,6 +177,8 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Shell.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -220,7 +222,19 @@
                 </DeployFile>
                 <DeployFile LocalName="bins\OpenSSL\Win32\Debug\Client_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="bins\OpenSSL\Win64\Debug\Client_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\Client_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>Client_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="bins\OpenSSL\Win64\Debug\Client_OpenSSL.rsm" Configuration="Debug" Class="DebugSymbols"/>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\Client_OpenSSL.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>Client_OpenSSL.rsm</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

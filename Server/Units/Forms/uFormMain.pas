@@ -150,6 +150,7 @@ type
     procedure Server1Click(Sender: TObject);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
+    procedure RegistryManager1Click(Sender: TObject);
   private
     FFileInfo : TSHFileInfo;
 
@@ -187,7 +188,8 @@ uses
   System.DateUtils, System.Rtti,
 
   uControlFormProcessManager, uControlFormLogs, uFormAbout, uControlFormTransfers, uControlFormControlForms,
-  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers
+  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers,
+  uControlFormRegistryManager
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
@@ -477,6 +479,11 @@ begin
   end;
 end;
 
+procedure TFormMain.RegistryManager1Click(Sender: TObject);
+begin
+  CreateNewControlForm(VST.FocusedNode, TControlFormRegistryManager);
+end;
+
 procedure TFormMain.RemoteShell1Click(Sender: TObject);
 begin
   CreateNewControlForm(VST.FocusedNode, TControlFormRemoteShell);
@@ -682,14 +689,15 @@ begin
 
   var AVisible := VST.FocusedNode <> nil;
 
-  erminate1.Visible       := AVisible;
-  ProcessManager1.Visible := AVisible;
-  Logs1.Visible           := AVisible;
-  FileManager1.Visible    := AVisible;
-  ControlForms1.Visible   := AVisible;
-  transfers1.Visible      := AVisible;
-  asks1.Visible           := AVisible;
-  RemoteShell1.Visible    := AVisible;
+  erminate1.Visible        := AVisible;
+  ProcessManager1.Visible  := AVisible;
+  Logs1.Visible            := AVisible;
+  FileManager1.Visible     := AVisible;
+  ControlForms1.Visible    := AVisible;
+  transfers1.Visible       := AVisible;
+  asks1.Visible            := AVisible;
+  RemoteShell1.Visible     := AVisible;
+  RegistryManager1.Visible := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);

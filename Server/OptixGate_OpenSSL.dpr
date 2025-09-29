@@ -113,7 +113,8 @@ uses
   Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
   Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
   Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
-  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas';
+  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas',
+  uControlFormRegistryManager in 'Units\Forms\Control\uControlFormRegistryManager.pas' {ControlFormRegistryManager};
 
 {$R *.res}
 {$R data.res}

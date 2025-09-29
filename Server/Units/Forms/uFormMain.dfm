@@ -52,6 +52,8 @@ object FormMain: TFormMain
     OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitLeft = -7
+    ExplicitTop = -7
     Columns = <
       item
         Position = 0
@@ -162,6 +164,7 @@ object FormMain: TFormMain
     end
     object RegistryManager1: TMenuItem
       Caption = 'Registry Manager'
+      OnClick = RegistryManager1Click
     end
     object RegistrySearch1: TMenuItem
       Caption = 'Registry Search'

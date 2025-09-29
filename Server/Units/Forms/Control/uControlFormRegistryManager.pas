@@ -41,137 +41,139 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.System.Helper;
+unit uControlFormRegistryManager;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
+
+  VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.Types,
+  OMultiPanel,
+
+  __uBaseFormControl__, Vcl.StdCtrls;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TSystemHelper = class
-  public
-    {@M}
-    class function FileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
-    class function TryFileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
-    class procedure NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
-    class procedure TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
-    class function AccessCheck(ADesiredAccess : DWORD; const hToken : THandle;
-      const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean;
+  TKeysTreeData = record
+    Name       : String;
+    Path       : String;
+    ImageIndex : Integer;
   end;
+  PKeysTreeData = ^TKeysTreeData;
+
+  TControlFormRegistryManager = class(TBaseFormControl)
+    OMultiPanel: TOMultiPanel;
+    VSTKeys: TVirtualStringTree;
+    VSTValues: TVirtualStringTree;
+    EditPath: TEdit;
+    procedure VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+    procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: string);
+    procedure VSTKeysFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure VSTKeysChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure FormCreate(Sender: TObject);
+    procedure VSTKeysGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
+      Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
+  private
+    {@M}
+    procedure InsertKey(const AKeyName : String; const AKeyPath : String = '');
+    procedure BrowsePath(const ARegistryHive : HKEY; const AKeyPath : String);
+  public
+    { Public declarations }
+  end;
+
+var
+  ControlFormRegistryManager: TControlFormRegistryManager;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils,
+  uFormMain,
 
-  Optix.Exceptions;
+  Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TSystemHelper.NTSetPrivilege }
-class procedure TSystemHelper.NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+{$R *.dfm}
+
+procedure TControlFormRegistryManager.BrowsePath(const ARegistryHive : HKEY; const AKeyPath : String);
 begin
-  var hToken : THandle;
-  if not OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, hToken) then
-    raise EWindowsException.Create('OpenProcessToken');
+  ///
+end;
 
+procedure TControlFormRegistryManager.FormCreate(Sender: TObject);
+begin
+  // TODO: Receive them from remote probing for permission
+  InsertKey('HKEY_CLASSES_ROOT');
+  InsertKey('HKEY_CURRENT_USER');
+  InsertKey('HKEY_LOCAL_MACHINE');
+  InsertKey('HKEY_USERS');
+  InsertKey('HKEY_PERFORMANCE_DATA');
+  InsertKey('HKEY_CURRENT_CONFIG');
+  InsertKey('HKEY_DYN_DATA');
+end;
+
+procedure TControlFormRegistryManager.InsertKey(const AKeyName : String; const AKeyPath : String = '');
+begin
+  VSTKeys.BeginUpdate();
   try
-    var ATokenPrivilege : TOKEN_PRIVILEGES;
+    var pNode := VSTKeys.AddChild(nil);
+    var pData := PKeysTreeData(pNode.GetData);
 
-    if not LookupPrivilegeValue(nil, PChar(APrivilegeName), ATokenPrivilege.Privileges[0].Luid) then
-      raise EWindowsException.Create('LookupPrivilegeValue');
-
-    ATokenPrivilege.PrivilegeCount := 1;
-
-    case AEnabled of
-      True  : ATokenPrivilege.Privileges[0].Attributes  := SE_PRIVILEGE_ENABLED;
-      False : ATokenPrivilege.Privileges[0].Attributes  := 0;
-    end;
-
-    if not AdjustTokenPrivileges(
-                                  hToken,
-                                  False,
-                                  ATokenPrivilege,
-                                  SizeOf(TOKEN_PRIVILEGES),
-                                  PTokenPrivileges(nil)^,
-                                  PDWORD(nil)^
-    ) then
-      raise EWindowsException.Create('AdjustTokenPrivileges');
+    pData^.Name       := AKeyName;
+    pData^.Path       := AKeyPath;
+    pData^.ImageIndex := SystemFolderIcon();
   finally
-    CloseHandle(hToken);
+    VSTKeys.EndUpdate();
   end;
 end;
 
-{ TSystemHelper.TryNTSetPrivilege }
-class procedure TSystemHelper.TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+procedure TControlFormRegistryManager.VSTKeysChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
-  try
-    NTSetPrivilege(APrivilegeName, AEnabled);
-  except
-
-  end;
+  TVirtualStringTree(Sender).Refresh();
 end;
 
-{ TSystemHelper.FileTimeToDateTime }
-class function TSystemHelper.FileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
+procedure TControlFormRegistryManager.VSTKeysFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Column: TColumnIndex);
 begin
-  var ALocalFileTime: TFileTime;
-  if not FileTimeToLocalFileTime(AFileTime, ALocalFileTime) then
-    raise EWindowsException.Create('FileTimeToLocalFileTime');
-
-  var ASystemTime : TSystemTime;
-  if not FileTimeToSystemTime(AFileTime, ASystemTime) then
-    raise EWindowsException.Create('FileTimeToSystemTime');
-
-  ///
-  Result := SystemTimeToDateTime(ASystemTime);
+  TVirtualStringTree(Sender).Refresh();
 end;
 
-{ TSystemHelper.TryFileTimeToDateTime }
-class function TSystemHelper.TryFileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
+procedure TControlFormRegistryManager.VSTKeysGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
+  Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
 begin
-  try
-    result := FileTimeToDateTime(AFileTime);
-  except
-    result := Now;
-  end;
-end;
-
-{ TSystemHelper.TryFileTimeToDateTime }
-class function TSystemHelper.AccessCheck(ADesiredAccess : DWORD; const hToken : THandle;
-  const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean;
-begin
-  var AMapping : TGenericMapping;
-  AMapping.GenericRead    := KEY_READ;
-  AMapping.GenericWrite   := KEY_WRITE;
-  AMapping.GenericExecute := KEY_EXECUTE;
-  AMapping.GenericAll     := KEY_ALL_ACCESS;
+  if (Column <> 0) or ((Kind <> ikNormal) and (Kind <> ikSelected)) then
+    Exit();
   ///
 
-  MapGenericMask(ADesiredAccess, AMapping);
+  var pData := PKeysTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
 
-  var APrivilegeSet : TPrivilegeSet;
-  var APrivilegeSetSize := DWORD(SizeOf(TPrivilegeSet));
+  ImageIndex := pData^.ImageIndex;
+end;
 
-  var AGrantedAccess := DWORD(0);
-  var AStatus : BOOL;
+procedure TControlFormRegistryManager.VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
+begin
+  NodeDataSize := SizeOf(TKeysTreeData);
+end;
 
-  if not Winapi.Windows.AccessCheck(
-    ptrSecurityDescriptor,
-    hToken,
-    ADesiredAccess,
-    AMapping,
-    APrivilegeSet,
-    APrivilegeSetSize,
-    AGrantedAccess,
-    AStatus
-  ) then
-    result := False
-  else
-    result := AStatus;
+procedure TControlFormRegistryManager.VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType; var CellText: string);
+begin
+  var pData := PKeysTreeData(Node.GetData);
+  if not Assigned(pData) or (Column <> 0) then
+    Exit();
+  ///
+
+  CellText := pData^.Name;
 end;
 
 end.

@@ -41,40 +41,36 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.Preflight;
+unit Optix.Func.Commands.Registry;
 
 interface
 
-const OPTIX_PROTOCOL_VERSION = 'v1.2.0' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Optix.Shared.Classes, Optix.Func.Commands.Base;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TClientKind = (
-    ckHandler,
-    ckFileTransfer
-  );
-
-  TOptixPreflightRequest = record
-    ProtocolVersion : String[50];
-    ClientKind      : TClientKind;
-    HandlerId       : TGUID;
-
-    {$IFDEF CLIENT}
-    {@O}
-    class operator Initialize(out ADestRecord : TOptixPreflightRequest);
-    {$ENDIF}
+  TOptixGetRegistryHives = class(TOptixCommandActionResponse)
+  public
+    {@M}
+    procedure DoAction(); override;
   end;
 
 implementation
 
-{$IFDEF CLIENT}
-uses Optix.Protocol.Packet;
+(***********************************************************************************************************************
 
-{ TOptixPreflightRequest.Initialize }
-class operator TOptixPreflightRequest.Initialize(out ADestRecord : TOptixPreflightRequest);
+  TOptixGetRegistryHives
+
+***********************************************************************************************************************)
+
+{ TOptixGetRegistryHives.DoAction }
+procedure TOptixGetRegistryHives.DoAction();
 begin
-  ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;
-  ADestRecord.HandlerId       := TGUID.Empty;
+  ///
 end;
-{$ENDIF}
 
 end.

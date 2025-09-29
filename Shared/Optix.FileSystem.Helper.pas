@@ -45,7 +45,10 @@ unit Optix.FileSystem.Helper;
 
 interface
 
-uses System.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TDriveType = (
@@ -67,8 +70,10 @@ type
 
   TFileSystemHelper = class
   public
-    class function GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean; static;
-    class function TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean; static;
+    class function GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String;
+      var ADriveType : TDriveType) : Boolean; static;
+    class function TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String;
+      var ADriveType : TDriveType) : Boolean; static;
     class function GetFileACLString(const AFileName : String) : String; static;
     class function TryGetFileACLString(const AFileName : String) : String; static;
     class procedure GetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean); overload; static;
@@ -91,8 +96,14 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows, Optix.Exceptions, Optix.WinApiEx, Winapi.ShellAPI,
-     Optix.System.Helper, System.IOUtils, System.StrUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.IOUtils, System.StrUtils,
+
+  Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows, Winapi.ShellAPI,
+
+  Optix.Exceptions, Optix.WinApiEx, Optix.System.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* Local *)
 
@@ -155,7 +166,8 @@ end;
 (* TFileSystemHelper *)
 
 { TFileSystemHelper.GetDriveInformation }
-class function TFileSystemHelper.GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
+class function TFileSystemHelper.GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String;
+ var ADriveType : TDriveType) : Boolean;
 begin
   var AOldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
   try
@@ -205,7 +217,8 @@ begin
 end;
 
 { TFileSystemHelper.TryGetDriveInformation }
-class function TFileSystemHelper.TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String; var ADriveType : TDriveType) : Boolean;
+class function TFileSystemHelper.TryGetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String;
+ var ADriveType : TDriveType) : Boolean;
 begin
   AName      := '';
   AFormat    := '';
@@ -239,7 +252,7 @@ begin
       @ptrSecurityDescriptor
     );
     if AResult <> ERROR_SUCCESS then
-      raise EWindowsException.Create('GetNamedSecurityInfoW');
+      raise EWindowsException.Create('GetNamedSecurityInfoW', AResult);
 
     if not ConvertSecurityDescriptorToStringSecurityDescriptorW(
       ptrSecurityDescriptor,
@@ -272,47 +285,15 @@ begin
 end;
 
 { TFileSystemHelper.GetCurrentUserFileAccess }
-class procedure TFileSystemHelper.GetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean);
-var AMapping              : TGenericMapping;
-    ptrSecurityDescriptor : PSecurityDescriptor;
-    hToken                : THandle;
-
-  function AccessCheck(ADesiredAccess : DWORD) : Boolean;
-  begin
-    MapGenericMask(ADesiredAccess, AMapping);
-
-    var APrivilegeSet : TPrivilegeSet;
-    var APrivilegeSetSize := DWORD(SizeOf(TPrivilegeSet));
-
-    var AGrantedAccess := DWORD(0);
-    var AStatus : BOOL;
-
-    if not Winapi.Windows.AccessCheck(
-      ptrSecurityDescriptor,
-      hToken,
-      ADesiredAccess,
-      AMapping,
-      APrivilegeSet,
-      APrivilegeSetSize,
-      AGrantedAccess,
-      AStatus
-    ) then 
-      result := False
-    else
-      result := AStatus;
-  end;
-
+class procedure TFileSystemHelper.GetCurrentUserFileAccess(const AFileName : String;
+ var ARead, AWrite, AExecute : Boolean);
 begin
   var AImpersonated := False;
   
-  ptrSecurityDescriptor := nil;  
-  hToken := 0;
+  var ptrSecurityDescriptor := PSecurityDescriptor(nil);
+  var hToken := THandle(0);
   ///
 
-  AMapping.GenericRead    := FILE_GENERIC_READ;
-  AMapping.GenericWrite   := FILE_GENERIC_WRITE;
-  AMapping.GenericExecute := FILE_GENERIC_EXECUTE;
-  AMapping.GenericAll     := FILE_ALL_ACCESS;
   try
     AImpersonated := ImpersonateSelf(SecurityImpersonation);
     
@@ -335,17 +316,17 @@ begin
       @ptrSecurityDescriptor
     );
     if AResult <> ERROR_SUCCESS then
-      raise EWindowsException.Create('GetNamedSecurityInfoW');
+      raise EWindowsException.Create('GetNamedSecurityInfoW', AResult);
 
     ///
-    if AccessCheck(FILE_ALL_ACCESS) then begin
+    if TSystemHelper.AccessCheck(FILE_ALL_ACCESS, hToken, ptrSecurityDescriptor) then begin
       ARead    := True;
       AWrite   := True;
       AExecute := True;
     end else begin
-      ARead    := AccessCheck(FILE_GENERIC_READ);
-      AWrite   := AccessCheck(FILE_GENERIC_WRITE);
-      AExecute := AccessCheck(FILE_GENERIC_EXECUTE);
+      ARead    := TSystemHelper.AccessCheck(FILE_GENERIC_READ, hToken, ptrSecurityDescriptor);
+      AWrite   := TSystemHelper.AccessCheck(FILE_GENERIC_WRITE, hToken, ptrSecurityDescriptor);
+      AExecute := TSystemHelper.AccessCheck(FILE_GENERIC_EXECUTE, hToken, ptrSecurityDescriptor);
     end;
   finally
     if Assigned(ptrSecurityDescriptor) then
@@ -379,7 +360,8 @@ begin
 end;
 
 { TFileSystemHelper.TryGetCurrentUserFileAccess }
-class procedure TFileSystemHelper.TryGetCurrentUserFileAccess(const AFileName : String; var ARead, AWrite, AExecute : Boolean);
+class procedure TFileSystemHelper.TryGetCurrentUserFileAccess(const AFileName : String;
+ var ARead, AWrite, AExecute : Boolean);
 begin
   try
     GetCurrentUserFileAccess(AFileName, ARead, AWrite, AExecute);
@@ -442,7 +424,8 @@ begin
 end;
 
 { TFileSystem.Helper.GetFileTime }
-class procedure TFileSystemHelper.GetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime);
+class procedure TFileSystemHelper.GetFileTime(const AFileName : String;
+ var ACreate, ALastModified, ALastAccess : TDateTime);
 begin
   var hFile := CreateFileW(
     PWideChar(AFileName),
@@ -470,7 +453,8 @@ begin
 end;
 
 { TFileSystem.Helper.TryGetFileTime }
-class function TFileSystemHelper.TryGetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean;
+class function TFileSystemHelper.TryGetFileTime(const AFileName : String;
+ var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean;
 begin
   try
     GetFileTime(AFileName, ACreate, ALastModified, ALastAccess);
