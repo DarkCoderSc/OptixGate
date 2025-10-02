@@ -41,6 +41,15 @@
 {                                                                              }
 {******************************************************************************}
 
+(*
+  Current Release Changelog:
+    - N/A
+
+  When Delphi 13 in Community Edition (Code Improvements):
+    - Replace "not (x in y)" by "x not in y"
+    - Ternary operator
+*)
+
 unit uFormMain;
 
 interface

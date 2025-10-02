@@ -378,6 +378,9 @@ const
   in6addr_any : TIn6Addr = (Byte: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
   NI_MAXHOST             = 1025;
 
+  (* Advapi32.dll *)
+  RRF_RT_ANY = $0000FFFF;
+
 //----------------------------------------------------------------------------------------------------------------------
 
 (* Netapi32.dll *)
@@ -415,6 +418,16 @@ function ConvertSecurityDescriptorToStringSecurityDescriptorW(
   var StringSecurityDescriptor : LPWSTR;
   StringSecurityDescriptorLen  : PULONG
 ): BOOL; stdcall; external 'Advapi32.dll';
+
+function RegGetValueW(
+  hkey        : HKEY;
+  lpSubKey    : LPCWSTR;
+  lpValue     : LPCWSTR;
+  dwFlags     : DWORD;
+  var dwType  : DWORD;
+  pvData      : PVOID;
+  var pcbData : DWORD
+) : LONG; stdcall; external 'Advapi32.dll';
 
 (* NTDLL.dll *)
 

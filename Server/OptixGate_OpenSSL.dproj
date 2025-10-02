@@ -255,6 +255,9 @@
             <Form>ControlFormRegistryManager</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

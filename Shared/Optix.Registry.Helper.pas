@@ -47,6 +47,8 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  Generics.Collections,
+
   Winapi.Windows;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -66,25 +68,90 @@ type
   TRegistryKeyPermissions = set of TRegistryKeyPermission;
 
   TRegistryHelper = class
-    public
-      class function GetRegistryACLString(const AHive : HKEY; const AKeyPath : String = '') : String;
-      class function TryGetFileACLString(const AHive : HKEY; const AKeyPath : String) : String;
-      class procedure GetCurrentUserRegistryKeyAccess(const AHive : HKEY; const AKeyPath : String;
-        var ARegistryKeyPermissions : TRegistryKeyPermissions);
-      class procedure TryGetCurrentUserRegistryKeyAccess(const AHive : HKEY; const AKeyPath : String;
-        var ARegistryKeyPermissions : TRegistryKeyPermissions);
+  private
+    class var FRegistryHives : TDictionary<String, HKEY>;
+  public
+    {@C}
+    class constructor Create();
+    class destructor Destroy();
+
+    {@M}
+    class procedure ExtractKeyPathInformation(const AFullPath: String; var AHive: HKEY; var APath: String); static;
+    class function GetRegistryACLString(const AKeyFullPath : String = '') : String; static;
+    class function TryGetFileACLString(const AKeyFullPath : String) : String; static;
+    class procedure GetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
+      var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
+    class procedure TryGetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
+      var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
+    class function HiveToString(const AHive : HKEY) : String; static;
+
+    {@G}
+    class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  System.SysUtils,
+
   Optix.Exceptions, Optix.WinApiEx, Optix.System.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TRegistryHelper.GetRegistryACLString }
-class function TRegistryHelper.GetRegistryACLString(const AHive : HKEY; const AKeyPath : String = '') : String;
+{ TRegistryHelper.Create }
+class constructor TRegistryHelper.Create();
 begin
+  FRegistryHives := TDictionary<String, HKEY>.Create();
+  ///
+
+  FRegistryHives.Add('HKEY_CLASSES_ROOT', HKEY_CLASSES_ROOT);
+  FRegistryHives.Add('HKEY_CURRENT_USER', HKEY_CURRENT_USER);
+  FRegistryHives.Add('HKEY_LOCAL_MACHINE', HKEY_LOCAL_MACHINE);
+  FRegistryHives.Add('HKEY_USERS', HKEY_USERS);
+  FRegistryHives.Add('HKEY_PERFORMANCE_DATA', HKEY_PERFORMANCE_DATA);
+  FRegistryHives.Add('HKEY_CURRENT_CONFIG', HKEY_CURRENT_CONFIG);
+  FRegistryHives.Add('HKEY_DYN_DATA', HKEY_DYN_DATA);
+end;
+
+{ TRegistryHelper.Destroy }
+class destructor TRegistryHelper.Destroy();
+begin
+  if Assigned(FRegistryHives) then
+    FreeAndNil(FRegistryHives);
+end;
+
+{ TRegistryHelper.ExtractKeyPathInformation }
+class procedure TRegistryHelper.ExtractKeyPathInformation(const AFullPath: String; var AHive: HKEY; var APath: String);
+begin
+  AHive := 0;
+  APath := '';
+
+  var APosSlash := Pos('\', AFullPath);
+  var AHiveName := '';
+
+  if APosSlash > 0 then begin
+    AHiveName := Copy(AFullPath, 1, APosSlash - 1);
+
+    APath := ExcludeTrailingPathDelimiter(Copy(AFullPath, APosSlash + 1, MaxInt));
+  end else
+    AHiveName := AFullPath;
+
+  ///
+  if not Assigned(FRegistryHives) or not FRegistryHives.TryGetValue(AHiveName, AHive) then
+    raise Exception.Create(Format('Registry hive "%s" is not valid.', [AHiveName]));
+end;
+
+{ TRegistryHelper.GetRegistryACLString }
+class function TRegistryHelper.GetRegistryACLString(const AKeyFullPath : String = '') : String;
+begin
+  result := '';
+  ///
+
+  var AHive : HKEY;
+  var AKeyPath : String;
+
+  ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
+
   var ASecurityDescriptorSize := DWORD(0);
 
   var ptrSecurityDescriptor := PSecurityDescriptor(nil);
@@ -135,21 +202,26 @@ begin
 end;
 
 { TRegistryHelper.TryGetFileACLString }
-class function TRegistryHelper.TryGetFileACLString(const AHive : HKEY; const AKeyPath : String) : String;
+class function TRegistryHelper.TryGetFileACLString(const AKeyFullPath : String) : String;
 begin
   try
-    result := GetRegistryACLString(AHive, AKeyPath);
+    result := GetRegistryACLString(AKeyFullPath);
   except
     result := '';
   end;
 end;
 
 { TRegistryHelper.GetCurrentUserRegistryKeyAccess }
-class procedure TRegistryHelper.GetCurrentUserRegistryKeyAccess(const AHive : HKEY; const AKeyPath : String;
+class procedure TRegistryHelper.GetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
  var ARegistryKeyPermissions : TRegistryKeyPermissions);
 begin
   ARegistryKeyPermissions := [];
   ///
+
+  var AHive : HKEY;
+  var AKeyPath := '';
+
+  ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
 
   var AImpersonated := False;
 
@@ -227,14 +299,25 @@ begin
 end;
 
 { TRegistryHelper.TryGetCurrentUserRegistryKeyAccess }
-class procedure TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(const AHive : HKEY; const AKeyPath : String;
+class procedure TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
  var ARegistryKeyPermissions : TRegistryKeyPermissions);
 begin
   try
-    GetCurrentUserRegistryKeyAccess(AHive, AKeyPath, ARegistryKeyPermissions);
+    GetCurrentUserRegistryKeyAccess(AKeyFullPath, ARegistryKeyPermissions);
   except
     ARegistryKeyPermissions := [];
   end;
+end;
+
+{ TRegistryHelper.HiveToString }
+class function TRegistryHelper.HiveToString(const AHive : HKEY) : String;
+begin
+  result := '';
+  ///
+
+  for var APair in FRegistryHives do
+    if APair.Value = AHive then
+      result := APair.Key;
 end;
 
 end.

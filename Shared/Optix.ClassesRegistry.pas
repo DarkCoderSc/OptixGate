@@ -63,7 +63,7 @@ type
 
     {@M}
     class function CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject; static;
-    class procedure RegisterClass(const AClass : TClass);
+    class procedure RegisterClass(const AClass : TClass); static;
   end;
 
 implementation
@@ -71,7 +71,8 @@ implementation
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
-  Optix.Task.ProcessDump, Optix.Func.Commands.Base, Optix.Func.SessionInformation, Optix.Func.LogNotifier;
+  Optix.Task.ProcessDump, Optix.Func.Commands.Base, Optix.Func.SessionInformation, Optix.Func.LogNotifier,
+  Optix.Func.Commands.Registry;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TClassesRegistry.Create }
@@ -165,6 +166,9 @@ initialization
   TClassesRegistry.RegisterClass(TLogNotifier);
   TClassesRegistry.RegisterClass(TLogTransferException);
 
+  // Registry Manager
+  TClassesRegistry.RegisterClass(TOptixGetRegistryHives);
+  TClassesRegistry.RegisterClass(TOptixRefreshRegistrySubKeys);
 
   (* Tasks *)
   TClassesRegistry.RegisterClass(TOptixTaskResult);

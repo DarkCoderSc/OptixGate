@@ -51,19 +51,21 @@ uses
 
   Winapi.Windows, Winapi.Messages,
 
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Menus,
 
   VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.Types,
   OMultiPanel,
 
-  __uBaseFormControl__, Vcl.StdCtrls;
+  __uBaseFormControl__,
+
+  Optix.Protocol.Packet, Optix.Func.Commands.Registry, Optix.Registry.Enum, Optix.Registry.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TKeysTreeData = record
-    Name       : String;
-    Path       : String;
-    ImageIndex : Integer;
+    KeyInformation : TRegistryKeyInformation;
+    ImageIndex     : Integer;
+    Path           : String;
   end;
   PKeysTreeData = ^TKeysTreeData;
 
@@ -72,20 +74,32 @@ type
     VSTKeys: TVirtualStringTree;
     VSTValues: TVirtualStringTree;
     EditPath: TEdit;
+    MainMenu: TMainMenu;
+    Options1: TMenuItem;
+    HideUnenumerableKeys1: TMenuItem;
     procedure VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
     procedure VSTKeysFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTKeysChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure FormCreate(Sender: TObject);
     procedure VSTKeysGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
+    procedure VSTKeysFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure VSTKeysCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
+      var Result: Integer);
+    procedure VSTKeysDblClick(Sender: TObject);
+    procedure HideUnenumerableKeys1Click(Sender: TObject);
   private
     {@M}
-    procedure InsertKey(const AKeyName : String; const AKeyPath : String = '');
-    procedure BrowsePath(const ARegistryHive : HKEY; const AKeyPath : String);
+    procedure BrowsePath(const AKeyFullPath : String);
+    procedure DisplayKeys(const AList : TOptixRefreshRegistryKeys);
+    procedure RefreshNodesVisibility();
+  protected
+    {@M}
+    procedure OnFirstShow(); override;
   public
-    { Public declarations }
+    {@M}
+    procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
   end;
 
 var
@@ -95,6 +109,8 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  Generics.Collections,
+
   uFormMain,
 
   Optix.Helper;
@@ -102,36 +118,129 @@ uses
 
 {$R *.dfm}
 
-procedure TControlFormRegistryManager.BrowsePath(const ARegistryHive : HKEY; const AKeyPath : String);
-begin
-  ///
-end;
-
-procedure TControlFormRegistryManager.FormCreate(Sender: TObject);
-begin
-  // TODO: Receive them from remote probing for permission
-  InsertKey('HKEY_CLASSES_ROOT');
-  InsertKey('HKEY_CURRENT_USER');
-  InsertKey('HKEY_LOCAL_MACHINE');
-  InsertKey('HKEY_USERS');
-  InsertKey('HKEY_PERFORMANCE_DATA');
-  InsertKey('HKEY_CURRENT_CONFIG');
-  InsertKey('HKEY_DYN_DATA');
-end;
-
-procedure TControlFormRegistryManager.InsertKey(const AKeyName : String; const AKeyPath : String = '');
+procedure TControlFormRegistryManager.RefreshNodesVisibility();
 begin
   VSTKeys.BeginUpdate();
   try
-    var pNode := VSTKeys.AddChild(nil);
-    var pData := PKeysTreeData(pNode.GetData);
+    for var pNode in VSTKeys.Nodes do begin
+      var pData := PKeysTreeData(pNode.GetData);
 
-    pData^.Name       := AKeyName;
-    pData^.Path       := AKeyPath;
-    pData^.ImageIndex := SystemFolderIcon();
+      // TODO: when Delphi CE is in version 13 replace not (x in y) by x not in y
+      var AExclude := HideUnenumerableKeys1.Checked and (not Assigned(pData^.KeyInformation) or
+        not (rkpEnumerateSubKeys in pData^.KeyInformation.Permissions));
+
+      VSTKeys.IsVisible[pNode] := not AExclude;
+    end;
   finally
     VSTKeys.EndUpdate();
   end;
+end;
+
+procedure TControlFormRegistryManager.DisplayKeys(const AList : TOptixRefreshRegistryKeys);
+
+  function GetParentNode(const APath : String) : PVirtualNode;
+  begin
+    result := nil;
+    ///
+
+    for var pNode in VSTKeys.Nodes do begin
+      var pData := PKeysTreeData(pNode.GetData);
+      if String.Compare(pData^.Path, APath, True) = 0 then begin
+        result := pNode;
+
+        break;
+      end;
+    end;
+  end;
+
+  function GetLevelFolder(const AName : String; const pParent : PVirtualNode) : PVirtualNode;
+  begin
+    result := nil;
+    ///
+
+    var pChildNode := VSTKeys.GetFirstChild(pParent);
+    while Assigned(pChildNode) do begin
+      var pData := PKeysTreeData(pChildNode.GetData);
+      if not Assigned(pData^.KeyInformation) then
+        continue;
+      ///
+
+      if String.Compare(pData^.KeyInformation.Name, AName, True) = 0 then begin
+        result := pChildNode;
+
+        break;
+      end;
+
+      ///
+      pChildNode := VSTKeys.GetNextSibling(pChildNode);
+    end;
+  end;
+
+begin
+  if not Assigned(AList) then
+    Exit();
+  ///
+
+  var pParentNode := GetParentNode(AList.Path);
+
+  VSTKeys.BeginUpdate();
+  try
+    for var AItem in AList.Keys do begin
+      var pNode := GetLevelFolder(AItem.Name, pParentNode);
+      if not Assigned(pNode) then
+        pNode := VSTKeys.AddChild(pParentNode);
+
+      var pData := PKeysTreeData(pNode.GetData);
+
+      pData^.KeyInformation := TRegistryKeyInformation.Create();
+      pData^.KeyInformation.Assign(AItem);
+
+      pData^.Path := IncludeTrailingPathDelimiterIfNotEmpty(AList.Path) + AItem.Name;
+
+      pData^.ImageIndex := SystemFolderIcon();
+    end;
+  finally
+    VSTKeys.FullExpand(pParentNode);
+
+    VSTKeys.SortTree(0, TSortDirection.sdAscending);
+
+    RefreshNodesVisibility();
+
+    VSTKeys.EndUpdate();
+
+    ///
+    EditPath.Text := AList.Path;
+  end;
+end;
+
+procedure TControlFormRegistryManager.HideUnenumerableKeys1Click(Sender: TObject);
+begin
+  RefreshNodesVisibility();
+end;
+
+procedure TControlFormRegistryManager.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
+begin
+  inherited;
+  ///
+
+  // -------------------------------------------------------------------------------------------------------------------
+  if AOptixPacket is TOptixRefreshRegistryKeys then
+    DisplayKeys(TOptixRefreshRegistryKeys(AOptixPacket));
+  // -------------------------------------------------------------------------------------------------------------------
+end;
+
+procedure TControlFormRegistryManager.BrowsePath(const AKeyFullPath : String);
+begin
+  SendCommand(TOptixRefreshRegistrySubKeys.Create(AKeyFullPath));
+end;
+
+procedure TControlFormRegistryManager.OnFirstShow();
+begin
+  VSTKeys.Clear();
+  VSTValues.Clear();
+
+  ///
+  SendCommand(TOptixGetRegistryHives.Create());
 end;
 
 procedure TControlFormRegistryManager.VSTKeysChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -139,10 +248,50 @@ begin
   TVirtualStringTree(Sender).Refresh();
 end;
 
+procedure TControlFormRegistryManager.VSTKeysCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
+  Column: TColumnIndex; var Result: Integer);
+begin
+  var pData1 := PKeysTreeData(Node1.GetData);
+  var pData2 := PKeysTreeData(Node2.GetData);
+  ///
+
+  if not Assigned(pData1) or not Assigned(pData2) then
+    Result := 0
+  else if not Assigned(pData1^.KeyInformation) or not Assigned(pData2^.KeyInformation) then
+    Result := CompareObjectAssigmenet(pData1^.KeyInformation, pData2^.KeyInformation)
+  else
+    Result := CompareText(pData1^.KeyInformation.Name, pData2^.KeyInformation.Name);
+end;
+
+procedure TControlFormRegistryManager.VSTKeysDblClick(Sender: TObject);
+begin
+  var pNode := VSTKeys.FocusedNode;
+  if not Assigned(pNode) then
+    Exit();
+
+  var pData := PKeysTreeData(pNode.GetData);
+  if not Assigned(pData) or not Assigned(pData^.KeyInformation) then
+    Exit();
+
+  ///
+  BrowsePath(pData^.Path);
+end;
+
 procedure TControlFormRegistryManager.VSTKeysFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TControlFormRegistryManager.VSTKeysFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  var pData := PKeysTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
+
+  if Assigned(pData^.KeyInformation) then
+    FreeAndNil(pData^.KeyInformation);
 end;
 
 procedure TControlFormRegistryManager.VSTKeysGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -173,7 +322,7 @@ begin
     Exit();
   ///
 
-  CellText := pData^.Name;
+  CellText := pData^.KeyInformation.Name;
 end;
 
 end.

@@ -52,8 +52,6 @@ object FormMain: TFormMain
     OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitLeft = -7
-    ExplicitTop = -7
     Columns = <
       item
         Position = 0

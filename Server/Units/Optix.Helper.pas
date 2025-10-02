@@ -44,7 +44,9 @@ function ReadResourceString(const AResourceName : String) : String;
 function TryReadResourceString(const AResourceName : String) : String;
 function FormatFileSize(const ASize : Int64) : string;
 
-procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo; const ALargeIcon : Boolean = False);
+procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo;
+  const ALargeIcon : Boolean = False);
+
 function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = False) : Integer;
 function SystemFolderIcon(APath : String = '') : Integer;
 function GetWindowsDirectory() : string;
@@ -54,7 +56,10 @@ procedure Open(const ACommand : String);
 procedure CheckCertificateFingerprint(const AValue : String);
 
 function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
-function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
+function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime;
+  const ADate2IsSet : Boolean) : Integer;
+
+function IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
 
 implementation
 
@@ -63,6 +68,15 @@ uses System.IOUtils,
 
      Winapi.Windows;
 // ---------------------------------------------------------------------------------------------------------------------
+
+{ _.IncludeTrailingPathDelimiterIfNotEmpty }
+function IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
+begin
+  if not String.IsNullOrWhiteSpace(AValue) then
+    result := IncludeTrailingPathDelimiter(AValue)
+  else
+    result := AValue;
+end;
 
 { _.CompareDateTimeEx }
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;

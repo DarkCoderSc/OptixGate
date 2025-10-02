@@ -10,8 +10,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Menu = MainMenu
   Position = poOwnerFormCenter
-  OnCreate = FormCreate
   TextHeight = 15
   object OMultiPanel: TOMultiPanel
     Left = 0
@@ -34,9 +34,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
-    ExplicitTop = 0
     ExplicitWidth = 701
-    ExplicitHeight = 399
+    ExplicitHeight = 368
     DesignSize = (
       711
       400)
@@ -65,7 +64,10 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
       OnChange = VSTKeysChange
+      OnCompareNodes = VSTKeysCompareNodes
+      OnDblClick = VSTKeysDblClick
       OnFocusChanged = VSTKeysFocusChanged
+      OnFreeNode = VSTKeysFreeNode
       OnGetText = VSTKeysGetText
       OnGetImageIndex = VSTKeysGetImageIndex
       OnGetNodeDataSize = VSTKeysGetNodeDataSize
@@ -136,8 +138,19 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     BevelOuter = bvRaised
     ReadOnly = True
     TabOrder = 1
-    ExplicitLeft = -2
-    ExplicitTop = 8
-    ExplicitWidth = 705
+    ExplicitWidth = 693
+  end
+  object MainMenu: TMainMenu
+    Left = 408
+    Top = 191
+    object Options1: TMenuItem
+      Caption = 'Options'
+      object HideUnenumerableKeys1: TMenuItem
+        AutoCheck = True
+        Caption = 'Hide Unenumerable Keys'
+        Checked = True
+        OnClick = HideUnenumerableKeys1Click
+      end
+    end
   end
 end
