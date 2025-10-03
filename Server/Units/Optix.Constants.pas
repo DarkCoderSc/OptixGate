@@ -109,6 +109,8 @@ const
  IMAGE_SERVER_LISTENING             = 64;
  IMAGE_SERVER_ERROR                 = 65;
  IMAGE_BUG                          = 66;
+ IMAGE_REG_SZ                       = 68;
+ IMAGE_REG_DATA                     = 69;
 
 var
  (* COLORS *)

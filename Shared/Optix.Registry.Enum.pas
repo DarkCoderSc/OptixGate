@@ -90,17 +90,22 @@ type
 
     [OptixSerializableAttribute]
     FType : DWORD;
+
+    {@M}
+    function GetIsDefault() : Boolean;
+    function GetValue() : String;
   public
     {@C}
-    constructor Create(const AHive : HKEY; const APath : String; const AName, AValue : String; AType : DWORD); overload;
+    constructor Create(const AName, AValue : String; AType : DWORD); overload;
 
     {@M}
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Name  : String read FName;
-    property Value : String read FValue;
-    property _Type : DWORD  read FType;
+    property Name      : String  read FName;
+    property Value     : String  read GetValue;
+    property _Type     : DWORD   read FType;
+    property IsDefault : Boolean read GetIsDefault;
   end;
 
   TOptixEnumRegistry = class
@@ -108,6 +113,9 @@ type
     class procedure Enum(const AKeyFullPath : String; var AKeys : TObjectList<TRegistryKeyInformation>;
       var AValues : TObjectList<TRegistryValueInformation>); static;
   end;
+
+  const
+    REG_MSZ_LINE_SEP = '{/\$/\@/\0\n/%\//\!/\}';
 
 implementation
 
@@ -154,7 +162,7 @@ end;
 ***********************************************************************************************************************)
 
 { TRegistryValueInformation.Create }
-constructor TRegistryValueInformation.Create(const AHive : HKEY; const APath : String; const AName, AValue : String; AType : DWORD);
+constructor TRegistryValueInformation.Create(const AName, AValue : String; AType : DWORD);
 begin
   inherited Create();
   ///
@@ -174,6 +182,21 @@ begin
     FType  := TRegistryValueInformation(ASource).FType;
   end else
     inherited;
+end;
+
+{ TRegistryValueInformation.GetIsDefault }
+function TRegistryValueInformation.GetIsDefault() : Boolean;
+begin
+  result := FName.IsEmpty();
+end;
+
+{ TRegistryValueInformation.GetValue }
+function TRegistryValueInformation.GetValue() : String;
+begin
+  if FType = REG_MULTI_SZ then
+    result := FValue.Replace(REG_MSZ_LINE_SEP, #13#10, [rfReplaceAll])
+  else
+    result := FValue;
 end;
 
 (***********************************************************************************************************************
@@ -250,13 +273,13 @@ begin
     Inc(AMaxKeyNameLength);
     Inc(AMaxValueNameLength);
 
-    var ABufferSize := 0;
+    var ABufferSize : DWORD;
     if AMaxKeyNameLength > AMaxValueNameLength then
       ABufferSize := AMaxKeyNameLength * SizeOf(WideChar)
     else
       ABufferSize := AMaxValueNameLength * SizeOf(WideChar);
 
-    var pNameBuffer : PWideChar := nil;
+    var pNameBuffer : PWideChar;
     GetMem(pNameBuffer, ABufferSize);
     try
       // Enumerate SubKeys
@@ -278,6 +301,8 @@ begin
       end;
 
       // Enumerate Key-Values
+      var ADefaultValueExists := False;
+
       if AValuesCount > 0 then begin
         for var  I := 0 to AValuesCount -1 do begin
           ZeroMemory(pNameBuffer, AMaxKeyNameLength * SizeOf(WideChar));
@@ -292,14 +317,14 @@ begin
           var AValueName := String(pNameBuffer);
           var AValueType : DWORD;
           var AValueDataSize : DWORD;
-          var AData : String;
+          var AData := '';
 
           ARet := RegGetValueW(hOpenedKey, nil, PWideChar(AValueName), RRF_RT_ANY, AValueType, nil, AValueDataSize);
           if ARet = ERROR_SUCCESS then begin
             var pData : Pointer;
             GetMem(pData, AValueDataSize * SizeOf(WideChar));
             try
-              RegGetValueW(
+              ARet := RegGetValueW(
                 hOpenedKey,
                 nil,
                 PWideChar(AValueName),
@@ -308,20 +333,60 @@ begin
                 pData,
                 AValueDataSize
               );
+              if ARet <> ERROR_SUCCESS then
+                continue;
+
+              if AValueName.IsEmpty then
+                ADefaultValueExists := True;
 
               case AValueType of
-                REG_SZ : begin
+                REG_SZ, REG_EXPAND_SZ:
                   AData := String(PWideChar(pData));
+
+                REG_MULTI_SZ: begin
+                  var AStringList := TStringList.Create();
+                  try
+                    var p := PWideChar(pData);
+                    while p^ <> #0 do begin
+                      AStringList.Add(String(p));
+
+                      ///
+                      Inc(p, lstrlenW(p) + 1);
+                    end;
+
+                    ///
+                    AStringList.LineBreak := REG_MSZ_LINE_SEP;
+                    AData := AStringList.Text;
+                  finally
+                    if Assigned(AStringList) then
+                      FreeAndNil(AStringList);
+                  end;
                 end;
 
-                REG_DWORD : AData := IntToStr(PDWORD(pData)^);
-                REG_QWORD : AData := IntToStr(PUInt64(pData)^);
+                REG_DWORD:
+                  AData := Format('0x%.8X (%d)', [PDWORD(pData)^, PDWORD(pData)^]);
 
-                // TODO: ... handle other value types ... //
+                REG_QWORD:
+                  AData := Format('0x%.16X (%d)', [PUInt64(pData)^, PUInt64(pData)^]);
+
+                REG_BINARY: begin
+                  var AStringBuilder := TStringBuilder.Create(AValueDataSize * 3 (* 1 Byte = 2 (Hex) + 1 (Space) *));
+                  try
+                    for var n := 0 to AValueDataSize -1 do begin
+                      AStringBuilder.AppendFormat('%.2X ', [PByte(NativeUInt(pData) + n)^]);
+                    end;
+
+                    ///
+                    AData := AStringBuilder.ToString.TrimRight;
+                  finally
+                    if Assigned(AStringBuilder) then
+                      FreeAndNil(AStringBuilder);
+                  end;
+                end;
               end;
 
               ///
-              //AValues.Add(TRegistryValueInformation.Create(AHive, APath, AValueName, AData, AValueType));
+              AValues.Add(TRegistryValueInformation.Create(AValueName, AData, AValueType));
             finally
               FreeMem(pData, AValueDataSize);
             end;
@@ -329,6 +394,10 @@ begin
             AData := '<could not read>';
         end;
       end;
+
+      ///
+      if not ADefaultValueExists then
+        AValues.Add(TRegistryValueInformation.Create('', '', REG_SZ));
     finally
       FreeMem(pNameBuffer, ABufferSize);
     end;

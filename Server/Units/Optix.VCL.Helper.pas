@@ -38,7 +38,11 @@ type
   public
     class function GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64; static;
     class function GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer; static;
-    class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean); static;
+    class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String;
+      AVisible : Boolean); static;
+    class function GetRootParentNode(const AVST : TVirtualStringTree;
+      const pNode : PVirtualNode) : PVirtualNode; static;
+    class procedure SelectNode(const AVST : TVirtualStringTree; const pNode : PVirtualNode); static;
   end;
 
 implementation
@@ -95,6 +99,37 @@ begin
     AColumn.Options := AColumn.Options + [coVisible]
   else
     AColumn.Options := AColumn.Options - [coVisible];
+end;
+
+{ TOptixVirtualTreesHelper.GetRootParentNode }
+class function TOptixVirtualTreesHelper.GetRootParentNode(const AVST : TVirtualStringTree;
+  const pNode : PVirtualNode) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  if not Assigned(pNode) or not Assigned(AVST) then
+    Exit();
+
+  result := pNode;
+
+  while Assigned(AVST.NodeParent[result]) do
+    result := AVST.NodeParent[result];
+end;
+
+{ TOptixVirtualTreesHelper.SelectNode }
+class procedure TOptixVirtualTreesHelper.SelectNode(const AVST : TVirtualStringTree; const pNode : PVirtualNode);
+begin
+  if not Assigned(AVST) or not Assigned(pNode) then
+    Exit();
+  ///
+
+  AVST.ClearSelection();
+  ///
+
+  AVST.FocusedNode := pNode;
+  AVST.Selected[pNode] := True;
+  AVST.ScrollIntoView(pNode, True);
 end;
 
 (* TOptixVCLHelper *)

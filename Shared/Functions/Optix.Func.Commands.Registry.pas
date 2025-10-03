@@ -67,8 +67,9 @@ type
     [OptixSerializableAttribute]
     FPermissions : TRegistryKeyPermissions;
 
-    FKeys   : TObjectList<TRegistryKeyInformation>;
-    FValues : TObjectList<TRegistryValueInformation>;
+    FParentKeys : TObjectList<TRegistryKeyInformation>;
+    FSubKeys    : TObjectList<TRegistryKeyInformation>;
+    FValues     : TObjectList<TRegistryValueInformation>;
 
     {@M}
     function GetIsRoot() : Boolean;
@@ -87,7 +88,8 @@ type
     {@G}
     property IsRoot      : Boolean                                read GetIsRoot;
     property Path        : String                                 read FPath;
-    property Keys        : TObjectList<TRegistryKeyInformation>   read FKeys;
+    property ParentKeys  : TObjectList<TRegistryKeyInformation>   read FParentKeys;
+    property SubKeys     : TObjectList<TRegistryKeyInformation>   read FSubKeys;
     property Values      : TObjectList<TRegistryValueInformation> read FValues;
     property Permissions : TRegistryKeyPermissions                read FPermissions;
   end;
@@ -106,6 +108,11 @@ type
 
 implementation
 
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.System.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+
 (***********************************************************************************************************************
 
   TOptixRefreshRegistryKeys
@@ -118,9 +125,13 @@ begin
   inherited;
   ///
 
-  FKeys.Clear();
-  for var I := 0 to ASerializedObject.A['Keys'].Length -1 do
-    FKeys.Add(TRegistryKeyInformation.Create(ASerializedObject.A['Keys'].O[I]));
+  FParentKeys.Clear();
+  for var I := 0 to ASerializedObject.A['ParentKeys'].Length -1 do
+    FParentKeys.Add(TRegistryKeyInformation.Create(ASerializedObject.A['ParentKeys'].O[I]));
+
+  FSubKeys.Clear();
+  for var I := 0 to ASerializedObject.A['SubKeys'].Length -1 do
+    FSubKeys.Add(TRegistryKeyInformation.Create(ASerializedObject.A['SubKeys'].O[I]));
 
   FValues.Clear();
   for var I := 0 to ASerializedObject.A['Values'].Length -1 do
@@ -135,10 +146,19 @@ begin
 
   var AJsonArray := TSuperArray.Create();
 
-  for var AItem in FKeys do
+  for var AItem in FParentKeys do
     AJsonArray.Add(AItem.Serialize);
 
-  result.A['Keys'] := AJsonArray;
+  result.A['ParentKeys'] := AJsonArray;
+
+  ///
+
+  AJsonArray := TSuperArray.Create();
+
+  for var AItem in FSubKeys do
+    AJsonArray.Add(AItem.Serialize);
+
+  result.A['SubKeys'] := AJsonArray;
 
   ///
 
@@ -156,8 +176,9 @@ begin
   inherited Create();
   ///
 
-  FKeys   := TObjectList<TRegistryKeyInformation>.Create(True);
-  FValues := TObjectList<TRegistryValueInformation>.Create(True);
+  FParentKeys := TObjectList<TRegistryKeyInformation>.Create(True);
+  FSubKeys    := TObjectList<TRegistryKeyInformation>.Create(True);
+  FValues     := TObjectList<TRegistryValueInformation>.Create(True);
 
   FPath := '';
   FPermissions := [];
@@ -169,15 +190,18 @@ begin
   Create();
   ///
 
-  FPath := APath;
+  FPath := ExcludeTrailingPathDelimiter(APath);
   TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(FPath, FPermissions);
 end;
 
 { TOptixRefreshRegistryKeys.Destroy }
 destructor TOptixRefreshRegistryKeys.Destroy();
 begin
-  if Assigned(FKeys) then
-    FreeAndNil(FKeys);
+  if Assigned(FParentKeys) then
+    FreeAndNil(FParentKeys);
+
+  if Assigned(FSubKeys) then
+    FreeAndNil(FSubKeys);
 
   if Assigned(FValues) then
     FreeAndNil(FValues);
@@ -202,7 +226,7 @@ end;
 procedure TOptixGetRegistryHives.DoAction();
 begin
   for var AHive in TRegistryHelper.RegistryHives.Keys do
-    FKeys.Add(TRegistryKeyInformation.Create(AHive, AHive));
+    FSubKeys.Add(TRegistryKeyInformation.Create(AHive, AHive));
 end;
 
 (***********************************************************************************************************************
@@ -214,7 +238,34 @@ end;
 { TOptixRefreshRegistrySubKeys.DoAction }
 procedure TOptixRefreshRegistrySubKeys.DoAction();
 begin
-  TOptixEnumRegistry.Enum(FPath, FKeys, FValues);
+  var ADirectories := TStringList.Create();
+  try
+    TRegistryHelper.CheckRegistryPath(FPath);
+    ///
+
+    ADirectories.Delimiter := '\';
+    ADirectories.DelimitedText := FPath;
+
+    FParentKeys.Clear();
+
+    var ACurrentPath := '';
+    for var ADirectory in ADirectories do begin
+      if ADirectory.IsEmpty then
+        continue;
+      ///
+
+      ACurrentPath := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(ACurrentPath) + ADirectory;
+
+      ///
+      FParentKeys.Add(TRegistryKeyInformation.Create(ADirectory, ACurrentPath));
+    end;
+  finally
+    if Assigned(ADirectories) then
+      FreeAndNil(ADirectories);
+  end;
+
+  ///
+  TOptixEnumRegistry.Enum(FPath, FSubKeys, FValues);
 end;
 
 end.

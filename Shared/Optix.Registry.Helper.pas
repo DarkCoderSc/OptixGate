@@ -84,6 +84,8 @@ type
     class procedure TryGetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
       var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
     class function HiveToString(const AHive : HKEY) : String; static;
+    class function ExpandHiveShortName(const AKeyFullPath : String) : String; static;
+    class procedure CheckRegistryPath(const AKeyFullPath : String); static;
 
     {@G}
     class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
@@ -138,7 +140,7 @@ begin
 
   ///
   if not Assigned(FRegistryHives) or not FRegistryHives.TryGetValue(AHiveName, AHive) then
-    raise Exception.Create(Format('Registry hive "%s" is not valid.', [AHiveName]));
+    raise Exception.Create(Format('"%s" is not a valid registry hive.', [AHiveName]));
 end;
 
 { TRegistryHelper.GetRegistryACLString }
@@ -318,6 +320,47 @@ begin
   for var APair in FRegistryHives do
     if APair.Value = AHive then
       result := APair.Key;
+end;
+
+class function TRegistryHelper.ExpandHiveShortName(const AKeyFullPath : String) : String;
+const
+  HIVES_MAP : array[0..7-1, 0..2-1] of String = (
+    ('HKCR\', 'HKEY_CLASSES_ROOT\'),
+    ('HKCU\', 'HKEY_CURRENT_USER\'),
+    ('HKLM\', 'HKEY_LOCAL_MACHINE\'),
+    ('HKU\',  'HKEY_USERS\'),
+    ('HKPD\', 'HKEY_PERFORMANCE_DATA\'),
+    ('HKCC\', 'HKEY_CURRENT_CONFIG\'),
+    ('HKDD\', 'HKEY_DYN_DATA\')
+  );
+begin
+  result := AKeyFullPath;
+  ///
+
+  for var i := 0 to High(HIVES_MAP) do begin
+    if AKeyFullPath.StartsWith(HIVES_MAP[i, 0]) then begin
+      Result := HIVES_MAP[i, 1] + Copy(AKeyFullPath, Length(HIVES_MAP[i, 0]) + 1, MaxInt);
+
+      Break;
+    end;
+  end;
+end;
+
+{ TRegistryHelper.CheckRegistryPath }
+class procedure TRegistryHelper.CheckRegistryPath(const AKeyFullPath : String);
+begin
+  var AHive : HKEY;
+  var AKeyPath := '';
+
+  ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
+
+  var AKeyHandle : HKEY;
+
+  var AResult := RegOpenKeyExW(AHive, PWideChar(AKeyPath), 0, READ_CONTROL, AKeyHandle);
+  if AResult <> ERROR_SUCCESS then
+    raise EWindowsException.Create('RegOpenKeyW', AResult);
+
+  RegCloseKey(AKeyHandle);
 end;
 
 end.

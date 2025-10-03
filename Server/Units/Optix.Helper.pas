@@ -56,10 +56,9 @@ procedure Open(const ACommand : String);
 procedure CheckCertificateFingerprint(const AValue : String);
 
 function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
+function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime;
   const ADate2IsSet : Boolean) : Integer;
-
-function IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
 
 implementation
 
@@ -68,15 +67,6 @@ uses System.IOUtils,
 
      Winapi.Windows;
 // ---------------------------------------------------------------------------------------------------------------------
-
-{ _.IncludeTrailingPathDelimiterIfNotEmpty }
-function IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
-begin
-  if not String.IsNullOrWhiteSpace(AValue) then
-    result := IncludeTrailingPathDelimiter(AValue)
-  else
-    result := AValue;
-end;
 
 { _.CompareDateTimeEx }
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
@@ -97,6 +87,17 @@ begin
   if not Assigned(AObject1) and not Assigned(AObject2) then
     Result := 0
   else if not Assigned(AObject1) then
+    Result := 1
+  else
+    Result := -1
+end;
+
+{ _.ComparePointerAssigmenet }
+function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
+begin
+  if (pPtr1 = nil) and (pPtr2 = nil) then
+    Result := 0
+  else if pPtr1 <> nil then
     Result := 1
   else
     Result := -1

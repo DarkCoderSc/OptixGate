@@ -50,16 +50,19 @@ uses
   Winapi.Windows;
 // ---------------------------------------------------------------------------------------------------------------------
 
+// If you wonder, static keyword in Delphi means cannot change.
+
 type
   TSystemHelper = class
   public
     {@M}
     class function FileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
     class function TryFileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
-    class procedure NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
-    class procedure TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+    class procedure NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean); static;
+    class procedure TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean); static;
     class function AccessCheck(ADesiredAccess : DWORD; const hToken : THandle;
-      const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean;
+      const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean; static;
+    class function IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String; static;
   end;
 
 implementation
@@ -172,6 +175,15 @@ begin
     result := False
   else
     result := AStatus;
+end;
+
+{ TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty }
+class function TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
+begin
+  if not String.IsNullOrWhiteSpace(AValue) then
+    result := IncludeTrailingPathDelimiter(AValue)
+  else
+    result := AValue;
 end;
 
 end.

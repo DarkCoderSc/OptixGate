@@ -34,8 +34,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 701
-    ExplicitHeight = 368
     DesignSize = (
       711
       400)
@@ -59,6 +57,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoHeaderClickAutoSort]
       Header.SortColumn = 0
       Images = FormMain.ImageSystem
+      PopupMenu = PopupKeys
       StateImages = FormMain.VirtualImageList
       TabOrder = 0
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
@@ -99,11 +98,17 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       Header.DefaultHeight = 25
       Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
       Header.SortColumn = 0
-      Images = FormMain.ImageSystem
-      StateImages = FormMain.VirtualImageList
+      Images = FormMain.VirtualImageList
       TabOrder = 1
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+      OnChange = VSTValuesChange
+      OnCompareNodes = VSTValuesCompareNodes
+      OnFocusChanged = VSTValuesFocusChanged
+      OnFreeNode = VSTValuesFreeNode
+      OnGetText = VSTValuesGetText
+      OnGetImageIndex = VSTValuesGetImageIndex
+      OnGetNodeDataSize = VSTValuesGetNodeDataSize
       Touch.InteractiveGestures = [igPan, igPressAndTap]
       Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
       Columns = <
@@ -138,11 +143,25 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     BevelOuter = bvRaised
     ReadOnly = True
     TabOrder = 1
-    ExplicitWidth = 693
   end
   object MainMenu: TMainMenu
     Left = 408
     Top = 191
+    object Registry1: TMenuItem
+      Caption = 'Registry'
+      object Refresh1: TMenuItem
+        Caption = 'Refresh'
+        ShortCut = 16466
+        OnClick = Refresh1Click
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object GoTo1: TMenuItem
+        Caption = 'Go To'
+        OnClick = GoTo1Click
+      end
+    end
     object Options1: TMenuItem
       Caption = 'Options'
       object HideUnenumerableKeys1: TMenuItem
@@ -151,6 +170,22 @@ object ControlFormRegistryManager: TControlFormRegistryManager
         Checked = True
         OnClick = HideUnenumerableKeys1Click
       end
+    end
+  end
+  object PopupKeys: TPopupMenu
+    OnPopup = PopupKeysPopup
+    Left = 64
+    Top = 167
+    object FullExpand1: TMenuItem
+      Caption = 'Full Expand'
+      OnClick = FullExpand1Click
+    end
+    object FullCollapse1: TMenuItem
+      Caption = 'Full Collapse'
+      OnClick = FullCollapse1Click
+    end
+    object FullCollapse2: TMenuItem
+      Caption = '-'
     end
   end
 end
