@@ -50,8 +50,7 @@
     - Ternary operator
 *)
 
-Bug to fix on file manager folder tree with the "Go To" function: do the same thing as for Registry
-
+// TODO: Implement Generic Folder Tree code to File Manager Folder Tree (Actually a serious bug exists using the "Go To")
 
 unit uFormMain;
 

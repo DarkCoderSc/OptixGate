@@ -175,112 +175,61 @@ begin
 end;
 
 procedure TControlFormRegistryManager.DisplayKeys(const AList : TOptixRefreshRegistryKeys);
-
-  function GetLevelFolder(const AName : String; const pParent : PVirtualNode) : PVirtualNode;
-  begin
-    result := nil;
-    ///
-
-    var pChildNode := VSTKeys.GetFirstChild(pParent);
-    while Assigned(pChildNode) do begin
-      var pData := PKeysTreeData(pChildNode.GetData);
-      if not Assigned(pData^.KeyInformation) then
-        continue;
-      ///
-
-      if String.Compare(pData^.KeyInformation.Name, AName, True) = 0 then begin
-        result := pChildNode;
-
-        break;
-      end;
-
-      ///
-      pChildNode := VSTKeys.GetNextSibling(pChildNode);
-    end;
-  end;
-
-  procedure CreateOrUpdateKeyNode(var pNode, pParentNode : PVirtualNode; const AKey : TRegistryKeyInformation);
-  begin
-    var pData : PKeysTreeData;
-    if not Assigned(pNode) then begin
-      pNode := VSTKeys.AddChild(pParentNode);
-
-      pData := PKeysTreeData(pNode.GetData);
-
-      pData^.KeyInformation := TRegistryKeyInformation.Create();
-
-      pData^.ImageIndex := SystemFolderIcon();
-
-      if Assigned(pParentNode) then begin
-        var pParentData := PKeysTreeData(pParentNode.GetData);
-
-        pData^.Path := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(pParentData^.Path) + AKey.Name;
-      end else
-        pData^.Path := AKey.Name;
-    end else
-      pData := PKeysTreeData(pNode.GetData);
-
-    ///
-    if Assigned(pData^.KeyInformation) then
-      pData^.KeyInformation.Assign(AKey);
-  end;
-
 begin
   if not Assigned(AList) and (AList.SubKeys.Count > 0) then
     Exit();
   ///
 
-  var pParentNode := PVirtualNode(nil);
-  var pNode : PVirtualNode;
-
-  VSTKeys.BeginUpdate();
   try
-    // Generate or Update Parent Keys Tree
-    for var AItem in AList.ParentKeys do begin
-      var pChildNode := PVirtualNode(nil);
+    TOptixVirtualTreesFolderTreeHelper.UpdateTree<TRegistryKeyInformation>(
+      VSTKeys,
+      AList.ParentKeys,
+      AList.SubKeys,
+      (
+        function (const pData : Pointer) : String
+        begin
+          result := PKeysTreeData(pData)^.KeyInformation.Name;
+        end
+      ),
+      (
+        function (const AItem: TRegistryKeyInformation): String
+        begin
+          if Assigned(AItem) then
+            result := AItem.Name
+          else
+            result := '';
+        end
+      ),
+      (
+        procedure (var pNode, pParentNode : PVirtualNode; const AItem : TRegistryKeyInformation)
+        begin
+          var pData : PKeysTreeData;
+          if not Assigned(pNode) then begin
+            pNode := VSTKeys.AddChild(pParentNode);
 
-      pNode := VSTKeys.GetFirstChild(pParentNode);
-      while Assigned(pNode) do begin
-        var pData := PKeysTreeData(pNode.GetData);
-        if not Assigned(pData) or not Assigned(pData^.KeyInformation) then
-          continue;
-        ///
+            pData := PKeysTreeData(pNode.GetData);
 
-        if String.Compare(pData^.KeyInformation.Name, AItem.Name, True) = 0 then begin
-          pChildNode := pNode;
+            pData^.KeyInformation := TRegistryKeyInformation.Create();
 
-          break;
-        end;
+            pData^.ImageIndex := SystemFolderIcon();
 
-        ///
-        pNode := VSTKeys.GetNextSibling(pNode);
-      end;
+            if Assigned(pParentNode) then begin
+              var pParentData := PKeysTreeData(pParentNode.GetData);
 
-      ///
-      CreateOrUpdateKeyNode(pChildNode, pParentNode, AItem);
+              pData^.Path := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(pParentData^.Path) + AItem.Name;
+            end else
+              pData^.Path := AItem.Name;
+          end else
+            pData := PKeysTreeData(pNode.GetData);
 
-      pParentNode := pChildNode;
-    end;
-
-    // Generate or Update Sub Keys Tree
-    for var AItem in AList.SubKeys do begin
-      pNode := GetLevelFolder(AItem.Name, pParentNode);
-
-      ///
-      CreateOrUpdateKeyNode(pNode, pParentNode, AItem);
-    end;
+          ///
+          if Assigned(pData^.KeyInformation) then
+            pData^.KeyInformation.Assign(AItem);
+        end
+      )
+    );
   finally
-    TOptixVirtualTreesHelper.SelectNode(VSTKeys, pParentNode);
-
-    var pRootParent := TOptixVirtualTreesHelper.GetRootParentNode(VSTKeys, pParentNode);
-    if Assigned(pRootParent) then
-      VSTKeys.FullExpand(pRootParent);
-
-    VSTKeys.SortTree(0, TSortDirection.sdAscending);
-
     RefreshNodesVisibility();
-
-    VSTKeys.EndUpdate();
 
     ///
     EditPath.Text := AList.Path;
