@@ -231,6 +231,12 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Shell.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
+        <DCCReference Include="Units\Forms\Control\uControlFormRegistryManager.pas">
+            <Form>ControlFormRegistryManager</Form>
+        </DCCReference>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

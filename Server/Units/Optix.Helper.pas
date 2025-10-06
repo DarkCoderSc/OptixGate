@@ -44,7 +44,9 @@ function ReadResourceString(const AResourceName : String) : String;
 function TryReadResourceString(const AResourceName : String) : String;
 function FormatFileSize(const ASize : Int64) : string;
 
-procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo; const ALargeIcon : Boolean = False);
+procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo;
+  const ALargeIcon : Boolean = False);
+
 function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = False) : Integer;
 function SystemFolderIcon(APath : String = '') : Integer;
 function GetWindowsDirectory() : string;
@@ -53,8 +55,10 @@ procedure Open(const ACommand : String);
 
 procedure CheckCertificateFingerprint(const AValue : String);
 
-function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
-function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
+function CompareObjectAssignement(const AObject1, AObject2 : TObject) : Integer;
+function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
+function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime;
+  const ADate2IsSet : Boolean) : Integer;
 
 implementation
 
@@ -78,11 +82,22 @@ begin
 end;
 
 { _.CompareObjectAssignement }
-function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
+function CompareObjectAssignement(const AObject1, AObject2 : TObject) : Integer;
 begin
   if not Assigned(AObject1) and not Assigned(AObject2) then
     Result := 0
   else if not Assigned(AObject1) then
+    Result := 1
+  else
+    Result := -1
+end;
+
+{ _.ComparePointerAssigmenet }
+function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
+begin
+  if (pPtr1 = nil) and (pPtr2 = nil) then
+    Result := 0
+  else if pPtr1 <> nil then
     Result := 1
   else
     Result := -1

@@ -251,6 +251,13 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Shell.pas"/>
+        <DCCReference Include="Units\Forms\Control\uControlFormRegistryManager.pas">
+            <Form>ControlFormRegistryManager</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
+        <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -279,10 +286,20 @@
             </Delphi.Personality>
             <Deployment Version="5">
                 <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile"/>
-                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Release" Class="ProjectFile"/>
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Release" Class="ProjectFile"/>
                 <DeployFile LocalName="bins\OpenSSL\Win32\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="bins\OpenSSL\Win32\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>OptixGate_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="bins\OpenSSL\Win32\Release\OptixGate_OpenSSL.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="bins\OpenSSL\Win64\Debug\OptixGate_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="bins\OpenSSL\Win64\Release\OptixGate_OpenSSL.exe" Configuration="Release" Class="ProjectOutput"/>

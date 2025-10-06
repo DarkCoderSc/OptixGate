@@ -95,7 +95,10 @@ uses
   Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
   Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
   Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
-  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas';
+  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas',
+  Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
+  Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
+  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas';
 
 begin
   IsMultiThread := True;

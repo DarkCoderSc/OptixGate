@@ -389,7 +389,7 @@ begin
     Result := 0
   else begin
     if (Column in [2..4, 6]) and (not Assigned(pData1^.FormInformation) or not Assigned(pData2^.FormInformation)) then
-      Result := CompareObjectAssigmenet(pData1^.FormInformation, pData2^.FormInformation)
+      Result := CompareObjectAssignement(pData1^.FormInformation, pData2^.FormInformation)
     else begin
       case Column of
         0 : Result := CompareText(pData1^.Title, pData2^.Title);

@@ -45,7 +45,12 @@ unit Optix.System.Helper;
 
 interface
 
-uses Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+
+// If you wonder, static keyword in Delphi means cannot change.
 
 type
   TSystemHelper = class
@@ -53,13 +58,21 @@ type
     {@M}
     class function FileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
     class function TryFileTimeToDateTime(const AFileTime: TFileTime) : TDateTime; static;
-    class procedure NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
-    class procedure TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
+    class procedure NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean); static;
+    class procedure TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean); static;
+    class function AccessCheck(ADesiredAccess : DWORD; const hToken : THandle;
+      const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean; static;
+    class function IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String; static;
   end;
 
 implementation
 
-uses Optix.Exceptions, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
 
 { TSystemHelper.NTSetPrivilege }
 class procedure TSystemHelper.NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
@@ -128,6 +141,49 @@ begin
   except
     result := Now;
   end;
+end;
+
+{ TSystemHelper.TryFileTimeToDateTime }
+class function TSystemHelper.AccessCheck(ADesiredAccess : DWORD; const hToken : THandle;
+  const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean;
+begin
+  var AMapping : TGenericMapping;
+  AMapping.GenericRead    := KEY_READ;
+  AMapping.GenericWrite   := KEY_WRITE;
+  AMapping.GenericExecute := KEY_EXECUTE;
+  AMapping.GenericAll     := KEY_ALL_ACCESS;
+  ///
+
+  MapGenericMask(ADesiredAccess, AMapping);
+
+  var APrivilegeSet : TPrivilegeSet;
+  var APrivilegeSetSize := DWORD(SizeOf(TPrivilegeSet));
+
+  var AGrantedAccess := DWORD(0);
+  var AStatus : BOOL;
+
+  if not Winapi.Windows.AccessCheck(
+    ptrSecurityDescriptor,
+    hToken,
+    ADesiredAccess,
+    AMapping,
+    APrivilegeSet,
+    APrivilegeSetSize,
+    AGrantedAccess,
+    AStatus
+  ) then
+    result := False
+  else
+    result := AStatus;
+end;
+
+{ TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty }
+class function TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
+begin
+  if not String.IsNullOrWhiteSpace(AValue) then
+    result := IncludeTrailingPathDelimiter(AValue)
+  else
+    result := AValue;
 end;
 
 end.

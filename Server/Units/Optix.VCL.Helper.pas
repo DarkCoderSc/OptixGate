@@ -22,7 +22,7 @@ unit Optix.VCL.Helper;
 
 interface
 
-uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms, VirtualTrees.BaseTree;
+uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms, VirtualTrees.BaseTree, Generics.Collections;
 
 type
   TOptixVCLHelper = class
@@ -38,12 +38,135 @@ type
   public
     class function GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64; static;
     class function GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer; static;
-    class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean); static;
+    class procedure UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String;
+      AVisible : Boolean); static;
+    class function GetRootParentNode(const AVST : TVirtualStringTree;
+      const pNode : PVirtualNode) : PVirtualNode; static;
+    class procedure SelectNode(const AVST : TVirtualStringTree; const pNode : PVirtualNode); static;
+  end;
+
+  TOptixVirtualTreesFolderTreeHelper = class
+  type
+    TCompareFolderNameCallback = reference to function(const pData : Pointer; const ACompareTo : String) : Boolean;
+    TGetFolderNameFromItemCallback<T> = reference to function(const AItem: T): String;
+    TGetFolderNameFromDataCallback = reference to function(const pData: Pointer): String;
+    TSetupNodeDataCallback<T> = reference to procedure(var pNode, pParentNode : PVirtualNode; const AItem : T);
+  public
+    class procedure UpdateTree<T>(const AVST : TVirtualStringTree; const AParentsItems: TEnumerable<T>;
+      ALevelItems: TEnumerable<T>; const AGetNameFromDataFunc : TGetFolderNameFromDataCallback;
+      const AGetNameFromItemFunc : TGetFolderNameFromItemCallback<T>;
+      const ASetupNodeDataFunc : TSetupNodeDataCallback<T>); static;
   end;
 
 implementation
 
 uses Winapi.Windows, Winapi.Messages, System.SysUtils;
+
+(* TOptixVirtualTreesFolderTreeHelper *)
+
+{ TOptixVirtualTreesFolderTreeHelper.UpdateTree }
+class procedure TOptixVirtualTreesFolderTreeHelper.UpdateTree<T>(const AVST : TVirtualStringTree;
+  const AParentsItems: TEnumerable<T>; ALevelItems: TEnumerable<T>;
+  const AGetNameFromDataFunc : TGetFolderNameFromDataCallback;
+  const AGetNameFromItemFunc : TGetFolderNameFromItemCallback<T>;
+  const ASetupNodeDataFunc : TSetupNodeDataCallback<T>);
+begin
+  if not Assigned(AVST) then
+    Exit();
+  ///
+
+  if not Assigned(ALevelItems) then
+    Exit();
+
+  var pParentNode := PVirtualNode(nil);
+  var pChildNode := PVirtualNode(nil);
+  var pNode := PVirtualNode(nil);
+
+  AVST.BeginUpdate();
+  try
+    // Generate or Update Parent Folder Tree
+    if Assigned(AParentsItems) then begin
+      for var AItem in AParentsItems do begin
+        pChildNode := nil;
+
+        pNode := AVST.GetFirstChild(pParentNode);
+        while Assigned(pNode) do begin
+          if SameText(AGetNameFromDataFunc(pNode.GetData), AGetNameFromitemFunc(AItem)) then begin
+            pChildNode := pNode;
+
+            break;
+          end;
+
+          ///
+          pNode := AVST.GetNextSibling(pNode);
+        end;
+
+        ///
+        ASetupNodeDataFunc(pChildNode, pParentNode, AItem);
+
+        pParentNode := pChildNode;
+      end;
+    end;
+
+    // Generate Or Update Level Folder
+    var ALevelNodesCache := TDictionary<String, PVirtualNode>.Create(); // For Optimization
+    var ALevelItemsCache := TList<String>.Create();
+    try
+      // Fill Cache with Existing Nodes
+      pNode := AVST.GetFirstChild(pParentNode);
+      while Assigned(pNode) do begin
+        if pNode.GetData <> nil then
+          ALevelNodesCache.Add(AGetNameFromDataFunc(pNode.GetData), pNode);
+
+        ///
+        pNode := AVST.GetNextSibling(pNode);
+      end;
+
+      // Insert or Update Nodes
+      var AItemName : String;
+      var ANewNode : Boolean;
+
+      for var AItem in ALevelItems do begin
+        pNode := nil;
+        pChildNode := AVST.GetFirstChild(pParentNode);
+        ///
+
+        AItemName := AGetNameFromItemFunc(AItem);
+
+        ALevelItemsCache.Add(AItemName);
+
+        ANewNode := not ALevelNodesCache.TryGetValue(AItemName, pNode);
+
+        ///
+        ASetupNodeDataFunc(pNode, pParentNode, AItem);
+
+        if ANewNode then
+          ALevelNodesCache.Add(AItemName, pNode);
+      end;
+
+      // Delete Missing Nodes
+      for var APair in ALevelNodesCache do
+        if not ALevelItemsCache.Contains(APair.Key) then
+          AVST.DeleteNode(APair.Value);
+    finally
+      if Assigned(ALevelItemsCache) then
+        FreeAndNil(ALevelItemsCache);
+
+      if Assigned(ALevelNodesCache) then
+        FreeAndNil(ALevelNodesCache);
+    end;
+  finally
+    if Assigned(pParentNode) then begin
+      AVST.Expanded[pParentNode] := True;
+
+      TOptixVirtualTreesHelper.SelectNode(AVST, pParentNode);
+    end;
+
+    AVST.SortTree(0, TSortDirection.sdAscending);
+
+    AVST.EndUpdate();
+  end;
+end;
 
 (* TOptixVirtualTreesHelper *)
 
@@ -95,6 +218,37 @@ begin
     AColumn.Options := AColumn.Options + [coVisible]
   else
     AColumn.Options := AColumn.Options - [coVisible];
+end;
+
+{ TOptixVirtualTreesHelper.GetRootParentNode }
+class function TOptixVirtualTreesHelper.GetRootParentNode(const AVST : TVirtualStringTree;
+  const pNode : PVirtualNode) : PVirtualNode;
+begin
+  result := nil;
+  ///
+
+  if not Assigned(pNode) or not Assigned(AVST) then
+    Exit();
+
+  result := pNode;
+
+  while Assigned(AVST.NodeParent[result]) do
+    result := AVST.NodeParent[result];
+end;
+
+{ TOptixVirtualTreesHelper.SelectNode }
+class procedure TOptixVirtualTreesHelper.SelectNode(const AVST : TVirtualStringTree; const pNode : PVirtualNode);
+begin
+  if not Assigned(AVST) or not Assigned(pNode) then
+    Exit();
+  ///
+
+  AVST.ClearSelection();
+  ///
+
+  AVST.FocusedNode := pNode;
+  AVST.Selected[pNode] := True;
+  AVST.ScrollIntoView(pNode, True);
 end;
 
 (* TOptixVCLHelper *)

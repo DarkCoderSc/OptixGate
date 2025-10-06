@@ -41,6 +41,12 @@
 {                                                                              }
 {******************************************************************************}
 
+(*
+  When Delphi 13 in Community Edition (Code Improvements):
+    - Replace "not (x in y)" by "x not in y"
+    - Ternary operator
+*)
+
 unit uFormMain;
 
 interface
@@ -150,6 +156,7 @@ type
     procedure Server1Click(Sender: TObject);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
+    procedure RegistryManager1Click(Sender: TObject);
   private
     FFileInfo : TSHFileInfo;
 
@@ -187,7 +194,8 @@ uses
   System.DateUtils, System.Rtti,
 
   uControlFormProcessManager, uControlFormLogs, uFormAbout, uControlFormTransfers, uControlFormControlForms,
-  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers
+  uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers,
+  uControlFormRegistryManager
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
@@ -477,6 +485,11 @@ begin
   end;
 end;
 
+procedure TFormMain.RegistryManager1Click(Sender: TObject);
+begin
+  CreateNewControlForm(VST.FocusedNode, TControlFormRegistryManager);
+end;
+
 procedure TFormMain.RemoteShell1Click(Sender: TObject);
 begin
   CreateNewControlForm(VST.FocusedNode, TControlFormRemoteShell);
@@ -602,9 +615,9 @@ begin
   end;
 
   if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
-    Result := CompareObjectAssigmenet(pData1^.SessionInformation, pData2^.SessionInformation)
+    Result := CompareObjectAssignement(pData1^.SessionInformation, pData2^.SessionInformation)
   else if not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler) then
-    Result := CompareObjectAssigmenet(pData1^.Handler, pData2^.Handler)
+    Result := CompareObjectAssignement(pData1^.Handler, pData2^.Handler)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
@@ -682,14 +695,15 @@ begin
 
   var AVisible := VST.FocusedNode <> nil;
 
-  erminate1.Visible       := AVisible;
-  ProcessManager1.Visible := AVisible;
-  Logs1.Visible           := AVisible;
-  FileManager1.Visible    := AVisible;
-  ControlForms1.Visible   := AVisible;
-  transfers1.Visible      := AVisible;
-  asks1.Visible           := AVisible;
-  RemoteShell1.Visible    := AVisible;
+  erminate1.Visible        := AVisible;
+  ProcessManager1.Visible  := AVisible;
+  Logs1.Visible            := AVisible;
+  FileManager1.Visible     := AVisible;
+  ControlForms1.Visible    := AVisible;
+  transfers1.Visible       := AVisible;
+  asks1.Visible            := AVisible;
+  RemoteShell1.Visible     := AVisible;
+  RegistryManager1.Visible := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);

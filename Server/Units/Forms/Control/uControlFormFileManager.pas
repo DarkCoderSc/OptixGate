@@ -83,10 +83,8 @@ type
   PFileTreeData = ^TFileTreeData;
 
   TFolderTreeData = record
-    Name       : String;
-    Access     : TFileAccessAttributes;
-    Path       : String;
-    ImageIndex : Integer;
+    Information : TSimpleFolderInformation;
+    ImageIndex  : Integer;
   end;
   PFolderTreeData = ^TFolderTreeData;
 
@@ -119,7 +117,6 @@ type
     PopupFoldersTree: TPopupMenu;
     FullExpand1: TMenuItem;
     FullCollapse1: TMenuItem;
-    AutoExpandFolderTree1: TMenuItem;
     procedure VSTFilesChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFilesFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -163,6 +160,7 @@ type
     procedure VSTFoldersDblClick(Sender: TObject);
     procedure VSTFoldersCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure VSTFoldersFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     FHistoryCursor : Integer;
     FPathHistory   : TList<String>;
@@ -172,8 +170,8 @@ type
     procedure BrowseFromCurrentHistoryLocation();
     function CanNodeFileBeDownloaded(var pData : PFileTreeData) : Boolean;
     function CanFileBeUploadedToNodeDirectory(var pData : PFileTreeData) : Boolean;
-    procedure RegisterFolderInTree(const ABasePath : String; const AFolder : String);
-    procedure RegisterFoldersInTree(const ABasePath : String; const AFolders : TDictionary<String, TFileAccessAttributes>);
+    procedure RegisterFoldersInTree(const AParentFolders : TObjectList<TSimpleFolderInformation>;
+      const AFolders : TObjectList<TSimpleFolderInformation>);
     procedure DisplayDrives(const AList : TOptixCommandRefreshDrives);
     procedure DisplayFiles(const AList : TOptixCommandRefreshFiles);
     procedure SetDisplayMode(const AMode : TDisplayMode);
@@ -280,8 +278,9 @@ begin
   end;
 
   ///
-  if AFileInformation.IsDirectory then
-    RegisterFolderInTree(APath, AFileInformation.Name);
+  if AFileInformation.IsDirectory then begin
+    // TODO: Support directories (Modify "new file/folder" feedback command to have parent folders list)
+  end;
 end;
 
 function TControlFormFileManager.GetFolderImageIndex(const AFolderAccess : TFileAccessAttributes) : Integer;
@@ -307,108 +306,49 @@ begin
     result := IMAGE_FOLDER_NORMAL;
 end;
 
-procedure TControlFormFileManager.RegisterFoldersInTree(const ABasePath : String; const AFolders : TDictionary<String, TFileAccessAttributes>);
-
-  function GetParentNode(const APath : String) : PVirtualNode;
-  begin
-    result := nil;
-    ///
-
-    for var pNode in VSTFolders.Nodes do begin
-      var pData := PFolderTreeData(pNode.GetData);
-      if String.Compare(pData^.Path, APath, True) = 0 then begin
-        result := pNode;
-
-        break;
-      end;
-    end;
-  end;
-
-  function GetLevelFolder(const AName : String; const pParent : PVirtualNode) : PVirtualNode;
-  begin
-    result := nil;
-    ///
-
-    var pChildNode := VSTFolders.GetFirstChild(pParent);
-    while Assigned(pChildNode) do begin
-      var pData := PFolderTreeData(pChildNode.GetData);
-
-      if String.Compare(pData^.Name, AName, True) = 0 then begin
-        result := pChildNode;
-
-        break;
-      end;
-
-      ///
-      pChildNode := VSTFolders.GetNextSibling(pChildNode);
-    end;
-  end;
-
+procedure TControlFormFileManager.RegisterFoldersInTree(const AParentFolders : TObjectList<TSimpleFolderInformation>;
+  const AFolders : TObjectList<TSimpleFolderInformation>);
 begin
-  var pParentNode : PVirtualNode := nil;
-
-  var ARoot := String.IsNullOrWhitespace(ABasePath);
-  if not ARoot then
-    pParentNode := GetParentNode(ABasePath);
-  ///
-
-  VSTFolders.BeginUpdate();
-  try
-    for var AFolder in AFolders do begin
-      var pNode := GetLevelFolder(AFolder.Key, pParentNode);
-      if Assigned(pNode) then begin
-        if ARoot then begin
-          var pData := PFolderTreeData(pNode.GetData);
-
-          // It might change (e.g. Bitlocker volume unlocked)
-          pData^.ImageIndex := SystemFileIcon(AFolder.Key);
-        end;
-
+  TOptixVirtualTreesFolderTreeHelper.UpdateTree<TSimpleFolderInformation>(
+    VSTFolders,
+    AParentFolders,
+    AFolders,
+    (
+      function (const pData : Pointer) : String
+      begin
+        result := PFolderTreeData(pData)^.Information.Name
+      end
+    ),
+    (
+      function (const AItem: TSimpleFolderInformation): String
+      begin
+        result := AItem.Name
+      end
+    ),
+    (
+      procedure (var pNode, pParentNode : PVirtualNode; const AItem : TSimpleFolderInformation)
+      begin
+        var pData : PFolderTreeData;
         ///
-        continue;
-      end;
-      ///
 
-      pNode := VSTFolders.AddChild(pParentNode);
-      var pData := PFolderTreeData(pNode.GetData);
+        if not Assigned(pNode) then begin
+          pNode := VSTFolders.AddChild(pParentNode);
 
-      pData^.Name := AFolder.Key;
+          pData := PFolderTreeData(pNode.GetData);
 
-      if ARoot then
-        pData^.Path := AFolder.Key
-      else
-        pData^.Path := IncludeTrailingPathDelimiter(IncludeTrailingPathDelimiter(ABasePath) + AFolder.Key);
+          pData^.Information := TSimpleFolderInformation.Create();
+        end else
+          pData := PFolderTreeData(pNode.GetData);
 
-      pData^.Access := AFolder.Value;
+        pData^.Information.Assign(AItem);
 
-      if ARoot then
-        pData^.ImageIndex := SystemFileIcon(AFolder.Key)
-      else
-        pData^.ImageIndex := SystemFolderIcon();
-    end;
-  finally
-    if AutoExpandFolderTree1.Checked then
-      VSTFolders.FullExpand(pParentNode);
-
-    VSTFiles.SortTree(0, TSortDirection.sdAscending);
-
-    ///
-    VSTFolders.EndUpdate();
-  end;
-end;
-
-procedure TControlFormFileManager.RegisterFolderInTree(const ABasePath : String; const AFolder : String);
-begin
-  var AFolders := TDictionary<String, TFileAccessAttributes>.Create();
-  try
-    AFolders.Add(AFolder, []);
-
-    ///
-    RegisterFoldersInTree(IncludeTrailingPathDelimiter(ABasePath), AFolders);
-  finally
-    if Assigned(AFolders) then
-      FreeAndNil(AFolders);
-  end;
+        if AItem.IsRoot then
+          pData^.ImageIndex := SystemFileIcon(AItem.Path)
+        else
+          pData^.ImageIndex := SystemFolderIcon();
+      end
+    )
+  );
 end;
 
 procedure TControlFormFileManager.BrowseFromCurrentHistoryLocation();
@@ -520,14 +460,6 @@ begin
 
   ButtonRefresh.Enabled := AMode = dmFiles;
   ButtonUpload.Enabled  := AMode = dmFiles;
-
-//  ButtonBack.Enabled    := AMode = dmFiles;
-//  ButtonForward.Enabled := AMode = dmFiles;
-
-//  if AMode = dmDrives then begin
-//    FPathHistory.Clear();
-//    FHistoryCursor := 0;
-//  end;
 
   ///
   RefreshNavButtons();
@@ -726,7 +658,6 @@ begin
     ///
     Exit(); // Avoid too many nested blocks of code in this specific case.
   end;
-
 
   // File Mode Sorting -------------------------------------------------------------------------------------------------
   if Assigned(pData1^.FileInformation) and Assigned(pData2^.FileInformation) then begin
@@ -983,7 +914,7 @@ begin
   if not Assigned(pData1) or not Assigned(pData2) then
     Result := 0
   else
-    Result := CompareText(pData1^.Name, pData2^.Name);
+    Result := CompareText(pData1^.Information.Name, pData2^.Information.Name);
 end;
 
 procedure TControlFormFileManager.VSTFoldersDblClick(Sender: TObject);
@@ -996,13 +927,20 @@ begin
   var pData := PFolderTreeData(pNode.GetData);
 
   ///
-  BrowsePath(pData^.Path);
+  BrowsePath(pData^.Information.Path);
 end;
 
 procedure TControlFormFileManager.VSTFoldersFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
   Column: TColumnIndex);
 begin
   TVirtualStringTree(Sender).Refresh();
+end;
+
+procedure TControlFormFileManager.VSTFoldersFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+begin
+  var pData := PFolderTreeData(Node.GetData);
+  if Assigned(pData) and Assigned(pData^.Information) then
+    FreeAndNil(pData^.Information);
 end;
 
 procedure TControlFormFileManager.VSTFoldersGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -1030,7 +968,7 @@ begin
 
   if Assigned(pData) then begin
     case Column of
-      0 : CellText := pData^.Name;
+      0 : CellText := pData^.Information.Name;
     end;
   end;
 
@@ -1060,7 +998,7 @@ begin
     Exit();
   ///
 
-  var AFolders := TDictionary<String, TFileAccessAttributes>.Create();
+  var AFolders := TObjectList<TSimpleFolderInformation>.Create(True);
 
   VSTFiles.BeginUpdate();
   try
@@ -1075,10 +1013,10 @@ begin
       pData^.ImageIndex  := SystemFileIcon(IncludeTrailingPathDelimiter(ADrive.Letter));
 
       ///
-      AFolders.Add(IncludeTrailingPathDelimiter(ADrive.Letter), []);
+      AFolders.Add(TSimpleFolderInformation.Create(ADrive.Letter, ADrive.Letter, [], True));
     end;
   finally
-    RegisterFoldersInTree('', AFolders);
+    RegisterFoldersInTree(nil, AFolders);
 
     VSTFiles.EndUpdate();
 
@@ -1101,11 +1039,11 @@ begin
 
   ButtonUpload.Enabled := faWrite in AList.Access;
 
-  var AFolders := TDictionary<String, TFileAccessAttributes>.Create();
+  var AFolders := TObjectList<TSimpleFolderInformation>.Create(True);
 
   VSTFiles.BeginUpdate();
   try
-    for var AFile in AList.List do begin
+    for var AFile in AList.Files do begin
       var pNode := VSTFiles.AddChild(nil);
       var pData := PFileTreeData(pNode.GetData);
       ///
@@ -1119,12 +1057,19 @@ begin
 
         ///
         if not MatchStr(pData^.FileInformation.Name, ['.', '..']) then
-          AFolders.Add(pData^.FileInformation.Name, pData^.FileInformation.Access);
+          AFolders.Add(
+            TSimpleFolderInformation.Create(
+              pData^.FileInformation.Name,
+              pData^.FileInformation.Path,
+              pData^.FileInformation.Access,
+              False
+            )
+          );
       end else
         pData^.ImageIndex := SystemFileIcon(AFile.Name, True);
     end;
   finally
-    RegisterFoldersInTree(IncludeTrailingPathDelimiter(AList.Path), AFolders);
+    RegisterFoldersInTree(AList.ParentFolders, AFolders);
 
     VSTFiles.EndUpdate();
 
