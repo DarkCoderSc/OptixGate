@@ -40,6 +40,7 @@ The project is developed in Delphi. In recent years, Embarcadero has made a sign
 * Remote shell with multiplexing
 * Remote file manager
 * Remote process manager
+* Remote registry manager
 * 100% free, 100% open-source, forever
 
 …and much more to do, much more to come.
@@ -155,16 +156,16 @@ It is possible to generate multiple certificates and register several trusted ce
 
 The Process Manager allows retrieving the list of currently running processes on a remote system. For each process, detailed information is provided, including (but not limited to):
 
-- Process ID
-- Name
-- Parent ID
-- Image Path
-- Session ID
-- Thread Count
-- Start Time
-- Command Line
-- Architecture
-- Elevation Status
+* Process ID
+* Name
+* Parent ID
+* Image Path
+* Session ID
+* Thread Count
+* Start Time
+* Command Line
+* Architecture
+* Elevation Status
 
 Elevated processes are highlighted in a distinct color, as are the current client process and those running under NT AUTHORITY/SYSTEM. This visual differentiation makes it easy to quickly identify the processes of interest. Color highlighting can be disabled if preferred. Additionally, depending on the architecture of the client and the enumerated processes, certain actions may not be available.
 
@@ -178,11 +179,12 @@ Optix currently provides an initial technique for dumping processes using the `M
 
 ![File Manger](Assets/sshot-8.png)
 
-The File Manager allows browsing the remote file system. At present, the available actions are limited to:
+Currently Implemented Features:
 
-- Uploading a file to the current folder (if permitted).
-- Uploading a file to a selected folder (if permitted).
-- Downloading a selected file (if permitted).
+* Browsing the remote file system
+* Uploading a file to the current folder (if permitted).
+* Uploading a file to a selected folder (if permitted).
+* Downloading a selected file (if permitted).
 
 Additional file management actions will be introduced in future versions.
 
@@ -190,11 +192,11 @@ A noteworthy aspect of the File Manager, which will also be extended to future f
 
 For folders, access rights are visually represented with color codes (which can be disabled) to quickly identify permissions:
 
-- Red: No Access
-- Yellow: Read and Execute
-- Orange: Execute Only
-- Blue: Read Only
-- Green: Full Access
+* Red: No Access
+* Yellow: Read and Execute
+* Orange: Execute Only
+* Blue: Read Only
+* Green: Full Access
 
 This approach reflects the ambition to provide users with clear, actionable insights at a glance, helping them both to solve challenges and to improve the overall security posture of certain elements.
 
@@ -203,6 +205,19 @@ This approach reflects the ambition to provide users with clear, actionable insi
 ![Remote Shell](Assets/sshot-14.png)
 
 As extensively discussed in the protocol section, this is a core feature for remote system management. It supports unlimited parallel sessions as well as interrupts to terminate long-running commands.
+
+### Registry Manager
+
+![Registry Manager](Assets/sshot-15.png)
+
+Registry Manager allows you to browse registry data remotely with an interface closely aligned to the native Microsoft Windows Registry application. It enables easy navigation and efficient management of keys and values.
+
+Currently Implemented Features:
+
+* Browse the Windows Registry remotely
+* View key and value, data types, including String, Multi-String, Binary, DWORD, and QWORD
+* Navigate directly to a specific key path (supports hive short names)
+* Option to hide keys that are inaccessible due to insufficient permissions
 
 ### What will you learn?
 
@@ -221,6 +236,15 @@ Many additional actions are planned for existing features, and several new capab
 Stability is my top priority; new features come second.
 
 ## Changelogs
+
+### 1.2.0 (Oct 2025)
+
+* Registry Manager has been introduced, currently available for browsing only. Users can browse registry hives and keys and view values (e.g., DWORD, QWORD, String, Binary, etc.). *Creation, deletion, and modification of keys or values will be implemented in a future update.*
+* A bug in the File Manager Folder Tree related to the 'Go To Path' function has been fixed. The complete destination path, including parent and child hierarchy, is now correctly built with proper permission resolution. This fix required a significant structural change.
+* File Manager now supports relative paths. Using `..` will resolve correctly, and the path format has been standardized to prevent potential errors.
+* Various other minor improvements and optimizations have been implemented.
+
+ⓘ The Registry Manager and File Manager Folder Tree showcase another valuable concept: generic programming using the Delphi programming language.
 
 ### 1.1.0 (Sept 2025)
 
@@ -298,6 +322,7 @@ zRt12rJmulmCvpFscq8G
 
 I would like to thank the following people for their support, extensive testing, and early feedback
 
+- [Embarcadero](https://www.embarcadero.com)
 - [Mr.NOODLE](https://x.com/bragames2)
 - [Euz](https://x.com/_Euzebius)
 - [Mudpak](https://x.com/_mudpak)
