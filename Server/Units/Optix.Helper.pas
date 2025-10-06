@@ -55,7 +55,7 @@ procedure Open(const ACommand : String);
 
 procedure CheckCertificateFingerprint(const AValue : String);
 
-function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
+function CompareObjectAssignement(const AObject1, AObject2 : TObject) : Integer;
 function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime;
   const ADate2IsSet : Boolean) : Integer;
@@ -82,7 +82,7 @@ begin
 end;
 
 { _.CompareObjectAssignement }
-function CompareObjectAssigmenet(const AObject1, AObject2 : TObject) : Integer;
+function CompareObjectAssignement(const AObject1, AObject2 : TObject) : Integer;
 begin
   if not Assigned(AObject1) and not Assigned(AObject2) then
     Result := 0

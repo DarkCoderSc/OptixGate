@@ -95,7 +95,6 @@ type
     procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
     procedure VSTKeysFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-    procedure VSTKeysChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTKeysGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex);
     procedure VSTKeysFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -118,6 +117,7 @@ type
     procedure PopupKeysPopup(Sender: TObject);
     procedure Refresh1Click(Sender: TObject);
     procedure GoTo1Click(Sender: TObject);
+    procedure VSTKeysChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
     {@M}
     procedure BrowsePath(const AKeyFullPath : String);
@@ -346,7 +346,7 @@ begin
   if not Assigned(pData1) or not Assigned(pData2) then
     Result := ComparePointerAssigmenet(pData1, pData2)
   else if not Assigned(pData1^.KeyInformation) or not Assigned(pData2^.KeyInformation) then
-    Result := CompareObjectAssigmenet(pData1^.KeyInformation, pData2^.KeyInformation)
+    Result := CompareObjectAssignement(pData1^.KeyInformation, pData2^.KeyInformation)
   else
     Result := CompareText(pData1^.KeyInformation.Name, pData2^.KeyInformation.Name);
 end;
@@ -427,7 +427,7 @@ begin
   if not Assigned(pData1) or not Assigned(pData2) then
     Result := ComparePointerAssigmenet(pData1, pData2)
   else if not Assigned(pData1^.ValueInformation) or not Assigned(pData2^.ValueInformation) then
-    Result := CompareObjectAssigmenet(pData1^.ValueInformation, pData2^.ValueInformation)
+    Result := CompareObjectAssignement(pData1^.ValueInformation, pData2^.ValueInformation)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.ValueInformation.Name, pData2^.ValueInformation.Name);

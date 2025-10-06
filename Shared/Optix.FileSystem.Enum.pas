@@ -57,6 +57,35 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
+  // Folder Information (Simplified) -----------------------------------------------------------------------------------
+  TSimpleFolderInformation = class(TOptixSerializableObject)
+  private
+    [OptixSerializableAttribute]
+    FName : String;
+
+    [OptixSerializableAttribute]
+    FPath : String;
+
+    [OptixSerializableAttribute]
+    FAccess : TFileAccessAttributes;
+
+    [OptixSerializableAttribute]
+    FIsRoot : Boolean;
+  public
+    {@C}
+    constructor Create(const AName, APath : String; const AAccess : TFileAccessAttributes;
+      const AIsRoot : Boolean); overload;
+
+    {@M}
+    procedure Assign(ASource : TPersistent); override;
+
+    {@G}
+    property Name   : String                read FName;
+    property Path   : String                read FPath;
+    property Access : TFileAccessAttributes read FAccess;
+    property IsRoot : Boolean               read FIsRoot;
+  end;
+
   // Drives ------------------------------------------------------------------------------------------------------------
   TDriveInformation = class(TOptixSerializableObject)
   private
@@ -108,6 +137,9 @@ type
   TFileInformation = class(TOptixSerializableObject)
   private
     [OptixSerializableAttribute]
+    FPath : String;
+
+    [OptixSerializableAttribute]
     FName : String;
 
     [OptixSerializableAttribute]
@@ -138,13 +170,14 @@ type
     FLastAccessDate : TDateTime;
   public
     {@C}
-    constructor Create(const AFilePath : String; const AIsDirectory : Boolean); overload;
+    constructor Create(const APath : String; const AIsDirectory : Boolean); overload;
 
     {@M}
     function GetFileTypeDescription() : String;
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
+    property Path             : String                read FPath;
     property Name             : String                read FName;
     property IsDirectory      : Boolean               read FIsDirectory;
     property ACL_SSDL         : String                read FACL_SSDL;
@@ -159,7 +192,8 @@ type
 
   TOptixEnumFiles = class
   public
-    class procedure Enum(APath : String; var AList : TObjectList<TFileInformation>; var AIsRoot : Boolean; var AAccess : TFileAccessAttributes); static;
+    class procedure Enum(const APath : String; var AList : TObjectList<TFileInformation>; var AIsRoot : Boolean;
+      var AAccess : TFileAccessAttributes); static;
   end;
 
 implementation
@@ -172,6 +206,37 @@ uses
 
   Optix.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
+
+(***********************************************************************************************************************
+
+  TSimpleFolderInformation
+
+***********************************************************************************************************************)
+
+{ TSimpleFolderInformation.Create }
+constructor TSimpleFolderInformation.Create(const AName, APath : String; const AAccess : TFileAccessAttributes;
+  const AIsRoot : Boolean);
+begin
+  inherited Create();
+  ///
+
+  FName   := AName;
+  FPath   := IncludeTrailingPathDelimiter(APath);
+  FAccess := AAccess;
+  FIsRoot := AIsRoot;
+end;
+
+{ TSimpleFolderInformation.Assign }
+procedure TSimpleFolderInformation.Assign(ASource : TPersistent);
+begin
+  if ASource is TSimpleFolderInformation then begin
+    FName   := TSimpleFolderInformation(ASource).FName;
+    FPath   := TSimpleFolderInformation(ASource).FPath;
+    FAccess := TSimpleFolderInformation(ASource).FAccess;
+    FIsRoot := TSimpleFolderInformation(ASource).FIsRoot;
+  end else
+    inherited;
+end;
 
 (***********************************************************************************************************************
 
@@ -285,6 +350,7 @@ end;
 procedure TFileInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TFileInformation then begin
+    FPath             := TFileInformation(ASource).FPath;
     FName             := TFileInformation(ASource).FName;
     FIsDirectory      := TFileInformation(ASource).FIsDirectory;
     FACL_SSDL         := TFileInformation(ASource).FACL_SSDL;
@@ -300,17 +366,18 @@ begin
 end;
 
 { TFileInformation.Create }
-constructor TFileInformation.Create(const AFilePath : String; const AIsDirectory : Boolean);
+constructor TFileInformation.Create(const APath : String; const AIsDirectory : Boolean);
 begin
-  FName         := ExtractFileName(AFilePath);
+  FPath         := APath;
+  FName         := ExtractFileName(APath);
   FIsDirectory  := AIsDirectory;
-  FACL_SSDL     := TFileSystemHelper.TryGetFileACLString(AFilePath);
-  FAccess       := TFileSystemHelper.TryGetCurrentUserFileAccess(AFilePath);
-  FDateAreValid := TFileSystemHelper.TryGetFileTime(AFilePath, FCreatedDate, FLastModifiedDate, FLastAccessDate);
+  FACL_SSDL     := TFileSystemHelper.TryGetFileACLString(APath);
+  FAccess       := TFileSystemHelper.TryGetCurrentUserFileAccess(APath);
+  FDateAreValid := TFileSystemHelper.TryGetFileTime(APath, FCreatedDate, FLastModifiedDate, FLastAccessDate);
 
   if not FIsDirectory then begin
-    FTypeDescription := TFileSystemHelper.GetFileTypeDescription(AFilePath);
-    FSize            := TFileSystemHelper.TryGetFileSize(AFilePath);
+    FTypeDescription := TFileSystemHelper.GetFileTypeDescription(APath);
+    FSize            := TFileSystemHelper.TryGetFileSize(APath);
   end else begin
     FTypeDescription := '';
     FSize            := 0;
@@ -324,7 +391,8 @@ end;
 ***********************************************************************************************************************)
 
 { TOptixEnumFiles.Enum }
-class procedure TOptixEnumFiles.Enum(APath : String; var AList : TObjectList<TFileInformation>; var AIsRoot : Boolean; var AAccess : TFileAccessAttributes);
+class procedure TOptixEnumFiles.Enum(const APath : String; var AList : TObjectList<TFileInformation>;
+  var AIsRoot : Boolean; var AAccess : TFileAccessAttributes);
 begin
   if not Assigned(AList) then
     AList := TObjectList<TFileInformation>.Create(True)
@@ -334,8 +402,6 @@ begin
 
   if String.IsNullOrEmpty(APath) then
     Exit();
-
-  APath := TFileSystemHelper.ExpandPath(APath);
 
   var ASearchParameter := Format('%s*.*', [APath]);
 
@@ -358,10 +424,12 @@ begin
       if AFileName = '..' then
         AIsRoot := False;
 
-      if (AWin32FindData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY) then begin
-        AList.Add(TFileInformation.Create(APath + AFileName, True))
-      end else
-        AList.Add(TFileInformation.Create(APath + AFileName, False));
+      AList.Add(
+        TFileInformation.Create(
+          APath + AFileName,
+          (AWin32FindData.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY = FILE_ATTRIBUTE_DIRECTORY)
+        )
+      );
     until FindNextFileW(hSearch, AWin32FindData) = False;
   finally
     FindClose(hSearch);

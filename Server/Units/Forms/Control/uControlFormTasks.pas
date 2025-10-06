@@ -298,7 +298,7 @@ begin
 
       5 : begin
         if not Assigned(pData1^.TaskCallBack.Result) or not Assigned(pData2^.TaskCallBack.Result) then
-          Result := CompareObjectAssigmenet(pData1^.TaskCallBack.Result, pData2^.TaskCallBack.Result)
+          Result := CompareObjectAssignement(pData1^.TaskCallBack.Result, pData2^.TaskCallBack.Result)
         else
           Result := CompareText(pData1^.TaskCallBack.Result.Description, pData2^.TaskCallBack.Result.Description);
       end;

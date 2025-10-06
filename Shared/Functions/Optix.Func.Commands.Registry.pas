@@ -110,7 +110,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.System.Helper;
+  Optix.System.Helper, Optix.FileSystem.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 (***********************************************************************************************************************
@@ -238,31 +238,19 @@ end;
 { TOptixRefreshRegistrySubKeys.DoAction }
 procedure TOptixRefreshRegistrySubKeys.DoAction();
 begin
-  var ADirectories := TStringList.Create();
-  try
-    TRegistryHelper.CheckRegistryPath(FPath);
-    ///
+  TRegistryHelper.CheckRegistryPath(FPath);
+  FParentKeys.Clear();
+  ///
 
-    ADirectories.Delimiter := '\';
-    ADirectories.DelimitedText := FPath;
-
-    FParentKeys.Clear();
-
-    var ACurrentPath := '';
-    for var ADirectory in ADirectories do begin
-      if ADirectory.IsEmpty then
-        continue;
-      ///
-
-      ACurrentPath := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(ACurrentPath) + ADirectory;
-
-      ///
-      FParentKeys.Add(TRegistryKeyInformation.Create(ADirectory, ACurrentPath));
-    end;
-  finally
-    if Assigned(ADirectories) then
-      FreeAndNil(ADirectories);
-  end;
+  TFileSystemHelper.TraverseDirectories(
+    FPath,
+    (
+      procedure (const ADirectoryName : String; const AAbsolutePath : String)
+      begin
+        FParentKeys.Add(TRegistryKeyInformation.Create(ADirectoryName, AAbsolutePath));
+      end
+    )
+  );
 
   ///
   TOptixEnumRegistry.Enum(FPath, FSubKeys, FValues);

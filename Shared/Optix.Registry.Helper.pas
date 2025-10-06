@@ -338,7 +338,7 @@ begin
   ///
 
   for var i := 0 to High(HIVES_MAP) do begin
-    if AKeyFullPath.StartsWith(HIVES_MAP[i, 0]) then begin
+    if AKeyFullPath.StartsWith(HIVES_MAP[i, 0], True) then begin
       Result := HIVES_MAP[i, 1] + Copy(AKeyFullPath, Length(HIVES_MAP[i, 0]) + 1, MaxInt);
 
       Break;

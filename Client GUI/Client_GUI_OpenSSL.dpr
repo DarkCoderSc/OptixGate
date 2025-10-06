@@ -103,7 +103,10 @@ uses
   Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
   Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas',
   Optix.FileSystem.Enum in '..\Shared\Optix.FileSystem.Enum.pas',
-  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas';
+  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
+  Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
+  Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
+  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas';
 
 {$R *.res}
 {$R ..\Server\data.res}

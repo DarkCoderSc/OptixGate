@@ -69,6 +69,8 @@ type
   TFileAccessAttributes = set of TFileAccess;
 
   TFileSystemHelper = class
+  type
+    TTraversedDirectoryCallback = reference to procedure(const ADirectoryName : String; const AAbsolutePath : String);
   public
     class function GetDriveInformation(ADriveLetter : String; var AName : String; var AFormat : String;
       var ADriveType : TDriveType) : Boolean; static;
@@ -87,6 +89,10 @@ type
     class function TryGetFileTime(const AFileName : String; var ACreate, ALastModified, ALastAccess : TDateTime) : Boolean; static;
     class function UniqueFileName(const AFileName : String) : String; static;
     class function ExpandPath(const APath : String) : String; static;
+    class procedure TraverseDirectories(const APath : String;
+      const ATraversedDirectoryFunc : TTraversedDirectoryCallback); static;
+    class function GetFullPathName(const APath : String) : String; static;
+    class procedure PathExists(const APath : String);
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
@@ -503,5 +509,65 @@ begin
   result := IncludeTrailingPathDelimiter(result);
 end;
 
+{ TFileSystemHelper.TraverseDirectories }
+class procedure TFileSystemHelper.TraverseDirectories(const APath : String;
+  const ATraversedDirectoryFunc : TTraversedDirectoryCallback);
+begin
+  var ADirectories := TStringList.Create();
+  try
+    ADirectories.Delimiter := '\';
+    ADirectories.DelimitedText := APath;
+
+    var ACurrentPath := '';
+    for var ADirectory in ADirectories do begin
+      if ADirectory.IsEmpty then
+        continue;
+      ///
+
+      ACurrentPath := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(ACurrentPath) + ADirectory;
+
+      ///
+      ATraversedDirectoryFunc(ADirectory, ACurrentPath);
+    end;
+  finally
+    if Assigned(ADirectories) then
+      FreeAndNil(ADirectories);
+  end;
+end;
+
+{ TFileSystemHelper.GetFullPathName }
+class function TFileSystemHelper.GetFullPathName(const APath : String) : String;
+begin
+  result := '';
+  ///
+
+  var pDummy : PWideChar;
+
+  var ARequiredLength := Winapi.Windows.GetFullPathNameW(PWideChar(APath), 0, nil, pDummy);
+  if ARequiredLength = 0 then
+    raise EWindowsException.Create('GetFullPathNameW(0)');
+  ///
+
+  Inc(ARequiredLength);
+
+  var pBuffer : PWideChar;
+  GetMem(pBuffer, ARequiredLength * SizeOf(WideChar));
+  try
+    if Winapi.Windows.GetFullPathNameW(PWideChar(APath), ARequiredLength, pBuffer, pDummy) = 0 then
+      raise EWindowsException.Create('GetFullPathNameW(1)');
+
+    ///
+    result := String(pBuffer);
+  finally
+    FreeMem(pBuffer, ARequiredLength * SizeOf(WideChar));
+  end;
+end;
+
+{ TFileSystemHelper.PathExists }
+class procedure TFileSystemHelper.PathExists(const APath : String);
+begin
+  if GetFileAttributesW(PWideChar(APath)) = INVALID_FILE_ATTRIBUTES then
+    raise EWindowsException.Create('GetFileAttributesW');
+end;
 
 end.

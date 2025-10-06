@@ -75,6 +75,9 @@ begin
     Exit();
   ///
 
+  if not Assigned(ALevelItems) then
+    Exit();
+
   var pParentNode := PVirtualNode(nil);
   var pChildNode := PVirtualNode(nil);
   var pNode := PVirtualNode(nil);
@@ -82,25 +85,27 @@ begin
   AVST.BeginUpdate();
   try
     // Generate or Update Parent Folder Tree
-    for var AItem in AParentsItems do begin
-      pChildNode := nil;
+    if Assigned(AParentsItems) then begin
+      for var AItem in AParentsItems do begin
+        pChildNode := nil;
 
-      pNode := AVST.GetFirstChild(pParentNode);
-      while Assigned(pNode) do begin
-        if SameText(AGetNameFromDataFunc(pNode.GetData), AGetNameFromitemFunc(AItem)) then begin
-          pChildNode := pNode;
+        pNode := AVST.GetFirstChild(pParentNode);
+        while Assigned(pNode) do begin
+          if SameText(AGetNameFromDataFunc(pNode.GetData), AGetNameFromitemFunc(AItem)) then begin
+            pChildNode := pNode;
 
-          break;
+            break;
+          end;
+
+          ///
+          pNode := AVST.GetNextSibling(pNode);
         end;
 
         ///
-        pNode := AVST.GetNextSibling(pNode);
+        ASetupNodeDataFunc(pChildNode, pParentNode, AItem);
+
+        pParentNode := pChildNode;
       end;
-
-      ///
-      ASetupNodeDataFunc(pChildNode, pParentNode, AItem);
-
-      pParentNode := pChildNode;
     end;
 
     // Generate Or Update Level Folder

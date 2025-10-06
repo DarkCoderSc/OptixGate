@@ -117,7 +117,8 @@ type
     [OptixSerializableAttribute]
     FIsRoot : Boolean;
 
-    FList : TObjectList<TFileInformation>;
+    FParentFolders : TObjectList<TSimpleFolderInformation>;
+    FFiles         : TObjectList<TFileInformation>;
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); override;
@@ -132,10 +133,11 @@ type
     destructor Destroy(); override;
 
     {@G}
-    property Path   : String                        read FPath;
-    property List   : TObjectList<TFileInformation> read FList;
-    property Access : TFileAccessAttributes         read FAccess;
-    property IsRoot : Boolean                       read FIsRoot;
+    property Path          : String                                read FPath;
+    property ParentFolders : TObjectList<TSimpleFolderInformation> read FParentFolders;
+    property Files         : TObjectList<TFileInformation>         read FFiles;
+    property Access        : TFileAccessAttributes                 read FAccess;
+    property IsRoot        : Boolean                               read FIsRoot;
   end;
 
   TOptixCommandTransfer = class(TOptixCommand)
@@ -168,6 +170,11 @@ type
   end;
 
 implementation
+
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.IOUtils;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (***********************************************************************************************************************
 
@@ -283,7 +290,34 @@ end;
 { TOptixCommandRefreshFiles.DoAction }
 procedure TOptixCommandRefreshFiles.DoAction();
 begin
-  TOptixEnumFiles.Enum(FPath, FList, FIsRoot, FAccess);
+  FParentFolders.Clear();
+  ///
+
+  FPath := TFileSystemHelper.GetFullPathName(TFileSystemHelper.ExpandPath(FPath));
+
+  TFileSystemHelper.PathExists(FPath);
+
+  TFileSystemHelper.TraverseDirectories(
+    FPath,
+    (
+      procedure (const ADirectoryName : String; const AAbsolutePath : String)
+      begin
+        var APath := IncludeTrailingPathDelimiter(AAbsolutePath);
+        var AIsRoot := SameText(APath, TPath.GetPathRoot(APath));
+        ///
+
+        var AFileAccess : TFileAccessAttributes := [];
+        if not AIsRoot then
+          AFileAccess := TFileSystemHelper.TryGetCurrentUserFileAccess(APath);
+
+        ///
+        FParentFolders.Add(TSimpleFolderInformation.Create(ADirectoryName, AAbsolutePath, AFileAccess, AIsRoot));
+      end
+    )
+  );
+
+  ///
+  TOptixEnumFiles.Enum(FPath, FFiles, FIsRoot, FAccess);
 end;
 
 { TOptixCommandRefreshFiles.DeSerialize }
@@ -292,10 +326,17 @@ begin
   inherited;
   ///
 
-  FList.Clear();
+  FParentFolders.Clear();
 
-  for var I := 0 to ASerializedObject.A['List'].Length -1 do
-    FList.Add(TFileInformation.Create(ASerializedObject.A['List'].O[I]));
+  for var I := 0 to ASerializedObject.A['ParentFolders'].Length -1 do
+    FParentFolders.Add(TSimpleFolderInformation.Create(ASerializedObject.A['ParentFolders'].O[I]));
+
+  ///
+
+  FFiles.Clear();
+
+  for var I := 0 to ASerializedObject.A['Files'].Length -1 do
+    FFiles.Add(TFileInformation.Create(ASerializedObject.A['Files'].O[I]));
 end;
 
 { TOptixCommandRefreshFiles.Serialize }
@@ -306,11 +347,21 @@ begin
 
   var AJsonArray := TSuperArray.Create();
 
-  for var AItem in FList do
+  for var AItem in FParentFolders do
     AJsonArray.Add(AItem.Serialize);
 
   ///
-  result.A['List'] := AJsonArray;
+  result.A['ParentFolders'] := AJsonArray;
+
+  ///
+
+  AJsonArray := TSuperArray.Create();
+
+  for var AItem in FFiles do
+    AJsonArray.Add(AItem.Serialize);
+
+  ///
+  result.A['Files'] := AJsonArray;
 end;
 
 { TOptixCommandRefreshFiles.Create }
@@ -319,7 +370,8 @@ begin
   inherited;
   ///
 
-  FList   := TObjectList<TFileInformation>.Create(True);
+  FParentFolders := TObjectList<TSimpleFolderInformation>.Create(True);
+  FFiles := TObjectList<TFileInformation>.Create(True);
 end;
 
 { TOptixCommandRefreshFiles.Create }
@@ -336,8 +388,11 @@ end;
 { TOptixCommandRefreshFiles.Destroy }
 destructor TOptixCommandRefreshFiles.Destroy();
 begin
-  if Assigned(FList) then
-    FreeAndNil(FList);
+  if Assigned(FFiles) then
+    FreeAndNil(FFiles);
+
+  if Assigned(FParentFolders) then
+    FreeAndNil(FParentFolders);
 
   ///
   inherited;

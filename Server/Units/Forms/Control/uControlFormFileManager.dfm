@@ -319,6 +319,7 @@ object ControlFormFileManager: TControlFormFileManager
       OnCompareNodes = VSTFoldersCompareNodes
       OnDblClick = VSTFoldersDblClick
       OnFocusChanged = VSTFoldersFocusChanged
+      OnFreeNode = VSTFoldersFreeNode
       OnGetText = VSTFoldersGetText
       OnGetImageIndex = VSTFoldersGetImageIndex
       OnGetNodeDataSize = VSTFoldersGetNodeDataSize
@@ -361,11 +362,6 @@ object ControlFormFileManager: TControlFormFileManager
       Caption = 'Show Folder Tree'
       Checked = True
       OnClick = ShowFolderTree1Click
-    end
-    object AutoExpandFolderTree1: TMenuItem
-      AutoCheck = True
-      Caption = 'Auto Expand Folder Tree'
-      Checked = True
     end
   end
   object PopupFoldersTree: TPopupMenu

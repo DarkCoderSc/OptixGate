@@ -42,15 +42,10 @@
 {******************************************************************************}
 
 (*
-  Current Release Changelog:
-    - N/A
-
   When Delphi 13 in Community Edition (Code Improvements):
     - Replace "not (x in y)" by "x not in y"
     - Ternary operator
 *)
-
-// TODO: Implement Generic Folder Tree code to File Manager Folder Tree (Actually a serious bug exists using the "Go To")
 
 unit uFormMain;
 
@@ -620,9 +615,9 @@ begin
   end;
 
   if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
-    Result := CompareObjectAssigmenet(pData1^.SessionInformation, pData2^.SessionInformation)
+    Result := CompareObjectAssignement(pData1^.SessionInformation, pData2^.SessionInformation)
   else if not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler) then
-    Result := CompareObjectAssigmenet(pData1^.Handler, pData2^.Handler)
+    Result := CompareObjectAssignement(pData1^.Handler, pData2^.Handler)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
