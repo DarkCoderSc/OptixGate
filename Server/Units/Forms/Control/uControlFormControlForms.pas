@@ -115,7 +115,8 @@ type
     function GetSelectedNodeGUID() : TGUID;
   public
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer); reintroduce;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String;
+      const pClientData : Pointer); reintroduce;
   end;
 
 var
@@ -162,7 +163,8 @@ begin
     pData := PTreeData(pNode.GetData);
 
   ///
-  self.Purge1.Visible := Assigned(pData) and not pData^.Special;
+  self.Show1.Visible  := Assigned(pData) and (pData^.FormInformation.State <> fcsWaitFree);
+  self.Purge1.Visible := Assigned(pData) and not pData^.Special and not (pData^.FormInformation.State = fcsWaitFree);
 end;
 
 function TControlFormControlForms.GetSelectedNodeGUID() : TGUID;
@@ -223,24 +225,14 @@ begin
     Exit();
   ///
 
-  var pNodeClientData := uFormMain.PTreeData(FClientData);
-  ///
-
-  if not Assigned(pNodeClientData^.Forms) then
-    Exit();
-
-  var AForm := GetFormByGUID(ATargetGUID);
-  if Assigned(AForm) then begin
-    AForm.PurgeRequest();
-
-    pNodeClientData.Forms.Remove(AForm);
-  end;
+  FormMain.PurgeControlForm(self, ATargetGUID);
 
   ///
   Refresh();
 end;
 
-constructor TControlFormControlForms.Create(AOwner : TComponent; const AUserIdentifier : String; const pClientData : Pointer);
+constructor TControlFormControlForms.Create(AOwner : TComponent; const AUserIdentifier : String;
+  const pClientData : Pointer);
 begin
   inherited Create(AOwner, AUserIdentifier, True);
   ///
@@ -272,10 +264,16 @@ begin
 
   Inc(FTick);
 
+  var AFormsToPurge := TList<TBaseFormControl>.Create();
+
   VST.BeginUpdate();
   try
     // -- Create or update forms -- //
     for var AForm in pClientNodeData^.Forms do begin
+      if AForm.FormInformation.State = fcsWaitFree then
+        AFormsToPurge.Add(AForm);
+      ///
+
       var pNode := GetNodeByGUID(AForm.FormInformation.GUID);
       if not Assigned(pNode) then
         pNode := VST.AddChild(nil);
@@ -311,7 +309,14 @@ begin
       ///
       FreeAndNil(ANodeArray);
     end;
+
+    ///
+    for var AForm in AFormsToPurge do
+      FormMain.PurgeControlForm(self, AForm.GUID);
   finally
+    if Assigned(AFormsToPurge) then
+      FreeAndNil(AFormsToPurge);
+
     VST.EndUpdate();
   end;
 
@@ -363,8 +368,9 @@ begin
   else if pData^.FormInformation.HasFocus then
     AColor := COLOR_LIST_LIMY
   else if pData^.FormInformation.State = fcsClosed then
-    AColor := COLOR_LIST_GRAY;
-
+    AColor := COLOR_LIST_GRAY
+  else if pData^.FormInformation.State = fcsWaitFree then
+    AColor := COLOR_LIST_RED;
 
   if AColor <> clNone then begin
     TargetCanvas.Brush.Color := AColor;

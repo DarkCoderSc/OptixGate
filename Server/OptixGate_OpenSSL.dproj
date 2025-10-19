@@ -4,7 +4,7 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">OptixGate_OpenSSL</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -258,6 +258,15 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
         <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ContentReader.pas"/>
+        <DCCReference Include="Units\Forms\Control\uControlFormContentReader.pas">
+            <Form>ControlFormContentReader</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\Control\uControlFormSetupContentReader.pas">
+            <Form>ControlFormSetupContentReader</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

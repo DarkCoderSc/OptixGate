@@ -135,7 +135,9 @@ type
     procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); override;
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture); reintroduce;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String;
+      const AClientArchitecture : TProcessorArchitecture;
+      const ARemoteProcessorArchitecture : TProcessorArchitecture); reintroduce;
   end;
 
 var
@@ -280,7 +282,8 @@ begin
   end;
 end;
 
-constructor TControlFormProcessManager.Create(AOwner : TComponent; const AUserIdentifier : String; const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
+constructor TControlFormProcessManager.Create(AOwner : TComponent; const AUserIdentifier : String;
+  const AClientArchitecture : TProcessorArchitecture; const ARemoteProcessorArchitecture : TProcessorArchitecture);
 begin
   inherited Create(AOwner, AUserIdentifier);
   ///

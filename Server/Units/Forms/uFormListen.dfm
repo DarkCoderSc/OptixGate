@@ -249,8 +249,8 @@ object FormListen: TFormListen
       ImageHeight = 0
       ImageIndex = 40
       ImageName = 'servers-connection'
-      ExplicitWidth = 32
-      ExplicitHeight = 32
+      ExplicitLeft = 10
+      ExplicitTop = 10
     end
   end
 end

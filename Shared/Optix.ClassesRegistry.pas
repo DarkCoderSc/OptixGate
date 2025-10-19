@@ -72,7 +72,7 @@ implementation
 uses
   Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
   Optix.Task.ProcessDump, Optix.Func.Commands.Base, Optix.Func.SessionInformation, Optix.Func.LogNotifier,
-  Optix.Func.Commands.Registry;
+  Optix.Func.Commands.Registry, Optix.Func.Commands.ContentReader;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TClassesRegistry.Create }
@@ -169,6 +169,13 @@ initialization
   // Registry Manager
   TClassesRegistry.RegisterClass(TOptixGetRegistryHives);
   TClassesRegistry.RegisterClass(TOptixRefreshRegistrySubKeys);
+
+  // File Readers
+  TClassesRegistry.RegisterClass(TOptixCommandCreateFileContentReader);
+  TClassesRegistry.RegisterClass(TOptixCommandCloseContentReader);
+  TClassesRegistry.RegisterClass(TOptixCommandBrowseContentReader);
+  TClassesRegistry.RegisterClass(TOptixCommandContentReaderFirstPage);
+  TClassesRegistry.RegisterClass(TOptixCommandContentReaderPage);
 
   (* Tasks *)
   TClassesRegistry.RegisterClass(TOptixTaskResult);

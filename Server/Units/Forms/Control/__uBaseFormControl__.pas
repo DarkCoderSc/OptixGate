@@ -63,7 +63,8 @@ type
     fcsUnset,
     fcsVisible,
     fcsMinimized,
-    fcsClosed
+    fcsClosed,
+    fcsWaitFree
   );
 
   TFormControlInformation = class(TPersistent)
@@ -80,6 +81,7 @@ type
     {@M}
     procedure SetHasFocus(const AValue : Boolean);
     procedure SetHasUnseenData(const AValue : Boolean);
+    procedure SetState(const AValue : TFormControlState);
   public
     {@C}
     constructor Create();
@@ -88,8 +90,7 @@ type
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property GUID                 : TGUID     read FGUID;
-    property CreatedTime          : TDateTime read FCreatedTime;
+    property CreatedTime : TDateTime read FCreatedTime;
 
     {@G/S}
     property LastReceivedDataTime : TDateTime         read FLastReceivedDataTime write FLastReceivedDataTime;
@@ -97,7 +98,8 @@ type
     property HasUnseenData        : Boolean           read FHasUnseenData        write SetHasUnseenData;
     property UserIdentifier       : String            read FUserIdentifier       write FUserIdentifier;
     property HasFocus             : Boolean           read FHasFocus             write SetHasFocus;
-    property State                : TFormControlState read FState                write FState;
+    property State                : TFormControlState read FState                write SetState;
+    property GUID                 : TGUID             read FGUID                 write FGUID;
   end;
 
   TBaseFormControl = class(TForm)
@@ -118,10 +120,14 @@ type
 
     procedure RegisterNewDialogAndShow(const ADialog : TForm);
 
-    function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
-    function RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; virtual;
+    function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = '';
+      const AContext : String = '') : TGUID; virtual;
+    function RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = '';
+      const AContext : String = '') : TGUID; virtual;
 
     procedure DoShow(); override;
+    procedure DoClose(var Action: TCloseAction); override;
+
     procedure CreateParams(var Params: TCreateParams); override;
 
     procedure OnFirstShow(); virtual;
@@ -136,9 +142,11 @@ type
     procedure SendCommand(const ACommand : TOptixCommand);
     procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); virtual;
     procedure PurgeRequest(); virtual;
+    procedure OverrideWindowGUID(const ANewGUID : TGUID);
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); reintroduce; virtual;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String;
+      const ASpecialForm : Boolean = False); reintroduce; virtual;
     destructor Destroy(); override;
 
     {@G}
@@ -171,6 +179,7 @@ begin
     fcsVisible   : result := 'Visible';
     fcsMinimized : result := 'Minimized';
     fcsClosed    : result := 'Closed';
+    fcsWaitFree  : result := 'Wait Free';
 
     else
       result := 'Unset';
@@ -182,10 +191,10 @@ end;
 { TFormControlInformation.Create }
 constructor TFormControlInformation.Create();
 begin
-  inherited;
+  inherited Create();
   ///
 
-  FGUID            := TGUID.NewGuid();
+  FGUID            := TGUID.NewGuid;
   FUserIdentifier  := '';
   FCreatedTime     := Now;
   FHasReceivedData := False;
@@ -228,8 +237,19 @@ begin
     FHasUnseenData := AValue;
 end;
 
+{ TFormControlInformation.SetState }
+procedure TFormControlInformation.SetState(const AValue : TFormControlState);
+begin
+  if (FState = AValue) or (FState = fcsWaitFree) then
+    Exit();
+
+  ///
+  FState := AValue;
+end;
+
 (* TBaseFormControl *)
 
+{ TBaseFormControl.RegisterNewDialogAndShow }
 procedure TBaseFormControl.RegisterNewDialogAndShow(const ADialog : TForm);
 begin
   if Assigned(ADialog) and Assigned(FDialogs) then begin
@@ -240,6 +260,7 @@ begin
   end;
 end;
 
+{ TBaseFormControl.GetContextDescription }
 function TBaseFormControl.GetContextDescription() : String;
 begin
   result := '';
@@ -285,6 +306,20 @@ begin
   end;
 end;
 
+{ TBaseFormControl.DoClose }
+procedure TBaseFormControl.DoClose(var Action: TCloseAction);
+begin
+  inherited;
+  ///
+
+  if Action = caFree then begin
+    Action := caHide;
+
+    ///
+    FFormInformation.State := fcsWaitFree;
+  end;
+end;
+
 { TBaseFormControl.OnFirstShow }
 procedure TBaseFormControl.OnFirstShow();
 begin
@@ -292,7 +327,8 @@ begin
 end;
 
 { TBaseFormControl.Create }
-constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
+constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String;
+  const ASpecialForm : Boolean = False);
 begin
   inherited Create(AOwner);
   ///
@@ -446,6 +482,12 @@ end;
 procedure TBaseFormControl.PurgeRequest();
 begin
   ///
+end;
+
+{ TBaseFormControl.OverrideWindowGUID }
+procedure TBaseFormControl.OverrideWindowGUID(const ANewGUID : TGUID);
+begin
+  FFormInformation.GUID := ANewGUID;
 end;
 
 end.

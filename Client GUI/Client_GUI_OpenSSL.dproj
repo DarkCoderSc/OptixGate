@@ -4,7 +4,7 @@
         <ProjectVersion>20.3</ProjectVersion>
         <FrameworkType>VCL</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectName Condition="'$(ProjectName)'==''">Client_GUI_OpenSSL</ProjectName>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -210,6 +210,7 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
         <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ContentReader.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

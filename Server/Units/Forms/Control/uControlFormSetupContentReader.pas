@@ -41,66 +41,108 @@
 {                                                                              }
 {******************************************************************************}
 
-program Client;
+unit uControlFormSetupContentReader;
 
-{$WARN DUPLICATE_CTOR_DTOR OFF}
+interface
 
-{$IFDEF DEBUG}
-  {$APPTYPE GUI}
-{$ELSE}
-  {$APPTYPE CONSOLE}
-{$ENDIF}
-
-{$R *.res}
-
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils,
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
-  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.FileSystem.Enum in '..\Shared\Optix.FileSystem.Enum.pas',
-  Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
-  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
-  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
-  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
-  Optix.Client.Entrypoint in 'Units\Optix.Client.Entrypoint.pas',
-  Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
-  Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
-  Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
-  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
-  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas',
-  Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
-  Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
-  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
-  Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas';
+  System.SysUtils, System.Variants, System.Classes,
 
-begin
-  IsMultiThread := True;
-  try
-    ClientEntrypoint();
-  except
-    on E: Exception do
-      Writeln(E.ClassName, ': ', E.Message);
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+
+  __uBaseFormControl__, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
+type
+  TControlFormSetupContentReader = class(TBaseFormControl)
+    PanelClient: TPanel;
+    Label1: TLabel;
+    PanelLeft: TPanel;
+    Image: TVirtualImage;
+    Label2: TLabel;
+    EditPath: TEdit;
+    SpinPageSize: TSpinEdit;
+    PanelBottom: TPanel;
+    ButtonStart: TButton;
+    ButtonCancel: TButton;
+    procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure ButtonStartClick(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+  private
+    {@M}
+    procedure DoResize();
+  public
+    { Public declarations }
   end;
+
+var
+  ControlFormSetupContentReader: TControlFormSetupContentReader;
+
+implementation
+
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.Func.Commands.ContentReader;
+// ---------------------------------------------------------------------------------------------------------------------
+
+{$R *.dfm}
+
+procedure TControlFormSetupContentReader.ButtonCancelClick(Sender: TObject);
+begin
+  Close();
+end;
+
+procedure TControlFormSetupContentReader.ButtonStartClick(Sender: TObject);
+begin
+  SendCommand(TOptixCommandCreateFileContentReader.Create(EditPath.Text, SpinPageSize.Value));
+
+  ///
+  Close();
+end;
+
+procedure TControlFormSetupContentReader.DoResize();
+begin
+  ButtonStart.Top := (PanelBottom.Height div 2) - (ButtonStart.Height div 2);
+  ButtonCancel.Top  := ButtonStart.Top;
+
+  ButtonStart.Left := PanelBottom.Width - ButtonStart.Width - 8;
+  ButtonCancel.Left  := ButtonStart.Left - ButtonStart.Width - 8;
+
+  var ANewHeight := PanelBottom.Height;
+
+  Inc(ANewHeight, SpinPageSize.Top + SpinPageSize.Height + 8);
+
+  ClientHeight := ANewHeight;
+end;
+
+procedure TControlFormSetupContentReader.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+end;
+
+procedure TControlFormSetupContentReader.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    13 : ButtonStartClick(ButtonStart);
+    27 : ButtonCancelClick(ButtonCancel);
+  end;
+end;
+
+procedure TControlFormSetupContentReader.FormResize(Sender: TObject);
+begin
+  DoResize();
+end;
+
+procedure TControlFormSetupContentReader.FormShow(Sender: TObject);
+begin
+  EditPath.SetFocus;
+
+  DoResize();
+end;
+
 end.

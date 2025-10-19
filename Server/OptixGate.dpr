@@ -106,7 +106,10 @@ uses
   Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
   Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
   Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
-  uControlFormRegistryManager in 'Units\Forms\Control\uControlFormRegistryManager.pas' {ControlFormRegistryManager};
+  uControlFormRegistryManager in 'Units\Forms\Control\uControlFormRegistryManager.pas' {ControlFormRegistryManager},
+  Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas',
+  uControlFormContentReader in 'Units\Forms\Control\uControlFormContentReader.pas' {ControlFormContentReader},
+  uControlFormSetupContentReader in 'Units\Forms\Control\uControlFormSetupContentReader.pas' {ControlFormSetupContentReader};
 
 {$R *.res}
 {$R data.res}

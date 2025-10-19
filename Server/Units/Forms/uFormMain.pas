@@ -94,11 +94,7 @@ type
     ProcessManager1: TMenuItem;
     N1: TMenuItem;
     FileManager1: TMenuItem;
-    SearchForFiles1: TMenuItem;
-    N2: TMenuItem;
-    ServiceManager1: TMenuItem;
     RegistryManager1: TMenuItem;
-    RegistrySearch1: TMenuItem;
     N3: TMenuItem;
     RemoteShell1: TMenuItem;
     N4: TMenuItem;
@@ -110,7 +106,6 @@ type
     Logs1: TMenuItem;
     ControlForms1: TMenuItem;
     ImageSystem: TImageList;
-    WMIConsole1: TMenuItem;
     Debug1: TMenuItem;
     hreads1: TMenuItem;
     asks1: TMenuItem;
@@ -118,6 +113,12 @@ type
     Stores1: TMenuItem;
     Certificates1: TMenuItem;
     rustedCertificates1: TMenuItem;
+    FileSystem1: TMenuItem;
+    System1: TMenuItem;
+    N6: TMenuItem;
+    N7: TMenuItem;
+    N2: TMenuItem;
+    ContentReader1: TMenuItem;
     procedure Close1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -157,6 +158,7 @@ type
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
     procedure RegistryManager1Click(Sender: TObject);
+    procedure ContentReader1Click(Sender: TObject);
   private
     FFileInfo : TSHFileInfo;
 
@@ -167,13 +169,15 @@ type
     function GetNodeByHandlerId(const AHandlerId : TGUID) : PVirtualNode;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
     procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
-    procedure CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
+    function CreateNewControlForm(const pNode : PVirtualNode;
+      const AFormClass : TBaseFormControlClass) : TBaseFormControl;
   public
     {@M}
     function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
     function GetControlForm(const pNode : PVirtualNode; const AWindowGUID : TGUID) : TBaseFormControl; overload;
     function GetControlForm(const AControlForm : TBaseFormControl; const AClass : TClass) : TBaseFormControl; overload;
     function GetControlForms(const ASourceControlForm : TBaseFormControl; const AClassFamily : TClass) : TList<TBaseFormControl>;
+    procedure PurgeControlForm(const AControlForm : TBaseFormControl; const AWindowGUID : TGUID);
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
@@ -195,11 +199,11 @@ uses
 
   uControlFormProcessManager, uControlFormLogs, uFormAbout, uControlFormTransfers, uControlFormControlForms,
   uControlFormFileManager, uFormDebugThreads, uControlFormTasks, uControlFormRemoteShell, uFormListen, uFormServers,
-  uControlFormRegistryManager
+  uControlFormRegistryManager, uControlFormSetupContentReader, uControlFormContentReader
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
   Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
-  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.ClassesRegistry
+  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.ClassesRegistry, Optix.Func.Commands.ContentReader
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -230,6 +234,26 @@ begin
 end;
 
 (* TFormMain *)
+
+procedure TFormMain.PurgeControlForm(const AControlForm : TBaseFormControl; const AWindowGUID : TGUID);
+begin
+  var pNode := GetNodeByControlForm(AControlForm);
+  if not Assigned(pNode) then
+    Exit();
+  ///
+
+  var pData := PTreeData(pNode.GetData);
+
+  if not Assigned(pData^.Forms) then
+    Exit();
+
+  var AForm := GetControlForm(pNode, AWindowGUID);
+  if Assigned(AForm) then begin
+    AForm.PurgeRequest();
+
+    pData.Forms.Remove(AForm);
+  end;
+end;
 
 function TFormMain.GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl;
 begin
@@ -315,6 +339,11 @@ begin
     if AForm is AClassFamily then
       result.Add(AForm);
   end;
+end;
+
+procedure TFormMain.ContentReader1Click(Sender: TObject);
+begin
+  CreateNewControlForm(VST.FocusedNode, TControlFormSetupContentReader);
 end;
 
 function TFormMain.ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
@@ -412,8 +441,12 @@ begin
     TOptixVCLHelper.ShowForm(AForm);
 end;
 
-procedure TFormMain.CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
+function TFormMain.CreateNewControlForm(const pNode : PVirtualNode;
+  const AFormClass : TBaseFormControlClass) : TBaseFormControl;
 begin
+  result := nil;
+  ///
+
   if pNode = nil then
     Exit();
 
@@ -423,6 +456,8 @@ begin
 
   var AForm := AFormClass.Create(self, pData^.ToString);
   pData^.Forms.Add(AForm);
+
+  result := AForm;
 
   ///
   TOptixVCLHelper.ShowForm(AForm);
@@ -696,14 +731,13 @@ begin
   var AVisible := VST.FocusedNode <> nil;
 
   erminate1.Visible        := AVisible;
-  ProcessManager1.Visible  := AVisible;
+  System1.Visible          := AVisible;
+  FileSystem1.Visible      := AVisible;
   Logs1.Visible            := AVisible;
-  FileManager1.Visible     := AVisible;
   ControlForms1.Visible    := AVisible;
   transfers1.Visible       := AVisible;
   asks1.Visible            := AVisible;
   RemoteShell1.Visible     := AVisible;
-  RegistryManager1.Visible := AVisible;
 end;
 
 procedure TFormMain.ProcessManager1Click(Sender: TObject);
@@ -748,6 +782,15 @@ begin
         if not Assigned(pNode) then
           Exit();
         ///
+
+        // -------------------------------------------------------------------------------------------------------------
+        if AOptixPacket is TOptixCommandContentReaderFirstPage then begin
+          var AForm := CreateNewControlForm(pNode, TControlFormContentReader);
+
+          ///
+          AForm.OverrideWindowGUID(AOptixPacket.WindowGUID);
+        end;
+        // -------------------------------------------------------------------------------------------------------------
 
         if AWindowGUID.IsEmpty then begin
           // -----------------------------------------------------------------------------------------------------------

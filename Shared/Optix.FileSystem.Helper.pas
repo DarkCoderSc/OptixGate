@@ -95,6 +95,30 @@ type
     class procedure PathExists(const APath : String);
   end;
 
+  TContentReader = class
+  private
+    FPageSize     : UInt64;
+    FFileHandle   : THandle;
+    FFileSize     : UInt64;
+    FFilePath     : String;
+
+    {@M}
+    function GetPageCount() : UInt64;
+  public
+    {@C}
+    constructor Create(const AFilePath : String; const APageSize : UInt64);
+    destructor Destroy(); override;
+
+    {@M}
+    procedure ReadPage(APageNumber : UInt64; var pBuffer : Pointer; var ABufferSize : UInt64);
+
+    {@G}
+    property PageSize  : UInt64  read FPageSize;
+    property FileSize  : UInt64  read FFileSize;
+    property PageCount : UInt64  read GetPageCount;
+    property FilePath  : String  read FFilePath;
+  end;
+
   function DriveTypeToString(const AValue : TDriveType) : String;
   function AccessSetToString(const AValue : TFileAccessAttributes) : String;
   function StringToAccessSet(const AValue : String) : TFileAccessAttributes;
@@ -104,7 +128,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.IOUtils, System.StrUtils,
+  System.SysUtils, System.IOUtils, System.StrUtils, System.Math,
 
   Winapi.AccCtrl, Winapi.AclAPI, Winapi.Windows, Winapi.ShellAPI,
 
@@ -568,6 +592,88 @@ class procedure TFileSystemHelper.PathExists(const APath : String);
 begin
   if GetFileAttributesW(PWideChar(APath)) = INVALID_FILE_ATTRIBUTES then
     raise EWindowsException.Create('GetFileAttributesW');
+end;
+
+(* TContentReader *)
+
+{ TContentReader.Create }
+constructor TContentReader.Create(const AFilePath : String; const APageSize : UInt64);
+begin
+  inherited Create();
+  ///
+
+  FPageSize := APageSize;
+
+  FFileSize := 0;
+  FFilePath := AFilePath;
+
+  FFileHandle := CreateFileW(
+    PWideChar(FFilePath),
+    GENERIC_READ,
+    FILE_SHARE_READ,
+    nil,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    0
+  );
+  if FFileHandle = INVALID_HANDLE_VALUE then
+    raise EWindowsException.Create('CreateFileW');
+  ///
+
+  FFileSize := TFileSystemHelper.GetFileSize(FFilePath);
+end;
+
+{ TContentReader.Destroy }
+destructor TContentReader.Destroy();
+begin
+  if FFileHandle <> INVALID_HANDLE_VALUE then
+    CloseHandle(FFileHandle);
+
+  ///
+  inherited Destroy();
+end;
+
+{ TContentReader.GetPageCount }
+function TContentReader.GetPageCount() : UInt64;
+begin
+  result := 0;
+  ///
+
+  if FFileHandle = INVALID_HANDLE_VALUE then
+    Exit();
+
+  ///
+  result := ceil(FFileSize div FPageSize);
+end;
+
+{ TContentReader.ReadPage }
+procedure TContentReader.ReadPage(APageNumber : UInt64; var pBuffer : Pointer; var ABufferSize : UInt64);
+begin
+  pBuffer := nil;
+  ABufferSize := 0;
+  ///
+
+  var APageCount := GetPageCount;
+  ///
+
+  if APageNumber > APageCount  then
+    APageNumber := APageCount;
+
+  var AOffset := UInt64(FPageSize * APageNumber);
+  var AHighOffset := DWORD((AOffset shr 32) and $FFFFFFFF);
+
+  if SetFilePointer(FFileHandle, DWORD(AOffset and $FFFFFFFF), @AHighOffset, FILE_BEGIN) = INVALID_SET_FILE_POINTER then
+    raise EWindowsException.Create('SetFilePointer');
+
+  GetMem(pBuffer, FPageSize);
+
+  var ABytesRead : DWORD;
+  if not ReadFile(FFileHandle, PByte(pBuffer)^, FPageSize, ABytesRead, nil) then
+    raise EWindowsException.Create('ReadFile');
+
+  ABufferSize := ABytesRead;
+  if ABufferSize < FPageSize then
+    ReallocMem(pBuffer, ABufferSize);
 end;
 
 end.

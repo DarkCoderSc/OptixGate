@@ -198,6 +198,7 @@
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
         <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
+        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ContentReader.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

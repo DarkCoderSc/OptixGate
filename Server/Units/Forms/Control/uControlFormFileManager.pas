@@ -194,7 +194,8 @@ type
     procedure RegisterNewFile(const APath : String; const AFileInformation : TFileInformation);
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); override;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String;
+      const ASpecialForm : Boolean = False); override;
   end;
 
 var
@@ -431,7 +432,8 @@ begin
   VSTFolders.Refresh();
 end;
 
-constructor TControlFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
+constructor TControlFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String;
+  const ASpecialForm : Boolean = False);
 begin
   inherited;
   ///
