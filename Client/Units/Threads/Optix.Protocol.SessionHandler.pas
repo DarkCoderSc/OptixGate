@@ -109,7 +109,7 @@ type
     procedure StdinToShellInstance(const ACommand : TOptixStdinShellInstance);
 
     procedure BrowseContentReaderPage(const AReaderId : TGUID; const APageNumber : Int64;
-      const AFirstPage : Boolean = False);
+      const ANewPageSize : UInt64 = 0; const AFirstPage : Boolean = False);
     procedure CreateAndRegisterNewContentReader(const ACommand : TOptixCommandCreateFileContentReader);
 
     procedure Connected(); override;
@@ -360,12 +360,15 @@ end;
 
 { TOptixSessionHandlerThread.BrowseContentReaderPage }
 procedure TOptixSessionHandlerThread.BrowseContentReaderPage(const AReaderId : TGUID; const APageNumber : Int64;
-  const AFirstPage : Boolean = False);
+  const ANewPageSize : UInt64 = 0; const AFirstPage : Boolean = False);
 begin
   var AReader := TContentReader(nil);
   if not FContentReaders.TryGetValue(AReaderId, AReader) then
     Exit();
   ///
+
+  if ANewPageSize > 0 then
+    AReader.PageSize := ANewPageSize;
 
   var ACommandClass : TOptixCommandContentReaderPageClass;
 
@@ -392,7 +395,7 @@ begin
 
   FContentReaders.Add(AReaderId, AReader);
 
-  BrowseContentReaderPage(AReaderId, 0, True);
+  BrowseContentReaderPage(AReaderId, 0, 0, True);
 end;
 
 { TOptixSessionHandlerThread.Connected }
@@ -499,7 +502,8 @@ begin
       else if AOptixPacket is TOptixCommandBrowseContentReader then
         BrowseContentReaderPage(
           AOptixPacket.WindowGUID,
-          TOptixCommandBrowseContentReader(AOptixPacket).PageNumber
+          TOptixCommandBrowseContentReader(AOptixPacket).PageNumber,
+          TOptixCommandBrowseContentReader(AOptixPacket).PageSize
         )
       // Simple Commands -----------------------------------------------------------------------------------------------
       else if AOptixPacket is TOptixSimpleCommand then begin

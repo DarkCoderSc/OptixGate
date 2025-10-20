@@ -61,7 +61,7 @@ type
     Label1: TLabel;
     PanelLeft: TPanel;
     Image: TVirtualImage;
-    Label2: TLabel;
+    LabelPageSize: TLabel;
     EditPath: TEdit;
     SpinPageSize: TSpinEdit;
     PanelBottom: TPanel;
@@ -73,6 +73,7 @@ type
     procedure ButtonStartClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
   private
     {@M}
     procedure DoResize();
@@ -87,7 +88,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.Func.Commands.ContentReader;
+  Optix.Func.Commands.ContentReader, Optix.FileSystem.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -99,7 +100,14 @@ end;
 
 procedure TControlFormSetupContentReader.ButtonStartClick(Sender: TObject);
 begin
-  SendCommand(TOptixCommandCreateFileContentReader.Create(EditPath.Text, SpinPageSize.Value));
+  if String.IsNullOrWhiteSpace(EditPath.Text) then begin
+    EditPath.SetFocus;
+
+    ///
+    raise Exception.Create('You must enter a valid file path.');
+  end;
+
+  StreamFileContent(EditPath.Text, SpinPageSize.Value);
 
   ///
   Close();
@@ -123,6 +131,18 @@ end;
 procedure TControlFormSetupContentReader.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
+end;
+
+procedure TControlFormSetupContentReader.FormCreate(Sender: TObject);
+begin
+  LabelPageSize.Caption := Format(LabelPageSize.Caption, [
+    TContentReader.MIN_PAGE_SIZE,
+    TContentReader.MAX_PAGE_SIZE
+  ]);
+
+  ///
+  SpinPageSize.MinValue := TContentReader.MIN_PAGE_SIZE;
+  SpinPageSize.MaxValue := TContentReader.MAX_PAGE_SIZE;
 end;
 
 procedure TControlFormSetupContentReader.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

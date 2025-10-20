@@ -125,6 +125,8 @@ type
     function RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = '';
       const AContext : String = '') : TGUID; virtual;
 
+    procedure StreamFileContent(const AFilePath : String; const APageSize : UInt64 = 1024);
+
     procedure DoShow(); override;
     procedure DoClose(var Action: TCloseAction); override;
 
@@ -167,6 +169,8 @@ uses
   System.SysUtils,
 
   Winapi.Windows,
+
+  Optix.Func.Commands.ContentReader,
 
   uFormMain, uControlFormTransfers;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -380,6 +384,16 @@ begin
   var AForm := FormMain.GetControlForm(self, TControlFormTransfers);
   if Assigned(AForm) then
     AForm.RequestFileUpload(ALocalFilePath, ARemoteFilePath, AContext);
+end;
+
+{ TBaseFormControl.StreamFileContent }
+procedure TBaseFormControl.StreamFileContent(const AFilePath : String; const APageSize : UInt64 = 1024);
+begin
+  if String.IsNullOrWhiteSpace(AFilePath) then
+    Exit();
+  ///
+
+  SendCommand(TOptixCommandCreateFileContentReader.Create(AFilePath, APageSize));
 end;
 
 { TBaseFormControl.CMVisibleChanged }

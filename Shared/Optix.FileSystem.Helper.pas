@@ -104,6 +104,11 @@ type
 
     {@M}
     function GetPageCount() : UInt64;
+    procedure SetPageSize(AValue : UInt64);
+  public
+    const
+      MIN_PAGE_SIZE = 128;
+      MAX_PAGE_SIZE = 409600;
   public
     {@C}
     constructor Create(const AFilePath : String; const APageSize : UInt64);
@@ -113,10 +118,12 @@ type
     procedure ReadPage(APageNumber : UInt64; var pBuffer : Pointer; var ABufferSize : UInt64);
 
     {@G}
-    property PageSize  : UInt64  read FPageSize;
     property FileSize  : UInt64  read FFileSize;
     property PageCount : UInt64  read GetPageCount;
     property FilePath  : String  read FFilePath;
+
+    {@S}
+    property PageSize : UInt64 read FPageSize write SetPageSize;
   end;
 
   function DriveTypeToString(const AValue : TDriveType) : String;
@@ -602,8 +609,6 @@ begin
   inherited Create();
   ///
 
-  FPageSize := APageSize;
-
   FFileSize := 0;
   FFilePath := AFilePath;
 
@@ -621,6 +626,7 @@ begin
   ///
 
   FFileSize := TFileSystemHelper.GetFileSize(FFilePath);
+  SetPageSize(APageSize);
 end;
 
 { TContentReader.Destroy }
@@ -643,7 +649,22 @@ begin
     Exit();
 
   ///
-  result := ceil(FFileSize div FPageSize);
+  result := ceil(FFileSize / FPageSize);
+end;
+
+{ TContentReader.SetPageSize }
+procedure TContentReader.SetPageSize(AValue : UInt64);
+begin
+  if AValue < MIN_PAGE_SIZE then
+    AValue := MIN_PAGE_SIZE
+  else if AValue > MAX_PAGE_SIZE then
+    AValue := MAX_PAGE_SIZE;
+
+  if (FFileSize > 0) and (AValue > FFileSize) then
+    AValue := FFileSize;
+
+  ///
+  FPageSize := AValue;
 end;
 
 { TContentReader.ReadPage }
@@ -653,7 +674,7 @@ begin
   ABufferSize := 0;
   ///
 
-  var APageCount := GetPageCount;
+  var APageCount := GetPageCount();
   ///
 
   if APageNumber > APageCount  then

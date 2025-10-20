@@ -109,9 +109,10 @@ type
     FClientData : Pointer;
 
     {@M}
-    procedure Refresh(const AStartRefreshTimer : Boolean = False);
+    procedure Refresh(const AInitializeRefresh : Boolean = False);
     function GetNodeByGUID(const AGUID : TGUID) : PVirtualNode;
     function GetFormByGUID(const AGUID : TGUID) : TBaseFormControl;
+    function GetSelectedNodeState() : TFormControlState;
     function GetSelectedNodeGUID() : TGUID;
   public
     {@C}
@@ -178,6 +179,23 @@ begin
     Exit();
 
   result := pData^.FormInformation.GUID;
+end;
+
+function TControlFormControlForms.GetSelectedNodeState() : TFormControlState;
+begin
+  result := fcsUnset;
+  ///
+
+  if VST.FocusedNode = nil then
+    Exit();
+  ///
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if not Assigned(pData) or not Assigned(pData^.FormInformation) then
+    Exit();
+  ///
+
+  result := pData^.FormInformation.State;
 end;
 
 function TControlFormControlForms.GetFormByGUID(const AGUID : TGUID) : TBaseFormControl;
@@ -252,7 +270,7 @@ begin
   Refresh(True);
 end;
 
-procedure TControlFormControlForms.Refresh(const AStartRefreshTimer : Boolean = False);
+procedure TControlFormControlForms.Refresh(const AInitializeRefresh : Boolean = False);
 begin
   var pClientNodeData := uFormMain.PTreeData(FClientData);
 
@@ -270,8 +288,13 @@ begin
   try
     // -- Create or update forms -- //
     for var AForm in pClientNodeData^.Forms do begin
-      if AForm.FormInformation.State = fcsWaitFree then
+      if AForm.FormInformation.State = fcsWaitFree then begin
         AFormsToPurge.Add(AForm);
+
+        ///
+        if AInitializeRefresh then
+          continue;
+      end;
       ///
 
       var pNode := GetNodeByGUID(AForm.FormInformation.GUID);
@@ -321,7 +344,7 @@ begin
   end;
 
   ///
-  if AStartRefreshTimer then
+  if AInitializeRefresh then
     TimerRefresh.Enabled := True;
 end;
 
@@ -332,6 +355,10 @@ end;
 
 procedure TControlFormControlForms.Show1Click(Sender: TObject);
 begin
+  if GetSelectedNodeState() = fcsWaitFree then
+    Exit();
+  ///
+
   var ATargetGUID := GetSelectedNodeGUID();
   if ATargetGUID.IsEmpty then
     Exit();

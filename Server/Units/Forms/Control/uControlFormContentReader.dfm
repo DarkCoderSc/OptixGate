@@ -11,6 +11,7 @@ object ControlFormContentReader: TControlFormContentReader
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poOwnerFormCenter
+  ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
   TextHeight = 15
@@ -27,6 +28,8 @@ object ControlFormContentReader: TControlFormContentReader
     ActivePage = TabHexTable
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 806
+    ExplicitHeight = 530
     object TabHexTable: TTabSheet
       Caption = 'Hex Table (Beta)'
       ImageIndex = 2
@@ -61,6 +64,7 @@ object ControlFormContentReader: TControlFormContentReader
         TabOrder = 0
         TreeOptions.PaintOptions = [toHideFocusRect, toHideSelection, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toAlwaysHideSelection]
         TreeOptions.SelectionOptions = [toDisableDrawSelection]
+        OnBeforeCellPaint = VSTBeforeCellPaint
         OnGetText = VSTGetText
         Touch.InteractiveGestures = [igPan, igPressAndTap]
         Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
@@ -192,7 +196,6 @@ object ControlFormContentReader: TControlFormContentReader
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitTop = 6
       end
     end
     object TabStrings: TTabSheet
@@ -215,7 +218,6 @@ object ControlFormContentReader: TControlFormContentReader
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitTop = 6
       end
     end
   end
@@ -232,13 +234,14 @@ object ControlFormContentReader: TControlFormContentReader
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitWidth = 606
+    ExplicitWidth = 806
     object ButtonBack: TSpeedButton
       AlignWithMargins = True
       Left = 36
       Top = 4
       Width = 30
       Height = 22
+      Hint = 'Browse Previous Page'
       Margins.Left = 2
       Margins.Top = 4
       Margins.Right = 2
@@ -257,6 +260,7 @@ object ControlFormContentReader: TControlFormContentReader
       Top = 4
       Width = 30
       Height = 22
+      Hint = 'Browse Next Page'
       Margins.Left = 2
       Margins.Top = 4
       Margins.Right = 2
@@ -274,6 +278,7 @@ object ControlFormContentReader: TControlFormContentReader
       Top = 4
       Width = 30
       Height = 22
+      Hint = 'Download File'
       Margins.Left = 2
       Margins.Top = 4
       Margins.Right = 2
@@ -292,6 +297,7 @@ object ControlFormContentReader: TControlFormContentReader
       Top = 4
       Width = 30
       Height = 22
+      Hint = 'Go To Page'
       Margins.Left = 2
       Margins.Top = 4
       Margins.Right = 2
@@ -302,6 +308,24 @@ object ControlFormContentReader: TControlFormContentReader
       Images = FormMain.VirtualImageList
       OnClick = ButtonBrowsePageClick
       ExplicitLeft = 198
+    end
+    object ButtonUpdatePageSize: TSpeedButton
+      AlignWithMargins = True
+      Left = 138
+      Top = 4
+      Width = 30
+      Height = 22
+      Hint = 'Update Page Size'
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 73
+      ImageName = 'document-update'
+      Images = FormMain.VirtualImageList
+      OnClick = ButtonUpdatePageSizeClick
+      ExplicitLeft = 184
     end
   end
   object StatusBar: TStatusBar
@@ -317,6 +341,8 @@ object ControlFormContentReader: TControlFormContentReader
         Alignment = taRightJustify
         Width = 50
       end>
+    ExplicitTop = 568
+    ExplicitWidth = 814
   end
   object PopupRichHex: TPopupMenu
     Left = 332

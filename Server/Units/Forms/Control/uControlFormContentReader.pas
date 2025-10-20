@@ -61,8 +61,6 @@ uses
   Optix.Protocol.Packet, Optix.Func.Commands.ContentReader;
 // ---------------------------------------------------------------------------------------------------------------------
 
-// TODO: Update Page Size
-
 type
   TControlFormContentReader = class(TBaseFormControl)
     Pages: TPageControl;
@@ -93,6 +91,7 @@ type
     MinimumLength1: TMenuItem;
     NoMinimum1: TMenuItem;
     Custom1: TMenuItem;
+    ButtonUpdatePageSize: TSpeedButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ButtonDownloadClick(Sender: TObject);
@@ -110,6 +109,9 @@ type
     procedure NoMinimum1Click(Sender: TObject);
     procedure PopupRichStringsPopup(Sender: TObject);
     procedure Custom1Click(Sender: TObject);
+    procedure ButtonUpdatePageSizeClick(Sender: TObject);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
     FCurrentPage              : TOptixCommandContentReaderPage;
     FMinExtractedStringLength : Cardinal;
@@ -249,7 +251,7 @@ begin
   var AValue : String;
 
   if not InputQuery('Browse Page', Format('Enter page number(1 to %d)', [
-    FCurrentPage.PageCount +1
+    FCurrentPage.PageCount
   ]), AValue) then
     Exit();
   ///
@@ -260,7 +262,9 @@ begin
   ///
 
   if APageNumber = 0 then
-    Inc(APageNumber);
+    Inc(APageNumber)
+  else if APageNumber > FCurrentPage.PageCount then
+    APageNumber := FCurrentPage.PageCount;
 
   BrowsePage(APageNumber -1);
 end;
@@ -275,6 +279,29 @@ procedure TControlFormContentReader.ButtonForwardClick(Sender: TObject);
 begin
   if Assigned(FCurrentPage) then
     BrowsePage(FCurrentPage.PageNumber +1);
+end;
+
+procedure TControlFormContentReader.ButtonUpdatePageSizeClick(Sender: TObject);
+begin
+  var AValue := '';
+  if not InputQuery(
+    'Update Page Size',
+    Format('New page size (min: %d):', [TContentReader.MIN_PAGE_SIZE]),
+    AValue) then
+      Exit();
+  ///
+
+  var APageSize : UInt64;
+  if not TryStrToUInt64(AValue, APageSize) then
+    Exit();
+
+  if APageSize < TContentReader.MIN_PAGE_SIZE then
+    APageSize := TContentReader.MIN_PAGE_SIZE
+  else if APageSize > TContentReader.MAX_PAGE_SIZE then
+    APageSize := TContentReader.MAX_PAGE_SIZE;
+
+  ///
+  SendCommand(TOptixCommandBrowseContentReader.Create(0, APageSize));
 end;
 
 procedure TControlFormContentReader.Copy1Click(Sender: TObject);
@@ -335,15 +362,16 @@ begin
     Exit();
   ///
 
-  ButtonDownload.Enabled   := not String.IsNullOrWhiteSpace(FCurrentPage.FilePath);
-  ButtonBack.Enabled       := FCurrentPage.PageNumber > 0;
-  ButtonForward.Enabled    := FCurrentPage.PageNumber < FCurrentPage.PageCount;
-  ButtonBrowsePage.Enabled := FCurrentPage.PageCount > 0;
+  ButtonDownload.Enabled       := not String.IsNullOrWhiteSpace(FCurrentPage.FilePath);
+  ButtonBack.Enabled           := FCurrentPage.PageNumber > 0;
+  ButtonForward.Enabled        := FCurrentPage.PageNumber < FCurrentPage.PageCount -1;
+  ButtonBrowsePage.Enabled     := FCurrentPage.PageCount > 1;
+  ButtonUpdatePageSize.Enabled := True;
   ///
 
   StatusBar.Panels.Items[0].Text := Format('Page: %d / %d', [
     FCurrentPage.PageNumber +1,
-    FCurrentPage.PageCount +1
+    FCurrentPage.PageCount
   ]);
 
   StatusBar.Panels.Items[1].Text := Format('Data Size: %s (Page Size: %s), Total Size: %s', [
@@ -354,6 +382,28 @@ begin
 
   ///
   RefreshCaption();
+end;
+
+procedure TControlFormContentReader.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas;
+  Node: PVirtualNode; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var AColor := clNone;
+
+  case Column of
+    0 : AColor := clBlack;
+
+    1..16 : begin
+      if odd(Column mod 2) then
+        AColor := clBlack;
+    end;
+
+    17 : AColor := clBlack;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+    TargetCanvas.FillRect(CellRect);
+  end;
 end;
 
 procedure TControlFormContentReader.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;

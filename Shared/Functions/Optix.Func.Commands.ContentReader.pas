@@ -79,12 +79,16 @@ type
   private
     [OptixSerializableAttribute]
     FPageNumber : UInt64;
+
+    [OptixSerializableAttribute]
+    FPageSize : UInt64;
   public
     {@G}
     property PageNumber : UInt64 read FPageNumber;
+    property PageSize   : UInt64 read FPageSize;
 
     {@C}
-    constructor Create(const APageNumber : UInt64); overload;
+    constructor Create(const APageNumber : UInt64; const ANewPageSize : UInt64 = 0); overload;
   end;
 
   TOptixCommandContentReaderPage = class(TOptixCommandContentReader)
@@ -146,12 +150,13 @@ uses
 (* TOptixCommandBrowseContentReader *)
 
 { TOptixCommandBrowseContentReader.Create }
-constructor TOptixCommandBrowseContentReader.Create(const APageNumber: UInt64);
+constructor TOptixCommandBrowseContentReader.Create(const APageNumber : UInt64; const ANewPageSize : UInt64 = 0);
 begin
   inherited Create();
   ///
 
   FPageNumber := APageNumber;
+  FPageSize   := ANewPageSize;
 end;
 
 (* TOptixCommandCreateFileContentReader *)

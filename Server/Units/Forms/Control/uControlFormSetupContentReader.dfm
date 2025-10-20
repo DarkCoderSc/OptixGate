@@ -14,6 +14,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
   KeyPreview = True
   Position = poOwnerFormCenter
   OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow
@@ -46,7 +47,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Caption = 'File Path:'
       ExplicitWidth = 48
     end
-    object Label2: TLabel
+    object LabelPageSize: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 54
@@ -57,8 +58,8 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
-      Caption = 'Page Size:'
-      ExplicitWidth = 52
+      Caption = 'Page Size (%d - %d):'
+      ExplicitWidth = 108
     end
     object EditPath: TEdit
       Left = 8
@@ -67,7 +68,6 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Height = 23
       Align = alTop
       TabOrder = 0
-      Text = 'c:\temp\cports.exe'
       ExplicitWidth = 320
     end
     object SpinPageSize: TSpinEdit
@@ -76,7 +76,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Width = 330
       Height = 24
       Align = alTop
-      MaxValue = 2147483647
+      MaxValue = 409600
       MinValue = 128
       TabOrder = 1
       Value = 1024

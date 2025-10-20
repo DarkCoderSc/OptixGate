@@ -119,7 +119,7 @@ object ControlFormFileManager: TControlFormFileManager
       Left = 619
       Top = 10
       Width = 21
-      Height = 15
+      Height = 20
       Margins.Left = 8
       Margins.Top = 10
       Margins.Right = 8
@@ -133,6 +133,7 @@ object ControlFormFileManager: TControlFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
+      ExplicitHeight = 15
     end
     object ButtonBack: TSpeedButton
       AlignWithMargins = True
@@ -206,7 +207,8 @@ object ControlFormFileManager: TControlFormFileManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 666
+    ExplicitWidth = 646
+    ExplicitHeight = 348
     DesignSize = (
       656
       380)
@@ -342,6 +344,13 @@ object ControlFormFileManager: TControlFormFileManager
     object UploadToFolder1: TMenuItem
       Caption = 'Upload To Folder'
       OnClick = UploadToFolder1Click
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object StreamFileContentOpen1: TMenuItem
+      Caption = 'Stream File Content (Open)'
+      OnClick = StreamFileContentOpen1Click
     end
   end
   object PopupMenuOptions: TPopupMenu
