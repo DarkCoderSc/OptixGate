@@ -41,40 +41,128 @@
 {                                                                              }
 {******************************************************************************}
 
-unit Optix.Protocol.Preflight;
+unit uControlFormSetupContentReader;
 
 interface
 
-const OPTIX_PROTOCOL_VERSION = 'v1.3.0' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Variants, System.Classes,
 
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
+
+  __uBaseFormControl__, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
 type
-  TClientKind = (
-    ckHandler,
-    ckFileTransfer
-  );
-
-  TOptixPreflightRequest = record
-    ProtocolVersion : String[50];
-    ClientKind      : TClientKind;
-    HandlerId       : TGUID;
-
-    {$IFDEF CLIENT}
-    {@O}
-    class operator Initialize(out ADestRecord : TOptixPreflightRequest);
-    {$ENDIF}
+  TControlFormSetupContentReader = class(TBaseFormControl)
+    PanelClient: TPanel;
+    Label1: TLabel;
+    PanelLeft: TPanel;
+    Image: TVirtualImage;
+    LabelPageSize: TLabel;
+    EditPath: TEdit;
+    SpinPageSize: TSpinEdit;
+    PanelBottom: TPanel;
+    ButtonStart: TButton;
+    ButtonCancel: TButton;
+    procedure FormShow(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure ButtonStartClick(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
+  private
+    {@M}
+    procedure DoResize();
+  public
+    { Public declarations }
   end;
+
+var
+  ControlFormSetupContentReader: TControlFormSetupContentReader;
 
 implementation
 
-{$IFDEF CLIENT}
-uses Optix.Protocol.Packet;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.Func.Commands.ContentReader, Optix.FileSystem.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixPreflightRequest.Initialize }
-class operator TOptixPreflightRequest.Initialize(out ADestRecord : TOptixPreflightRequest);
+{$R *.dfm}
+
+procedure TControlFormSetupContentReader.ButtonCancelClick(Sender: TObject);
 begin
-  ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;
-  ADestRecord.HandlerId       := TGUID.Empty;
+  Close();
 end;
-{$ENDIF}
+
+procedure TControlFormSetupContentReader.ButtonStartClick(Sender: TObject);
+begin
+  if String.IsNullOrWhiteSpace(EditPath.Text) then begin
+    EditPath.SetFocus;
+
+    ///
+    raise Exception.Create('You must enter a valid file path.');
+  end;
+
+  StreamFileContent(EditPath.Text, SpinPageSize.Value);
+
+  ///
+  Close();
+end;
+
+procedure TControlFormSetupContentReader.DoResize();
+begin
+  ButtonStart.Top := (PanelBottom.Height div 2) - (ButtonStart.Height div 2);
+  ButtonCancel.Top  := ButtonStart.Top;
+
+  ButtonStart.Left := PanelBottom.Width - ButtonStart.Width - 8;
+  ButtonCancel.Left  := ButtonStart.Left - ButtonStart.Width - 8;
+
+  var ANewHeight := PanelBottom.Height;
+
+  Inc(ANewHeight, SpinPageSize.Top + SpinPageSize.Height + 8);
+
+  ClientHeight := ANewHeight;
+end;
+
+procedure TControlFormSetupContentReader.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action := caFree;
+end;
+
+procedure TControlFormSetupContentReader.FormCreate(Sender: TObject);
+begin
+  LabelPageSize.Caption := Format(LabelPageSize.Caption, [
+    TContentReader.MIN_PAGE_SIZE,
+    TContentReader.MAX_PAGE_SIZE
+  ]);
+
+  ///
+  SpinPageSize.MinValue := TContentReader.MIN_PAGE_SIZE;
+  SpinPageSize.MaxValue := TContentReader.MAX_PAGE_SIZE;
+end;
+
+procedure TControlFormSetupContentReader.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    13 : ButtonStartClick(ButtonStart);
+    27 : ButtonCancelClick(ButtonCancel);
+  end;
+end;
+
+procedure TControlFormSetupContentReader.FormResize(Sender: TObject);
+begin
+  DoResize();
+end;
+
+procedure TControlFormSetupContentReader.FormShow(Sender: TObject);
+begin
+  EditPath.SetFocus;
+
+  DoResize();
+end;
 
 end.

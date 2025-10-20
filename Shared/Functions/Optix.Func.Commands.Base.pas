@@ -470,7 +470,7 @@ begin
   result := inherited;
   ///
 
-  result.S['ResultClass']      := ClassName;
+  result.S['ResultClass'] := ClassName;
 end;
 
 end.

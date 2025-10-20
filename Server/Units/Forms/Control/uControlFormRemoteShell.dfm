@@ -29,7 +29,8 @@ object ControlFormRemoteShell: TControlFormRemoteShell
     TabOrder = 0
     OnChange = PagesChange
     OnContextPopup = PagesContextPopup
-    ExplicitWidth = 661
+    ExplicitWidth = 641
+    ExplicitHeight = 307
   end
   object PanelActions: TPanel
     AlignWithMargins = True

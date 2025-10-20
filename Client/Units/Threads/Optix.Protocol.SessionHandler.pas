@@ -55,7 +55,7 @@ uses
 
   Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer,
   Optix.Func.Commands, Optix.Func.Commands.Base, Optix.Actions.ProcessHandler, Optix.Func.Commands.FileSystem,
-  Optix.Func.Commands.Shell;
+  Optix.Func.Commands.Shell, Optix.FileSystem.Helper, Optix.Func.Commands.ContentReader;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -79,6 +79,7 @@ type
     FTasks                    : TObjectList<TOptixTask>;
     FShellInstances           : TObjectList<TProcessHandler>;
     FFileTransferOrchestrator : TOptixFileTransferOrchestratorThread;
+    FContentReaders           : TObjectDictionary<TGUID, TContentReader>;
 
     {$IFDEF CLIENT_GUI}
     FOnConnectedToServer         : TOnConnectedToServer;
@@ -106,6 +107,10 @@ type
     procedure TerminateShellInstance(const ACommand : TOptixTerminateShellInstance);
     procedure BreakShellInstance(const ACommand : TOptixBreakShellInstance);
     procedure StdinToShellInstance(const ACommand : TOptixStdinShellInstance);
+
+    procedure BrowseContentReaderPage(const AReaderId : TGUID; const APageNumber : Int64;
+      const ANewPageSize : UInt64 = 0; const AFirstPage : Boolean = False);
+    procedure CreateAndRegisterNewContentReader(const ACommand : TOptixCommandCreateFileContentReader);
 
     procedure Connected(); override;
     procedure Disconnected(); override;
@@ -138,6 +143,7 @@ begin
   FFileTransferOrchestrator := nil;
   FTasks := TObjectList<TOptixTask>.Create(True);
   FShellInstances := TObjectList<TProcessHandler>.Create(True);
+  FContentReaders := TObjectDictionary<TGUID, TContentReader>.Create([doOwnsValues]);
 
   {$IFDEF CLIENT_GUI}
   FOnConnectedToServer         := nil;
@@ -164,6 +170,9 @@ begin
 
   if Assigned(FShellInstances) then
     FreeAndNil(FShellInstances);
+
+  if Assigned(FContentReaders) then
+    FreeAndNil(FContentReaders);
 end;
 
 { TOptixSessionHandlerThread.InitializePreflightRequest }
@@ -349,6 +358,46 @@ begin
   FFileTransferOrchestrator.AddTransfer(ATransfer);
 end;
 
+{ TOptixSessionHandlerThread.BrowseContentReaderPage }
+procedure TOptixSessionHandlerThread.BrowseContentReaderPage(const AReaderId : TGUID; const APageNumber : Int64;
+  const ANewPageSize : UInt64 = 0; const AFirstPage : Boolean = False);
+begin
+  var AReader := TContentReader(nil);
+  if not FContentReaders.TryGetValue(AReaderId, AReader) then
+    Exit();
+  ///
+
+  if ANewPageSize > 0 then
+    AReader.PageSize := ANewPageSize;
+
+  var ACommandClass : TOptixCommandContentReaderPageClass;
+
+  if AFirstPage then
+    ACommandClass := TOptixCommandContentReaderFirstPage
+  else
+    ACommandClass := TOptixCommandContentReaderPage;
+
+  ///
+  AddPacket(ACommandClass.Create(
+    AReaderId,
+    AReader,
+    APageNumber
+  ));
+end;
+
+{ TOptixSessionHandlerThread.CreateAndRegisterNewContentReader }
+procedure TOptixSessionHandlerThread.CreateAndRegisterNewContentReader(
+  const ACommand : TOptixCommandCreateFileContentReader);
+begin
+  var AReader := TContentReader.Create(ACommand.FilePath, ACommand.PageSize);
+
+  var AReaderId := TGUID.NewGuid;
+
+  FContentReaders.Add(AReaderId, AReader);
+
+  BrowseContentReaderPage(AReaderId, 0, 0, True);
+end;
+
 { TOptixSessionHandlerThread.Connected }
 procedure TOptixSessionHandlerThread.Connected();
 begin
@@ -405,10 +454,6 @@ begin
 
   var AClassName := ASerializedPacket.S['PacketClass'];
 
-  var AWindowGUID := TGUID.Empty;
-  if ASerializedPacket.Contains('FWindowGUID') then
-    AWindowGUID := TGUID.Create(ASerializedPacket.S['FWindowGUID']);
-
   var AOptixPacket  : TOptixPacket := nil;
   var AHandleMemory : Boolean := True;
   try
@@ -420,7 +465,7 @@ begin
         Exit();
       ///
 
-      // Optix Action Command (& Response)
+      // Optix Action Command (& Response) -----------------------------------------------------------------------------
       if AOptixPacket is TOptixCommandAction then begin
         TOptixCommandActionResponse(AOptixPacket).DoAction();
 
@@ -430,16 +475,16 @@ begin
           ///
           AddPacket(AOptixPacket);
         end;
-      // Optix Task Command
+      // Optix Task Command --------------------------------------------------------------------------------------------
       end else if AOptixPacket is TOptixCommandTask then begin
         var ATask := TOptixCommandTask(AOptixPacket).CreateTask(TOptixCommand(AOptixPacket));
 
         ///
         RegisterAndStartNewTask(ATask);
-      // Optix Transfers (Download & Upload)
+      // Optix Transfers (Download & Upload) ---------------------------------------------------------------------------
       end else if AOptixPacket is TOptixCommandTransfer then
         RegisterNewFileTransfer(TOptixCommandTransfer(AOptixPacket))
-      // Shell Commands
+      // Shell Commands ------------------------------------------------------------------------------------------------
       else if AOptixPacket is TOptixCommandShell then begin
         if AOptixPacket is TOptixStartShellInstance then
           RegisterAndStartNewShellInstance(TOptixStartShellInstance(AOptixPacket))
@@ -449,8 +494,19 @@ begin
           BreakShellInstance(TOptixBreakShellInstance(AOptixPacket))
         else if AOptixPacket is TOptixStdinShellInstance then
           StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
-      // Simple Commands
-      end else if AOptixPacket is TOptixSimpleCommand then begin
+      // Content Reader Commands ---------------------------------------------------------------------------------------
+      end else if AOptixPacket is TOptixCommandCreateFileContentReader then
+        CreateAndRegisterNewContentReader(TOptixCommandCreateFileContentReader(AOptixPacket))
+      else if AOptixPacket is TOptixCommandCloseContentReader then
+        FContentReaders.Remove(AOptixPacket.WindowGUID)
+      else if AOptixPacket is TOptixCommandBrowseContentReader then
+        BrowseContentReaderPage(
+          AOptixPacket.WindowGUID,
+          TOptixCommandBrowseContentReader(AOptixPacket).PageNumber,
+          TOptixCommandBrowseContentReader(AOptixPacket).PageSize
+        )
+      // Simple Commands -----------------------------------------------------------------------------------------------
+      else if AOptixPacket is TOptixSimpleCommand then begin
         AHandleMemory := False;
         ///
 

@@ -117,6 +117,8 @@ type
     PopupFoldersTree: TPopupMenu;
     FullExpand1: TMenuItem;
     FullCollapse1: TMenuItem;
+    N2: TMenuItem;
+    StreamFileContentOpen1: TMenuItem;
     procedure VSTFilesChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTFilesFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -161,6 +163,7 @@ type
     procedure VSTFoldersCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure VSTFoldersFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure StreamFileContentOpen1Click(Sender: TObject);
   private
     FHistoryCursor : Integer;
     FPathHistory   : TList<String>;
@@ -168,7 +171,7 @@ type
     {@M}
     procedure InsertPathToHistory(APath : String);
     procedure BrowseFromCurrentHistoryLocation();
-    function CanNodeFileBeDownloaded(var pData : PFileTreeData) : Boolean;
+    function CanNodeFileBeRead(var pData : PFileTreeData) : Boolean;
     function CanFileBeUploadedToNodeDirectory(var pData : PFileTreeData) : Boolean;
     procedure RegisterFoldersInTree(const AParentFolders : TObjectList<TSimpleFolderInformation>;
       const AFolders : TObjectList<TSimpleFolderInformation>);
@@ -194,7 +197,8 @@ type
     procedure RegisterNewFile(const APath : String; const AFileInformation : TFileInformation);
 
     {@C}
-    constructor Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False); override;
+    constructor Create(AOwner : TComponent; const AUserIdentifier : String;
+      const ASpecialForm : Boolean = False); override;
   end;
 
 var
@@ -431,7 +435,8 @@ begin
   VSTFolders.Refresh();
 end;
 
-constructor TControlFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String; const ASpecialForm : Boolean = False);
+constructor TControlFormFileManager.Create(AOwner : TComponent; const AUserIdentifier : String;
+  const ASpecialForm : Boolean = False);
 begin
   inherited;
   ///
@@ -553,7 +558,7 @@ begin
     result := Format('%s', [EditPath.Text])
 end;
 
-function TControlFormFileManager.CanNodeFileBeDownloaded(var pData : PFileTreeData) : Boolean;
+function TControlFormFileManager.CanNodeFileBeRead(var pData : PFileTreeData) : Boolean;
 begin
   result := False;
   ///
@@ -595,8 +600,10 @@ begin
           UploadToFolder1.Visible := True;
           UploadToFolder1.Enabled := CanFileBeUploadedToNodeDirectory(pData);
         end else begin
-          DownloadFile1.Visible   := True;
-          DownloadFile1.Enabled   := CanNodeFileBeDownloaded(pData);
+          DownloadFile1.Visible          := True;
+          DownloadFile1.Enabled          := CanNodeFileBeRead(pData);
+          StreamFileContentOpen1.Visible := DownloadFile1.Visible;
+          StreamFileContentOpen1.Enabled := DownloadFile1.Enabled;
         end;
       end;
     end;
@@ -1086,7 +1093,7 @@ begin
     Exit();
 
   var pData := PFileTreeData(pNode.GetData);
-  if not CanNodeFileBeDownloaded(pData) then
+  if not CanNodeFileBeRead(pData) then
     Exit();
 
   ///
@@ -1096,6 +1103,17 @@ end;
 procedure TControlFormFileManager.ShowFolderTree1Click(Sender: TObject);
 begin
   MultiPanel.PanelCollection.Items[0].Visible := TMenuItem(Sender).Checked;
+end;
+
+procedure TControlFormFileManager.StreamFileContentOpen1Click(Sender: TObject);
+begin
+  if VSTFiles.FocusedNode = nil then
+    Exit();
+  ///
+
+  var pData := PFileTreeData(VSTFiles.FocusedNode.GetData);
+  if CanNodeFileBeRead(pData) then
+    StreamFileContent(pData^.FileInformation.Path);
 end;
 
 procedure TControlFormFileManager.FormDestroy(Sender: TObject);

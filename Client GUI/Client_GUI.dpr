@@ -95,7 +95,8 @@ uses
   Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
   Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
   Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
-  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas';
+  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
+  Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas';
 
 {$R *.res}
 {$R ..\Server\data.res}

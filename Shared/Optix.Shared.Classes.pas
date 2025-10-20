@@ -70,13 +70,34 @@ type
     constructor Create(const ASerializedObject : ISuperObject); overload; virtual;
   end;
 
+  TOptixMemoryObject = class
+  private
+    FAddress : Pointer;
+    FSize    : UInt64;
+
+    {@M}
+    function GetAsBase64() : String;
+  public
+    {@C}
+    constructor Create(const AMemoryAddress : Pointer; const AMemorySize : UInt64; const ACopy : Boolean); overload;
+    constructor Create(const ABase64Data : String); overload;
+    destructor Destroy(); override;
+
+    {@G}
+    property Address  : Pointer read FAddress;
+    property Size     : UInt64  read FSize;
+    property ToBase64 : String  read GetAsBase64;
+  end;
+
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   Winapi.Windows,
 
-  System.Rtti, System.TypInfo, System.SysUtils;
+  System.NetEncoding,
+
+  System.Rtti, System.TypInfo, System.SysUtils, System.Hash;
 // ---------------------------------------------------------------------------------------------------------------------
 
 { TOptixSerializableObject.Serialize }
@@ -117,7 +138,9 @@ begin
 
             ///
             result.O[AField.Name] := ASerializableObject.Serialize();
-          end;
+          // Memory Object ---------------------------------------------------------------------------------------------
+          end else if AFieldClass.InheritsFrom(TOptixMemoryObject) then
+            result.S[AField.Name] := (AObject as TOptixMemoryObject).ToBase64
           // -----------------------------------------------------------------------------------------------------------
         end;
         // Sets --------------------------------------------------------------------------------------------------------
@@ -164,16 +187,21 @@ begin
       tkClass : begin
         var AFieldClass := AField.FieldType.AsInstance.MetaclassType;
         var AObject := AField.GetValue(self).AsObject;
-        if not Assigned(AObject) then
-          continue;
         ///
 
         // Serializable Object -----------------------------------------------------------------------------------------
-        if AFieldClass.InheritsFrom(TOptixSerializableObject) then begin
+        if AFieldClass.InheritsFrom(TOptixSerializableObject) and Assigned(AObject) then begin
           var ASerializableObject := AObject as TOptixSerializableObject;
 
           ///
           ASerializableObject.DeSerialize(APair.AsObject);
+        // Memory Object -----------------------------------------------------------------------------------------------
+        end else if AFieldClass.InheritsFrom(TOptixMemoryObject) then begin
+          if Assigned(AObject) then
+            FreeAndNil(AObject);
+          ///
+
+          AField.SetValue(self, TOptixMemoryObject.Create(APair.AsString));
         end;
         // -------------------------------------------------------------------------------------------------------------
       end;
@@ -217,6 +245,54 @@ begin
 
   if Assigned(ASerializedObject) then
     DeSerialize(ASerializedObject);
+end;
+
+(* TOptixMemoryObject *)
+
+{ TOptixMemoryObject.Create }
+constructor TOptixMemoryObject.Create(const AMemoryAddress : Pointer; const AMemorySize : UInt64;
+  const ACopy : Boolean);
+begin
+  inherited Create();
+  ///
+
+  FSize := AMemorySize;
+
+  if ACopy then begin
+    GetMem(FAddress, AMemorySize);
+
+    CopyMemory(FAddress, AMemoryAddress, AMemorySize);
+  end else
+    FAddress := AMemoryAddress;
+end;
+
+{ TOptixMemoryObject.Create }
+constructor TOptixMemoryObject.Create(const ABase64Data : String);
+begin
+  var ABytes := TNetEncoding.Base64.DecodeStringToBytes(ABase64Data);
+
+  ///
+  Create(@ABytes[0], Length(ABytes), True);
+end;
+
+{ TOptixMemoryObject.Destroy }
+destructor TOptixMemoryObject.Destroy();
+begin
+  if Assigned(FAddress) then
+    FreeMem(FAddress, FSize);
+
+  ///
+  inherited Destroy();
+end;
+
+{ TOptixMemoryObject.GetAsBase64 }
+function TOptixMemoryObject.GetAsBase64() : String;
+begin
+  result := '';
+  ///
+
+  if Assigned(FAddress) and (FSize > 0) then
+    result := TNetEncoding.Base64.EncodeBytesToString(FAddress, FSize);
 end;
 
 end.

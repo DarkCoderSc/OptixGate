@@ -345,6 +345,13 @@ object ControlFormFileManager: TControlFormFileManager
       Caption = 'Upload To Folder'
       OnClick = UploadToFolder1Click
     end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object StreamFileContentOpen1: TMenuItem
+      Caption = 'Stream File Content (Open)'
+      OnClick = StreamFileContentOpen1Click
+    end
   end
   object PopupMenuOptions: TPopupMenu
     Left = 384

@@ -92,7 +92,8 @@ uses
   Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas',
   Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
   Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
-  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas';
+  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
+  Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas';
 
 begin
   IsMultiThread := True;
