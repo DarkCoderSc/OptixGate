@@ -41,183 +41,16 @@ The project is developed in Delphi. In recent years, Embarcadero has made a sign
 * Remote file manager
 * Remote process manager
 * Remote registry manager
+* Remote Content Streaming (File)
 * 100% free, 100% open-source, forever
 
 …and much more to do, much more to come.
 
-## The Protocol
+---
 
-This section details the key components of the protocol, which form the strength of the program and are designed for easy extensibility:
+⚠️ For more information about its engine, protocol, usage, and available features: [please refer to the wiki](https://github.com/DarkCoderSc/OptixGate/wiki)
 
-### Command And Control aka Session Handler
-
-![Control Forms](Assets/sshot-12.png)
-
-The session handler, on both the client and server sides, is responsible for transmitting and receiving Optix packets. An Optix packet object contains either a command with a variable number of arguments depending on the desired action, or a response from an executed command. Packets are serialized as JSON objects and sent over the network to be deserialized and processed by the remote peer.
-
-Packets are managed in the session handler thread using a threaded queue, which allows packets to be registered from any thread in a thread-safe manner without the need for complex checks or mechanisms.
-
-Sometimes, a command, once executed, needs to provide feedback to the server, for example, when requesting a process list, and must target a specific form (window), called a control form. Packets keep track of the handler ID, session ID, and window ID to ensure that, in cases where multiple clients are being controlled simultaneously, responses are received in the correct location. Some features, such as the file manager, even allow multiple control windows to be opened for a single client instance.
-
-### Multiplexed File Transfer
-
-![File Transfer](Assets/sshot-10.png)
-
-Interestingly, this time I did not use the classic method for transferring files over the network. In the past, I would open a new socket connection and create a new thread for each file to be transferred. While this approach was easy to manage, transferring a large number of files could quickly degrade system performance and even cause instability. To mitigate this, I had implemented a queue system to limit the number of concurrent file transfers.
-
-For this version, I chose a completely different approach. All files are transmitted using a single dedicated socket and thread per Client Session, whether uploading or downloading. Transfers are orchestrated through this single connection, with files sent iteratively in chunks, one file at a time. This allows multiple files to be transferred “simultaneously” while preserving network speed, CPU usage, and memory efficiency.
-
-The only limitation is that the overall transfer time increases with the number of files. However, this method allows thousands of files to be transmitted concurrently without compromising system performance or stability.
-
-### Jobs / Tasks
-
-![Jobs / Tasks](Assets/sshot-11.png)
-
-Sometimes an action can take a considerable amount of time to complete (e.g., file or registry searches, process dumps, etc.). Executing such actions directly from the Session Handler, as is done for standard commands (e.g., killing or list process), can seriously and negatively impact the responsiveness of other actions that require low latency (e.g., retrieving process lists, file lists, or service lists).
-
-To address this issue, I implemented a task management system using Delphi's Parallel Programming Library (PPL). This system is responsible for registering and scheduling tasks while providing the Server with continuous feedback on task status (waiting, running, succeeded, or failed). This approach allows long-running operations to execute in the background, scheduled for optimal timing, without compromising the program's responsiveness.
-
-Once a task completes successfully, the Server receives and records its result in its task manager. The user can then access the results at any time, for example, to download a dumped file or perform further actions.
-
-### Multiplexed Remote Shell
-
-One of the most important features for remote management is access to a shell. It is therefore natural that Optix included this feature from its very first version, fully integrated into its protocol and managed by the Session Handler. A single remote shell session is often insufficient, as multiple shell windows are frequently needed to perform concurrent actions.
-Optix allows opening multiple remote shell sessions either through tabs within the same window or by opening multiple windows with separate shell instances for the same session. This is achieved using the Session Handler shell orchestration without sacrificing responsiveness or performance. Each shell's input and output are correctly dispatched to their respective processes, with support for interrupts (`CTRL+C`) to terminate long-running tasks. Notably, this design does not require a secondary socket or thread, which reduces resource consumption, simplifies management, and minimizes the risk of errors when handling multiple threads per client session.
-
-The only minor drawback is a slight latency in shell output display, as each shell instance's output is polled at regular intervals to maintain thread responsiveness. This does not pose a significant issue, though further optimization could be considered if lower latency for shell output dispatching becomes necessary.
-
-## Conclusion
-
-To conclude on the protocol, these four points represent the program's core pillars and were essential to establishing Optix as a solid solution from its first release candidate. They ensure safe, thread-managed command/response processes, support for multi-file transfers, processing of long-running actions with constant feedback, and parallel shell session access.
-
-The file management system also demonstrates a component of the protocol called Workers. Unlike my previous programs, Optix aims to minimize the number of required connections and threads per client session. However, relying solely on the Session Handler (main socket + thread) is sometimes insufficient. For instance, file transfers, though technically possible over the main connection, would excessively degrade the Session Handler's performance. In such cases, it is necessary to register a Worker. A Worker is a dedicated thread with its own socket connection, tied to an existing client session. It remains active as long as the main client session remains. This design also anticipates future features, such as Remote Desktop, which would require its own dedicated Worker thread.
-
-In conclusion, Optix is architected to support future growth and feature expansion. Only minor improvements to the protocol, such as optimizations or code readability enhancements, may be needed over time.
-
-## Understanding Optix Parts
-
-### Server
-
-![Server Control Center](Assets/sshot-1.png)
-
-The server is the command-and-control component of the system. It is the program used to manage and take control of remote systems, referred to as clients.
-
-#### Multi-listener
-
-![Server Multi-Listener](Assets/sshot-9.png)
-
-The multi-listener feature allows the server to listen on multiple ports simultaneously, ensuring flexibility when clients are configured to connect through different ports. It is particularly useful in environments where services must be accessible over both IPv4 and IPv6, even on the same port.
-
-### Client GUI
-
-![Client GUI](Assets/sshot-2.png)
-
-The client is the component that receives control from the server. The distributed version of Optix (the compiled version) includes only the Client GUI, a graphical interface designed for users who want to securely receive assistance or test the program without having to compile their own standalone client.
-
-The Client GUI allows users to connect to one or multiple servers simultaneously through its intuitive graphical interface.
-
-### Client
-
-![Client Template](Assets/sshot-3.png)
-
-The client, available only as a minimal template, is by default a console application that connects to a remote server defined statically in the code. This component is neither distributed as binaries nor provided with an easy way to patch its configuration. It is entirely the user's responsibility to modify the relevant parts of the code to suit their specific needs.
-
-As stated in the introduction, Optix will never facilitate program misuse and does not provide any code intended for such purposes. Any modifications made to the code are solely the responsibility of the user and fall outside the scope of my concern.
-
-#### NoSSL / OpenSSL Versions
-
-Optix is available in two variants: NoSSL, which excludes any OpenSSL-related features, and the recommended version, which integrates the OpenSSL library on top of sockets. I recall the difficulties I faced when working with SubSeven Legacy few years ago, particularly deciphering the OpenSSL documentation to integrate its APIs with custom networking components. In Optix, the OpenSSL wrapper has been improved to simplify integration and also serves as a practical example of how to implement OpenSSL in native socket programming.
-
-The OpenSSL-enabled version of Optix encrypts network communication using TLS 1.3 with AES-256-GCM SHA-384, a robust and secure protocol and cipher suite. Client and server are mutually authenticated (mTLS) through certificate fingerprints checking on both sides. This approach makes it virtually (at least today speaking) impossible to intercept communications or perform man-in-the-middle (MITM) attacks without physical access to either the client or the server machine.
-
-Both versions are offered for a specific reason. In Capture the Flag (CTF) contexts, it is not always necessary to add this layer of security, and in some cases, the NoSSL version may be easier to use. However, in most other scenarios, it is strongly recommended to use the OpenSSL version to ensure that communication between client and server is encrypted and that both sides are properly authenticated.
-
-Finally, Optix was designed for flexibility: compiling with or without OpenSSL support is straightforward, thanks to conditional compiler expressions. This approach maintains a single code base, while ensuring that the NoSSL build contains no OpenSSL-related code whatsoever.
-
-##### Basic Usage
-
-As this concept may seem confusing at first, I will explain the concept of the OpenSSL version of Optix, focusing on proper configuration for smooth mutual authentication.
-
-![Certificate Store](Assets/sshot-4.png)
-
-Ideally, both the Client and Server should have their own certificates, although it is not strictly mandatory for them to be different. For security reasons, using distinct certificates is strongly recommended. Once the respective certificates are generated, the server's certificate must be registered in the client's trusted certificate store, and similarly, the client's certificate fingerprint must be registered in the server's trusted client certificate store.
-
-![Trusted Certificate Store](Assets/sshot-5.png)
-
-This setup ensures that the client's certificate is recognized as valid by the server, and vice versa.
-
-It is possible to generate multiple certificates and register several trusted certificates in each store. When starting the server or adding a client, you must specify the certificate to use, ensuring it matches the certificate expected by the remote peer.
-
-## Existing Features
-
-### Process Manager
-
-![Process Manager](Assets/sshot-6.png)
-
-The Process Manager allows retrieving the list of currently running processes on a remote system. For each process, detailed information is provided, including (but not limited to):
-
-* Process ID
-* Name
-* Parent ID
-* Image Path
-* Session ID
-* Thread Count
-* Start Time
-* Command Line
-* Architecture
-* Elevation Status
-
-Elevated processes are highlighted in a distinct color, as are the current client process and those running under NT AUTHORITY/SYSTEM. This visual differentiation makes it easy to quickly identify the processes of interest. Color highlighting can be disabled if preferred. Additionally, depending on the architecture of the client and the enumerated processes, certain actions may not be available.
-
-#### Process Dump
-
-![Process Dump (MiniDumpWriteDump)](Assets/sshot-7.png)
-
-Optix currently provides an initial technique for dumping processes using the `MiniDumpWriteDump` Windows API. Additional methods will be implemented in future versions.
-
-### File Manager
-
-![File Manger](Assets/sshot-8.png)
-
-Currently Implemented Features:
-
-* Browsing the remote file system
-* Uploading a file to the current folder (if permitted).
-* Uploading a file to a selected folder (if permitted).
-* Downloading a selected file (if permitted).
-
-Additional file management actions will be introduced in future versions.
-
-A noteworthy aspect of the File Manager, which will also be extended to future features such as the Remote Registry Editor or Services Manager, is its Access Control List (ACL) analysis. For each file, ACLs are evaluated to determine read, write, or execute permissions. This makes it possible to immediately understand what actions can be performed in the current path.
-
-For folders, access rights are visually represented with color codes (which can be disabled) to quickly identify permissions:
-
-* Red: No Access
-* Yellow: Read and Execute
-* Orange: Execute Only
-* Blue: Read Only
-* Green: Full Access
-
-This approach reflects the ambition to provide users with clear, actionable insights at a glance, helping them both to solve challenges and to improve the overall security posture of certain elements.
-
-### Remote Shell
-
-![Remote Shell](Assets/sshot-14.png)
-
-As extensively discussed in the protocol section, this is a core feature for remote system management. It supports unlimited parallel sessions as well as interrupts to terminate long-running commands.
-
-### Registry Manager
-
-![Registry Manager](Assets/sshot-15.png)
-
-Registry Manager allows you to browse registry data remotely with an interface closely aligned to the native Microsoft Windows Registry application. It enables easy navigation and efficient management of keys and values.
-
-Currently Implemented Features:
-
-* Browse the Windows Registry remotely
-* View key and value, data types, including String, Multi-String, Binary, DWORD, and QWORD
-* Navigate directly to a specific key path (supports hive short names)
-* Option to hide keys that are inaccessible due to insufficient permissions
+---
 
 ### What will you learn?
 
@@ -236,6 +69,18 @@ Many additional actions are planned for existing features, and several new capab
 Stability is my top priority; new features come second.
 
 ## Changelogs
+
+### 1.3.0 (Oct 2025)
+
+The Content Reader feature introduces a new capability that allows users to remotely open and view readable files in a dedicated editor. Currently available for files only, this feature enables instant server-side access to any file, regardless of its size.
+
+To optimize performance, the remote file is paginated, meaning that only a user-defined portion (chunk) of the file is transmitted and displayed at a time, rather than transferring the entire file. The content is presented as a hexadecimal table, with built-in tools to extract and highlight ANSI and Unicode strings from the streamed data.
+
+This approach ensures that even very large files can be opened instantly for view-only access, without requiring a full download or local storage.
+
+This feature has been integrated into the file manager for readable files. You can also manually stream a remote file through a dedicated dialog. 
+
+Finally, this release includes several minor changes and improvements.
 
 ### 1.2.0 (Oct 2025)
 
