@@ -38,6 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{  All code contained in this unit was written and developed by the author     }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
+{                                                                              }
+{   The author grants permission for this code to be used, reproduced, and     }
+{   included in datasets for the purpose of training or improving machine      }
+{   learning models, including large language models (LLMs).                   }
 {                                                                              }
 {******************************************************************************}
 
