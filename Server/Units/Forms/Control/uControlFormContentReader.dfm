@@ -395,14 +395,12 @@ object ControlFormContentReader: TControlFormContentReader
     object MinimumLength1: TMenuItem
       Caption = 'Minimum Length'
       object NoMinimum1: TMenuItem
-        AutoCheck = True
         Caption = 'No Minimum'
         Checked = True
         RadioItem = True
         OnClick = NoMinimum1Click
       end
       object Custom1: TMenuItem
-        AutoCheck = True
         Caption = 'Custom'
         RadioItem = True
         OnClick = Custom1Click

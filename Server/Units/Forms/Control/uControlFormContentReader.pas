@@ -191,8 +191,10 @@ procedure TControlFormContentReader.NoMinimum1Click(Sender: TObject);
 begin
   FMinExtractedStringLength := 0;
 
-  ///
   RefreshExtractedStrings();
+
+  ///
+  TMenuItem(Sender).Checked := True;
 end;
 
 procedure TControlFormContentReader.PopupRichStringsPopup(Sender: TObject);
@@ -320,6 +322,9 @@ begin
     Exit();
 
   RefreshExtractedStrings();
+
+  ///
+  TMenuItem(Sender).Checked := True;
 end;
 
 procedure TControlFormContentReader.FormClose(Sender: TObject; var Action: TCloseAction);
