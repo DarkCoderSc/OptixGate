@@ -102,6 +102,7 @@ type
     class procedure CheckRegistryPath(const AKeyFullPath : String); static;
     class procedure CreateSubKey(ANewKeyFullPath : String); overload; static;
     class procedure CreateSubKey(const AKeyFullPath, ANewKeyName : String); overload; static;
+    class procedure DeleteKey(const AKeyFullPath : String); static;
 
     {@G}
     class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
@@ -442,6 +443,24 @@ begin
 
   ///
   CreateSubKey(ARootKeyPath, AKeyName);
+end;
+
+{ TRegistryHelper.DeleteKey }
+class procedure TRegistryHelper.DeleteKey(const AKeyFullPath : String);
+begin
+  var ARootKeyPath := '';
+  var AKeyName := '';
+
+  SplitRegKeyFullPath(AKeyFullPath, ARootKeyPath, AKeyName);
+
+  var AKeyHandle := OpenRegistryKey(ARootKeyPath, _DELETE);
+  try
+    var AResult := RegDeleteTreeW(AKeyHandle, PWideChar(AKeyName));
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegDeleteKeyW', AResult);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
 end;
 
 end.

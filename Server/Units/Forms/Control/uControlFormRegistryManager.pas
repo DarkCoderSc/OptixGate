@@ -108,6 +108,7 @@ type
     PopupValues: TPopupMenu;
     New1: TMenuItem;
     Key1: TMenuItem;
+    DeleteSelectedKey1: TMenuItem;
     procedure VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -140,6 +141,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure Key1Click(Sender: TObject);
     procedure PopupValuesPopup(Sender: TObject);
+    procedure DeleteSelectedKey1Click(Sender: TObject);
   private
     FCurrentKeyPath        : String;
     FCurrentKeyPermissions : TRegistryKeyPermissions;
@@ -323,6 +325,30 @@ begin
   end;
 end;
 
+procedure TControlFormRegistryManager.DeleteSelectedKey1Click(Sender: TObject);
+begin
+  if VSTKeys.FocusedNode = nil then
+    Exit();
+  ///
+
+  var pData := PKeysTreeData(VSTKeys.FocusedNode.GetData);
+  if not Assigned(pData) or not Assigned(pData^.KeyInformation) or
+     (not (rkpDelete in pData^.KeyInformation.Permissions)) then
+    Exit();
+  ///
+
+  if Application.MessageBox(
+    'You are about to permanently delete the registry key "keyname". All of its subkeys and all associated values will'+
+    ' be permanently removed.',
+    'Delete Selected Key',
+     MB_ICONQUESTION + MB_YESNO
+  ) = ID_NO then
+    Exit();
+
+  ///
+  SendCommand(TOptixCommandDeleteKey.Create(pData^.Path));
+end;
+
 procedure TControlFormRegistryManager.DisplayKeys(const AList : TOptixRefreshRegistryKeys);
 begin
   if not Assigned(AList) then
@@ -424,6 +450,28 @@ begin
     EditPath.Text := AResult.Path;
   end
   // -------------------------------------------------------------------------------------------------------------------
+  else if AOptixPacket is TOptixCommandDeleteKey then begin
+    var AResult := TOptixCommandDeleteKey(AOptixPacket);
+    ///
+
+    var pNode := GetNodeByKeyPath(AResult.KeyFullPath);
+    VSTKeys.BeginUpdate();
+    try
+      VSTKeys.DeleteNode(pNode);
+    finally
+      VSTKeys.EndUpdate();
+    end;
+
+    if String.Compare(FCurrentKeyPath, AResult.KeyFullPath, True) = 0 then begin
+      VSTValues.Clear();
+
+      FCurrentKeyPath := '';
+      FCurrentKeyPermissions := [];
+      EditPath.Clear();
+    end;
+
+  end;
+  // -------------------------------------------------------------------------------------------------------------------
 end;
 
 procedure TControlFormRegistryManager.BrowsePath(const AKeyFullPath : String);
@@ -450,7 +498,8 @@ begin
   var AIsDataAssigned := Assigned(pData) and Assigned(pData^.KeyInformation);
 
   ///
-  CreateSubKey1.Enabled := AIsDataAssigned and (rkpCreateSubKey in pData^.KeyInformation.Permissions);
+  CreateSubKey1.Enabled      := AIsDataAssigned and (rkpCreateSubKey in pData^.KeyInformation.Permissions);
+  DeleteSelectedKey1.Enabled := AIsDataAssigned and (rkpDelete in pData^.KeyInformation.Permissions);
 end;
 
 procedure TControlFormRegistryManager.PopupValuesPopup(Sender: TObject);

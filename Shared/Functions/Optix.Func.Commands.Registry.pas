@@ -131,6 +131,21 @@ type
     property NewKeyFullPath : String read FNewKeyFullPath;
   end;
 
+  TOptixCommandDeleteKey = class(TOptixCommandActionResponse)
+  private
+    [OptixSerializableAttribute]
+    FKeyFullPath : String;
+  public
+    {@C}
+    constructor Create(const AKeyFullPath : String); overload;
+
+    {@M}
+    procedure DoAction(); override;
+
+    {@G}
+    property KeyFullPath : String read FKeyFullPath;
+  end;
+
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -307,6 +322,27 @@ begin
 
   ///
   inherited;
+end;
+
+(***********************************************************************************************************************
+
+TOptixCommandDeleteKey
+
+***********************************************************************************************************************)
+
+{ TOptixCommandDeleteKey.Create }
+constructor TOptixCommandDeleteKey.Create(const AKeyFullPath: String);
+begin
+  inherited Create();
+  ///
+
+  FKeyFullPath := AKeyFullPath;
+end;
+
+{ TOptixCommandDeleteKey.DoAction }
+procedure TOptixCommandDeleteKey.DoAction();
+begin
+  TRegistryHelper.DeleteKey(FKeyFullPath);
 end;
 
 end.

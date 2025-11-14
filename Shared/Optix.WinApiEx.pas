@@ -441,6 +441,8 @@ function RegGetValueW(
   var pcbData : DWORD
 ) : LONG; stdcall; external 'Advapi32.dll';
 
+function RegDeleteTreeW(hKey: HKEY; lpSubKey: PWideChar): Longint; stdcall; external 'Advapi32.dll';
+
 (* NTDLL.dll *)
 
 function NtQuerySystemInformation(
