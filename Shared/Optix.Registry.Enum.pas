@@ -236,6 +236,8 @@ begin
   var AKeyPath := '';
   TRegistryHelper.ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
 
+  var ADefaultValueExists := False;
+
   if not String.IsNullOrWhiteSpace(AKeyPath) then begin
     var ARet := RegOpenKeyEx(
       AHive,
@@ -309,9 +311,6 @@ begin
           AKeys.Add(TRegistryKeyInformation.Create(AKeyName, IncludeTrailingPathDelimiter(AKeyFullPath) + AKeyName));
         end;
       end;
-
-      // Enumerate Key-Values
-      var ADefaultValueExists := False;
 
       if AValuesCount > 0 then begin
         for var  I := 0 to AValuesCount -1 do begin
@@ -404,14 +403,14 @@ begin
             AData := '<could not read>';
         end;
       end;
-
-      ///
-      if not ADefaultValueExists then
-        AValues.Add(TRegistryValueInformation.Create('', '', REG_SZ));
     finally
       FreeMem(pNameBuffer, ABufferSize);
     end;
   finally
+    if not ADefaultValueExists then
+        AValues.Add(TRegistryValueInformation.Create('', '', REG_SZ));
+    ///
+
     if ACloseKey then
       RegCloseKey(hOpenedKey);
   end;
