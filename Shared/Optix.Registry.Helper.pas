@@ -95,7 +95,13 @@ type
       var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
     class function HiveToString(const AHive : HKEY) : String; static;
     class function ExpandHiveShortName(const AKeyFullPath : String) : String; static;
+    class function OpenRegistryKey(const ARegistryHive : HKEY; const AKeyPath : String;
+      const ADesiredAccess : REGSAM) : HKEY; overload; static;
+    class procedure SplitRegKeyFullPath(AKeyFullPath: String; out ARootKeyPath, AKeyName: String); static;
+    class function OpenRegistryKey(const AKeyFullPath : String; const ADesiredAccess : REGSAM) : HKEY; overload; static;
     class procedure CheckRegistryPath(const AKeyFullPath : String); static;
+    class procedure CreateSubKey(ANewKeyFullPath : String); overload; static;
+    class procedure CreateSubKey(const AKeyFullPath, ANewKeyName : String); overload; static;
 
     {@G}
     class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
@@ -105,7 +111,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils,
+  System.SysUtils, System.IOUtils, System.StrUtils,
 
   Optix.Exceptions, Optix.WinApiEx, Optix.System.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -356,21 +362,86 @@ begin
   end;
 end;
 
-{ TRegistryHelper.CheckRegistryPath }
-class procedure TRegistryHelper.CheckRegistryPath(const AKeyFullPath : String);
+{ TRegistryHelper.OpenRegistryKey }
+class function TRegistryHelper.OpenRegistryKey(const ARegistryHive : HKEY; const AKeyPath : String;
+  const ADesiredAccess : REGSAM) : HKEY;
+begin
+  var AResult := RegOpenKeyExW(ARegistryHive, PWideChar(AKeyPath), 0, ADesiredAccess, result);
+  if AResult <> ERROR_SUCCESS then
+    raise EWindowsException.Create('RegOpenKeyW', AResult);
+end;
+
+{ TRegistryHelper.SplitRegKeyFullPath }
+class procedure TRegistryHelper.SplitRegKeyFullPath(AKeyFullPath: String; out ARootKeyPath, AKeyName: String);
+begin
+  ARootKeyPath := '';
+  AKeyName := '';
+  ///
+
+  if (AKeyFullPath <> '') and (AKeyFullPath[Length(AKeyFullPath)] = '\') then
+    SetLength(AKeyFullPath, Length(AKeyFullPath) - 1);
+  ///
+
+  var ADirectories := SplitString(AKeyFullPath, '\');
+
+  if Length(ADirectories) = 1 then
+    ARootKeyPath := ADirectories[0]
+  else if Length(ADirectories) > 1 then begin
+    ARootKeyPath := String.Join('\', Copy(ADirectories, 0, High(ADirectories)));
+    AKeyName := ADirectories[High(ADirectories)];
+  end;
+end;
+
+{ TRegistryHelper.OpenRegistryKey }
+class function TRegistryHelper.OpenRegistryKey(const AKeyFullPath : String; const ADesiredAccess : REGSAM) : HKEY;
 begin
   var AHive : HKEY;
   var AKeyPath := '';
+  ///
 
   ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
 
-  var AKeyHandle : HKEY;
+  ///
+  result := OpenRegistryKey(AHive, AKeyPath, ADesiredAccess);
+end;
 
-  var AResult := RegOpenKeyExW(AHive, PWideChar(AKeyPath), 0, READ_CONTROL, AKeyHandle);
-  if AResult <> ERROR_SUCCESS then
-    raise EWindowsException.Create('RegOpenKeyW', AResult);
+{ TRegistryHelper.CheckRegistryPath }
+class procedure TRegistryHelper.CheckRegistryPath(const AKeyFullPath : String);
+begin
+  var AKeyHandle := OpenRegistryKey(AKeyFullPath, READ_CONTROL);
 
+  ///
   RegCloseKey(AKeyHandle);
+end;
+
+{ TRegistryHelper.CreateSubKey }
+class procedure TRegistryHelper.CreateSubKey(const AKeyFullPath, ANewKeyName : String);
+begin
+  var AKeyHandle := OpenRegistryKey(AKeyFullPath, KEY_CREATE_SUB_KEY);
+  try
+    var ANewKeyHandle : HKEY;
+
+    var AResult := RegCreateKeyW(AKeyHandle, PWideChar(ANewKeyName), ANewKeyHandle);
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegCreateKeyW', AResult);
+
+    ///
+    RegCloseKey(ANewKeyHandle);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+{ TRegistryHelper.CreateSubKey }
+class procedure TRegistryHelper.CreateSubKey(ANewKeyFullPath : String);
+begin
+  var ARootKeyPath := '';
+  var AKeyName := '';
+
+  SplitRegKeyFullPath(ANewKeyFullPath, ARootKeyPath, AKeyName);
+
+  ///
+  CreateSubKey(ARootKeyPath, AKeyName);
 end;
 
 end.

@@ -108,9 +108,6 @@ begin
     Exit();
   ///
 
-  if not Assigned(ALevelItems) then
-    Exit();
-
   var pParentNode := PVirtualNode(nil);
   var pChildNode := PVirtualNode(nil);
   var pNode := PVirtualNode(nil);
@@ -141,52 +138,54 @@ begin
       end;
     end;
 
-    // Generate Or Update Level Folder
-    var ALevelNodesCache := TDictionary<String, PVirtualNode>.Create(); // For Optimization
-    var ALevelItemsCache := TList<String>.Create();
-    try
-      // Fill Cache with Existing Nodes
-      pNode := AVST.GetFirstChild(pParentNode);
-      while Assigned(pNode) do begin
-        if pNode.GetData <> nil then
-          ALevelNodesCache.Add(AGetNameFromDataFunc(pNode.GetData), pNode);
+    if Assigned(ALevelItems) then begin
+      // Generate Or Update Level Folder
+      var ALevelNodesCache := TDictionary<String, PVirtualNode>.Create(); // For Optimization
+      var ALevelItemsCache := TList<String>.Create();
+      try
+        // Fill Cache with Existing Nodes
+        pNode := AVST.GetFirstChild(pParentNode);
+        while Assigned(pNode) do begin
+          if pNode.GetData <> nil then
+            ALevelNodesCache.Add(AGetNameFromDataFunc(pNode.GetData), pNode);
 
-        ///
-        pNode := AVST.GetNextSibling(pNode);
+          ///
+          pNode := AVST.GetNextSibling(pNode);
+        end;
+
+        // Insert or Update Nodes
+        var AItemName : String;
+        var ANewNode : Boolean;
+
+        for var AItem in ALevelItems do begin
+          pNode := nil;
+          pChildNode := AVST.GetFirstChild(pParentNode);
+          ///
+
+          AItemName := AGetNameFromItemFunc(AItem);
+
+          ALevelItemsCache.Add(AItemName);
+
+          ANewNode := not ALevelNodesCache.TryGetValue(AItemName, pNode);
+
+          ///
+          ASetupNodeDataFunc(pNode, pParentNode, AItem);
+
+          if ANewNode then
+            ALevelNodesCache.Add(AItemName, pNode);
+        end;
+
+        // Delete Missing Nodes
+        for var APair in ALevelNodesCache do
+          if not ALevelItemsCache.Contains(APair.Key) then
+            AVST.DeleteNode(APair.Value);
+      finally
+        if Assigned(ALevelItemsCache) then
+          FreeAndNil(ALevelItemsCache);
+
+        if Assigned(ALevelNodesCache) then
+          FreeAndNil(ALevelNodesCache);
       end;
-
-      // Insert or Update Nodes
-      var AItemName : String;
-      var ANewNode : Boolean;
-
-      for var AItem in ALevelItems do begin
-        pNode := nil;
-        pChildNode := AVST.GetFirstChild(pParentNode);
-        ///
-
-        AItemName := AGetNameFromItemFunc(AItem);
-
-        ALevelItemsCache.Add(AItemName);
-
-        ANewNode := not ALevelNodesCache.TryGetValue(AItemName, pNode);
-
-        ///
-        ASetupNodeDataFunc(pNode, pParentNode, AItem);
-
-        if ANewNode then
-          ALevelNodesCache.Add(AItemName, pNode);
-      end;
-
-      // Delete Missing Nodes
-      for var APair in ALevelNodesCache do
-        if not ALevelItemsCache.Contains(APair.Key) then
-          AVST.DeleteNode(APair.Value);
-    finally
-      if Assigned(ALevelItemsCache) then
-        FreeAndNil(ALevelItemsCache);
-
-      if Assigned(ALevelNodesCache) then
-        FreeAndNil(ALevelNodesCache);
     end;
   finally
     if Assigned(pParentNode) then begin

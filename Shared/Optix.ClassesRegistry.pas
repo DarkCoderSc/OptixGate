@@ -179,6 +179,7 @@ initialization
   // Registry Manager
   TClassesRegistry.RegisterClass(TOptixGetRegistryHives);
   TClassesRegistry.RegisterClass(TOptixRefreshRegistrySubKeys);
+  TClassesRegistry.RegisterClass(TOptixCommandRegistryCreateKey);
 
   // File Readers
   TClassesRegistry.RegisterClass(TOptixCommandCreateFileContentReader);

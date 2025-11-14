@@ -116,6 +116,21 @@ type
     procedure DoAction(); override;
   end;
 
+  TOptixCommandRegistryCreateKey = class(TOptixRefreshRegistrySubKeys)
+  private
+    [OptixSerializableAttribute]
+    FNewKeyFullPath : String;
+  public
+    {@C}
+    constructor Create(const ANewKeyFullPath : String); overload;
+
+    {@M}
+    procedure DoAction(); override;
+
+    {@G}
+    property NewKeyFullPath : String read FNewKeyFullPath;
+  end;
+
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -264,6 +279,34 @@ begin
 
   ///
   TOptixEnumRegistry.Enum(FPath, FSubKeys, FValues);
+end;
+
+(***********************************************************************************************************************
+
+TOptixCommandRegistryCreateKey
+
+***********************************************************************************************************************)
+
+{ TOptixCommandRegistryCreateKey.Create }
+constructor TOptixCommandRegistryCreateKey.Create(const ANewKeyFullPath : String);
+begin
+  inherited Create();
+  ///
+
+  FNewKeyFullPath := ANewKeyFullPath;
+end;
+
+{ TOptixCommandRegistryCreateKey.DoAction }
+procedure TOptixCommandRegistryCreateKey.DoAction();
+begin
+  TRegistryHelper.CreateSubKey(FNewKeyFullPath);
+  ///
+
+  FPath := ExcludeTrailingPathDelimiter(FNewKeyFullPath);
+  TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(FPath, FPermissions);
+
+  ///
+  inherited;
 end;
 
 end.

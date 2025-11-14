@@ -12,6 +12,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
   Font.Style = []
   Menu = MainMenu
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
   TextHeight = 15
   object OMultiPanel: TOMultiPanel
     Left = 0
@@ -34,8 +35,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 701
-    ExplicitHeight = 368
     DesignSize = (
       711
       400)
@@ -101,6 +100,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
       Header.SortColumn = 0
       Images = FormMain.VirtualImageList
+      PopupMenu = PopupValues
       TabOrder = 1
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
@@ -145,7 +145,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     BevelOuter = bvRaised
     ReadOnly = True
     TabOrder = 1
-    ExplicitWidth = 693
   end
   object MainMenu: TMainMenu
     Left = 408
@@ -159,6 +158,10 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       end
       object N1: TMenuItem
         Caption = '-'
+      end
+      object CreateKey1: TMenuItem
+        Caption = 'Create Key'
+        OnClick = CreateKey1Click
       end
       object GoTo1: TMenuItem
         Caption = 'Go To'
@@ -189,6 +192,22 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     end
     object FullCollapse2: TMenuItem
       Caption = '-'
+    end
+    object CreateSubKey1: TMenuItem
+      Caption = 'Create Sub Key'
+      OnClick = CreateSubKey1Click
+    end
+  end
+  object PopupValues: TPopupMenu
+    OnPopup = PopupValuesPopup
+    Left = 512
+    Top = 143
+    object New1: TMenuItem
+      Caption = 'New'
+      object Key1: TMenuItem
+        Caption = 'Key'
+        OnClick = Key1Click
+      end
     end
   end
 end
