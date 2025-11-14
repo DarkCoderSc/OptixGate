@@ -554,25 +554,15 @@ end;
 class procedure TFileSystemHelper.TraverseDirectories(const APath : String;
   const ATraversedDirectoryFunc : TTraversedDirectoryCallback);
 begin
-  var ADirectories := TStringList.Create();
-  try
-    ADirectories.Delimiter := '\';
-    ADirectories.DelimitedText := APath;
+  var ADirectories := APath.Split(['\'], TStringSplitOptions.ExcludeEmpty);
+  ///
 
-    var ACurrentPath := '';
-    for var ADirectory in ADirectories do begin
-      if ADirectory.IsEmpty then
-        continue;
-      ///
+  var ACurrentPath := '';
+  for var ADirectory in ADirectories do begin
+    ACurrentPath := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(ACurrentPath) + ADirectory;
 
-      ACurrentPath := TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(ACurrentPath) + ADirectory;
-
-      ///
-      ATraversedDirectoryFunc(ADirectory, ACurrentPath);
-    end;
-  finally
-    if Assigned(ADirectories) then
-      FreeAndNil(ADirectories);
+    ///
+    ATraversedDirectoryFunc(ADirectory, ACurrentPath);
   end;
 end;
 
