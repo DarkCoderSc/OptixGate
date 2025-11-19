@@ -119,7 +119,8 @@ uses
   uControlFormRegistryManager in 'Units\Forms\Control\uControlFormRegistryManager.pas' {ControlFormRegistryManager},
   Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas',
   uControlFormContentReader in 'Units\Forms\Control\uControlFormContentReader.pas' {ControlFormContentReader},
-  uControlFormSetupContentReader in 'Units\Forms\Control\uControlFormSetupContentReader.pas' {ControlFormSetupContentReader};
+  uControlFormSetupContentReader in 'Units\Forms\Control\uControlFormSetupContentReader.pas' {ControlFormSetupContentReader},
+  uFrameHexEditor in 'Units\Frames\Components\uFrameHexEditor.pas' {FrameHexEditor: TFrame};
 
 {$R *.res}
 {$R data.res}

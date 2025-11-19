@@ -1,0 +1,55 @@
+object FrameHexEditor: TFrameHexEditor
+  Left = 0
+  Top = 0
+  Width = 640
+  Height = 480
+  TabOrder = 0
+  object VST: TVirtualStringTree
+    Left = 0
+    Top = 0
+    Width = 640
+    Height = 480
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    AccessibleName = '0F'
+    Align = alClient
+    BackGroundImageTransparent = True
+    BorderStyle = bsNone
+    Color = clWhite
+    Colors.FocusedSelectionColor = clHotLight
+    Colors.UnfocusedColor = clWindowText
+    DefaultNodeHeight = 19
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'Courier New'
+    Font.Style = []
+    Header.AutoSizeIndex = -1
+    Header.DefaultHeight = 25
+    Header.FixedAreaConstraints.MaxWidthPercent = 90
+    Header.Height = 15
+    Header.MainColumn = -1
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Indent = 0
+    ParentFont = False
+    TabOrder = 0
+    TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
+    TreeOptions.PaintOptions = [toHideFocusRect, toHideSelection, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toAlwaysHideSelection]
+    TreeOptions.SelectionOptions = [toDisableDrawSelection]
+    OnBeforeCellPaint = VSTBeforeCellPaint
+    OnGetText = VSTGetText
+    OnGetNodeDataSize = VSTGetNodeDataSize
+    OnKeyDown = VSTKeyDown
+    OnKeyPress = VSTKeyPress
+    OnNodeClick = VSTNodeClick
+    Touch.InteractiveGestures = [igPan, igPressAndTap]
+    Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitLeft = -347
+    ExplicitTop = -36
+    ExplicitWidth = 987
+    ExplicitHeight = 516
+    Columns = <>
+  end
+end

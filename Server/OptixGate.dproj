@@ -244,6 +244,10 @@
         <DCCReference Include="Units\Forms\Control\uControlFormSetupContentReader.pas">
             <Form>ControlFormSetupContentReader</Form>
         </DCCReference>
+        <DCCReference Include="Units\Frames\Components\uFrameHexEditor.pas">
+            <Form>FrameHexEditor</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
