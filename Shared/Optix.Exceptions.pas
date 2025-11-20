@@ -69,7 +69,15 @@ type
     property ErrorCode : Integer read FErrorCode;
   end;
 
+  EOptixSystemException = class(Exception)
+  public
+    {@C}
+    constructor Create(const ASystemmErrorIdentifier : TGUID); overload;
+  end;
+
 implementation
+
+(* EWindowsException *)
 
 { EWindowsException.Create }
 constructor EWindowsException.Create(const WindowsAPIName : String; const AErrorCode : Cardinal = 0);
@@ -88,6 +96,13 @@ begin
 
   ///
   inherited Create(AFormatedMessage);
+end;
+
+(* EOptixSystemException *)
+
+constructor EOptixSystemException.Create(const ASystemmErrorIdentifier : TGUID);
+begin
+  inherited Create(Format('Optix System Error: "%s"', [ASystemmErrorIdentifier.ToString]));
 end;
 
 end.

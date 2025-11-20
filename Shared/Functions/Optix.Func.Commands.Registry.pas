@@ -131,7 +131,7 @@ type
     property NewKeyFullPath : String read FNewKeyFullPath;
   end;
 
-  TOptixCommandDeleteKey = class(TOptixCommandActionResponse)
+  TOptixCommandRegistryDeleteKey = class(TOptixCommandActionResponse)
   private
     [OptixSerializableAttribute]
     FKeyFullPath : String;
@@ -146,11 +146,45 @@ type
     property KeyFullPath : String read FKeyFullPath;
   end;
 
+  TOptixCommandRegistrySetValue = class(TOptixCommandActionResponse)
+  private
+    [OptixSerializableAttribute]
+    FKeyFullPath : String;
+
+    [OptixSerializableAttribute]
+    FName : String;
+
+    [OptixSerializableAttribute]
+    FKind : DWORD;
+
+    [OptixSerializableAttribute]
+    FData : TOptixMemoryObject;
+
+    [OptixSerializableAttribute]
+    FNewValue : TRegistryValueInformation;
+  public
+    {@C}
+    constructor Create(); override;
+    constructor Create(const AKeyFullPath : String; const AName : String; const AKind : DWORD; const pData : Pointer;
+      const ADataSize : UInt64); overload;
+    destructor Destroy(); override;
+
+    {@M}
+    procedure DoAction(); override;
+
+    {@G}
+    property KeyFullPath : String                    read FKeyFullPath;
+    property Name        : String                    read FName;
+    property Kind        : DWORD                     read FKind;
+    property Data        : TOptixMemoryObject        read FData;
+    property NewValue    : TRegistryValueInformation read FNewValue;
+  end;
+
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.System.Helper, Optix.FileSystem.Helper;
+  Optix.System.Helper, Optix.FileSystem.Helper, Optix.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
 
 (***********************************************************************************************************************
@@ -326,12 +360,12 @@ end;
 
 (***********************************************************************************************************************
 
-TOptixCommandDeleteKey
+TOptixCommandRegistryDeleteKey
 
 ***********************************************************************************************************************)
 
-{ TOptixCommandDeleteKey.Create }
-constructor TOptixCommandDeleteKey.Create(const AKeyFullPath: String);
+{ TOptixCommandRegistryDeleteKey.Create }
+constructor TOptixCommandRegistryDeleteKey.Create(const AKeyFullPath: String);
 begin
   inherited Create();
   ///
@@ -339,10 +373,78 @@ begin
   FKeyFullPath := AKeyFullPath;
 end;
 
-{ TOptixCommandDeleteKey.DoAction }
-procedure TOptixCommandDeleteKey.DoAction();
+{ TOptixCommandRegistryDeleteKey.DoAction }
+procedure TOptixCommandRegistryDeleteKey.DoAction();
 begin
   TRegistryHelper.DeleteKey(FKeyFullPath);
+end;
+
+(***********************************************************************************************************************
+
+TOptixCommandRegistrySetValue
+
+***********************************************************************************************************************)
+
+{ TOptixCommandRegistrySetValue.Create }
+constructor TOptixCommandRegistrySetValue.Create();
+begin
+  inherited;
+  ///
+
+  FNewValue := TRegistryValueInformation.Create();
+end;
+
+{ TOptixCommandRegistrySetValue.Create }
+constructor TOptixCommandRegistrySetValue.Create(const AKeyFullPath : String;  const AName : String;
+  const AKind : DWORD; const pData : Pointer; const ADataSize : UInt64);
+begin
+  Create();
+  ///
+
+  FKeyFullPath := AKeyFullPath;
+  FName        := AName;
+  FKind        := AKind;
+
+  FData := TOptixMemoryObject.Create(pData, ADataSize, True);
+end;
+
+{ TOptixCommandRegistrySetValue.Destroy }
+destructor TOptixCommandRegistrySetValue.Destroy();
+begin
+  if Assigned(FNewValue) then
+    FreeAndNil(FNewValue);
+
+  if Assigned(FData) then
+    FreeAndNil(FData);
+
+  ///
+  inherited;
+end;
+
+{ TOptixCommandRegistrySetValue.DoAction }
+procedure TOptixCommandRegistrySetValue.DoAction();
+begin
+  if not Assigned(FData) then
+    raise EOptixSystemException.Create('{DBBAF446-0898-4242-B566-86AB8C620B21}');
+  ///
+
+  TRegistryHelper.SetValue(
+    FKeyFullPath,
+    FName,
+    FKind,
+    FData.Address,
+    FData.Size
+  );
+
+  if Assigned(FNewValue) then
+    FreeAndNil(FNewValue);
+
+  var AValueKind    : DWORD;
+  var ADataAsString : String;
+
+  TRegistryHelper.ReadValueAsGenericString(FKeyFullPath, FName, AValueKind, ADataAsString);
+
+  FNewValue := TRegistryValueInformation.Create(FName, ADataAsString, AValueKind);
 end;
 
 end.

@@ -108,6 +108,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
       OnChange = VSTValuesChange
       OnCompareNodes = VSTValuesCompareNodes
+      OnDblClick = VSTValuesDblClick
       OnFocusChanged = VSTValuesFocusChanged
       OnFreeNode = VSTValuesFreeNode
       OnGetText = VSTValuesGetText
@@ -207,14 +208,44 @@ object ControlFormRegistryManager: TControlFormRegistryManager
   end
   object PopupValues: TPopupMenu
     OnPopup = PopupValuesPopup
-    Left = 512
-    Top = 143
+    Left = 520
+    Top = 175
     object New1: TMenuItem
       Caption = 'New'
-      object Key1: TMenuItem
+      object NewKey1: TMenuItem
         Caption = 'Key'
-        OnClick = Key1Click
+        OnClick = NewKey1Click
       end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object NewStringValue1: TMenuItem
+        Caption = 'String (SZ)'
+        OnClick = NewStringValue1Click
+      end
+      object NewMultiLineStringValue1: TMenuItem
+        Caption = 'Multi Line String (MSZ)'
+        OnClick = NewMultiLineStringValue1Click
+      end
+      object NewDWORDValue1: TMenuItem
+        Caption = 'DWORD (4 Byte)'
+        OnClick = NewDWORDValue1Click
+      end
+      object NewQWORDValue1: TMenuItem
+        Caption = 'QWORD (8 Bytes)'
+        OnClick = NewQWORDValue1Click
+      end
+      object NewBinaryValue1: TMenuItem
+        Caption = 'Binary'
+        OnClick = NewBinaryValue1Click
+      end
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object EditSelectedValue1: TMenuItem
+      Caption = 'Edit Selected'
+      OnClick = EditSelectedValue1Click
     end
   end
 end

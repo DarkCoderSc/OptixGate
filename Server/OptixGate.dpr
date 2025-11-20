@@ -120,7 +120,8 @@ uses
   Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas',
   uControlFormContentReader in 'Units\Forms\Control\uControlFormContentReader.pas' {ControlFormContentReader},
   uControlFormSetupContentReader in 'Units\Forms\Control\uControlFormSetupContentReader.pas' {ControlFormSetupContentReader},
-  uFrameHexEditor in 'Units\Frames\Components\uFrameHexEditor.pas' {FrameHexEditor: TFrame};
+  uFrameHexEditor in 'Units\Frames\Components\uFrameHexEditor.pas' {FrameHexEditor: TFrame},
+  uControlFormRegistryEditor in 'Units\Forms\Control\uControlFormRegistryEditor.pas' {ControlFormRegistryEditor};
 
 {$R *.res}
 {$R data.res}
@@ -141,6 +142,7 @@ begin
   Application.CreateForm(TFormAbout, FormAbout);
   Application.CreateForm(TFormDebugThreads, FormDebugThreads);
   Application.CreateForm(TFormServers, FormServers);
+
   ///
   Application.Run;
 end.

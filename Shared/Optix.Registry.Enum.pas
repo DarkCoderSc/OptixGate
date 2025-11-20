@@ -124,9 +124,6 @@ type
       var AValues : TObjectList<TRegistryValueInformation>); static;
   end;
 
-  const
-    REG_MSZ_LINE_SEP = '{/\$/\@/\0\n/%\//\!/\}';
-
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -204,7 +201,7 @@ end;
 function TRegistryValueInformation.GetValue() : String;
 begin
   if FType = REG_MULTI_SZ then
-    result := FValue.Replace(REG_MSZ_LINE_SEP, #13#10, [rfReplaceAll])
+    result := FValue.Replace(TRegistryHelper.REG_MSZ_LINE_SEP, #13#10, [rfReplaceAll])
   else
     result := FValue;
 end;
@@ -324,83 +321,17 @@ begin
 
           ///
           var AValueName := String(pNameBuffer);
-          var AValueType : DWORD;
-          var AValueDataSize : DWORD;
-          var AData := '';
+          if AValueName.IsEmpty then
+            ADefaultValueExists := True;
+          try
+            var AValueKind    : DWORD;
+            var ADataAsString : String;
 
-          ARet := RegGetValueW(hOpenedKey, nil, PWideChar(AValueName), RRF_RT_ANY, AValueType, nil, AValueDataSize);
-          if ARet = ERROR_SUCCESS then begin
-            var pData : Pointer;
-            GetMem(pData, AValueDataSize * SizeOf(WideChar));
-            try
-              ARet := RegGetValueW(
-                hOpenedKey,
-                nil,
-                PWideChar(AValueName),
-                RRF_RT_ANY,
-                AValueType,
-                pData,
-                AValueDataSize
-              );
-              if ARet <> ERROR_SUCCESS then
-                continue;
+            TRegistryHelper.ReadValueAsGenericString(hOpenedKey, AValueName, AValueKind, ADataAsString);
 
-              if AValueName.IsEmpty then
-                ADefaultValueExists := True;
-
-              case AValueType of
-                REG_SZ, REG_EXPAND_SZ:
-                  AData := String(PWideChar(pData));
-
-                REG_MULTI_SZ: begin
-                  var AStringList := TStringList.Create();
-                  try
-                    var p := PWideChar(pData);
-                    while p^ <> #0 do begin
-                      AStringList.Add(String(p));
-
-                      ///
-                      Inc(p, lstrlenW(p) + 1);
-                    end;
-
-                    ///
-                    AStringList.LineBreak := REG_MSZ_LINE_SEP;
-                    AData := AStringList.Text;
-                  finally
-                    if Assigned(AStringList) then
-                      FreeAndNil(AStringList);
-                  end;
-                end;
-
-                REG_DWORD:
-                  AData := Format('0x%.8X (%d)', [PDWORD(pData)^, PDWORD(pData)^]);
-
-                REG_QWORD:
-                  AData := Format('0x%.16X (%d)', [PUInt64(pData)^, PUInt64(pData)^]);
-
-                REG_BINARY: begin
-                  var AStringBuilder := TStringBuilder.Create(AValueDataSize * 3 (* 1 Byte = 2 (Hex) + 1 (Space) *));
-                  try
-                    for var n := 0 to AValueDataSize -1 do begin
-                      AStringBuilder.AppendFormat('%.2X ', [PByte(NativeUInt(pData) + n)^]);
-                    end;
-
-                    ///
-                    AData := AStringBuilder.ToString.TrimRight;
-                  finally
-                    if Assigned(AStringBuilder) then
-                      FreeAndNil(AStringBuilder);
-                  end;
-                end;
-              end;
-
-              ///
-              AValues.Add(TRegistryValueInformation.Create(AValueName, AData, AValueType));
-            finally
-              FreeMem(pData, AValueDataSize);
-            end;
-          end else
-            AData := '<could not read>';
+            AValues.Add(TRegistryValueInformation.Create(AValueName, ADataAsString, AValueKind));
+          except
+          end;
         end;
       end;
     finally

@@ -89,6 +89,7 @@ type
     function GetAsBase64() : String;
   public
     {@C}
+    constructor Create(); overload;
     constructor Create(const AMemoryAddress : Pointer; const AMemorySize : UInt64; const ACopy : Boolean); overload;
     constructor Create(const ABase64Data : String); overload;
     destructor Destroy(); override;
@@ -260,11 +261,24 @@ end;
 (* TOptixMemoryObject *)
 
 { TOptixMemoryObject.Create }
+constructor TOptixMemoryObject.Create();
+begin
+  inherited;
+  ///
+
+  FAddress := nil;
+  FSize := 0;
+end;
+
+{ TOptixMemoryObject.Create }
 constructor TOptixMemoryObject.Create(const AMemoryAddress : Pointer; const AMemorySize : UInt64;
   const ACopy : Boolean);
 begin
-  inherited Create();
+  Create();
   ///
+
+  if not Assigned(AMemoryAddress) or (AMemorySize = 0) then
+    Exit();
 
   FSize := AMemorySize;
 
@@ -279,10 +293,14 @@ end;
 { TOptixMemoryObject.Create }
 constructor TOptixMemoryObject.Create(const ABase64Data : String);
 begin
-  var ABytes := TNetEncoding.Base64.DecodeStringToBytes(ABase64Data);
+  if String.IsNullOrWhiteSpace(ABase64Data) then
+    Create()
+  else begin
+    var ABytes := TNetEncoding.Base64.DecodeStringToBytes(ABase64Data);
 
-  ///
-  Create(@ABytes[0], Length(ABytes), True);
+    ///
+    Create(@ABytes[0], Length(ABytes), True);
+  end;
 end;
 
 { TOptixMemoryObject.Destroy }

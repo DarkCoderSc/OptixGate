@@ -132,6 +132,7 @@ type
 
     {@M}
     procedure LoadData(const pData : Pointer; const ADataSize : UInt64);
+    procedure Clear();
 
     {@G}
     property Data            : Pointer read FBuffer;
@@ -154,10 +155,38 @@ uses
 {$R *.dfm}
 
 { TFrameHexEditor.Create }
+procedure TFrameHexEditor.Clear();
+begin
+  FSelStart := -1;
+  FSelEnd   := -1;
+  FSelKind  := gskNone;
+
+  if not FReadOnly and Assigned(FBuffer) then begin
+    FEditHexCellPos := 0;
+    ZeroMemory(FBuffer, FTotalBufferSize);
+
+    if FExpandable then begin
+      ReallocMem(FBuffer, FPageSize);
+
+      ///
+      FTotalBufferSize := FPageSize;
+      FRealSize := 0;
+
+      RefreshHexGrid();
+    end;
+  end;
+
+  ///
+  VST.Refresh();
+end;
+
+{ TFrameHexEditor.Create }
 constructor TFrameHexEditor.Create(AOwner : TComponent);
 begin
   inherited;
   ///
+
+  InitializeGridHeader();
 
   FReadOnly := False;
   FExpandable := True;
@@ -184,7 +213,6 @@ begin
   end;
 
   ///
-  InitializeGridHeader();
   RefreshHexGrid();
 end;
 

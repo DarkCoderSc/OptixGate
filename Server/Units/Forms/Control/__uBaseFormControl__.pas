@@ -151,10 +151,11 @@ type
     procedure WMWindowPosChanging(var AMessage: TWMWindowPosChanging); message WM_WINDOWPOSCHANGING;
   public
     {@M}
-    procedure SendCommand(const ACommand : TOptixCommand);
+    procedure SendCommand(const ACommand : TOptixCommand); overload;
+    procedure SendCommand(const ACommand : TOptixCommand; const AControlFormGUIDForCallBack : TGUID); overload;
     procedure ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean); virtual;
     procedure PurgeRequest(); virtual;
-    procedure OverrideWindowGUID(const ANewGUID : TGUID);
+    procedure __WARNING__OverrideWindowGUID(const ANewGUID : TGUID); (* Warning | TODO: Safer method *)
 
     {@C}
     constructor Create(AOwner : TComponent; const AUserIdentifier : String;
@@ -380,6 +381,15 @@ begin
   FormMain.SendCommand(self, ACommand);
 end;
 
+{ TBaseFormControl.SendCommand }
+procedure TBaseFormControl.SendCommand(const ACommand : TOptixCommand; const AControlFormGUIDForCallBack : TGUID);
+begin
+  ACommand.WindowGUID := AControlFormGUIDForCallBack;
+
+  ///
+  FormMain.SendCommand(self, ACommand);
+end;
+
 { TBaseFormControl.RequestFileDownload }
 function TBaseFormControl.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
@@ -508,8 +518,8 @@ begin
   ///
 end;
 
-{ TBaseFormControl.OverrideWindowGUID }
-procedure TBaseFormControl.OverrideWindowGUID(const ANewGUID : TGUID);
+{ TBaseFormControl.__WARNING__OverrideWindowGUID }
+procedure TBaseFormControl.__WARNING__OverrideWindowGUID(const ANewGUID : TGUID);
 begin
   FFormInformation.GUID := ANewGUID;
 end;

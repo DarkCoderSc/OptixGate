@@ -179,8 +179,6 @@ type
     function GetNodeByHandlerId(const AHandlerId : TGUID) : PVirtualNode;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
     procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
-    function CreateNewControlForm(const pNode : PVirtualNode;
-      const AFormClass : TBaseFormControlClass) : TBaseFormControl;
   public
     {@M}
     function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
@@ -191,6 +189,11 @@ type
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
+
+    function CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass;
+      const ADoShow : Boolean = True) : TBaseFormControl; overload;
+    function CreateNewControlForm(const AControlForm : TBaseFormControl; const AFormClass : TBaseFormControlClass;
+      const ADoShow : Boolean = True) : TBaseFormControl; overload;
 
     {@ME}
     procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
@@ -451,8 +454,8 @@ begin
     TOptixVCLHelper.ShowForm(AForm);
 end;
 
-function TFormMain.CreateNewControlForm(const pNode : PVirtualNode;
-  const AFormClass : TBaseFormControlClass) : TBaseFormControl;
+function TFormMain.CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass;
+  const ADoShow : Boolean = True) : TBaseFormControl;
 begin
   result := nil;
   ///
@@ -469,8 +472,14 @@ begin
 
   result := AForm;
 
-  ///
-  TOptixVCLHelper.ShowForm(AForm);
+  if ADoShow then
+    TOptixVCLHelper.ShowForm(AForm);
+end;
+
+function TFormMain.CreateNewControlForm(const AControlForm : TBaseFormControl; const AFormClass : TBaseFormControlClass;
+  const ADoShow : Boolean = True) : TBaseFormControl;
+begin
+  result := CreateNewControlForm(GetNodeByControlForm(AControlForm), AFormClass, ADoShow);
 end;
 
 procedure TFormMain.Logs1Click(Sender: TObject);
@@ -798,7 +807,7 @@ begin
           var AForm := CreateNewControlForm(pNode, TControlFormContentReader);
 
           ///
-          AForm.OverrideWindowGUID(AOptixPacket.WindowGUID);
+          AForm.__WARNING__OverrideWindowGUID(AOptixPacket.WindowGUID);
         end;
         // -------------------------------------------------------------------------------------------------------------
 

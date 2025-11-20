@@ -273,6 +273,9 @@
             <Form>FrameHexEditor</Form>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
+        <DCCReference Include="Units\Forms\Control\uControlFormRegistryEditor.pas">
+            <Form>ControlFormRegistryEditor</Form>
+        </DCCReference>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

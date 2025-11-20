@@ -180,7 +180,8 @@ initialization
   TClassesRegistry.RegisterClass(TOptixGetRegistryHives);
   TClassesRegistry.RegisterClass(TOptixRefreshRegistrySubKeys);
   TClassesRegistry.RegisterClass(TOptixCommandRegistryCreateKey);
-  TClassesRegistry.RegisterClass(TOptixCommandDeleteKey);
+  TClassesRegistry.RegisterClass(TOptixCommandRegistryDeleteKey);
+  TClassesRegistry.RegisterClass(TOptixCommandRegistrySetValue);
 
   // File Readers
   TClassesRegistry.RegisterClass(TOptixCommandCreateFileContentReader);

@@ -46,10 +46,6 @@ object FrameHexEditor: TFrameHexEditor
     OnNodeClick = VSTNodeClick
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitLeft = -347
-    ExplicitTop = -36
-    ExplicitWidth = 987
-    ExplicitHeight = 516
     Columns = <>
   end
 end

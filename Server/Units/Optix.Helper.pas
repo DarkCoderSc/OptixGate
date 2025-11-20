@@ -61,7 +61,7 @@ uses
 
   Generics.Collections,
 
-  Winapi.ShellAPI,
+  Winapi.ShellAPI, Winapi.Windows,
 
   VCL.Controls;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -91,6 +91,13 @@ type
     class function OutputPrintableChar(const pBuffer : Pointer; const ABufferSize : UInt64) : String; overload; static;
     class function ToHexTable(const pBuffer : Pointer; const ABufferSize : UInt64;
       const AStartOffset : UInt64 = 0; const AColumnLength : Cardinal = 16) : String; static;
+  end;
+
+  TMemoryUtils = class
+  public
+    class procedure StringToMemory(const AValue : String; out pData : Pointer; out ADataSize : UInt64); static;
+    class procedure DwordToMemory(const AValue : DWORD; out pData : Pointer; out ADataSize : UInt64); static;
+    class procedure QwordToMemory(const AValue : UInt64; out pData : Pointer; out ADataSize : UInt64); static;
   end;
 
 // Format Utilities
@@ -126,9 +133,7 @@ function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
-uses System.IOUtils,
-
-     Winapi.Windows;
+uses System.IOUtils;
 // ---------------------------------------------------------------------------------------------------------------------
 
 (* TContentFormater *)
@@ -349,6 +354,38 @@ begin
     if Assigned(AOutputBuilder) then
       FreeAndNil(AOutputBuilder);
   end;
+end;
+
+(* TMemoryUtils *)
+
+{ TMemoryUtils.StringToMemory }
+class procedure TMemoryUtils.StringToMemory(const AValue : String; out pData : Pointer; out ADataSize : UInt64);
+begin
+  ADataSize := Length(AValue) * SizeOf(WideChar);
+
+  GetMem(pData, ADataSize);
+
+  CopyMemory(pData, PWideChar(AValue), ADataSize);
+end;
+
+{ TMemoryUtils.DwordToMemory }
+class procedure TMemoryUtils.DwordToMemory(const AValue : DWORD; out pData : Pointer; out ADataSize : UInt64);
+begin
+  ADataSize := SizeOf(DWORD);
+
+  GetMem(pData, ADataSize);
+
+  CopyMemory(pData, @AValue, ADataSize);
+end;
+
+{ TMemoryUtils.QwordToMemory }
+class procedure TMemoryUtils.QwordToMemory(const AValue : UInt64; out pData : Pointer; out ADataSize : UInt64);
+begin
+  ADataSize := SizeOf(UInt64);
+
+  GetMem(pData, ADataSize);
+
+  CopyMemory(pData, @AValue, ADataSize);
 end;
 
 (* _ *)
