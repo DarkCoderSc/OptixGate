@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Func.Commands.Registry;
 
@@ -402,7 +403,8 @@ begin
   FName        := AName;
   FKind        := AKind;
 
-  FData := TOptixMemoryObject.Create(pData, ADataSize, True);
+  FData := TOptixMemoryObject.Create();
+  FData.CopyFrom(pData, ADataSize);
 end;
 
 { TOptixCommandRegistrySetValue.Destroy }

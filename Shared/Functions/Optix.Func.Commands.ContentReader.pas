@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Func.Commands.ContentReader;
 
@@ -202,8 +203,10 @@ begin
 
   AReader.ReadPage(FPageNumber, pBuffer, ABufferSize);
   try
-    if Assigned(pBuffer) and (ABufferSize > 0) then
-      FData := TOptixMemoryObject.Create(pBuffer, ABufferSize, True);
+    if Assigned(pBuffer) and (ABufferSize > 0) then begin
+      FData := TOptixMemoryObject.Create();
+      FData.CopyFrom(pBuffer, ABufferSize);
+    end;
   finally
     FreeMem(pBuffer, ABufferSize);
   end;

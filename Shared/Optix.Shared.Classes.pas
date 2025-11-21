@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Shared.Classes;
 
@@ -79,15 +80,18 @@ type
 
   TOptixMemoryObject = class
   private
-    FAddress : Pointer;
-    FSize    : UInt64;
+    FAddress    : Pointer;
+    FSize       : UInt64;
+    FOwnsMemory : Boolean;
 
     {@M}
+    procedure FreeMemory();
     function GetAsBase64() : String;
   public
     {@C}
     constructor Create(); overload;
-    constructor Create(const AMemoryAddress : Pointer; const AMemorySize : UInt64; const ACopy : Boolean); overload;
+    procedure CopyFrom(const pCopyFromAddress : Pointer; const ASize : UInt64);
+    procedure Assign(const pMemoryAddress : Pointer; const ASize : UInt64);
     constructor Create(const ABase64Data : String); overload;
     destructor Destroy(); override;
 
@@ -263,28 +267,48 @@ begin
   inherited;
   ///
 
+  FOwnsMemory := False;
+
+  FreeMemory();
+end;
+
+{ TOptixMemoryObject.FreeMemory }
+procedure TOptixMemoryObject.FreeMemory();
+begin
+  if FOwnsMemory and Assigned(FAddress) then
+    FreeMem(FAddress, FSize);
+  ///
+
   FAddress := nil;
   FSize := 0;
 end;
 
-{ TOptixMemoryObject.Create }
-constructor TOptixMemoryObject.Create(const AMemoryAddress : Pointer; const AMemorySize : UInt64;
-  const ACopy : Boolean);
+{ TOptixMemoryObject.CopyFrom }
+procedure TOptixMemoryObject.CopyFrom(const pCopyFromAddress : Pointer; const ASize : UInt64);
 begin
-  Create();
+  FreeMemory();
+  FOwnsMemory := True;
   ///
 
-  if not Assigned(AMemoryAddress) or (AMemorySize = 0) then
+  if ASize = 0 then
     Exit();
 
-  FSize := AMemorySize;
+  FSize := ASize;
 
-  if ACopy then begin
-    GetMem(FAddress, AMemorySize);
+  GetMem(FAddress, FSize);
 
-    CopyMemory(FAddress, AMemoryAddress, AMemorySize);
-  end else
-    FAddress := AMemoryAddress;
+  CopyMemory(FAddress, pCopyFromAddress, FSize);
+end;
+
+{ TOptixMemoryObject.Assign }
+procedure TOptixMemoryObject.Assign(const pMemoryAddress : Pointer; const ASize : UInt64);
+begin
+  FreeMemory();
+  FOwnsMemory := False;
+  ///
+
+  FAddress := pMemoryAddress;
+  FSize := ASize;
 end;
 
 { TOptixMemoryObject.Create }
@@ -296,15 +320,14 @@ begin
     var ABytes := TNetEncoding.Base64.DecodeStringToBytes(ABase64Data);
 
     ///
-    Create(@ABytes[0], Length(ABytes), True);
+    CopyFrom(@ABytes[0], Length(ABytes));
   end;
 end;
 
 { TOptixMemoryObject.Destroy }
 destructor TOptixMemoryObject.Destroy();
 begin
-  if Assigned(FAddress) then
-    FreeMem(FAddress, FSize);
+  FreeMemory();
 
   ///
   inherited Destroy();
