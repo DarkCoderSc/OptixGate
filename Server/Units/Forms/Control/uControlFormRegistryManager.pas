@@ -40,16 +40,14 @@
 {                                                                              }
 {  Authorship (No AI):                                                         }
 {  -------------------                                                         }
-{  All code contained in this unit was written and developed by the author     }
+{   All code contained in this unit was written and developed by the author    }
 {   without the assistance of artificial intelligence systems, large language  }
 {   models (LLMs), or automated code generation tools. Any external libraries  }
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
-{   The author grants permission for this code to be used, reproduced, and     }
-{   included in datasets for the purpose of training or improving machine      }
-{   learning models, including large language models (LLMs).                   }
-{                                                                              }
 {******************************************************************************}
+
+
 
 unit uControlFormRegistryManager;
 
@@ -221,10 +219,6 @@ begin
     end;
   end;
 end;
-
-TODO:
-  - Instead of receiving registry value as generic string, receive as Optix Object raw data, and read it server-side,
-    then support value prefill on registry value edit.
 
 procedure TControlFormRegistryManager.CreateOrEditRegistryValue(const AValueKind : DWORD;
   const AEditValue : Boolean = False; const AExistingValueName : String = '');

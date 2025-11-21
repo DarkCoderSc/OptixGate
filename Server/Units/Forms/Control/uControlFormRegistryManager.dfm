@@ -35,8 +35,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 701
-    ExplicitHeight = 368
+    ExplicitWidth = 721
     DesignSize = (
       711
       400)
