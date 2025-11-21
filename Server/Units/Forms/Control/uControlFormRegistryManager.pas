@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uControlFormRegistryManager;
 
 interface
@@ -81,6 +79,7 @@ type
 
   TValuesTreeData = record
     ValueInformation : TRegistryValueInformation;
+    ValueAsString    : String;
     ImageIndex       : Integer;
   end;
   PValuesTreeData = ^TValuesTreeData;
@@ -115,6 +114,8 @@ type
     NewBinaryValue1: TMenuItem;
     EditSelectedValue1: TMenuItem;
     N3: TMenuItem;
+    Refresh2: TMenuItem;
+    N4: TMenuItem;
     procedure VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -155,6 +156,7 @@ type
     procedure NewBinaryValue1Click(Sender: TObject);
     procedure EditSelectedValue1Click(Sender: TObject);
     procedure VSTValuesDblClick(Sender: TObject);
+    procedure Refresh2Click(Sender: TObject);
   private
     FCurrentKeyPath        : String;
     FCurrentKeyPermissions : TRegistryKeyPermissions;
@@ -167,8 +169,8 @@ type
     procedure DisplayValues(const AList : TOptixRefreshRegistryKeys);
     function GetNodeByKeyPath(const AKeyPath : String) : PVirtualNode;
     procedure RefreshNodesVisibility();
-    procedure CreateOrEditRegistryValue(const AValueKind : DWORD; const AEditValue : Boolean = False;
-      const AExistingValueName : String = '');
+    procedure CreateOrEditRegistryValue(const AValueKind : DWORD;
+      const AExistingValue : TRegistryValueInformation = nil);
     function GetValueNode(const AFullKeyPath, AValueName : String) : PVirtualNode;
   protected
     {@M}
@@ -221,7 +223,7 @@ begin
 end;
 
 procedure TControlFormRegistryManager.CreateOrEditRegistryValue(const AValueKind : DWORD;
-  const AEditValue : Boolean = False; const AExistingValueName : String = '');
+  const AExistingValue : TRegistryValueInformation = nil);
 begin
   if not (rkpSetValue in FCurrentKeyPermissions) then
     Exit();
@@ -234,8 +236,13 @@ begin
   AForm.ManagerGUID := GUID;
   AForm.ValueKind   := AValueKind;
   AForm.FullKeyPath := FCurrentKeyPath;
-  AForm.EditMode := AEditValue;
-  AForm.EditName.Text := AExistingValueName;
+
+  if Assigned(AExistingValue) then begin
+    AForm.EditMode := True;
+    AForm.EditName.Text := AExistingValue.Name;
+
+    AForm.SetData(AExistingValue.Value);
+  end;
 
   ///
   TOptixVCLHelper.ShowForm(AForm);
@@ -309,6 +316,14 @@ procedure TControlFormRegistryManager.Refresh1Click(Sender: TObject);
 begin
   if not String.IsNullOrWhiteSpace(EditPath.Text) then
     BrowsePath(EditPath.Text);
+end;
+
+procedure TControlFormRegistryManager.Refresh2Click(Sender: TObject);
+begin
+  if String.IsNullOrWhiteSpace(FCurrentKeyPath) then
+    Exit();
+
+  BrowsePath(FCurrentKeyPath);
 end;
 
 procedure TControlFormRegistryManager.RefreshNodesVisibility();
@@ -432,6 +447,7 @@ begin
 
   pData^.ValueInformation := TRegistryValueInformation.Create();
   pData^.ValueInformation.Assign(AValueInformation);
+  pData^.ValueAsString := AValueInformation.ToString;
 
   case pData^.ValueInformation._Type of
     REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ:
@@ -467,7 +483,7 @@ begin
 
   var pData := PValuesTreeData(VSTValues.FocusedNode.GetData);
   if Assigned(pData) and Assigned(pData^.ValueInformation) then
-    CreateOrEditRegistryValue(pData^.ValueInformation._Type, True, pData^.ValueInformation.Name);
+    CreateOrEditRegistryValue(pData^.ValueInformation._Type, pData^.ValueInformation);
 end;
 
 procedure TControlFormRegistryManager.FormCreate(Sender: TObject);
@@ -587,8 +603,11 @@ begin
         AddNewValueNode(AResult.NewValue)
       else begin
         var pData := PValuesTreeData(pNode.GetData);
-        if Assigned(pData) and Assigned(pData^.ValueInformation) then
+        if Assigned(pData) and Assigned(pData^.ValueInformation) then begin
           pData^.ValueInformation.Assign(AResult.NewValue);
+
+          pData^.ValueAsString := AResult.NewValue.ToString; // Save computing time for VST
+        end;
       end;
     finally
       VSTValues.EndUpdate();
@@ -631,7 +650,6 @@ begin
 
   ///
   NewKey1.Enabled := rkpCreateSubKey in FCurrentKeyPermissions;
-
 
   // New Values
   NewStringValue1.Enabled          := rkpSetValue in FCurrentKeyPermissions;
@@ -745,7 +763,7 @@ begin
     case Column of
       0 : Result := CompareText(pData1^.ValueInformation.Name, pData2^.ValueInformation.Name);
       1 : Result := CompareValue(pData1^.ValueInformation._Type, pData2^.ValueInformation._Type);
-      2 : Result := CompareText(pData1^.ValueInformation.Value, pData2^.ValueInformation.Value);
+      2 : Result := CompareText(pData1^.ValueAsString, pData2^.ValueAsString);
     end;
   end;
 end;
@@ -813,10 +831,10 @@ begin
 
       2 : begin
         // TODO Ternary op when Delphi 13 CE released
-        if pData^.ValueInformation.IsDefault and pData^.ValueInformation.Value.IsEmpty then
+        if pData^.ValueInformation.IsDefault and (pData^.ValueAsString = '') then
           CellText := '(value not set)'
         else
-          CellText := pData^.ValueInformation.Value.Replace(#13#10, '\0', [rfReplaceAll]);
+          CellText := pData^.ValueAsString.Replace(#13#10, '\0', [rfReplaceAll]);
       end;
     end;
   end;

@@ -252,6 +252,7 @@
             <Form>ControlFormRegistryEditor</Form>
             <FormType>dfm</FormType>
         </DCCReference>
+        <DCCReference Include="..\Shared\Optix.Shared.Helper.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

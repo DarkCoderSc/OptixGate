@@ -87,15 +87,18 @@ type
     {@M}
     procedure FreeMemory();
     function GetAsBase64() : String;
+    function GetHasData() : Boolean;
   public
     {@C}
     constructor Create(); overload;
-    procedure CopyFrom(const pCopyFromAddress : Pointer; const ASize : UInt64);
+    procedure CopyFrom(const pCopyFromAddress : Pointer; const ASize : UInt64); overload;
+    procedure CopyFrom(const AOptixMemoryObject : TOptixMemoryObject); overload;
     procedure Assign(const pMemoryAddress : Pointer; const ASize : UInt64);
     constructor Create(const ABase64Data : String); overload;
     destructor Destroy(); override;
 
     {@G}
+    property HasData  : Boolean read GetHasData;
     property Address  : Pointer read FAddress;
     property Size     : UInt64  read FSize;
     property ToBase64 : String  read GetAsBase64;
@@ -300,6 +303,13 @@ begin
   CopyMemory(FAddress, pCopyFromAddress, FSize);
 end;
 
+{ TOptixMemoryObject.CopyFrom }
+procedure TOptixMemoryObject.CopyFrom(const AOptixMemoryObject : TOptixMemoryObject);
+begin
+  if Assigned(AOptixMemoryObject) then
+    CopyFrom(AOptixMemoryObject.Address, AOptixMemoryObject.Size);
+end;
+
 { TOptixMemoryObject.Assign }
 procedure TOptixMemoryObject.Assign(const pMemoryAddress : Pointer; const ASize : UInt64);
 begin
@@ -309,6 +319,12 @@ begin
 
   FAddress := pMemoryAddress;
   FSize := ASize;
+end;
+
+{ TOptixMemoryObject.GetHasData }
+function TOptixMemoryObject.GetHasData() : Boolean;
+begin
+  result := Assigned(FAddress) and (FSize > 0);
 end;
 
 { TOptixMemoryObject.Create }

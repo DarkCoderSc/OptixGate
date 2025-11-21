@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Registry.Helper;
 
@@ -107,10 +108,10 @@ type
     class procedure SetValue(const AKeyFullPath : String; const AName : String; const AValueKind : DWORD;
       const pData : Pointer; const ADataSize : UInt64); static;
     class function ValueKindToString(const AValueKind : DWORD) : String; static;
-    class procedure ReadValueAsGenericString(const hOpenedKey : HKEY; const AValueName : String; out AValueType : DWORD;
-      out ADataAsString : String); overload; static;
-    class procedure ReadValueAsGenericString(const AFullKeyPath : String; const AValueName : String;
-      out AValueType : DWORD; out ADataAsString : String); overload;static;
+    class procedure ReadValue(const hOpenedKey : HKEY; const AValueName : String; out AValueType : DWORD;
+      out pData : Pointer; out ADataSize : DWORD); overload; static;
+    class procedure ReadValue(const AFullKeyPath : String; const AValueName : String; out AValueType : DWORD;
+      out pData : Pointer; out ADataSize : DWORD); overload;static;
 
     {@G}
     class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
@@ -507,92 +508,44 @@ begin
   end;
 end;
 
-{ TRegistryHelper.ReadValueAsGenericString }
-class procedure TRegistryHelper.ReadValueAsGenericString(const hOpenedKey : HKEY; const AValueName : String;
-  out AValueType : DWORD; out ADataAsString : String);
+{ TRegistryHelper.ReadValue }
+class procedure TRegistryHelper.ReadValue(const hOpenedKey : HKEY; const AValueName : String;
+  out AValueType : DWORD; out pData : Pointer; out ADataSize : DWORD);
 begin
-  var AValueDataSize : DWORD;
+  pData := nil;
+  ADataSize := 0;
   ///
 
-  var ARet := RegGetValueW(hOpenedKey, nil, PWideChar(AValueName), RRF_RT_ANY, AValueType, nil, AValueDataSize);
-  if (ARet = ERROR_SUCCESS) or (ARet = ERROR_MORE_DATA) then begin
-    var pData : Pointer;
-    GetMem(pData, AValueDataSize * SizeOf(WideChar));
-    try
-      ARet := RegGetValueW(
-        hOpenedKey,
-        nil,
-        PWideChar(AValueName),
-        RRF_RT_ANY,
-        AValueType,
-        pData,
-        AValueDataSize
-      );
-      if ARet <> ERROR_SUCCESS then
-        raise EWindowsException.Create('RegGetValueW');
+  var ARet := RegGetValueW(hOpenedKey, nil, PWideChar(AValueName), RRF_RT_ANY, AValueType, nil, ADataSize);
+  if (ARet <> ERROR_SUCCESS) and (ARet <> ERROR_MORE_DATA) then
+    Exit();
+  ///
 
-      if not Assigned(pData) or (AValueDataSize = 0) then
-        Exit();
-
-      case AValueType of
-        REG_SZ, REG_EXPAND_SZ:
-          ADataAsString := String(PWideChar(pData));
-
-        REG_MULTI_SZ: begin
-          var AStringList := TStringList.Create();
-          try
-            var p := PWideChar(pData);
-            while p^ <> #0 do begin
-              AStringList.Add(String(p));
-
-              ///
-              Inc(p, lstrlenW(p) + 1);
-            end;
-
-            ///
-            AStringList.LineBreak := REG_MSZ_LINE_SEP;
-            ADataAsString := AStringList.Text;
-          finally
-            if Assigned(AStringList) then
-              FreeAndNil(AStringList);
-          end;
-        end;
-
-        REG_DWORD:
-          ADataAsString := Format('0x%.8X (%d)', [PDWORD(pData)^, PDWORD(pData)^]);
-
-        REG_QWORD:
-          ADataAsString := Format('0x%.16X (%d)', [PUInt64(pData)^, PUInt64(pData)^]);
-
-        REG_BINARY: begin
-          var AStringBuilder := TStringBuilder.Create(AValueDataSize * 3 (* 1 Byte = 2 (Hex) + 1 (Space) *));
-          try
-            for var n := 0 to AValueDataSize -1 do begin
-              AStringBuilder.AppendFormat('%.2X ', [PByte(NativeUInt(pData) + n)^]);
-            end;
-
-            ///
-            ADataAsString := AStringBuilder.ToString.TrimRight;
-          finally
-            if Assigned(AStringBuilder) then
-              FreeAndNil(AStringBuilder);
-          end;
-        end;
-      end;
-    finally
-      FreeMem(pData, AValueDataSize);
+  GetMem(pData, ADataSize * SizeOf(WideChar));
+  try
+    ARet := RegGetValueW(
+      hOpenedKey,
+      nil,
+      PWideChar(AValueName),
+      RRF_RT_ANY,
+      AValueType,
+      pData,
+      ADataSize
+    );
+    if ARet <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegGetValueW');
+    except
+      FreeMem(pData, ADataSize);
     end;
-  end else
-    ADataAsString := '<could not read>';
 end;
 
-{ TRegistryHelper.ReadValueAsGenericString }
-class procedure TRegistryHelper.ReadValueAsGenericString(const AFullKeyPath : String; const AValueName : String;
-  out AValueType : DWORD; out ADataAsString : String);
+{ TRegistryHelper.ReadValue }
+class procedure TRegistryHelper.ReadValue(const AFullKeyPath : String; const AValueName : String;
+  out AValueType : DWORD; out pData : Pointer; out ADataSize : DWORD);
 begin
   var AKeyHandle := OpenRegistryKey(AFullKeyPath, KEY_QUERY_VALUE);
   try
-    ReadValueAsGenericString(AKeyHandle, AValueName, AValueType, ADataAsString);
+    ReadValue(AKeyHandle, AValueName, AValueType, pData, ADataSize);
   finally
     RegCloseKey(AKeyHandle);
   end;

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormContentReader;
 
@@ -145,7 +146,7 @@ implementation
 uses
   System.Math,
 
-  Optix.Helper, Optix.FileSystem.Helper;
+  Optix.Helper, Optix.FileSystem.Helper, Optix.Shared.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}

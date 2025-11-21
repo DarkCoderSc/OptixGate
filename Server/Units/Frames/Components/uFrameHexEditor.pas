@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 (*
   TODO:
@@ -605,8 +606,6 @@ begin
   FEditHexCellPos := 0;
   FSelStart       := -1;
   FSelEnd         := -1;
-
-  FReadOnly := True; // TODO: offer as an option + decide if working in Copy or Existing data (memory)
 
   RefreshHexGrid();
 

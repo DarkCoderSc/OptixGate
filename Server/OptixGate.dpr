@@ -121,7 +121,8 @@ uses
   uControlFormContentReader in 'Units\Forms\Control\uControlFormContentReader.pas' {ControlFormContentReader},
   uControlFormSetupContentReader in 'Units\Forms\Control\uControlFormSetupContentReader.pas' {ControlFormSetupContentReader},
   uFrameHexEditor in 'Units\Frames\Components\uFrameHexEditor.pas' {FrameHexEditor: TFrame},
-  uControlFormRegistryEditor in 'Units\Forms\Control\uControlFormRegistryEditor.pas' {ControlFormRegistryEditor};
+  uControlFormRegistryEditor in 'Units\Forms\Control\uControlFormRegistryEditor.pas' {ControlFormRegistryEditor},
+  Optix.Shared.Helper in '..\Shared\Optix.Shared.Helper.pas';
 
 {$R *.res}
 {$R data.res}

@@ -94,26 +94,28 @@ type
     FName : String;
 
     [OptixSerializableAttribute]
-    FValue : String;
+    FValue : TOptixMemoryObject;
 
     [OptixSerializableAttribute]
     FType : DWORD;
 
     {@M}
     function GetIsDefault() : Boolean;
-    function GetValue() : String;
   public
     {@C}
-    constructor Create(const AName, AValue : String; AType : DWORD); overload;
+    constructor Create(const AName : String; const AType : DWORD; const pData : Pointer;
+      const ADataSize : DWORD); overload;
+    destructor Destroy(); override;
 
     {@M}
+    function ToString() : String; override;
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Name      : String  read FName;
-    property Value     : String  read GetValue;
-    property _Type     : DWORD   read FType;
-    property IsDefault : Boolean read GetIsDefault;
+    property Name      : String             read FName;
+    property Value     : TOptixMemoryObject read FValue;
+    property _Type     : DWORD              read FType;
+    property IsDefault : Boolean            read GetIsDefault;
   end;
 
   TOptixEnumRegistry = class
@@ -128,7 +130,7 @@ implementation
 uses
   System.SysUtils,
 
-  Optix.Exceptions, Optix.WinApiEx;
+  Optix.Exceptions, Optix.WinApiEx, Optix.Shared.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 (***********************************************************************************************************************
@@ -167,24 +169,41 @@ end;
 ***********************************************************************************************************************)
 
 { TRegistryValueInformation.Create }
-constructor TRegistryValueInformation.Create(const AName, AValue : String; AType : DWORD);
+constructor TRegistryValueInformation.Create(const AName : String; const AType : DWORD; const pData : Pointer;
+  const ADataSize : DWORD);
 begin
   inherited Create();
   ///
 
   FName  := AName;
-  FValue := AValue;
   FType  := AType;
+
+  FValue := TOptixMemoryObject.Create();
+  FValue.CopyFrom(pData, ADataSize);
 end;
 
+{ TRegistryValueInformation.Destroy }
+destructor TRegistryValueInformation.Destroy();
+begin
+  if Assigned(FValue) then
+    FreeAndNil(FValue);
+
+  ///
+  inherited;
+end;
 
 { TRegistryValueInformation.Assign }
 procedure TRegistryValueInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TRegistryValueInformation then begin
-    FName  := TRegistryValueInformation(ASource).FName;
-    FValue := TRegistryValueInformation(ASource).FValue;
-    FType  := TRegistryValueInformation(ASource).FType;
+    FName := TRegistryValueInformation(ASource).FName;
+    FType := TRegistryValueInformation(ASource).FType;
+
+    if Assigned(TRegistryValueInformation(ASource).FValue) then begin
+      FValue := TOptixMemoryObject.Create();
+      FValue.CopyFrom(TRegistryValueInformation(ASource).FValue);
+    end else
+      FValue := nil;
   end else
     inherited;
 end;
@@ -195,13 +214,43 @@ begin
   result := FName.IsEmpty();
 end;
 
-{ TRegistryValueInformation.GetValue }
-function TRegistryValueInformation.GetValue() : String;
+{ TRegistryValueInformation.ToString }
+function TRegistryValueInformation.ToString() : String;
 begin
-  if FType = REG_MULTI_SZ then
-    result := FValue.Replace(TRegistryHelper.REG_MSZ_LINE_SEP, #13#10, [rfReplaceAll])
-  else
-    result := FValue;
+  if not Assigned(FValue) or not FValue.HasData then
+    Exit('');
+  ///
+
+  case FType of
+    REG_SZ, REG_EXPAND_SZ:
+      result := TMemoryUtils.MemoryToString(FValue.Address, FValue.Size);
+
+    REG_MULTI_SZ:
+      result := TMemoryUtils.MemoryMultiStringToString(FValue.Address, FValue.Size);
+
+    REG_DWORD:
+      result := Format('0x%.8X (%d)', [PDWORD(FValue.Address)^, PDWORD(FValue.Address)^]);
+
+    REG_QWORD:
+      result := Format('0x%.16X (%u)', [PUInt64(FValue.Address)^, PUInt64(FValue.Address)^]);
+
+    REG_BINARY: begin
+      var AStringBuilder := TStringBuilder.Create(FValue.Size * 3 (* 1 Byte = 2 (Hex) + 1 (Space) *));
+      try
+        for var n := 0 to FValue.Size -1 do
+          AStringBuilder.AppendFormat('%.2X ', [PByte(NativeUInt(FValue.Address) + n)^]);
+
+        ///
+        result := AStringBuilder.ToString.TrimRight;
+      finally
+        if Assigned(AStringBuilder) then
+          FreeAndNil(AStringBuilder);
+      end;
+    end;
+
+    else
+      result := '<could not read>';
+  end;
 end;
 
 (***********************************************************************************************************************
@@ -324,10 +373,16 @@ begin
           try
             var AValueKind    : DWORD;
             var ADataAsString : String;
+            var pData         : Pointer;
+            var ADataSize     : DWORD;
 
-            TRegistryHelper.ReadValueAsGenericString(hOpenedKey, AValueName, AValueKind, ADataAsString);
-
-            AValues.Add(TRegistryValueInformation.Create(AValueName, ADataAsString, AValueKind));
+            TRegistryHelper.ReadValue(hOpenedKey, AValueName, AValueKind, pData, ADataSize);
+            try
+              AValues.Add(TRegistryValueInformation.Create(AValueName, AValueKind, pData, ADataSize));
+            finally
+              if Assigned(pData) then
+                FreeMem(pData, ADataSize);
+            end;
           except
           end;
         end;
@@ -337,7 +392,7 @@ begin
     end;
   finally
     if not ADefaultValueExists then
-        AValues.Add(TRegistryValueInformation.Create('', '', REG_SZ));
+        AValues.Add(TRegistryValueInformation.Create('', REG_SZ, nil, 0));
     ///
 
     if ACloseKey then

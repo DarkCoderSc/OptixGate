@@ -156,9 +156,6 @@ type
     FKind : DWORD;
 
     [OptixSerializableAttribute]
-    FData : TOptixMemoryObject;
-
-    [OptixSerializableAttribute]
     FNewValue : TRegistryValueInformation;
   public
     {@C}
@@ -174,7 +171,6 @@ type
     property KeyFullPath : String                    read FKeyFullPath;
     property Name        : String                    read FName;
     property Kind        : DWORD                     read FKind;
-    property Data        : TOptixMemoryObject        read FData;
     property NewValue    : TRegistryValueInformation read FNewValue;
   end;
 
@@ -393,18 +389,17 @@ begin
 end;
 
 { TOptixCommandRegistrySetValue.Create }
-constructor TOptixCommandRegistrySetValue.Create(const AKeyFullPath : String;  const AName : String;
-  const AKind : DWORD; const pData : Pointer; const ADataSize : UInt64);
+constructor TOptixCommandRegistrySetValue.Create(const AKeyFullPath : String; const AName : String; const AKind : DWORD;
+  const pData : Pointer; const ADataSize : UInt64);
 begin
-  Create();
+  inherited Create();
   ///
 
   FKeyFullPath := AKeyFullPath;
-  FName        := AName;
-  FKind        := AKind;
+  FName := AName;
+  FKind := AKind;
 
-  FData := TOptixMemoryObject.Create();
-  FData.CopyFrom(pData, ADataSize);
+  FNewValue := TRegistryValueInformation.Create(AName, AKind, pData, ADataSize);
 end;
 
 { TOptixCommandRegistrySetValue.Destroy }
@@ -413,9 +408,6 @@ begin
   if Assigned(FNewValue) then
     FreeAndNil(FNewValue);
 
-  if Assigned(FData) then
-    FreeAndNil(FData);
-
   ///
   inherited;
 end;
@@ -423,7 +415,7 @@ end;
 { TOptixCommandRegistrySetValue.DoAction }
 procedure TOptixCommandRegistrySetValue.DoAction();
 begin
-  if not Assigned(FData) then
+  if not Assigned(FNewValue) or not Assigned(FNewValue.Value) then
     raise EOptixSystemException.Create('{DBBAF446-0898-4242-B566-86AB8C620B21}');
   ///
 
@@ -431,19 +423,9 @@ begin
     FKeyFullPath,
     FName,
     FKind,
-    FData.Address,
-    FData.Size
+    FNewValue.Value.Address,
+    FNewValue.Value.Size
   );
-
-  if Assigned(FNewValue) then
-    FreeAndNil(FNewValue);
-
-  var AValueKind    : DWORD;
-  var ADataAsString : String;
-
-  TRegistryHelper.ReadValueAsGenericString(FKeyFullPath, FName, AValueKind, ADataAsString);
-
-  FNewValue := TRegistryValueInformation.Create(FName, ADataAsString, AValueKind);
 end;
 
 end.
