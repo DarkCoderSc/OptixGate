@@ -46,13 +46,19 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Interfaces;
 
 interface
 
-uses System.Classes, XSuperObject;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  XSuperObject;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   IOptixEnumerator = Interface(IInterface)

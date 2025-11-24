@@ -98,7 +98,6 @@ uses
   {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixFileTransferOrchestratorThread.AddTransfer }
 procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixCommandTransfer);
 begin
   if not Assigned(ATransfer) then
@@ -108,7 +107,6 @@ begin
   FTransferQueue.PushItem(ATransfer);
 end;
 
-{ TOptixFileTransferOrchestratorThread.ClientExecute }
 procedure TOptixFileTransferOrchestratorThread.ClientExecute();
 begin
   if not Assigned(FTransferQueue) then
@@ -161,7 +159,7 @@ begin
         except
           on E : Exception do begin
             if Assigned(FHandler) then
-              FHandler.AddPacket(TLogTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Initialization'));
+              FHandler.AddPacket(TOptixCommandReceiveTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Initialization'));
 
             FreeAndNil(ATransfer);
 
@@ -224,7 +222,7 @@ begin
                   raise
                 else begin
                   if Assigned(FHandler) then
-                    FHandler.AddPacket(TLogTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Progress'));
+                    FHandler.AddPacket(TOptixCommandReceiveTransferException.Create(ATransfer.TransferId, E.Message, 'Transfer Progress'));
 
                   ///
                   ATerminatedTransfers.Add(ATransfer);
@@ -259,13 +257,11 @@ begin
   end;
 end;
 
-{ TOptixFileTransferOrchestratorThread.InitializePreflightRequest }
 function TOptixFileTransferOrchestratorThread.InitializePreflightRequest() : TOptixPreflightRequest;
 begin
   result.ClientKind := ckFileTransfer;
 end;
 
-{ TOptixFileTransferOrchestratorThread.Initialize }
 procedure TOptixFileTransferOrchestratorThread.Initialize();
 begin
   inherited;
@@ -275,7 +271,6 @@ begin
   FTransferQueue := TThreadedQueue<TOptixCommandTransfer>.Create(1024, INFINITE, 100);
 end;
 
-{ TOptixFileTransferOrchestratorThread.Finalize }
 constructor TOptixFileTransferOrchestratorThread.Create(const AHandler : TOptixClientHandlerThread);
 begin
   {$IFDEF USETLS}
@@ -302,7 +297,6 @@ begin
   FClientId := AHandler.ClientId; // Same Group
 end;
 
-{ TOptixFileTransferOrchestratorThread.Finalize }
 procedure TOptixFileTransferOrchestratorThread.Finalize();
 begin
   inherited;

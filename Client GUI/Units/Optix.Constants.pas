@@ -46,13 +46,19 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Constants;
 
 interface
 
-uses Winapi.Windows, VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows,
+
+  VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
 
 const
   IMAGE_CLIENT_DISCONNECTED = 1;

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.ClassesRegistry;
 
@@ -82,20 +83,17 @@ uses
   Optix.Func.Commands.Registry, Optix.Func.Commands.ContentReader;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TClassesRegistry.Create }
 class constructor TClassesRegistry.Create();
 begin
   FRegisteredClasses := TDictionary<String, TClass>.Create();
 end;
 
-{ TClassesRegistry.Destroy }
 class destructor TClassesRegistry.Destroy();
 begin
   if Assigned(FRegisteredClasses) then
     FreeAndNil(FRegisteredClasses);
 end;
 
-{ TClassesRegistry.CreateInstance }
 class function TClassesRegistry.CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject;
 begin
   result := nil;
@@ -135,7 +133,6 @@ begin
   end;
 end;
 
-{ TClassesRegistry.RegisterClass }
 class procedure TClassesRegistry.RegisterClass(const AClass : TClass);
 begin
   if Assigned(FRegisteredClasses) and not FRegisteredClasses.ContainsKey(AClass.ClassName) then
@@ -146,50 +143,51 @@ initialization
   (* Commands *)
 
   // General
-  TClassesRegistry.RegisterClass(TOptixCommandTerminate);
-  TClassesRegistry.RegisterClass(TOptixSessionInformation);
+  TClassesRegistry.RegisterClass(TOptixCommandTerminateCurrentProcess);
+  TClassesRegistry.RegisterClass(TOptixCommandReceiveSessionInformation);
 
   // File System Commands
-  TClassesRegistry.RegisterClass(TOptixRequestFileInformation);
-  TClassesRegistry.RegisterClass(TOptixRequestUploadedFileInformation);
-  TClassesRegistry.RegisterClass(TOptixCommandRefreshDrives);
-  TClassesRegistry.RegisterClass(TOptixCommandRefreshFiles);
+  TClassesRegistry.RegisterClass(TOptixCommandReceiveFileInformation);
+  TClassesRegistry.RegisterClass(TOptixCommandGetUploadedFileInformation);
+  TClassesRegistry.RegisterClass(TOptixCommandEnumDrives);
+  TClassesRegistry.RegisterClass(TOptixCommandEnumDirectoryFiles);
   TClassesRegistry.RegisterClass(TOptixCommandDownloadFile);
   TClassesRegistry.RegisterClass(TOptixCommandUploadFile);
 
   // System & Process Commands
-  TClassesRegistry.RegisterClass(TOptixCommandKillProcess);
-  TClassesRegistry.RegisterClass(TOptixCommandProcessDump);
-  TClassesRegistry.RegisterClass(TOptixCommandRefreshProcess);
+  TClassesRegistry.RegisterClass(TOptixCommandTerminateProcess);
+  TClassesRegistry.RegisterClass(TOptixCommandDumpProcess);
+  TClassesRegistry.RegisterClass(TOptixCommandEnumRunningProcesses);
 
   // Shell Commands
-  TClassesRegistry.RegisterClass(TOptixStartShellInstance);
-  TClassesRegistry.RegisterClass(TOptixTerminateShellInstance);
-  TClassesRegistry.RegisterClass(TOptixBreakShellInstance);
-  TClassesRegistry.RegisterClass(TOptixStdinShellInstance);
-  TClassesRegistry.RegisterClass(TOptixShellOutput);
+  TClassesRegistry.RegisterClass(TOptixCommandCreateShellInstance);
+  TClassesRegistry.RegisterClass(TOptixCommandDeleteShellInstance);
+  TClassesRegistry.RegisterClass(TOptixCommandSigIntShellInstance);
+  TClassesRegistry.RegisterClass(TOptixCommandWriteShellInstance);
+  TClassesRegistry.RegisterClass(TOptixCommandReadShellInstance);
 
   // Logs
-  TClassesRegistry.RegisterClass(TLogNotifier);
-  TClassesRegistry.RegisterClass(TLogTransferException);
+  TClassesRegistry.RegisterClass(TOptixCommandReceiveLogMessage);
+  TClassesRegistry.RegisterClass(TOptixCommandReceiveTransferException);
 
   // Registry Manager
-  TClassesRegistry.RegisterClass(TOptixGetRegistryHives);
-  TClassesRegistry.RegisterClass(TOptixRefreshRegistrySubKeys);
-  TClassesRegistry.RegisterClass(TOptixCommandRegistryCreateKey);
-  TClassesRegistry.RegisterClass(TOptixCommandRegistryDeleteKey);
-  TClassesRegistry.RegisterClass(TOptixCommandRegistrySetValue);
+  TClassesRegistry.RegisterClass(TOptixCommandEnumRegistryHives);
+  TClassesRegistry.RegisterClass(TOptixCommandEnumRegistryKeys);
+  TClassesRegistry.RegisterClass(TOptixCommandCreateRegistryKey);
+  TClassesRegistry.RegisterClass(TOptixCommandDeleteRegistryKey);
+  TClassesRegistry.RegisterClass(TOptixCommandSetRegistryValue);
 
   // File Readers
   TClassesRegistry.RegisterClass(TOptixCommandCreateFileContentReader);
-  TClassesRegistry.RegisterClass(TOptixCommandCloseContentReader);
-  TClassesRegistry.RegisterClass(TOptixCommandBrowseContentReader);
-  TClassesRegistry.RegisterClass(TOptixCommandContentReaderFirstPage);
-  TClassesRegistry.RegisterClass(TOptixCommandContentReaderPage);
+  TClassesRegistry.RegisterClass(TOptixCommandDeleteContentReader);
+  TClassesRegistry.RegisterClass(TOptixCommandGetContentReaderPage);
+  TClassesRegistry.RegisterClass(TOptixCommandReadContentReaderPageFirstPage);
+  TClassesRegistry.RegisterClass(TOptixCommandReadContentReaderPage);
 
   (* Tasks *)
+
   TClassesRegistry.RegisterClass(TOptixTaskResult);
   TClassesRegistry.RegisterClass(TOptixTaskCallback);
-  TClassesRegistry.RegisterClass(TOptixProcessDumpTaskResult);
+  TClassesRegistry.RegisterClass(TOptixTaskGetProcessDumpResult);
 
 end.

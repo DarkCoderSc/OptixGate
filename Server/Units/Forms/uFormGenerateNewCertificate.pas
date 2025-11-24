@@ -53,9 +53,14 @@ unit uFormGenerateNewCertificate;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormGenerateNewCertificate = class(TForm)
@@ -92,7 +97,12 @@ var
 
 implementation
 
-uses uFormMain, Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain,
+
+  Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 

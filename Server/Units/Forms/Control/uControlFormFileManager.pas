@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 {
   TODO:
@@ -126,9 +127,6 @@ type
     FullCollapse1: TMenuItem;
     N2: TMenuItem;
     StreamFileContentOpen1: TMenuItem;
-    procedure VSTFilesChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFilesFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex);
     procedure VSTFilesGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: TImageIndex);
@@ -158,8 +156,6 @@ type
     procedure ButtonGoToClick(Sender: TObject);
     procedure ShowFolderTree1Click(Sender: TObject);
     procedure VSTFoldersGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
-    procedure VSTFoldersChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFoldersFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTFoldersGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
       TextType: TVSTTextType; var CellText: string);
     procedure VSTFoldersGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
@@ -182,8 +178,8 @@ type
     function CanFileBeUploadedToNodeDirectory(var pData : PFileTreeData) : Boolean;
     procedure RegisterFoldersInTree(const AParentFolders : TObjectList<TSimpleFolderInformation>;
       const AFolders : TObjectList<TSimpleFolderInformation>);
-    procedure DisplayDrives(const AList : TOptixCommandRefreshDrives);
-    procedure DisplayFiles(const AList : TOptixCommandRefreshFiles);
+    procedure DisplayDrives(const AList : TOptixCommandEnumDrives);
+    procedure DisplayFiles(const AList : TOptixCommandEnumDirectoryFiles);
     procedure SetDisplayMode(const AMode : TDisplayMode);
     procedure BrowsePath(const APath : string; const APushToHistory : Boolean = True);
     procedure RefreshNavButtons();
@@ -428,7 +424,7 @@ begin
     InsertPathToHistory('\\:DRIVES:\\');
   ///
 
-  SendCommand(TOptixCommandRefreshDrives.Create());
+  SendCommand(TOptixCommandEnumDrives.Create());
 end;
 
 procedure TControlFormFileManager.RefreshFiles();
@@ -653,12 +649,6 @@ begin
   end;
 end;
 
-procedure TControlFormFileManager.VSTFilesChange(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TControlFormFileManager.VSTFilesCompareNodes(Sender: TBaseVirtualTree; Node1,
   Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
 begin
@@ -732,7 +722,7 @@ begin
     InsertPathToHistory(APath);
   ///
 
-  SendCommand(TOptixCommandRefreshFiles.Create(APath));
+  SendCommand(TOptixCommandEnumDirectoryFiles.Create(APath));
 end;
 
 procedure TControlFormFileManager.VSTFilesDblClick(Sender: TObject);
@@ -757,12 +747,6 @@ begin
     ///
     BrowsePath(APath);
   end;
-end;
-
-procedure TControlFormFileManager.VSTFilesFocusChanged(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TControlFormFileManager.VSTFilesFreeNode(Sender: TBaseVirtualTree;
@@ -913,11 +897,6 @@ begin
   end;
 end;
 
-procedure TControlFormFileManager.VSTFoldersChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TControlFormFileManager.VSTFoldersCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
   Column: TColumnIndex; var Result: Integer);
 begin
@@ -942,12 +921,6 @@ begin
 
   ///
   BrowsePath(pData^.Information.Path);
-end;
-
-procedure TControlFormFileManager.VSTFoldersFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-  Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TControlFormFileManager.VSTFoldersFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -995,15 +968,15 @@ begin
   ///
 
   // -------------------------------------------------------------------------------------------------------------------
-  if AOptixPacket is TOptixCommandRefreshDrives then
-    DisplayDrives(TOptixCommandRefreshDrives(AOptixPacket))
+  if AOptixPacket is TOptixCommandEnumDrives then
+    DisplayDrives(TOptixCommandEnumDrives(AOptixPacket))
   // -------------------------------------------------------------------------------------------------------------------
-  else if AOptixPacket is TOptixCommandRefreshFiles then
-    DisplayFiles(TOptixCommandRefreshFiles(AOptixPacket));
+  else if AOptixPacket is TOptixCommandEnumDirectoryFiles then
+    DisplayFiles(TOptixCommandEnumDirectoryFiles(AOptixPacket));
   // -------------------------------------------------------------------------------------------------------------------
 end;
 
-procedure TControlFormFileManager.DisplayDrives(const AList : TOptixCommandRefreshDrives);
+procedure TControlFormFileManager.DisplayDrives(const AList : TOptixCommandEnumDrives);
 begin
   SetDisplayMode(dmDrives);
   ///
@@ -1016,7 +989,7 @@ begin
 
   VSTFiles.BeginUpdate();
   try
-    for var ADrive in AList.List do begin
+    for var ADrive in AList.Drives do begin
       var pNode := VSTFiles.AddChild(nil);
       var pData := PFileTreeData(pNode.GetData);
       ///
@@ -1039,7 +1012,7 @@ begin
   end;
 end;
 
-procedure TControlFormFileManager.DisplayFiles(const AList : TOptixCommandRefreshFiles);
+procedure TControlFormFileManager.DisplayFiles(const AList : TOptixCommandEnumDirectoryFiles);
 begin
   SetDisplayMode(dmFiles);
   ///

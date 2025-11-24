@@ -46,13 +46,21 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.VCL.Helper;
 
 interface
 
-uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms, VirtualTrees.BaseTree, Generics.Collections;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Generics.Collections,
+
+  VCL.Menus, VCL.Forms,
+
+  VirtualTrees, VirtualTrees.BaseTree, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixVCLHelper = class
@@ -90,11 +98,15 @@ type
 
 implementation
 
-uses Winapi.Windows, Winapi.Messages, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows, Winapi.Messages;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixVirtualTreesFolderTreeHelper *)
 
-{ TOptixVirtualTreesFolderTreeHelper.UpdateTree }
 class procedure TOptixVirtualTreesFolderTreeHelper.UpdateTree<T>(const AVST : TVirtualStringTree;
   const AParentsItems: TEnumerable<T>; ALevelItems: TEnumerable<T>;
   const AGetNameFromDataFunc : TGetFolderNameFromDataCallback;
@@ -199,7 +211,6 @@ end;
 
 (* TOptixVirtualTreesHelper *)
 
-{ TOptixVirtualTreesHelper.GetVisibleNodesCount }
 class function TOptixVirtualTreesHelper.GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64;
 begin
   result := 0;
@@ -214,7 +225,6 @@ begin
   end;
 end;
 
-{ TOptixVirtualTreesHelper.GetColumnIndexByName }
 class function TOptixVirtualTreesHelper.GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer;
 begin
   result := -1;
@@ -233,7 +243,6 @@ begin
   end;
 end;
 
-{ TOptixVirtualTreesHelper.UpdateColumnVisibility }
 class procedure TOptixVirtualTreesHelper.UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean);
 begin
   var AColumnIndex := GetColumnIndexByName(AVST, AName);
@@ -249,7 +258,6 @@ begin
     AColumn.Options := AColumn.Options - [coVisible];
 end;
 
-{ TOptixVirtualTreesHelper.GetRootParentNode }
 class function TOptixVirtualTreesHelper.GetRootParentNode(const AVST : TVirtualStringTree;
   const pNode : PVirtualNode) : PVirtualNode;
 begin
@@ -265,7 +273,6 @@ begin
     result := AVST.NodeParent[result];
 end;
 
-{ TOptixVirtualTreesHelper.SelectNode }
 class procedure TOptixVirtualTreesHelper.SelectNode(const AVST : TVirtualStringTree; const pNode : PVirtualNode);
 begin
   if not Assigned(AVST) or not Assigned(pNode) then
@@ -282,7 +289,6 @@ end;
 
 (* TOptixVCLHelper *)
 
-{ TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility }
 class procedure TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean);
 begin
   if not Assigned(APopupMenu) then
@@ -293,19 +299,16 @@ begin
     APopupMenu.Items[I].Visible := AVisible;
 end;
 
-{ TOptixVCLHelper.HideAllPopupMenuRootItems }
 class procedure TOptixVCLHelper.HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
 begin
   UpdatePopupMenuRootItemsVisibility(APopupMenu, False);
 end;
 
-{ TOptixVCLHelper.ShowAllPopupMenuRootItems }
 class procedure TOptixVCLHelper.ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
 begin
   UpdatePopupMenuRootItemsVisibility(APopupMenu, True);
 end;
 
-{ TOptixVCLHelper.ShowForm }
 class procedure TOptixVCLHelper.ShowForm(const AForm : TForm);
 begin
   if not Assigned(AForm) then

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Func.LogNotifier;
 
@@ -55,8 +56,6 @@ interface
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   System.SysUtils,
-
-  XSuperObject,
 
   Optix.Func.Commands.Base, Optix.Shared.Classes;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -68,7 +67,7 @@ type
     (* ... *)
   );
 
-  TLogNotifier = class(TOptixCommand)
+  TOptixCommandReceiveLogMessage = class(TOptixCommand)
   private
     [OptixSerializableAttribute]
     FMessage : String;
@@ -92,7 +91,7 @@ type
     property Context         : String   read FContext;
   end;
 
-  TLogTransferException = class(TLogNotifier)
+  TOptixCommandReceiveTransferException = class(TOptixCommandReceiveLogMessage)
   private
     [OptixSerializableAttribute]
     FTransferId : TGUID;
@@ -111,10 +110,9 @@ type
 
 implementation
 
-(* TLogNotifier *)
+(* TOptixCommandReceiveLogMessage *)
 
-{ TLogNotifier.Create }
-constructor TLogNotifier.Create(const AMessage : String; const AContext : String; const AKind : TLogKind);
+constructor TOptixCommandReceiveLogMessage.Create(const AMessage : String; const AContext : String; const AKind : TLogKind);
 begin
   inherited Create();
   ///
@@ -124,8 +122,7 @@ begin
   FContext := AContext;
 end;
 
-{ TLogNotifier.GetDetailedMessage }
-function TLogNotifier.GetDetailedMessage() : String;
+function TOptixCommandReceiveLogMessage.GetDetailedMessage() : String;
 begin
   result := FMessage;
 end;
@@ -142,10 +139,9 @@ begin
   end;
 end;
 
-(* TLogTransferException *)
+(* TOptixCommandReceiveTransferException *)
 
-{ TLogTransferException.Create }
-constructor TLogTransferException.Create(const ATransferId : TGUID; const AMessage : String; const AContext : String = '');
+constructor TOptixCommandReceiveTransferException.Create(const ATransferId : TGUID; const AMessage : String; const AContext : String = '');
 begin
   inherited Create(AMessage, AContext, TLogKind.lkException);
   ///
@@ -153,8 +149,7 @@ begin
   FTransferId := ATransferId;
 end;
 
-{ TLogTransferException.GetDetailedMessage }
-function TLogTransferException.GetDetailedMessage() : String;
+function TOptixCommandReceiveTransferException.GetDetailedMessage() : String;
 begin
   result := Format('Transfer Id:[%s] %s', [
     FTransferId.ToString,

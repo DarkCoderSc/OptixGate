@@ -101,7 +101,6 @@ implementation
 
 (* TContentFormater *)
 
-{ TContentFormater.TStringInformation.ToString }
 function TContentFormater.TStringInformation.ToString() : String;
 begin
   if Kind = skUnicode then
@@ -116,7 +115,6 @@ begin
   end;
 end;
 
-{ TContentFormater.TStringInformation.Length }
 function TContentFormater.TStringInformation.Length() : UInt64;
 begin
   // TODO : Delphi CE >= 13 use Ternary
@@ -126,7 +124,6 @@ begin
     result := Size;
 end;
 
-{ TContentFormater.ProbeForStrings }
 class function TContentFormater.ProbeForStrings(const pBuffer : Pointer; const ABufferSize : UInt64;
   const AMinLength : Cardinal = 0) : TList<TStringInformation>;
 
@@ -134,13 +131,11 @@ class function TContentFormater.ProbeForStrings(const pBuffer : Pointer; const A
     pCurByte, pLastByte : PByte;
     AStringInformation : TStringInformation;
 
-  { _.IsPrintable }
   function IsPrintable(const AByte : Byte) : Boolean;
   begin
     Result := AByte in [9, 32..126];
   end;
 
-  { _.RegisterStringInformation }
   procedure RegisterStringInformation();
   begin
     if (AStringInformation.Offset <> nil) then begin
@@ -203,7 +198,6 @@ begin
   RegisterStringInformation();
 end;
 
-{ TContentFormater.ExtractStrings }
 class function TContentFormater.ExtractStrings(const pBuffer : Pointer; const ABufferSize : UInt64;
   const AMinLength : Cardinal = 0; AStringKinds : TStringKinds = []) : String;
 begin
@@ -242,7 +236,6 @@ begin
   end;
 end;
 
-{ TContentFormater.PrintableChar }
 class function TContentFormater.OutputPrintableChar(const AByte : Byte) : Char;
 begin
   if AByte in [32..126] then
@@ -251,7 +244,6 @@ begin
     result := '.';
 end;
 
-{ TContentFormater.PrintableChar }
 class function TContentFormater.OutputPrintableChar(const pBuffer : Pointer; const ABufferSize : UInt64) : String;
 begin
   SetLength(result, ABufferSize);
@@ -261,7 +253,6 @@ begin
     result[I +1] := OutputPrintableChar(PByte(NativeUInt(pBuffer) + I)^);
 end;
 
-{ TContentFormater.Hexize }
 class function TContentFormater.ToHexTable(const pBuffer : Pointer; const ABufferSize : UInt64;
   const AStartOffset : UInt64 = 0; const AColumnLength : Cardinal = 16) : String;
 begin
@@ -321,7 +312,6 @@ end;
 
 (* TMemoryUtils *)
 
-{ TMemoryUtils.StringToMemory }
 class procedure TMemoryUtils.StringToMemory(const AValue : String; out pData : Pointer; out ADataSize : UInt64);
 begin
   ADataSize := Length(AValue) * SizeOf(WideChar);
@@ -331,7 +321,6 @@ begin
   CopyMemory(pData, PWideChar(AValue), ADataSize);
 end;
 
-{ TMemoryUtils.DwordToMemory }
 class procedure TMemoryUtils.DwordToMemory(const AValue : DWORD; out pData : Pointer; out ADataSize : UInt64);
 begin
   ADataSize := SizeOf(DWORD);
@@ -341,7 +330,6 @@ begin
   CopyMemory(pData, @AValue, ADataSize);
 end;
 
-{ TMemoryUtils.QwordToMemory }
 class procedure TMemoryUtils.QwordToMemory(const AValue : UInt64; out pData : Pointer; out ADataSize : UInt64);
 begin
   ADataSize := SizeOf(UInt64);
@@ -351,7 +339,6 @@ begin
   CopyMemory(pData, @AValue, ADataSize);
 end;
 
-{ TMemoryUtils.MemoryMultiStringToString }
 class function TMemoryUtils.MemoryMultiStringToString(const pBuffer : Pointer; const ABufferSize : UInt64) : String;
 begin
   if not Assigned(pBuffer) or (ABufferSize < 2) then
@@ -395,7 +382,6 @@ begin
   end;
 end;
 
-{ TMemoryUtils.MemoryToString }
 class function TMemoryUtils.MemoryToString(const pBuffer : Pointer; const ABufferSize : UInt64) : String;
 begin
   if not Assigned(pBuffer) or (ABufferSize = 0) then

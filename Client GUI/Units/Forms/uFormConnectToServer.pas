@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uFormConnectToServer;
 
@@ -229,7 +230,6 @@ begin
     TSpinEdit(Sender).Value := 65535;
 end;
 
-{ TFormConnectToServer.Create }
 procedure TFormConnectToServer.ComboIpVersionChange(Sender: TObject);
 begin
   case TComboBox(Sender).ItemIndex of

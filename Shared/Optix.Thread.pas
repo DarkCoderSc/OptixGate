@@ -46,16 +46,21 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Thread;
 
 interface
 
-uses System.Classes, Generics.Collections, System.SyncObjs;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SyncObjs,
+
+  Generics.Collections;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  (* TOptixThreadWatchDogThread *)
   TOptixThreadWatchDogThread = class(TThread)
   protected
     FIntervalEvent : TEvent;
@@ -72,7 +77,6 @@ type
     procedure TerminatedSet(); override;
   end;
 
-  (* TOptixThread *)
   TOptixThread = class(TThread)
   private
     FGuid            : TGUID;
@@ -118,12 +122,16 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* Local *)
 
 {$WARN SYMBOL_PLATFORM OFF}
-{ _.GetPriorityString }
 function ThreadPriorityToString(const AThreadPriority : TThreadPriority) : String;
 begin
   result := 'Unknown';
@@ -143,7 +151,6 @@ end;
 
 (* TOptixThreadWatchDogThread *)
 
-{ TOptixThreadWatchDogThread.Create }
 constructor TOptixThreadWatchDogThread.Create();
 begin
   inherited Create(False);
@@ -154,7 +161,6 @@ begin
   FIntervalEvent := TEvent.Create(nil, True, False, TGUID.NewGuid.ToString());
 end;
 
-{ TOptixThreadWatchDogThread.Destroy }
 destructor TOptixThreadWatchDogThread.Destroy();
 begin
   if Assigned(FIntervalEvent) then
@@ -164,7 +170,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixThreadWatchDogThread.Execute }
 procedure TOptixThreadWatchDogThread.Execute();
 begin
   try
@@ -183,7 +188,6 @@ begin
   end;
 end;
 
-{ TOptixThreadWatchDogThread.TerminatedSet }
 procedure TOptixThreadWatchDogThread.TerminatedSet();
 begin
   inherited TerminatedSet();
@@ -195,7 +199,6 @@ end;
 
 (* TOptixThread *)
 
-{ TOptixThread.IsThreadRunning }
 class function TOptixThread.IsThreadRunning(const AThread : TThread): Boolean;
 var AExitCode : DWORD;
 begin
@@ -212,7 +215,6 @@ begin
   result := (AExitCode = STILL_ACTIVE);
 end;
 
-{ TOptixThread.Terminate }
 class procedure TOptixThread.Terminate(const AThread : TThread; const AWaitFor : Boolean = False);
 begin
   if not Assigned(AThread) then
@@ -226,13 +228,11 @@ begin
   end;
 end;
 
-{ TOptixThread.TerminateWait }
 class procedure TOptixThread.TerminateWait(const AThread : TThread);
 begin
   Terminate(AThread, True);
 end;
 
-{ TOptixThread.SignalHiveAndFlush }
 class procedure TOptixThread.SignalHiveAndFlush();
 begin
   if not Assigned(OPTIX_THREAD_HIVE) then
@@ -260,7 +260,6 @@ begin
   FreeAndNil(AThreadsToFlush);
 end;
 
-{ TOptixThread.FlushDeadThreads }
 class procedure TOptixThread.FlushDeadThreads();
 begin
   if not Assigned(OPTIX_THREAD_HIVE) then
@@ -282,7 +281,6 @@ begin
   end;
 end;
 
-{ TOptixThread.HasRunningInstance }
 class function TOptixThread.HasRunningInstance(const AThread : TOptixThread; const ATryTerminate : Boolean = False) : Boolean;
 begin
   result := False;
@@ -307,7 +305,6 @@ begin
   end;
 end;
 
-{ TOptixThread.TerminateInstance }
 class procedure TOptixThread.TerminateInstance(const AThread : TOptixThread);
 begin
   if not Assigned(OPTIX_THREAD_HIVE) then
@@ -329,13 +326,11 @@ begin
   end;
 end;
 
-{ TOptixThread.IsRunning }
 function TOptixThread.IsRunning() : Boolean;
 begin
   result := TOptixThread.IsThreadRunning(self);
 end;
 
-{ TOptixThread.Execute }
 procedure TOptixThread.Execute();
 begin
   FStarted := True;
@@ -358,7 +353,6 @@ begin
   end;
 end;
 
-{ TOptixThread.Create }
 constructor TOptixThread.Create();
 begin
   inherited Create(True);
@@ -379,7 +373,6 @@ begin
   FOnThreadEnd     := nil;
 end;
 
-{ TOptixThread.Destroy }
 destructor TOptixThread.Destroy();
 begin
   if Assigned(OPTIX_THREAD_HIVE) then

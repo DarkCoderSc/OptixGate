@@ -97,12 +97,10 @@ function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
-uses System.IOUtils;
+uses
+  System.IOUtils;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(* _ *)
-
-{ _.CompareDateTimeEx }
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
 begin
   if not ADate1IsSet and not ADate2IsSet then
@@ -115,7 +113,6 @@ begin
     result := CompareDateTime(ADate1, ADate2);
 end;
 
-{ _.CompareObjectAssignement }
 function CompareObjectAssignement(const AObject1, AObject2 : TObject) : Integer;
 begin
   if not Assigned(AObject1) and not Assigned(AObject2) then
@@ -126,7 +123,6 @@ begin
     Result := -1
 end;
 
-{ _.ComparePointerAssigmenet }
 function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
 begin
   if (pPtr1 = nil) and (pPtr2 = nil) then
@@ -137,7 +133,6 @@ begin
     Result := -1
 end;
 
-{ _.CheckCertificateFingerprint }
 procedure CheckCertificateFingerprint(const AValue : String);
 begin
   if not TRegEx.IsMatch(AValue, '^([0-9A-Fa-f]{2}:){63}[0-9A-Fa-f]{2}$') then
@@ -147,13 +142,11 @@ begin
     );
 end;
 
-{ _.Open }
 procedure Open(const ACommand : String);
 begin
   ShellExecute(0, 'open', PWideChar(ACommand), nil, nil, SW_SHOW);
 end;
 
-{ _.GetWindowsDirectory }
 function GetWindowsDirectory() : string;
 begin
   SetLength(result, MAX_PATH);
@@ -168,7 +161,6 @@ begin
   result := IncludeTrailingPathDelimiter(result);
 end;
 
-{ _.InitializeSystemIcons }
 procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo; const ALargeIcon : Boolean = False);
 var AFlags : Integer;
 begin
@@ -189,7 +181,6 @@ begin
   );
 end;
 
-{ _.SystemFileIcon }
 function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = False) : Integer;
 var AFileInfo : TSHFileInfo;
 begin
@@ -208,7 +199,6 @@ begin
   Result := AFileInfo.iIcon;
 end;
 
-{ _.SystemFolderIcon }
 function SystemFolderIcon(APath : String = '') : Integer;
 var AFileInfo : TSHFileInfo;
 begin
@@ -225,7 +215,6 @@ begin
   Result := AFileInfo.iIcon;
 end;
 
-{ _.FormatFileSize }
 function FormatFileSize(const ASize : Int64) : string;
 const AByteDescription : array[0..9-1] of string = (
   'Bytes', 'KiB', 'MB', 'GiB', 'TB',
@@ -244,7 +233,6 @@ begin
   );
 end;
 
-{ _.ReadResourceString }
 function ReadResourceString(const AResourceName : String) : String;
 begin
   var AResourceStream := TResourceStream.Create(hInstance, AResourceName, RT_RCDATA);
@@ -255,7 +243,6 @@ begin
   end;
 end;
 
-{ _.TryReadResourceString }
 function TryReadResourceString(const AResourceName : String) : String;
 begin
   try
@@ -265,7 +252,6 @@ begin
   end;
 end;
 
-{ _.DefaultIfEmpty }
 function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;
 begin
   if String.IsNullOrEmpty(AValue) then
@@ -274,7 +260,6 @@ begin
     result := AValue;
 end;
 
-{ _.FormatInt }
 function FormatInt(const AInteger : Integer) : String;
 begin
   result := Format('%d (0x%p)', [
@@ -283,7 +268,6 @@ begin
   ]);
 end;
 
-{ _.ElapsedTime }
 function ElapsedTime(const ADays, AHours, AMinutes, ASeconds : UInt64) : String;
 begin
   if ADays > 0 then
@@ -308,7 +292,6 @@ begin
     result := Format('%d seconds ago.', [ASeconds]);
 end;
 
-{ _.ElapsedTime }
 function ElapsedTime(const AMilliseconds : UInt64) : String;
 var ASpan : TTimeSpan;
 begin
@@ -323,7 +306,6 @@ begin
   );
 end;
 
-{ _.ElapsedDateTime }
 function ElapsedDateTime(const AFirstDateTime, ASecondDateTime : TDateTime) : String;
 var AElaspedTime  : TDateTime;
     ADays         : Integer;

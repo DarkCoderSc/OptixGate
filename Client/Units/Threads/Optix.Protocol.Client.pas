@@ -46,14 +46,23 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Protocol.Client;
 
 interface
 
-uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs, Generics.Collections,
-     Optix.Protocol.Preflight{$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SyncObjs,
+
+  Generics.Collections,
+
+  Optix.Sockets.Helper, Optix.Thread, Optix.Protocol.Preflight
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   {$IFDEF CLIENT_GUI}
@@ -149,34 +158,37 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions, Optix.Protocol.Exceptions
-     {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-{ TOptixClientThread.Connected }
+  Winapi.Windows,
+
+  Optix.Sockets.Exceptions, Optix.Protocol.Exceptions
+
+  {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TOptixClientThread.Connected();
 begin
   ///
 end;
 
-{ TOptixClientThread.Disconnect }
 procedure TOptixClientThread.Disconnected();
 begin
   ///
 end;
 
-{ TOptixClientThread.Initialize }
 procedure TOptixClientThread.Initialize();
 begin
   ///
 end;
 
-{ TOptixClientThread.Finalize }
 procedure TOptixClientThread.Finalize();
 begin
   ///
 end;
 
-{ TOptixClientThread.Create }
 constructor TOptixClientThread.Create({$IFDEF USETLS}const ACertificate : TX509Certificate; {$ENDIF}const ARemoteAddress : String; const ARemotePort : Word; const AIPVersion : TIPVersion);
 begin
   inherited Create();
@@ -213,7 +225,6 @@ begin
   Initialize();
 end;
 
-{ TOptixClientThread.Destroy }
 destructor TOptixClientThread.Destroy();
 begin
   if Assigned(FRetryEvent) then
@@ -236,7 +247,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixClientThread.ThreadExecute }
 procedure TOptixClientThread.ThreadExecute();
 begin
   while not Terminated do begin
@@ -327,7 +337,6 @@ begin
   end; // (While not Terminated)
 end;
 
-{ TOptixClientThread.TerminatedSet }
 procedure TOptixClientThread.TerminatedSet();
 begin
   inherited TerminatedSet();
@@ -340,7 +349,6 @@ begin
     FRetryEvent.SetEvent();
 end;
 
-{ TOptixClientThread.SetRetry }
 procedure TOptixClientThread.SetRetry(const AValue: Boolean);
 begin
   if AValue then
@@ -359,7 +367,6 @@ begin
   FRetry := AValue;
 end;
 
-{ TOptixClientThread.SetRetryDelay }
 procedure TOptixClientThread.SetRetryDelay(AValue : Cardinal);
 begin
   if AValue < 500 then

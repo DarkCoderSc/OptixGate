@@ -46,13 +46,17 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.OpenSSL.Headers;
 
 interface
 
-uses Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
 
 const LIB_CRYPTO_DLL = {$IFDEF WIN64}'libcrypto-1_1-x64.dll'{$ELSE}'libcrypto-1_1.dll'{$IFEND};
       LIB_SSL_DLL    = {$IFDEF WIN64}'libssl-1_1-x64.dll'{$ELSE}'libssl-1_1.dll'{$IFEND};

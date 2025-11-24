@@ -119,7 +119,7 @@ object ControlFormFileManager: TControlFormFileManager
       Left = 619
       Top = 10
       Width = 21
-      Height = 20
+      Height = 15
       Margins.Left = 8
       Margins.Top = 10
       Margins.Right = 8
@@ -133,7 +133,6 @@ object ControlFormFileManager: TControlFormFileManager
       Font.Style = []
       ParentFont = False
       Visible = False
-      ExplicitHeight = 15
     end
     object ButtonBack: TSpeedButton
       AlignWithMargins = True
@@ -207,8 +206,7 @@ object ControlFormFileManager: TControlFormFileManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 646
-    ExplicitHeight = 348
+    ExplicitWidth = 666
     DesignSize = (
       656
       380)
@@ -237,10 +235,8 @@ object ControlFormFileManager: TControlFormFileManager
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
       OnBeforeCellPaint = VSTFilesBeforeCellPaint
-      OnChange = VSTFilesChange
       OnCompareNodes = VSTFilesCompareNodes
       OnDblClick = VSTFilesDblClick
-      OnFocusChanged = VSTFilesFocusChanged
       OnFreeNode = VSTFilesFreeNode
       OnGetText = VSTFilesGetText
       OnGetImageIndex = VSTFilesGetImageIndex
@@ -315,10 +311,8 @@ object ControlFormFileManager: TControlFormFileManager
       TabOrder = 0
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnChange = VSTFoldersChange
       OnCompareNodes = VSTFoldersCompareNodes
       OnDblClick = VSTFoldersDblClick
-      OnFocusChanged = VSTFoldersFocusChanged
       OnFreeNode = VSTFoldersFreeNode
       OnGetText = VSTFoldersGetText
       OnGetImageIndex = VSTFoldersGetImageIndex

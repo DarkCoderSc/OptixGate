@@ -46,13 +46,21 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.InformationGathering.Helper;
 
 interface
 
-uses Winapi.Windows, System.Classes, System.Hash, Optix.WinApiEx;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.Hash,
+
+  Winapi.Windows,
+
+  Optix.WinApiEx;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixInformationGathering = class
@@ -79,11 +87,15 @@ type
 
 implementation
 
-uses Optix.Exceptions, System.SysUtils, Optix.Process.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Optix.Exceptions, Optix.Process.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* Local *)
 
-{ _.ProcessArchitectureToString }
 function ProcessArchitectureToString(const AValue : TProcessorArchitecture) : String;
 begin
   result := '';
@@ -97,7 +109,6 @@ end;
 
 (* TOptixInformationGathering *)
 
-{ TOptixInformationGathering.CurrentProcessArchitecture }
 class function TOptixInformationGathering.CurrentProcessArchitecture() : TProcessorArchitecture;
 begin
   {$IFDEF WIN32}
@@ -109,7 +120,6 @@ begin
   {$ENDIF}
 end;
 
-{ TOptixInformationGathering.UserName }
 class function TOptixInformationGathering.UserName() : string;
 var ABufferLen : DWORD;
     ABuffer    : array[0..255 -1] of WideChar;
@@ -125,7 +135,6 @@ begin
     raise EWindowsException.Create('GetUserName');
 end;
 
-{ TOptixInformationGathering.TryUserName}
 class function TOptixInformationGathering.TryGetUserName() : String;
 begin
   result := '';
@@ -138,7 +147,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.ComputerName }
 class function TOptixInformationGathering.ComputerName() : string;
 var ABufferLen : DWORD;
     ABuffer    : array[0..255 -1] of WideChar;
@@ -154,7 +162,6 @@ begin
     raise EWindowsException.Create('GetComputerName');
 end;
 
-{ TOptixInformationGathering.TryGetComputerName }
 class function TOptixInformationGathering.TryGetComputerName() : String;
 begin
   result := '';
@@ -167,7 +174,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.GetUserSidByType }
 class function TOptixInformationGathering.GetUserSidByType(const AUserName : String; ASidType : TSidNameUse = SidTypeUser) : String;
 var ptrSID         : PSID;
     ASidSize       : Cardinal;
@@ -214,13 +220,11 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.GetCurrentUserSid() }
 class function TOptixInformationGathering.GetCurrentUserSid() : String;
 begin
   result := GetUserSidByType(TOptixInformationGathering.UserName);
 end;
 
-{ TOptixInformationGathering.TryGetCurrentUserSid }
 class function TOptixInformationGathering.TryGetCurrentUserSid() : String;
 begin
   try
@@ -230,7 +234,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.GetWindowsDirectory }
 class function TOptixInformationGathering.GetWindowsDirectory() : string;
 var ALen  : Cardinal;
 begin
@@ -246,7 +249,6 @@ begin
   result := IncludeTrailingPathDelimiter(result);
 end;
 
-{ TOptixInformationGathering.GetHardDriveSerial }
 class function TOptixInformationGathering.GetHardDriveSerial() : String;
 begin
   result := '';
@@ -302,7 +304,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.GetUserUID }
 class function TOptixInformationGathering.GetUserUID(const AIntegrateOptionalExtraInformation : String = '') : TGUID;
 begin
   var A128BitHash := THashMD5.GetHashBytes(
@@ -316,7 +317,6 @@ begin
   Move(A128BitHash[0], result, SizeOf(TGUID));
 end;
 
-{ TOptixInformationGathering.GetLangroup }
 class function TOptixInformationGathering.GetLangroup() : String;
 begin
   result := '';
@@ -332,7 +332,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.GetDomainName }
 class function TOptixInformationGathering.GetDomainName() : String;
 begin
   result := '';
@@ -348,7 +347,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.IsCurrentUserInAdminGroup }
 class function TOptixInformationGathering.IsCurrentUserInAdminGroup() : Boolean;
 begin
   result := False;
@@ -408,7 +406,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.TryIsCurrentUserInAdminGroup }
 class function TOptixInformationGathering.TryIsCurrentUserInAdminGroup() : Boolean;
 begin
   result := False;
@@ -419,7 +416,6 @@ begin
   end;
 end;
 
-{ TOptixInformationGathering.GetWindowsArchitecture }
 class function TOptixInformationGathering.GetWindowsArchitecture() : TProcessorArchitecture;
 begin
   var ASystemInfo : TSystemInfo;

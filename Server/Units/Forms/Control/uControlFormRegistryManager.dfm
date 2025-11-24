@@ -35,6 +35,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 721
     DesignSize = (
       711
       400)
@@ -63,10 +64,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       TabOrder = 0
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnChange = VSTKeysChange
       OnCompareNodes = VSTKeysCompareNodes
       OnDblClick = VSTKeysDblClick
-      OnFocusChanged = VSTKeysFocusChanged
       OnFreeNode = VSTKeysFreeNode
       OnGetText = VSTKeysGetText
       OnGetImageIndex = VSTKeysGetImageIndex
@@ -104,10 +103,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       TabOrder = 1
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnChange = VSTValuesChange
       OnCompareNodes = VSTValuesCompareNodes
       OnDblClick = VSTValuesDblClick
-      OnFocusChanged = VSTValuesFocusChanged
       OnFreeNode = VSTValuesFreeNode
       OnGetText = VSTValuesGetText
       OnGetImageIndex = VSTValuesGetImageIndex

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Sockets.Helper;
 
@@ -191,7 +192,6 @@ uses
 
 (* TSocketBase *)
 
-{ TSocketBase.Create }
 constructor TSocketBase.Create(const AVersion : TIPVersion);
 begin
   FVersion := AVersion;
@@ -200,7 +200,6 @@ begin
   CreateSocket();
 end;
 
-{ TSocketBase.Destroy }
 destructor TSocketBase.Destroy();
 begin
   Close();
@@ -209,7 +208,6 @@ begin
   inherited Destroy();
 end;
 
-{ TSocketBase.Close }
 procedure TSocketBase.Close();
 begin
   if FSocket <> INVALID_SOCKET then begin
@@ -221,7 +219,6 @@ begin
   FSocket := INVALID_SOCKET;
 end;
 
-{ TSocketBase.CreateSocket }
 procedure TSocketBase.CreateSocket();
 begin
   FSocket := INVALID_SOCKET;
@@ -253,7 +250,6 @@ end;
 
 (* TClientSocket *)
 
-{ TClientSocket.Create }
 constructor TClientSocket.Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF} const ARemoteAddress : String; const ARemotePort : word; const AVersion : TIPVersion);
 begin
   inherited Create(AVersion);
@@ -268,7 +264,6 @@ begin
   FRemotePort    := ARemotePort;
 end;
 
-{ TClientSocket.Create }
 constructor TClientSocket.Create({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext;{$ENDIF} const ASocket : TSocket);
 begin
   FSocket := ASocket;
@@ -296,7 +291,6 @@ begin
   {$ENDIF}
 end;
 
-{ TClientSocket.GetPeerInformations }
 procedure TClientSocket.GetPeerInformations();
 begin
   var ASockAddrStorage : TSockAddrStorage;
@@ -342,7 +336,6 @@ begin
   end;
 end;
 
-{ TClientSocket.Connect }
 procedure TClientSocket.Connect();
 begin
   var ptrSockAddr     : PSockAddr;
@@ -411,7 +404,6 @@ end;
 
 (* TClientSocket.__OpenSSL__ *)
 
-{ TClientSocket.Destroy }
 destructor TClientSocket.Destroy();
 begin
   if Assigned(FSSLHandler) then
@@ -421,21 +413,18 @@ begin
   inherited Destroy();
 end;
 
-{ TClientSocket.Send }
 procedure TClientSocket.Send(const buf; len : Integer);
 begin
   if Assigned(FSSLHandler) then
     FSSLHandler.Send(buf, len);
 end;
 
-{ TClientSocket.Recv }
 procedure TClientSocket.Recv(var buf; len : Integer);
 begin
   if Assigned(FSSLhandler) then
     FSSLHandler.Recv(buf, len);
 end;
 
-{ TClientSocket.GetPeerCertificateFingerprint }
 function TClientSocket.GetPeerCertificateFingerprint() : String;
 begin
   result := '';
@@ -446,15 +435,12 @@ begin
 end;
 
 {$ELSE}
-
-{ TClientSocket.Send }
 procedure TClientSocket.Send(const buf; len : Integer);
 begin
   if Winapi.Winsock2.Send(FSocket, buf, len, 0) <= 0 then
     raise ESocketException.Create('Send');
 end;
 
-{ TClientSocket.Recv }
 procedure TClientSocket.Recv(var buf; len : Integer);
 begin
   if Winapi.Winsock2.Recv(FSocket, buf, len, 0) <= 0 then
@@ -462,8 +448,6 @@ begin
 end;
 
 {$ENDIF}
-
-{ TClientSocket.SendBuffer }
 procedure TClientSocket.SendBuffer(const pValue : Pointer; const ABufferSize : UInt64);
 begin
   if not Assigned(pValue) or (ABufferSize = 0) then
@@ -489,7 +473,6 @@ begin
   until ABytesWritten >= ABufferSize;
 end;
 
-{ TClientSocket.ReceiveBuffer }
 procedure TClientSocket.ReceiveBuffer(var pBuffer : Pointer; var ABufferSize : UInt64);
 begin
   Recv(ABufferSize, SizeOf(UInt64));
@@ -514,7 +497,6 @@ begin
   until ABytesRead >= ABufferSize;
 end;
 
-{ TClientSocket.SendStream }
 procedure TClientSocket.SendStream(const AValue : TMemoryStream);
 begin
   if not Assigned(AValue) then
@@ -529,7 +511,6 @@ begin
   SendBuffer(AValue.Memory, AValue.Size);
 end;
 
-{ TClientSocket.ReceiveStream }
 procedure TClientSocket.ReceiveStream(var AValue : TMemoryStream);
 begin
   if not Assigned(AValue) then
@@ -553,7 +534,6 @@ begin
   end;
 end;
 
-{ TClientSocket.SendString }
 procedure TClientSocket.SendString(const AString : String);
 begin
   var ABuffer := ZCompressStr(AString, TZCompressionLevel.zcDefault);
@@ -563,7 +543,6 @@ begin
   // SendBuffer(PWideChar(AString), Length(AString) * SizeOf(WideChar));
 end;
 
-{ TClientSocket.RecvString }
 function TClientSocket.ReceiveString() : String;
 begin
   result := '';
@@ -589,7 +568,6 @@ begin
   end;
 end;
 
-{ TClientSocket.SendJson }
 procedure TClientSocket.SendJson(const AJson : ISuperObject);
 begin
   if not Assigned(AJson) then
@@ -599,7 +577,6 @@ begin
   SendString(AJson.AsJSON());
 end;
 
-{ TClientSocket.SendJson }
 procedure TClientSocket.SendJson(const AJsonArray : ISuperArray);
 begin
   if not Assigned(AJsonArray) then
@@ -609,7 +586,6 @@ begin
   SendString(AJsonArray.AsJSON());
 end;
 
-{ TClientSocket.ReceiveJson }
 function TClientSocket.ReceiveJson() : ISuperObject;
 begin
   var AJsonString := ReceiveString();
@@ -622,7 +598,6 @@ begin
   end;
 end;
 
-{ TClientSocket.ReceiveJsonArray }
 function TClientSocket.ReceiveJsonArray() : ISuperArray;
 begin
   var AJsonString := ReceiveString();
@@ -635,7 +610,6 @@ begin
   end;
 end;
 
-{ TClientSocket.SendPacket }
 procedure TClientSocket.SendPacket(const APacket : TOptixPacket);
 begin
   if not Assigned(APacket) then
@@ -645,7 +619,6 @@ begin
   SendJson(APacket.Serialize);
 end;
 
-{ TClientSocket.ReceiveePacket }
 procedure TClientSocket.ReceivePacket(var APacketBody : ISuperObject; const ABlockUntilDataAvailable : Boolean = False);
 begin
   if not ABlockUntilDataAvailable then
@@ -655,7 +628,6 @@ begin
   APacketBody := ReceiveJson();
 end;
 
-{ TClientSocket.IsDataAvailable }
 function TClientSocket.IsDataAvailable(): Boolean;
 begin
   {$IFDEF USETLS}
@@ -681,7 +653,6 @@ begin
   result := (ARet > 0);
 end;
 
-{ TClientSocket.IsSocketAlive }
 function TClientSocket.IsSocketAlive() : Boolean;
 begin
   var AReadFd : TFDSet;
@@ -721,7 +692,6 @@ end;
 
 (* TServerSocket *)
 
-{ TServerSocket.Create }
 constructor TServerSocket.Create(const ABindAddress : String; const ABindPort : Word; const AVersion : TIPVersion);
 begin
   inherited Create(AVersion);
@@ -731,7 +701,6 @@ begin
   FBindPort    := ABindPort;
 end;
 
-{ TServerSocket.Listen }
 procedure TServerSocket.Listen();
 begin
   var ptrSockAddr     : PSockAddr;
@@ -793,7 +762,6 @@ begin
   end;
 end;
 
-{ TServerSocket.AcceptClient }
 function TServerSocket.AcceptClient({$IFDEF USETLS}const ASSLContext : TOptixOpenSSLContext{$ENDIF}) : TClientSocket;
 begin
   var ptrSockAddr     : PSockAddr;
@@ -827,7 +795,6 @@ end;
 
 (* TOptixSocketHelper *)
 
-{ TOptixSocketHelper.IsValidHost }
 class function TOptixSocketHelper.IsValidHost(const AValue : String; const AIPVersion : TIPVersion) : Boolean;
 begin
   var AAddrInfo : TAddrInfoW;

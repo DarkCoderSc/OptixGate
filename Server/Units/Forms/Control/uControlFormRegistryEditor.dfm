@@ -25,11 +25,13 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
     Align = alClient
     PageIndex = 1
     TabOrder = 0
-    ExplicitHeight = 174
+    ExplicitWidth = 371
+    ExplicitHeight = 137
     object TPage
       Left = 0
       Top = 0
       Caption = 'SZ'
+      ExplicitWidth = 0
       ExplicitHeight = 174
       object PanelSZ: TPanel
         Left = 0
@@ -47,11 +49,10 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         object Label1: TLabel
           Left = 8
           Top = 8
-          Width = 365
+          Width = 31
           Height = 15
           Align = alTop
           Caption = 'Value:'
-          ExplicitWidth = 31
         end
         object EditSZ: TEdit
           AlignWithMargins = True
@@ -72,7 +73,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Left = 0
       Top = 0
       Caption = 'MSZ'
-      ExplicitHeight = 174
+      ExplicitWidth = 371
+      ExplicitHeight = 137
       object PanelMSZ: TPanel
         Left = 0
         Top = 0
@@ -84,7 +86,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Padding.Top = 8
         Padding.Right = 8
         TabOrder = 0
-        ExplicitHeight = 174
+        ExplicitWidth = 371
+        ExplicitHeight = 137
         object Label2: TLabel
           AlignWithMargins = True
           Left = 8
@@ -113,7 +116,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           ParentFont = False
           ScrollBars = ssBoth
           TabOrder = 0
-          ExplicitHeight = 139
+          ExplicitWidth = 355
+          ExplicitHeight = 110
         end
       end
     end
@@ -121,6 +125,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Left = 0
       Top = 0
       Caption = 'DQWord'
+      ExplicitWidth = 0
       ExplicitHeight = 174
       object PanelQDword: TPanel
         Left = 0
@@ -139,7 +144,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           AlignWithMargins = True
           Left = 8
           Top = 8
-          Width = 365
+          Width = 31
           Height = 15
           Margins.Left = 0
           Margins.Top = 0
@@ -147,7 +152,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           Margins.Bottom = 4
           Align = alTop
           Caption = 'Value:'
-          ExplicitWidth = 31
         end
         object EditQDword: TEdit
           Left = 8
@@ -214,6 +218,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Left = 0
       Top = 0
       Caption = 'Binary'
+      ExplicitWidth = 0
       ExplicitHeight = 174
       object PanelBinary: TPanel
         Left = 0
@@ -235,6 +240,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 191
+    ExplicitWidth = 371
     object ButtonAction: TButton
       AlignWithMargins = True
       Left = 298
@@ -249,8 +256,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Caption = 'Action'
       TabOrder = 0
       OnClick = ButtonActionClick
-      ExplicitTop = 4
-      ExplicitHeight = 27
+      ExplicitLeft = 288
     end
     object ButtonCancel: TButton
       AlignWithMargins = True
@@ -266,8 +272,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Caption = 'Cancel'
       TabOrder = 1
       OnClick = ButtonCancelClick
-      ExplicitTop = 4
-      ExplicitHeight = 27
+      ExplicitLeft = 209
     end
   end
   object PanelHeader: TPanel
@@ -281,6 +286,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
     Padding.Top = 8
     Padding.Right = 8
     TabOrder = 2
+    ExplicitWidth = 371
     object LabelName: TLabel
       AlignWithMargins = True
       Left = 8
@@ -307,6 +313,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Align = alTop
       TabOrder = 0
       OnKeyUp = EditNameKeyUp
+      ExplicitWidth = 355
     end
   end
   object StatusBar: TStatusBar
@@ -318,6 +325,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       item
         Width = 500
       end>
+    ExplicitTop = 231
+    ExplicitWidth = 371
   end
   object MainMenu: TMainMenu
     Left = 224

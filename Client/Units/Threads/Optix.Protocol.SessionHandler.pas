@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Protocol.SessionHandler;
 
@@ -109,11 +110,11 @@ type
     procedure RegisterNewFileTransfer(const ATransfer : TOptixCommandTransfer);
     procedure RegisterAndStartNewTask(const AOptixTask : TOptixTask);
 
-    procedure RegisterAndStartNewShellInstance(const ACommand : TOptixStartShellInstance);
+    procedure RegisterAndStartNewShellInstance(const ACommand : TOptixCommandCreateShellInstance);
     procedure PerformActionOnShellInstance(const AInstanceId : TGUID; const AShellAction : TShellAction);
-    procedure TerminateShellInstance(const ACommand : TOptixTerminateShellInstance);
-    procedure BreakShellInstance(const ACommand : TOptixBreakShellInstance);
-    procedure StdinToShellInstance(const ACommand : TOptixStdinShellInstance);
+    procedure TerminateShellInstance(const ACommand : TOptixCommandDeleteShellInstance);
+    procedure BreakShellInstance(const ACommand : TOptixCommandSigIntShellInstance);
+    procedure StdinToShellInstance(const ACommand : TOptixCommandWriteShellInstance);
 
     procedure BrowseContentReaderPage(const AReaderId : TGUID; const APageNumber : Int64;
       const ANewPageSize : UInt64 = 0; const AFirstPage : Boolean = False);
@@ -141,7 +142,6 @@ uses
   Optix.Func.SessionInformation, Optix.Func.LogNotifier, Optix.Thread, Optix.ClassesRegistry;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixSessionHandlerThread.Initialize }
 procedure TOptixSessionHandlerThread.Initialize();
 begin
   inherited;
@@ -159,7 +159,6 @@ begin
   {$ENDIF}
 end;
 
-{ TOptixSessionHandlerThread.Finalize }
 procedure TOptixSessionHandlerThread.Finalize();
 begin
   inherited;
@@ -182,13 +181,11 @@ begin
     FreeAndNil(FContentReaders);
 end;
 
-{ TOptixSessionHandlerThread.InitializePreflightRequest }
 function TOptixSessionHandlerThread.InitializePreflightRequest() : TOptixPreflightRequest;
 begin
   result.ClientKind := ckHandler;
 end;
 
-{ TOptixSessionHandlerThread.PollTasks }
 procedure TOptixSessionHandlerThread.PollTasks();
 begin
   if not Assigned(FTasks) or (FTasks.Count = 0) then
@@ -218,7 +215,6 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.RegisterAndStartNewTask }
 procedure TOptixSessionHandlerThread.RegisterAndStartNewTask(const AOptixTask : TOptixTask);
 begin
   if not Assigned(AOptixTask) or not Assigned(FTasks) then
@@ -237,7 +233,6 @@ begin
   FTasks.Add(AOptixTask);
 end;
 
-{ TOptixSessionHandlerThread.PollShellInstances }
 procedure TOptixSessionHandlerThread.PollShellInstances();
 begin
   var AShellInstancesToDelete := TList<TProcessHandler>.Create();
@@ -255,7 +250,7 @@ begin
         ///
 
         if not String.IsNullOrWhiteSpace(ARetrievedOutput) then
-          AddPacket(TOptixShellOutput.Create(AShellInstance.GroupId, ARetrievedOutput, AShellInstance.InstanceId));
+          AddPacket(TOptixCommandReadShellInstance.Create(AShellInstance.GroupId, ARetrievedOutput, AShellInstance.InstanceId));
       except
         AShellInstance.Close();
       end;
@@ -263,7 +258,7 @@ begin
 
     for var AShellInstance in AShellInstancesToDelete do begin
       // Notify server about a terminated shell instance
-      var ATerminateShellInstance := TOptixTerminateShellInstance.Create(AShellInstance.InstanceId);
+      var ATerminateShellInstance := TOptixCommandDeleteShellInstance.Create(AShellInstance.InstanceId);
       ATerminateShellInstance.WindowGUID := AShellInstance.GroupId;
       AddPacket(ATerminateShellInstance);
 
@@ -275,7 +270,6 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.PerformActionOnShellInstance }
 procedure TOptixSessionHandlerThread.PerformActionOnShellInstance(const AInstanceId : TGUID; const AShellAction : TShellAction);
 begin
   for var AShellInstance in FShellInstances do begin
@@ -295,8 +289,7 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.StdinToShellInstance }
-procedure TOptixSessionHandlerThread.StdinToShellInstance(const ACommand : TOptixStdinShellInstance);
+procedure TOptixSessionHandlerThread.StdinToShellInstance(const ACommand : TOptixCommandWriteShellInstance);
 begin
   for var AShellInstance in FShellInstances do begin
     if AShellInstance.InstanceId <> ACommand.InstanceId then
@@ -309,20 +302,17 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.TerminateShellInstance }
-procedure TOptixSessionHandlerThread.TerminateShellInstance(const ACommand : TOptixTerminateShellInstance);
+procedure TOptixSessionHandlerThread.TerminateShellInstance(const ACommand : TOptixCommandDeleteShellInstance);
 begin
   PerformActionOnShellInstance(ACommand.InstanceId, saTerminate);
 end;
 
-{ TOptixSessionHandlerThread.BreakhellInstance }
-procedure TOptixSessionHandlerThread.BreakShellInstance(const ACommand : TOptixBreakShellInstance);
+procedure TOptixSessionHandlerThread.BreakShellInstance(const ACommand : TOptixCommandSigIntShellInstance);
 begin
   PerformActionOnShellInstance(ACommand.InstanceId, saBreak);
 end;
 
-{ TOptixSessionHandlerThread.RegisterAndStartNewShellInstance }
-procedure TOptixSessionHandlerThread.RegisterAndStartNewShellInstance(const ACommand : TOptixStartShellInstance);
+procedure TOptixSessionHandlerThread.RegisterAndStartNewShellInstance(const ACommand : TOptixCommandCreateShellInstance);
 begin
   var AProcessHandler := TProcessHandler.Create('powershell.exe', ACommand.WindowGUID);
 
@@ -333,7 +323,6 @@ begin
   FShellInstances.Add(AProcessHandler);
 end;
 
-{ TOptixSessionHandlerThread.PollActions }
 procedure TOptixSessionHandlerThread.PollActions();
 begin
   // Tasks -------------------------------------------------------------------------------------------------------------
@@ -343,7 +332,6 @@ begin
   // -------------------------------------------------------------------------------------------------------------------
 end;
 
-{ TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread }
 procedure TOptixSessionHandlerThread.InitializeFileTransferOrchestratorThread();
 begin
   if not TOptixThread.HasRunningInstance(FFileTransferOrchestrator) then begin
@@ -356,7 +344,6 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.RegisterNewFileTransfer }
 procedure TOptixSessionHandlerThread.RegisterNewFileTransfer(const ATransfer : TOptixCommandTransfer);
 begin
   InitializeFileTransferOrchestratorThread();
@@ -365,7 +352,6 @@ begin
   FFileTransferOrchestrator.AddTransfer(ATransfer);
 end;
 
-{ TOptixSessionHandlerThread.BrowseContentReaderPage }
 procedure TOptixSessionHandlerThread.BrowseContentReaderPage(const AReaderId : TGUID; const APageNumber : Int64;
   const ANewPageSize : UInt64 = 0; const AFirstPage : Boolean = False);
 begin
@@ -377,12 +363,12 @@ begin
   if ANewPageSize > 0 then
     AReader.PageSize := ANewPageSize;
 
-  var ACommandClass : TOptixCommandContentReaderPageClass;
+  var ACommandClass : TOptixCommandReadContentReaderPageClass;
 
   if AFirstPage then
-    ACommandClass := TOptixCommandContentReaderFirstPage
+    ACommandClass := TOptixCommandReadContentReaderPageFirstPage
   else
-    ACommandClass := TOptixCommandContentReaderPage;
+    ACommandClass := TOptixCommandReadContentReaderPage;
 
   ///
   AddPacket(ACommandClass.Create(
@@ -392,7 +378,6 @@ begin
   ));
 end;
 
-{ TOptixSessionHandlerThread.CreateAndRegisterNewContentReader }
 procedure TOptixSessionHandlerThread.CreateAndRegisterNewContentReader(
   const ACommand : TOptixCommandCreateFileContentReader);
 begin
@@ -405,7 +390,6 @@ begin
   BrowseContentReaderPage(AReaderId, 0, 0, True);
 end;
 
-{ TOptixSessionHandlerThread.Connected }
 procedure TOptixSessionHandlerThread.Connected();
 begin
   inherited;
@@ -418,7 +402,7 @@ begin
     end);
   {$ENDIF}
 
-  var ASessionInformation := TOptixSessionInformation.Create();
+  var ASessionInformation := TOptixCommandReceiveSessionInformation.Create();
   try
     ASessionInformation.DoAction();
 
@@ -430,7 +414,6 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.Disconnected }
 procedure TOptixSessionHandlerThread.Disconnected();
 begin
   inherited;
@@ -451,7 +434,6 @@ begin
   end;
 end;
 
-{ TOptixSessionHandlerThread.PacketReceived }
 procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
 begin
   if not Assigned(ASerializedPacket) or
@@ -492,39 +474,38 @@ begin
       end else if AOptixPacket is TOptixCommandTransfer then
         RegisterNewFileTransfer(TOptixCommandTransfer(AOptixPacket))
       // Shell Commands ------------------------------------------------------------------------------------------------
-      else if AOptixPacket is TOptixCommandShell then begin
-        if AOptixPacket is TOptixStartShellInstance then
-          RegisterAndStartNewShellInstance(TOptixStartShellInstance(AOptixPacket))
-        else if AOptixPacket is TOptixTerminateShellInstance then
-          TerminateShellInstance(TOptixTerminateShellInstance(AOptixPacket))
-        else if AOptixPacket is TOptixBreakShellInstance then
-          BreakShellInstance(TOptixBreakShellInstance(AOptixPacket))
-        else if AOptixPacket is TOptixStdinShellInstance then
-          StdinToShellInstance(TOptixStdinShellInstance(AOptixPacket));
+      else if AOptixPacket is TOptixCommandCreateShellInstance then
+        RegisterAndStartNewShellInstance(TOptixCommandCreateShellInstance(AOptixPacket))
+      else if AOptixPacket is TOptixCommandDeleteShellInstance then
+        TerminateShellInstance(TOptixCommandDeleteShellInstance(AOptixPacket))
+      else if AOptixPacket is TOptixCommandSigIntShellInstance then
+        BreakShellInstance(TOptixCommandSigIntShellInstance(AOptixPacket))
+      else if AOptixPacket is TOptixCommandWriteShellInstance then
+        StdinToShellInstance(TOptixCommandWriteShellInstance(AOptixPacket))
       // Content Reader Commands ---------------------------------------------------------------------------------------
-      end else if AOptixPacket is TOptixCommandCreateFileContentReader then
+      else if AOptixPacket is TOptixCommandCreateFileContentReader then
         CreateAndRegisterNewContentReader(TOptixCommandCreateFileContentReader(AOptixPacket))
-      else if AOptixPacket is TOptixCommandCloseContentReader then
+      else if AOptixPacket is TOptixCommandDeleteContentReader then
         FContentReaders.Remove(AOptixPacket.WindowGUID)
-      else if AOptixPacket is TOptixCommandBrowseContentReader then
+      else if AOptixPacket is TOptixCommandGetContentReaderPage then
         BrowseContentReaderPage(
           AOptixPacket.WindowGUID,
-          TOptixCommandBrowseContentReader(AOptixPacket).PageNumber,
-          TOptixCommandBrowseContentReader(AOptixPacket).PageSize
+          TOptixCommandGetContentReaderPage(AOptixPacket).PageNumber,
+          TOptixCommandGetContentReaderPage(AOptixPacket).PageSize
         )
-      // Simple Commands -----------------------------------------------------------------------------------------------
-      else if AOptixPacket is TOptixSimpleCommand then begin
+      // Basic Commands -----------------------------------------------------------------------------------------------
+      else if AOptixPacket is TOptixBasicCommand then begin
         AHandleMemory := False;
         ///
 
         // -------------------------------------------------------------------------------------------------------------
-        if AOptixPacket is TOptixCommandTerminate then
+        if AOptixPacket is TOptixCommandTerminateCurrentProcess then
           Terminate;
         // -------------------------------------------------------------------------------------------------------------
       end;
     except
       on E : Exception do
-        AddPacket(TLogNotifier.Create(E.Message, AClassName, lkException));
+        AddPacket(TOptixCommandReceiveLogMessage.Create(E.Message, AClassName, lkException));
     end;
   finally
     if not AHandleMemory and Assigned(AOptixPacket) then

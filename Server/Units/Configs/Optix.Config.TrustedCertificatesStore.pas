@@ -46,13 +46,19 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Config.TrustedCertificatesStore;
 
 interface
 
-uses XSuperObject, Optix.Config.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  XSuperObject,
+
+  Optix.Config.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   // TODO: Create a custom iterator for..in
@@ -74,9 +80,13 @@ type
 
 implementation
 
-uses Winapi.Windows, Optix.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows,
 
-{ TOptixConfigTrustedCertificatesStore.GetCount }
+  Optix.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+
 function TOptixConfigTrustedCertificatesStore.GetCount() : Integer;
 begin
   result := 0;
@@ -88,7 +98,6 @@ begin
   result := FJsonObject.A['Items'].Length;
 end;
 
-{ TOptixConfigTrustedCertificatesStore.GetItem }
 function TOptixConfigTrustedCertificatesStore.GetItem(AIndex: Integer): String;
 begin
   result := '';
@@ -114,13 +123,11 @@ begin
   end;
 end;
 
-{ TOptixConfigTrustedCertificatesStore.Add }
 procedure TOptixConfigTrustedCertificatesStore.Add(const AFingerprint : String);
 begin
   SetItem(-1, AFingerprint);
 end;
 
-{ TOptixConfigTrustedCertificatesStore.SetItem }
 procedure TOptixConfigTrustedCertificatesStore.SetItem(AIndex: Integer; const AValue: String);
 begin
   var AJsonArray  : ISuperArray;

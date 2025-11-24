@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormProcessManager;
 
@@ -95,9 +96,6 @@ type
     Clear1: TMenuItem;
     DumpProcess1: TMenuItem;
     procedure Refresh1Click(Sender: TObject);
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -125,7 +123,7 @@ type
     FRemoteProcessorArchitecture : TProcessorArchitecture;
 
     {@M}
-    procedure Refresh(const AProcessList : TOptixCommandRefreshProcess);
+    procedure Refresh(const AProcessList : TOptixCommandEnumRunningProcesses);
     procedure ApplyFilters(const AFilters : TFilterKinds = []);
     procedure ApplyFilterSettings();
     function GetNodeByProcessId(const AProcessId : Cardinal) : PVirtualNode;
@@ -173,7 +171,7 @@ end;
 
 procedure TControlFormProcessManager.RefreshProcess();
 begin
-  SendCommand(TOptixCommandRefreshProcess.Create());
+  SendCommand(TOptixCommandEnumRunningProcesses.Create());
 end;
 
 function TControlFormProcessManager.GetContextDescription() : String;
@@ -311,7 +309,7 @@ begin
 
   var pData := PTreeData(VST.FocusedNode.GetData);
 
-  //SendCommand(TOptixCommandProcessDump.Create(0, 'c:\temp\process_dump.dmp'));
+  //SendCommand(TOptixCommandDumpProcess.Create(0, 'c:\temp\process_dump.dmp'));
 
   var ADialog := TControlFormDumpProcess.Create(
     self,
@@ -341,7 +339,7 @@ begin
     Exit();
 
   ///
-  SendCommand(TOptixCommandKillProcess.Create(pData^.ProcessInformation.Id));
+  SendCommand(TOptixCommandTerminateProcess.Create(pData^.ProcessInformation.Id));
 end;
 
 procedure TControlFormProcessManager.PopupMenuPopup(Sender: TObject);
@@ -350,7 +348,7 @@ begin
   DumpProcess1.Visible := KillProcess1.Visible;
 end;
 
-procedure TControlFormProcessManager.Refresh(const AProcessList : TOptixCommandRefreshProcess);
+procedure TControlFormProcessManager.Refresh(const AProcessList : TOptixCommandEnumRunningProcesses);
 begin
   if not Assigned(AProcessList) then
     Exit();
@@ -360,7 +358,7 @@ begin
 
   VST.BeginUpdate();
   try
-    for var AProcessInformation in AProcessList.List do begin
+    for var AProcessInformation in AProcessList.Processes do begin
       var pNode := VST.AddChild(nil);
       var pData := PTreeData(pNode.GetData);
 
@@ -411,12 +409,6 @@ begin
   end;
 end;
 
-procedure TControlFormProcessManager.VSTChange(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TControlFormProcessManager.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
   Column: TColumnIndex; var Result: Integer);
 
@@ -456,12 +448,6 @@ begin
       10 : Result := CompareText(pData1^.ProcessInformation.ImagePath, pData2^.ProcessInformation.ImagePath);
     end;
   end;
-end;
-
-procedure TControlFormProcessManager.VSTFocusChanged(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TControlFormProcessManager.VSTFreeNode(Sender: TBaseVirtualTree;
@@ -567,11 +553,11 @@ begin
   ///
 
   // -------------------------------------------------------------------------------------------------------------------
-  if AOptixPacket is TOptixCommandRefreshProcess then
-    Refresh(TOptixCommandRefreshProcess(AOptixPacket))
+  if AOptixPacket is TOptixCommandEnumRunningProcesses then
+    Refresh(TOptixCommandEnumRunningProcesses(AOptixPacket))
   // -------------------------------------------------------------------------------------------------------------------
-  else if AOptixPacket is TOptixCommandKillProcess then
-    RemoveProcess(TOptixCommandKillProcess(AOptixPacket).ProcessId);
+  else if AOptixPacket is TOptixCommandTerminateProcess then
+    RemoveProcess(TOptixCommandTerminateProcess(AOptixPacket).ProcessId);
   // -------------------------------------------------------------------------------------------------------------------
 end;
 

@@ -46,13 +46,21 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Process.Helper;
 
 interface
 
-uses Winapi.Windows, System.Classes, Optix.WinApiEx, Optix.Shared.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows,
+
+  Optix.WinApiEx, Optix.Shared.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TElevatedStatus = (
@@ -68,8 +76,8 @@ type
     class function TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus; static;
     class function IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus; static;
     class function TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus; static;
-    class procedure GetProcessUserInformation(const AProcessId : Cardinal; var AUserName, ADomain : String); static;
-    class function TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean; static;
+    class procedure GetProcessUserInformation(const AProcessId : Cardinal; out AUserName, ADomain : String); static;
+    class function TryGetProcessUserInformation(const AProcessId : Cardinal; out AUsername, ADomain : String) : Boolean; static;
     class function GetProcessImagePath(const AProcessID : Cardinal) : String; static;
     class function TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String; static;
     class function IsWow64Process(const AProcessId : Cardinal) : Boolean; static;
@@ -84,11 +92,15 @@ type
 
 implementation
 
-uses Optix.Exceptions, System.SysUtils, System.IOUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.IOUtils,
+
+  Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* Local *)
 
-{ _.ElevatedStatusToString }
 function ElevatedStatusToString(const AValue : TElevatedStatus) : String;
 begin
   result := 'Unknown';
@@ -102,7 +114,6 @@ end;
 
 (* TProcessHelper *)
 
-{ TProcessHelper.IsElevated }
 class function TProcessHelper.IsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
 var AToken        : THandle;
     ATokenInfo    : TTokenElevation;
@@ -127,7 +138,6 @@ begin
     result := esLimited;
 end;
 
-{ TProcessHelper.TryGetIsElevated }
 class function TProcessHelper.TryGetIsElevated(AProcessHandle : THandle = 0) : TElevatedStatus;
 begin
   result := esUnknown;
@@ -140,7 +150,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.IsElevatedByProcessId }
 class function TProcessHelper.IsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
 begin
   var hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessId);
@@ -153,7 +162,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.TryIsElevatedByProcessId }
 class function TProcessHelper.TryIsElevatedByProcessId(const AProcessId : Cardinal) : TElevatedStatus;
 begin
   try
@@ -163,12 +171,8 @@ begin
   end;
 end;
 
-{ TProcessHelper.GetProcessUserInformation }
-class procedure TProcessHelper.GetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String);
+class procedure TProcessHelper.GetProcessUserInformation(const AProcessId : Cardinal; out AUsername, ADomain : String);
 begin
-  AUserName    := '';
-  ADomain      := '';
-
   var AFlags : Cardinal;
 
   if TOSVersion.Major < 6 then
@@ -260,8 +264,7 @@ begin
   end;
 end;
 
-{ TProcessHelper.TryGetProcessUserInformation }
-class function TProcessHelper.TryGetProcessUserInformation(const AProcessId : Cardinal; var AUsername, ADomain : String) : Boolean;
+class function TProcessHelper.TryGetProcessUserInformation(const AProcessId : Cardinal; out AUsername, ADomain : String) : Boolean;
 begin
   try
     GetProcessUserInformation(AProcessId, AUsername, ADomain);
@@ -273,7 +276,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.GetProcessImagePath }
 class function TProcessHelper.GetProcessImagePath(const AProcessID : Cardinal) : String;
 begin
   result := '';
@@ -302,7 +304,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.TryGetProcessImagePath }
 class function TProcessHelper.TryGetProcessImagePath(const AProcessID : Cardinal; const ADefault : String = '') : String;
 begin
   try
@@ -312,7 +313,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.IsWow64Process }
 class function TProcessHelper.IsWow64Process(const AProcessId : Cardinal) : Boolean;
 begin
   var hProcess := OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, False, AProcessId);
@@ -331,7 +331,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.TryIsWow64Process }
 class function TProcessHelper.TryIsWow64Process(const AProcessId : Cardinal) : TBoolResult;
 begin
   try
@@ -341,7 +340,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.GetProcessCommandLine }
 class function TProcessHelper.GetProcessCommandLine(const AProcessId : Cardinal) : String;
 begin
   var hProcess := OpenProcess(PROCESS_QUERY_INFORMATION or PROCESS_VM_READ, False, AProcessId);
@@ -393,7 +391,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.TryGetProcessCommandLine }
 class function TProcessHelper.TryGetProcessCommandLine(const AProcessId : Cardinal) : String;
 begin
   try
@@ -403,7 +400,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.MiniDumpWriteDump }
 class function TProcessHelper.MiniDumpWriteDump(const ATargetProcessId : Cardinal; const ATypesValue : DWORD; AOutputFilePath : String = '') : String;
 begin
   if String.IsNullOrWhiteSpace(AOutputFilePath) then
@@ -431,7 +427,6 @@ begin
   end;
 end;
 
-{ TProcessHelper.TerminateProcess }
 class procedure TProcessHelper.TerminateProcess(const AProcessId : Cardinal);
 begin
   var hProcess := OpenProcess(PROCESS_TERMINATE, False, AProcessId);
@@ -444,6 +439,5 @@ begin
     CloseHandle(hProcess);
   end;
 end;
-
 
 end.

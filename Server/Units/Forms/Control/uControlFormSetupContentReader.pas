@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormSetupContentReader;
 
@@ -62,6 +63,7 @@ uses
 
   __uBaseFormControl__, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
 // ---------------------------------------------------------------------------------------------------------------------
+
 type
   TControlFormSetupContentReader = class(TBaseFormControl)
     PanelClient: TPanel;

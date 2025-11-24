@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormTransfers;
 
@@ -100,8 +101,6 @@ type
     OpenDialog: TOpenDialog;
     N1: TMenuItem;
     CancelTransfer1: TMenuItem;
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -126,7 +125,7 @@ type
     function RequestFileUpload(ALocalFilePath : String; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID; override;
 
     procedure ApplyTransferException(const ATransferId : TGUID; const AReason : String); overload;
-    procedure ApplyTransferException(const ALogTransferException : TLogTransferException); overload;
+    procedure ApplyTransferException(const ALogTransferException : TOptixCommandReceiveTransferException); overload;
 
     procedure OnRequestTransferTask(Sender : TObject; const ATransferId : TGUID; var ATask : TOptixTransferTask);
     procedure OnTransferError(Sender : TObject; const ATransferId : TGUID; const AReason : String);
@@ -160,12 +159,12 @@ begin
   ///
 
   // -------------------------------------------------------------------------------------------------------------------
-  if AOptixPacket is TOptixRequestUploadedFileInformation then begin
+  if AOptixPacket is TOptixCommandGetUploadedFileInformation then begin
     var AForms := FormMain.GetControlForms(self, TControlFormFileManager);
     if not Assigned(AForms) then
       Exit();
     try
-      var AFileInformation := TOptixRequestUploadedFileInformation(AOptixPacket);
+      var AFileInformation := TOptixCommandGetUploadedFileInformation(AOptixPacket);
       if Assigned(AFileInformation.FileInformation) then
         for var AForm in AForms do
           TControlFormFileManager(AForm).RegisterNewFile(
@@ -250,7 +249,7 @@ begin
       pData^.State := tsEnded;
 
       ///
-      SendCommand(TOptixRequestUploadedFileInformation.Create(pData^.DestinationFilePath, False));
+      SendCommand(TOptixCommandGetUploadedFileInformation.Create(pData^.DestinationFilePath, False));
     end;
   finally
     VST.EndUpdate();
@@ -291,7 +290,7 @@ begin
   end;
 end;
 
-procedure TControlFormTransfers.ApplyTransferException(const ALogTransferException : TLogTransferException);
+procedure TControlFormTransfers.ApplyTransferException(const ALogTransferException : TOptixCommandReceiveTransferException);
 begin
   if not Assigned(ALogTransferException) then
     Exit();
@@ -435,11 +434,6 @@ begin
   RequestFileUpload('');
 end;
 
-procedure TControlFormTransfers.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TControlFormTransfers.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
   var Result: Integer);
 
@@ -484,11 +478,6 @@ begin
       7 : CompareText(pData1^.Id.ToString, pData2^.Id.ToString);
     end;
   end;
-end;
-
-procedure TControlFormTransfers.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TControlFormTransfers.VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;

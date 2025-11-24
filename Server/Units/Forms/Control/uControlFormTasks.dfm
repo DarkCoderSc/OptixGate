@@ -37,9 +37,7 @@ object ControlFormTasks: TControlFormTasks
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-    OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
-    OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex

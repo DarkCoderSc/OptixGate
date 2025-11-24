@@ -46,13 +46,19 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.OpenSSL.Exceptions;
 
 interface
 
-uses System.SysUtils, Optix.Sockets.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Optix.Sockets.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   EOpenSSLBaseException = class(Exception)
@@ -77,23 +83,25 @@ type
 
 implementation
 
-uses Winapi.Windows, Winapi.Winsock2, Optix.OpenSSL.Headers;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows, Winapi.Winsock2,
+
+  Optix.OpenSSL.Headers;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* EOpenSSLBaseException *)
 
-{ EOpenSSLBaseException.Create }
 constructor EOpenSSLBaseException.Create();
 begin
   Create(ERR_get_error());
 end;
 
-{ EOpenSSLBaseException.Create }
 constructor EOpenSSLBaseException.Create(const pSSLConnection : Pointer);
 begin
   Create(SSL_get_error(pSSLConnection, FErrorCode));
 end;
 
-{ EOpenSSLBaseException.Create }
 constructor EOpenSSLBaseException.Create(const AErrorCode : Integer);
 begin
   FErrorCode := AErrorCode;

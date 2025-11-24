@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Protocol.Packet;
 
@@ -83,7 +84,6 @@ uses
 
 (* TOptixPacket *)
 
-{ TOptixPacket.Serialize }
 function TOptixPacket.Serialize() : ISuperObject;
 begin
   result := inherited;

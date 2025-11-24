@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormRemoteShell;
 
@@ -155,7 +156,7 @@ begin
   if not Assigned(AFrame) then
     Exit();
 
-  SendCommand(TOptixTerminateShellInstance.Create(AFrame.InstanceId));
+  SendCommand(TOptixCommandDeleteShellInstance.Create(AFrame.InstanceId));
 end;
 
 procedure TControlFormRemoteShell.CloseTabTerminate1Click(Sender: TObject);
@@ -224,17 +225,17 @@ begin
   ///
 
   // -------------------------------------------------------------------------------------------------------------------
-  if AOptixPacket is TOptixShellOutput then begin
-    var AFrame := GetFrameByInstanceId(TOptixShellOutput(AOptixPacket).InstanceId);
+  if AOptixPacket is TOptixCommandReadShellInstance then begin
+    var AFrame := GetFrameByInstanceId(TOptixCommandReadShellInstance(AOptixPacket).InstanceId);
     if not Assigned(AFrame) then
-      AFrame := StartShellInstance(TOptixShellOutput(AOptixPacket).InstanceId);
+      AFrame := StartShellInstance(TOptixCommandReadShellInstance(AOptixPacket).InstanceId);
     ///
 
-    AFrame.AddOutput(TOptixShellOutput(AOptixPacket).Output);
+    AFrame.AddOutput(TOptixCommandReadShellInstance(AOptixPacket).Output);
   end
   // -------------------------------------------------------------------------------------------------------------------
-  else if AOptixPacket is TOptixTerminateShellInstance then
-    CloseShellInstance(TOptixTerminateShellInstance(AOptixPacket).InstanceId);
+  else if AOptixPacket is TOptixCommandDeleteShellInstance then
+    CloseShellInstance(TOptixCommandDeleteShellInstance(AOptixPacket).InstanceId);
   // -------------------------------------------------------------------------------------------------------------------
 end;
 
@@ -294,7 +295,7 @@ end;
 
 procedure TControlFormRemoteShell.RequestNewShellInstance();
 begin
-  SendCommand(TOptixStartShellInstance.Create());
+  SendCommand(TOptixCommandCreateShellInstance.Create());
 end;
 
 function TControlFormRemoteShell.TabNameExists(const AName : String) : Boolean;
@@ -369,7 +370,7 @@ begin
   if not Assigned(AFrame) then
     Exit();
 
-  SendCommand(TOptixBreakShellInstance.Create(AFrame.InstanceId));
+  SendCommand(TOptixCommandSigIntShellInstance.Create(AFrame.InstanceId));
 end;
 
 procedure TControlFormRemoteShell.ButtonNewInstanceClick(Sender: TObject);

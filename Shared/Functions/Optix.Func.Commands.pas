@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Func.Commands;
 
@@ -59,7 +60,7 @@ uses
 
 type
   // Simple Commands
-  TOptixCommandTerminate = class(TOptixSimpleCommand);
+  TOptixCommandTerminateCurrentProcess = class(TOptixBasicCommand);
 
 implementation
 

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uFrameRemoteShellInstance;
 
@@ -132,7 +133,7 @@ begin
     Exit();
   ///
 
-  FControlForm.SendCommand(TOptixStdinShellInstance.Create(FInstanceId, Command.Text));
+  FControlForm.SendCommand(TOptixCommandWriteShellInstance.Create(FInstanceId, Command.Text));
 
   ///
   Command.Clear();

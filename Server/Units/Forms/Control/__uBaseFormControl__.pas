@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit __uBaseFormControl__;
 
@@ -200,7 +201,6 @@ end;
 
 (* TFormControlInformation *)
 
-{ TFormControlInformation.Create }
 constructor TFormControlInformation.Create();
 begin
   inherited Create();
@@ -214,7 +214,6 @@ begin
   FState           := fcsUnset;
 end;
 
-{ TFormControlInformation.Assign }
 procedure TFormControlInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TFormControlInformation then begin
@@ -230,7 +229,6 @@ begin
     inherited;
 end;
 
-{ TBaseFormControl.SetHasFocus }
 procedure TFormControlInformation.SetHasFocus(const AValue : Boolean);
 begin
   if AValue then
@@ -240,7 +238,6 @@ begin
   FHasFocus := AValue;
 end;
 
-{ TBaseFormControl.SetHasUnseenData }
 procedure TFormControlInformation.SetHasUnseenData(const AValue : Boolean);
 begin
   if AValue then
@@ -249,7 +246,6 @@ begin
     FHasUnseenData := AValue;
 end;
 
-{ TFormControlInformation.SetState }
 procedure TFormControlInformation.SetState(const AValue : TFormControlState);
 begin
   if (FState = AValue) or (FState = fcsWaitFree) then
@@ -261,7 +257,6 @@ end;
 
 (* TBaseFormControl *)
 
-{ TBaseFormControl.RegisterNewDialogAndShow }
 procedure TBaseFormControl.RegisterNewDialogAndShow(const ADialog : TForm);
 begin
   if Assigned(ADialog) and Assigned(FDialogs) then begin
@@ -272,14 +267,12 @@ begin
   end;
 end;
 
-{ TBaseFormControl.GetContextDescription }
 function TBaseFormControl.GetContextDescription() : String;
 begin
   result := '';
   ///
 end;
 
-{ TBaseFormControl.CreateParams }
 procedure TBaseFormControl.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   if not Assigned(AOptixPacket) then
@@ -293,7 +286,6 @@ begin
   FFormInformation.LastReceivedDataTime := Now;
 end;
 
-{ TBaseFormControl.CreateParams }
 procedure TBaseFormControl.CreateParams(var Params: TCreateParams);
 begin
   inherited;
@@ -304,7 +296,6 @@ begin
   Params.WndParent := 0;
 end;
 
-{ TBaseFormControl.DoShow }
 procedure TBaseFormControl.DoShow();
 begin
   inherited;
@@ -318,7 +309,6 @@ begin
   end;
 end;
 
-{ TBaseFormControl.DoClose }
 procedure TBaseFormControl.DoClose(var Action: TCloseAction);
 begin
   inherited;
@@ -332,13 +322,11 @@ begin
   end;
 end;
 
-{ TBaseFormControl.OnFirstShow }
 procedure TBaseFormControl.OnFirstShow();
 begin
   ///
 end;
 
-{ TBaseFormControl.Create }
 constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String;
   const ASpecialForm : Boolean = False);
 begin
@@ -356,7 +344,6 @@ begin
   FDialogs := TObjectList<TForm>.Create(True);
 end;
 
-{ TBaseFormControl.Destroy }
 destructor TBaseFormControl.Destroy();
 begin
   if Assigned(FFormInformation) then
@@ -369,7 +356,6 @@ begin
   inherited;
 end;
 
-{ TBaseFormControl.SendCommand }
 procedure TBaseFormControl.SendCommand(const ACommand : TOptixCommand);
 begin
   ACommand.WindowGUID := FFormInformation.GUID;
@@ -378,7 +364,6 @@ begin
   FormMain.SendCommand(self, ACommand);
 end;
 
-{ TBaseFormControl.SendCommand }
 procedure TBaseFormControl.SendCommand(const ACommand : TOptixCommand; const AControlFormGUIDForCallBack : TGUID);
 begin
   ACommand.WindowGUID := AControlFormGUIDForCallBack;
@@ -387,7 +372,6 @@ begin
   FormMain.SendCommand(self, ACommand);
 end;
 
-{ TBaseFormControl.RequestFileDownload }
 function TBaseFormControl.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
   var AForm := FormMain.GetControlForm(self, TControlFormTransfers);
@@ -395,7 +379,6 @@ begin
     AForm.RequestFileDownload(ARemoteFilePath, ALocalFilePath, AContext);
 end;
 
-{ TBaseFormControl.RequestFileUpload }
 function TBaseFormControl.RequestFileUpload(ALocalFilePath : String = ''; ARemoteFilePath : String = ''; const AContext : String = '') : TGUID;
 begin
   var AForm := FormMain.GetControlForm(self, TControlFormTransfers);
@@ -403,7 +386,6 @@ begin
     AForm.RequestFileUpload(ALocalFilePath, ARemoteFilePath, AContext);
 end;
 
-{ TBaseFormControl.StreamFileContent }
 procedure TBaseFormControl.StreamFileContent(const AFilePath : String; const APageSize : UInt64 = 1024);
 begin
   if String.IsNullOrWhiteSpace(AFilePath) then
@@ -413,7 +395,6 @@ begin
   SendCommand(TOptixCommandCreateFileContentReader.Create(AFilePath, APageSize));
 end;
 
-{ TBaseFormControl.CMVisibleChanged }
 procedure TBaseFormControl.CMVisibleChanged(var AMessage: TMessage);
 begin
   inherited;
@@ -431,7 +412,6 @@ begin
     FFormInformation.State := fcsClosed;
 end;
 
-{ TBaseFormControl.RefreshCaption }
 procedure TBaseFormControl.RefreshCaption();
 begin
   if String.IsNullOrEmpty(FFormInformation.UserIdentifier) then
@@ -443,13 +423,11 @@ begin
     ]);
 end;
 
-{ TBaseFormControl.GetGUID }
 function TBaseFormControl.GetGUID() : TGUID;
 begin
   result := FFormInformation.GUID
 end;
 
-{ TBaseFormControl.WMActivateApp }
 procedure TBaseFormControl.WMActivateApp(var AMessage: TWMActivateApp);
 begin
   inherited;
@@ -467,7 +445,6 @@ begin
   FFormInformation.SetHasFocus(AIsActive);
 end;
 
-{ TBaseFormControl.CMActivate }
 procedure TBaseFormControl.CMActivate(var AMessage: TCMActivate);
 begin
   inherited;
@@ -480,7 +457,6 @@ begin
   FFormInformation.SetHasFocus(True);
 end;
 
-{ TBaseFormControl.CMDeactivate }
 procedure TBaseFormControl.CMDeactivate(var AMessage: TCMDeactivate);
 begin
   inherited;
@@ -493,7 +469,6 @@ begin
   FFormInformation.SetHasFocus(False);
 end;
 
-{ TBaseFormControl.WMSize }
 procedure TBaseFormControl.WMWindowPosChanging(var AMessage: TWMWindowPosChanging);
 begin
   inherited;
@@ -509,13 +484,11 @@ begin
   end;
 end;
 
-{ TBaseFormControl.PurgeRequest }
 procedure TBaseFormControl.PurgeRequest();
 begin
   ///
 end;
 
-{ TBaseFormControl.__WARNING__OverrideWindowGUID }
 procedure TBaseFormControl.__WARNING__OverrideWindowGUID(const ANewGUID : TGUID);
 begin
   FFormInformation.GUID := ANewGUID;

@@ -66,9 +66,13 @@ type
   OptixSerializableAttribute = class(TCustomAttribute);
 
   TOptixSerializableObject = class(TInterfacedPersistent, IOptixSerializable)
+  private
+    const
+      SEARCH_LIST_PATTERN = '(?:.*\.|^)(TObjectList|TList)<\s*(?:.*\.)?([A-Za-z_]\w*)\s*>';
   protected
     {@M}
     procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+    procedure AfterCreate(); virtual;
   public
     {@M}
     function Serialize() : ISuperObject; virtual;
@@ -110,12 +114,9 @@ implementation
 uses
   Winapi.Windows,
 
-  System.NetEncoding,
-
-  System.Rtti, System.TypInfo, System.SysUtils, System.Hash;
+  System.NetEncoding, System.Rtti, System.TypInfo, System.SysUtils, System.Hash, System.RegularExpressions;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixSerializableObject.Serialize }
 function TOptixSerializableObject.Serialize() : ISuperObject;
 begin
   result := SO();
@@ -156,6 +157,30 @@ begin
           // Memory Object ---------------------------------------------------------------------------------------------
           end else if AFieldClass.InheritsFrom(TOptixMemoryObject) then
             result.S[AField.Name] := (AObject as TOptixMemoryObject).ToBase64
+          else if TRegEx.Match(AFieldClass.ClassName, SEARCH_LIST_PATTERN).Success then begin
+            var AToArrayMethod := AField.FieldType.GetMethod('ToArray');
+            if not Assigned(AToArrayMethod) then
+              Exit();
+            ///
+
+            var AInvokedMethod := AToArrayMethod.Invoke(AObject, []);
+
+            var AJsonArray := SA();
+
+            for var I := 0 to AInvokedMethod.GetArrayLength -1 do begin
+              var AItemObject := AInvokedMethod.GetArrayElement(I).AsObject();
+              ///
+
+              if not Assigned(AItemObject) or not (AItemObject is TOptixSerializableObject) then
+                continue;
+
+              ///
+              AJsonArray.Add(TOptixSerializableObject(AItemObject).Serialize())
+            end;
+
+            ///
+            result.A[AField.Name] := AJsonArray;
+          end;
           // -----------------------------------------------------------------------------------------------------------
         end;
         // Sets --------------------------------------------------------------------------------------------------------
@@ -173,7 +198,6 @@ begin
   end;
 end;
 
-{ TOptixSerializableObject.DeSerialize }
 procedure TOptixSerializableObject.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   if not Assigned(ASerializedObject) then
@@ -217,6 +241,33 @@ begin
           ///
 
           AField.SetValue(self, TOptixMemoryObject.Create(APair.AsString));
+        end else if TRegEx.Match(AFieldClass.ClassName, SEARCH_LIST_PATTERN).Success then begin
+          // TODO: Create object if not already + support OwnsObject
+          var AAddMethod := AField.FieldType.GetMethod('Add');
+          var AClearMethod := AField.FieldType.GetMethod('Clear');
+          ///
+
+          if not Assigned(AClearMethod) or not Assigned(AAddMethod) or (Length(AAddMethod.GetParameters) = 0) then
+            Exit();
+
+          AClearMethod.Invoke(AObject, []);
+
+          var AJsonArray := ASerializedObject.A[AField.Name];
+
+          // Trick to get <TObjectKind> class from the list using its first argument ("Add() method")
+          var AItemType := AAddMethod.GetParameters[0].ParamType;
+          var AItemClass := AItemType.AsInstance.MetaclassType;
+
+          for var I := 0 to AJsonArray.Length -1 do begin
+            var AItem := AItemClass.Create();
+            if not (AItem is TOptixSerializableObject) then
+              break;
+            ///
+
+            TOptixSerializableObject(AItem).DeSerialize(AJsonArray.O[I]);
+
+            AAddMethod.Invoke(AObject, [AItem]);
+          end;
         end;
         // -------------------------------------------------------------------------------------------------------------
       end;
@@ -243,16 +294,19 @@ begin
   end;
 end;
 
-{ TOptixSerializableObject.Create }
+procedure TOptixSerializableObject.AfterCreate();
+begin
+  ///
+end;
+
 constructor TOptixSerializableObject.Create();
 begin
   inherited;
   ///
 
-
+  AfterCreate();
 end;
 
-{ TOptixSerializableObject.Create }
 constructor TOptixSerializableObject.Create(const ASerializedObject : ISuperObject);
 begin
   Create();
@@ -264,7 +318,6 @@ end;
 
 (* TOptixMemoryObject *)
 
-{ TOptixMemoryObject.Create }
 constructor TOptixMemoryObject.Create();
 begin
   inherited;
@@ -275,7 +328,6 @@ begin
   FreeMemory();
 end;
 
-{ TOptixMemoryObject.FreeMemory }
 procedure TOptixMemoryObject.FreeMemory();
 begin
   if FOwnsMemory and Assigned(FAddress) then
@@ -286,7 +338,6 @@ begin
   FSize := 0;
 end;
 
-{ TOptixMemoryObject.CopyFrom }
 procedure TOptixMemoryObject.CopyFrom(const pCopyFromAddress : Pointer; const ASize : UInt64);
 begin
   FreeMemory();
@@ -303,14 +354,12 @@ begin
   CopyMemory(FAddress, pCopyFromAddress, FSize);
 end;
 
-{ TOptixMemoryObject.CopyFrom }
 procedure TOptixMemoryObject.CopyFrom(const AOptixMemoryObject : TOptixMemoryObject);
 begin
   if Assigned(AOptixMemoryObject) then
     CopyFrom(AOptixMemoryObject.Address, AOptixMemoryObject.Size);
 end;
 
-{ TOptixMemoryObject.Assign }
 procedure TOptixMemoryObject.Assign(const pMemoryAddress : Pointer; const ASize : UInt64);
 begin
   FreeMemory();
@@ -321,13 +370,11 @@ begin
   FSize := ASize;
 end;
 
-{ TOptixMemoryObject.GetHasData }
 function TOptixMemoryObject.GetHasData() : Boolean;
 begin
   result := Assigned(FAddress) and (FSize > 0);
 end;
 
-{ TOptixMemoryObject.Create }
 constructor TOptixMemoryObject.Create(const ABase64Data : String);
 begin
   if String.IsNullOrWhiteSpace(ABase64Data) then
@@ -340,7 +387,6 @@ begin
   end;
 end;
 
-{ TOptixMemoryObject.Destroy }
 destructor TOptixMemoryObject.Destroy();
 begin
   FreeMemory();
@@ -349,7 +395,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixMemoryObject.GetAsBase64 }
 function TOptixMemoryObject.GetAsBase64() : String;
 begin
   result := '';

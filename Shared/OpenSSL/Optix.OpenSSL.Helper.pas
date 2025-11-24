@@ -46,13 +46,17 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.OpenSSL.Helper;
 
 interface
 
-uses Optix.OpenSSL.Headers;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Optix.OpenSSL.Headers;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TX509Certificate = record
@@ -92,9 +96,15 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Context;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-{ TOptixOpenSSLHelper.NewPrivateKey }
+  Winapi.Windows,
+
+  Optix.OpenSSL.Exceptions, Optix.OpenSSL.Context;
+// ---------------------------------------------------------------------------------------------------------------------
+
 class function TOptixOpenSSLHelper.NewPrivateKey() : Pointer;
 begin
   var pTempKey := EVP_PKEY_new();
@@ -119,7 +129,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.NewX509 }
 class function TOptixOpenSSLHelper.NewX509(const pKey : Pointer; const C, O, CN : String) : Pointer;
 begin
   var pTempX509 := PX509(X509_new());
@@ -156,7 +165,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.LoadCertificate }
 class procedure TOptixOpenSSLHelper.LoadCertificate(const APublicKey : String; const APrivateKey : String; var ACertificate : TX509Certificate);
 
   function LoadKey(const AKey : String; const AKeyType : TOpenSSLCertificateKeyType) : Pointer;
@@ -191,7 +199,6 @@ begin
   RetrieveCertificateInformation(ACertificate);
 end;
 
-{ TOptixOpenSSLHelper.ImportCertificate }
 class procedure TOptixOpenSSLHelper.ImportCertificate(const ACertificateFile : String; var ACertificate : TX509Certificate);
 begin
   ZeroMemory(@ACertificate, SizeOf(TX509Certificate));
@@ -218,7 +225,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.ExportCertificate }
 class procedure TOptixOpenSSLHelper.ExportCertificate(const ADestinationFile : String; var ACertificate : TX509Certificate; AExportWhich : TOpenSSLCertificateKeyTypes = []);
 begin
   if AExportWhich = [] then
@@ -241,7 +247,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.RetrieveCertificateInformation }
 class procedure TOptixOpenSSLHelper.RetrieveCertificateInformation(var ACertificate : TX509Certificate);
 
   function GetTextFieldByNID(const pSubject : Pointer; const ANID : Integer) : String;
@@ -291,7 +296,6 @@ begin
   ACertificate.CN := GetTextFieldByNID(pSubject, NID_commonName);
 end;
 
-{ TOptixOpenSSLHelper.CheckCertificateFile }
 class procedure TOptixOpenSSLHelper.CheckCertificateFile(const ACertificateFile : String);
 var AContext : TOptixOpenSSLContext;
 begin
@@ -304,7 +308,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.GetPeerSha512Fingerprint }
 class function TOptixOpenSSLHelper.GetPeerSha512Fingerprint(const pSSLConnection : Pointer) : String;
 begin
   var pX509 := SSL_get_peer_certificate(pSSLConnection);
@@ -317,7 +320,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.GetX509Sha512Fingerprint }
 class function TOptixOpenSSLHelper.GetX509Sha512Fingerprint(const pX509 : Pointer) : String;
 begin
   var ACertificateFingerpring : TSSL_SHA512;
@@ -335,7 +337,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.CopyCertificate }
 class procedure TOptixOpenSSLHelper.CopyCertificate(const ASource : TX509Certificate; var ADest : TX509Certificate);
 begin
   FreeCertificate(ADest);
@@ -362,7 +363,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.FreeCertificate }
 class procedure TOptixOpenSSLHelper.FreeCertificate(var ACertificate : TX509Certificate);
 begin
   if ACertificate.pX509 <> nil then
@@ -372,7 +372,6 @@ begin
     EVP_PKEY_free(ACertificate.pPrivKey);
 end;
 
-{ TOptixOpenSSLHelper.SerializeCertificateKey }
 class function TOptixOpenSSLHelper.SerializeCertificateKey(const ACertificate : TX509Certificate; ACertificateType : TOpenSSLCertificateKeyType) : String;
 begin
   result := '';
@@ -417,19 +416,16 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHelper.SerializePublicKey }
 class function TOptixOpenSSLHelper.SerializePublicKey(const ACertificate : TX509Certificate) : String;
 begin
   result := SerializeCertificateKey(ACertificate, cktPublic);
 end;
 
-{ TOptixOpenSSLHelper.SerializePrivateKey }
 class function TOptixOpenSSLHelper.SerializePrivateKey(const ACertificate : TX509Certificate) : String;
 begin
   result := SerializeCertificateKey(ACertificate, cktPrivate);
 end;
 
-{ TOptixOpenSSLHelper.SerializeKeys }
 class procedure TOptixOpenSSLHelper.SerializeKeys(const ACertificate : TX509Certificate; var APublicKey : String; var APrivateKey : String);
 begin
   APublicKey  := '';

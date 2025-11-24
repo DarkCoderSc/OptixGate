@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.FileSystem.Enum;
 
@@ -214,13 +215,8 @@ uses
   Optix.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(***********************************************************************************************************************
+(* TSimpleFolderInformation *)
 
-  TSimpleFolderInformation
-
-***********************************************************************************************************************)
-
-{ TSimpleFolderInformation.Create }
 constructor TSimpleFolderInformation.Create(const AName, APath : String; const AAccess : TFileAccessAttributes;
   const AIsRoot : Boolean);
 begin
@@ -233,7 +229,6 @@ begin
   FIsRoot := AIsRoot;
 end;
 
-{ TSimpleFolderInformation.Assign }
 procedure TSimpleFolderInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TSimpleFolderInformation then begin
@@ -245,13 +240,8 @@ begin
     inherited;
 end;
 
-(***********************************************************************************************************************
+(* TDriveInformation *)
 
-  TDriveInformation
-
-***********************************************************************************************************************)
-
-{ TDriveInformation.Assign }
 procedure TDriveInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TDriveInformation then begin
@@ -265,7 +255,6 @@ begin
     inherited;
 end;
 
-{ TDriveInformation.Create }
 constructor TDriveInformation.Create(const ADrive : String; const AIndex : Integer);
 begin
   FLetter := ADrive;
@@ -281,7 +270,6 @@ begin
   end;
 end;
 
-{ TDriveInformation.UsedPercentage }
 function TDriveInformation.GetUsedPercentage() : Byte;
 begin
   if (FTotalSize <= 0) or (FFreeSize <= 0) then
@@ -291,7 +279,6 @@ begin
   result := (GetUsedSize() * 100) div FTotalSize;
 end;
 
-{ TDriveInformation.UsedSize }
 function TDriveInformation.GetUsedSize() : Int64;
 begin
   if FTotalSize <= 0 then
@@ -301,13 +288,8 @@ begin
   result := FTotalSize - FFreeSize;
 end;
 
-(***********************************************************************************************************************
+(* TOptixEnumDrives *)
 
-  TOptixEnumDrives
-
-***********************************************************************************************************************)
-
-{ TOptixEnumDrives.Enum }
 class procedure TOptixEnumDrives.Enum(var AList : TObjectList<TDriveInformation>);
 begin
   if not Assigned(AList) then
@@ -338,13 +320,8 @@ begin
   {$I+}
 end;
 
-(***********************************************************************************************************************
+(* TFileInformation *)
 
-  TFileInformation
-
-***********************************************************************************************************************)
-
-{ TFileInformation.GetFileTypeDescription }
 function TFileInformation.GetFileTypeDescription() : String;
 begin
   if FIsDirectory then
@@ -353,7 +330,6 @@ begin
     result := FTypeDescription;
 end;
 
-{ TFileInformation.Assign }
 procedure TFileInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TFileInformation then begin
@@ -372,7 +348,6 @@ begin
     inherited;
 end;
 
-{ TFileInformation.Create }
 constructor TFileInformation.Create(const APath : String; const AIsDirectory : Boolean);
 begin
   FPath         := APath;
@@ -391,13 +366,8 @@ begin
   end;
 end;
 
-(***********************************************************************************************************************
+(* TOptixEnumFiles *)
 
-  TOptixEnumFiles
-
-***********************************************************************************************************************)
-
-{ TOptixEnumFiles.Enum }
 class procedure TOptixEnumFiles.Enum(const APath : String; var AList : TObjectList<TFileInformation>;
   var AIsRoot : Boolean; var AAccess : TFileAccessAttributes);
 begin
@@ -422,8 +392,10 @@ begin
   try
     AIsRoot := True;
     AAccess := TFileSystemHelper.TryGetCurrentUserFileAccess(APath);
+
+    var AFileName : String;
     repeat
-      var AFileName := String(AWin32FindData.cFileName);
+      AFileName := String(AWin32FindData.cFileName);
       if AFileName = '.' then
         continue;
       ///

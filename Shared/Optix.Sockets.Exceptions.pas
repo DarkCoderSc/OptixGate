@@ -46,14 +46,18 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Sockets.Exceptions;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses System.SysUtils,
+
      Winapi.Winsock2;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   ESocketException = class(Exception)
@@ -73,7 +77,6 @@ implementation
 
 (* ESocketException *)
 
-{ ESocketException.Create }
 constructor ESocketException.Create(const ASocketAPI : String);
 var AFormatedMessage : String;
 begin

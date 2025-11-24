@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Shared.Types;
 
@@ -61,13 +62,11 @@ function CastResult(const AValue : Boolean) : TBoolResult; overload;
 
 implementation
 
-{ _.CastResult }
 function CastResult(const AValue : TBoolResult) : Boolean;
 begin
   result := AValue = brTrue;
 end;
 
-{ _.CastResult }
 function CastResult(const AValue : Boolean) : TBoolResult;
 begin
   if AValue then

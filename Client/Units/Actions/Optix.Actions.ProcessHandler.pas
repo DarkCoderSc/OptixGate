@@ -46,13 +46,19 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Actions.ProcessHandler;
 
 interface
 
-uses System.Classes, Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TProcessHandler = class
@@ -109,9 +115,13 @@ type
 
 implementation
 
-uses System.SysUtils, Optix.WinApiEx, Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-{ TProcessHandler.Create }
+  Optix.WinApiEx, Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+
 constructor TProcessHandler.Create(const ACommandLine : String);
 begin
   inherited Create();
@@ -127,7 +137,6 @@ begin
   FCommandLine := ACommandLine;
 end;
 
-{ TProcessHandler.Create }
 constructor TProcessHandler.Create(const ACommandLine : String; const AGroupId : TGUID);
 begin
   Create(ACommandLine);
@@ -136,7 +145,6 @@ begin
   FGroupId := AGroupId;
 end;
 
-{ TProcessHandler.Destroy }
 destructor TProcessHandler.Destroy();
 begin
   Close();
@@ -145,7 +153,6 @@ begin
   inherited Destroy();
 end;
 
-{ TProcessHandler.Start }
 procedure TProcessHandler.Start(const AControlIO : Boolean = False);
 begin
   Close(); // Terminate + clean previous process instance informations, if any.
@@ -226,14 +233,12 @@ begin
   end;
 end;
 
-{ TProcessHandler.GetAvailableOutputBytes }
 function TProcessHandler.GetAvailableOutputBytes() : DWORD;
 begin
   if not PeekNamedPipe(FPipeInRead, nil, 0, nil, @result, nil) then
     raise EWindowsException.Create('PeekNamedPipe');
 end;
 
-{ TProcessHandler.ReadAvailableOutput }
 function TProcessHandler.ReadAvailableOutput(var pBuffer : PVOID; var ABytesRead : Cardinal; const AOemToChar : Boolean) : Boolean;
 begin  
   result := False;
@@ -271,7 +276,6 @@ begin
   end;
 end;
 
-{ TProcessHandler.ReadAvailableOutput }
 function TProcessHandler.ReadAvailableOutput() : String;
 begin
   result := '';
@@ -291,7 +295,6 @@ begin
   end;
 end;
 
-{ TProcessHandler.Write }
 procedure TProcessHandler.Write(const pData : PVOID; const ADataSize : Cardinal);
 begin
   if not IsActive() or (FPipeOutWrite = 0) or (ADataSize = 0) or not Assigned(pData) then
@@ -304,13 +307,11 @@ begin
     raise EWindowsException.Create('WriteFile');
 end;
 
-{ TProcessHandler.WriteLn }
 procedure TProcessHandler.WriteLn(AStr : AnsiString = '');
 begin
   Write(@AStr[1], Length(AStr));
 end;
 
-{ TProcessHandler.CtrlC }
 procedure TProcessHandler.CtrlC();
 begin
   if not IsActive() then
@@ -335,7 +336,6 @@ begin
   end;
 end;
 
-{ TProcessHandler.TryCtrlC }
 procedure TProcessHandler.TryCtrlC();
 begin
   try
@@ -345,7 +345,6 @@ begin
   end;
 end;
 
-{ TProcessHandler.IsActive }
 function TProcessHandler.IsActive() : Boolean;
 begin
   result := False;
@@ -362,7 +361,6 @@ begin
   end;
 end;
 
-{ TProcessHandler.Close }
 procedure TProcessHandler.Close();
 begin
   var AExitCode : LongWord := 0;
@@ -384,7 +382,6 @@ begin
   Cleanup();
 end;
 
-{ TProcessHandler.TryClose }
 procedure TProcessHandler.TryClose();
 begin
   try
@@ -394,7 +391,6 @@ begin
   end;
 end;
 
-{ TProcessHandler.Cleanup }
 procedure TProcessHandler.Cleanup();
 begin
   FJobObject := 0;

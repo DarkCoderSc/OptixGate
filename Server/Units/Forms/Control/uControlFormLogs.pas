@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormLogs;
 
@@ -82,9 +83,6 @@ type
       var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex);
     procedure VSTGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: TImageIndex);
@@ -144,17 +142,17 @@ begin
   inherited;
   ///
 
-  var ALogNotifier : TLogNotifier := nil;
+  var ALogNotifier : TOptixCommandReceiveLogMessage := nil;
   try
     // -----------------------------------------------------------------------------------------------------------------
-    if AOptixPacket is TLogNotifier then
-      ALogNotifier := TLogNotifier(AOptixPacket)
+    if AOptixPacket is TOptixCommandReceiveLogMessage then
+      ALogNotifier := TOptixCommandReceiveLogMessage(AOptixPacket)
     // -----------------------------------------------------------------------------------------------------------------
-    else if AOptixPacket is TLogTransferException then begin
+    else if AOptixPacket is TOptixCommandReceiveTransferException then begin
       // Notify concerned transfer
       var ATransfersForm := TControlFormTransfers(FormMain.GetControlForm(self, TControlFormTransfers));
       if Assigned(aTransfersForm) then
-        ATransfersForm.ApplyTransferException(TLogTransferException(ALogNotifier));
+        ATransfersForm.ApplyTransferException(TOptixCommandReceiveTransferException(ALogNotifier));
     end;
     // -----------------------------------------------------------------------------------------------------------------
   finally
@@ -188,11 +186,6 @@ begin
   end;
 end;
 
-procedure TControlFormLogs.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TControlFormLogs.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
   var Result: Integer);
 begin
@@ -210,12 +203,6 @@ begin
       3 : Result := CompareDateTime(pData1^.LogDate, pData2^.LogDate);
     end;
   end;
-end;
-
-procedure TControlFormLogs.VSTFocusChanged(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TControlFormLogs.VSTGetImageIndex(Sender: TBaseVirtualTree;

@@ -46,16 +46,21 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uFormAbout;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls,
-  Vcl.ComCtrls;
+  System.Variants, System.Classes, System.SysUtils,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormAbout = class(TForm)
@@ -82,7 +87,12 @@ var
 
 implementation
 
-uses uFormMain, Optix.Helper, Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain,
+
+  Optix.Helper, Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Client.Entrypoint;
 
@@ -68,7 +69,6 @@ procedure ClientEntrypoint();
 
 implementation
 
-{ _.ClientEntrypoint }
 procedure ClientEntrypoint();
 begin
   {$IFNDEF CLIENT}

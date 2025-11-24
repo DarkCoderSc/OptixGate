@@ -46,13 +46,17 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Protocol.Exceptions;
 
 interface
 
-uses System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TPreflightErrorCode = (
@@ -80,7 +84,6 @@ implementation
 
 (* Local *)
 
-{ _.PreflightErrorCodeToString }
 function PreflightErrorCodeToString(const AValue : TPreflightErrorCode) : String;
 begin
   case AValue of
@@ -95,7 +98,6 @@ end;
 
 (* EOptixPreflightException *)
 
-{ EOptixPreflightException.Create }
 constructor EOptixPreflightException.Create(const AMessage : String; const AErrorCode : TPreflightErrorCode);
 begin
   FErrorCode := AErrorCode;

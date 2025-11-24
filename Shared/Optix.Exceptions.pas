@@ -46,13 +46,17 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Exceptions;
 
 interface
 
-uses System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   EWindowsException = class(Exception)
@@ -76,7 +80,6 @@ implementation
 
 (* EWindowsException *)
 
-{ EWindowsException.Create }
 constructor EWindowsException.Create(const WindowsAPIName : String; const AErrorCode : Cardinal = 0);
 begin
   if AErrorCode = 0 then

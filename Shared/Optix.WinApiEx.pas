@@ -46,13 +46,17 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.WinApiEx;
 
 interface
 
-uses Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   //--------------------------------------------------------------------------------------------------------------------
@@ -483,7 +487,6 @@ function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : 
 
 implementation
 
-{ _.ProcessorArchitectureToString }
 function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : String;
 begin
   case AValue of

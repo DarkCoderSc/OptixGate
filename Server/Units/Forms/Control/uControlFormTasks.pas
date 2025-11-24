@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit uControlFormTasks;
 
@@ -80,9 +81,6 @@ type
     VST: TVirtualStringTree;
     PopupMenu: TPopupMenu;
     Action1: TMenuItem;
-
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
@@ -174,15 +172,15 @@ begin
   ///
 
   // -------------------------------------------------------------------------------------------------------------------
-  if ACallBack.Result is TOptixProcessDumpTaskResult then begin
+  if ACallBack.Result is TOptixTaskGetProcessDumpResult then begin
     var ADirectory := '';
 
     if not SelectDirectory('Select destination', '', ADirectory) then
       Exit();
 
     RequestFileDownload(
-      TOptixProcessDumpTaskResult(ACallBack.Result).OutputFilePath,
-      IncludeTrailingPathDelimiter(ADirectory) + TOptixProcessDumpTaskResult(ACallBack.Result).DisplayName + '.dmp',
+      TOptixTaskGetProcessDumpResult(ACallBack.Result).OutputFilePath,
+      IncludeTrailingPathDelimiter(ADirectory) + TOptixTaskGetProcessDumpResult(ACallBack.Result).DisplayName + '.dmp',
       'Process Dump'
     );
   end;
@@ -205,7 +203,7 @@ begin
     otsSuccess : begin
       Action1.Visible := True;
       // ---------------------------------------------------------------------------------------------------------------
-      if ACallBack.Result is TOptixProcessDumpTaskResult then
+      if ACallBack.Result is TOptixTaskGetProcessDumpResult then
         Action1.Caption := 'Download Process Dump File'
       // ---------------------------------------------------------------------------------------------------------------
       else
@@ -258,11 +256,6 @@ begin
   end;
 end;
 
-procedure TControlFormTasks.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TControlFormTasks.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
   var Result: Integer);
 
@@ -311,11 +304,6 @@ begin
       end;
     end;
   end;
-end;
-
-procedure TControlFormTasks.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TControlFormTasks.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.Process.Enum;
 
@@ -154,13 +155,11 @@ uses
 
 (* TProcessInformation *)
 
-{ TProcessInformation.CheckIfSystemUser() }
 function TProcessInformation.CheckIfSystemUser() : Boolean;
 begin
   result := String.Compare(FUserSid, 'S-1-5-18', True) =  0;
 end;
 
-{ TProcessInformation.Assign }
 procedure TProcessInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TProcessInformation then begin
@@ -182,13 +181,11 @@ begin
     inherited;
 end;
 
-{ TProcessInformation.EvaluateIfCurrentProcess }
 function TProcessInformation.EvaluateIfCurrentProcess() : Boolean;
 begin
   result := FCurrentProcessId = FId;
 end;
 
-{ TProcessInformation.Create }
 constructor TProcessInformation.Create(const pProcessInformation : PSystemProcessInformation);
 begin
   inherited Create();
@@ -227,7 +224,6 @@ end;
 
 (* TOptixEnumProcess *)
 
-{ TOptixEnumProcess.Enum }
 class procedure TOptixEnumProcess.Enum(var AList : TObjectList<TProcessInformation>);
 begin
   if not Assigned(AList) then

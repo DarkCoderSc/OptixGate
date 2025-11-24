@@ -103,7 +103,6 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
         Images = FormMain.VirtualImageList
         TabOrder = 1
         OnClick = ButtonSendClick
-        ExplicitHeight = 39
       end
     end
   end

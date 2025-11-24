@@ -314,7 +314,7 @@ begin
   end;
 
   SendCommand(
-    TOptixCommandRegistrySetValue.Create(FFullKeyPath, EditName.Text, FValueKind, pData, ADataSize),
+    TOptixCommandSetRegistryValue.Create(FFullKeyPath, EditName.Text, FValueKind, pData, ADataSize),
     FManagerGUID
   );
 
@@ -530,6 +530,8 @@ begin
 
       case AOldValueKind of
         REG_SZ, REG_MULTI_SZ : begin
+          EditQDword.Text := '0';
+
           var AString : String;
           if AOldValueKind = REG_SZ then
             AString := EditSZ.Text

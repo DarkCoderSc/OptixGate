@@ -46,7 +46,6 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
 
 unit Optix.Config.Servers;
 
@@ -88,7 +87,6 @@ uses
   Optix.Helper, Optix.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixConfigServers.GetCount }
 function TOptixConfigServers.GetCount() : Integer;
 begin
   result := 0;
@@ -100,7 +98,6 @@ begin
   result := FJsonObject.A['Items'].Length;
 end;
 
-{ TOptixConfigServers.GetItem }
 function TOptixConfigServers.GetItem(AIndex: Integer): TServerConfiguration;
 begin
   ZeroMemory(@result, SizeOf(TServerConfiguration));
@@ -142,13 +139,11 @@ begin
   end;
 end;
 
-{ TOptixConfigServers.Add }
 procedure TOptixConfigServers.Add(const AServerConfiguration : TServerConfiguration);
 begin
   SetItem(-1, AServerConfiguration);
 end;
 
-{ TOptixConfigServers.SetItem }
 procedure TOptixConfigServers.SetItem(AIndex: Integer; const AServerConfiguration : TServerConfiguration);
 begin
   var AJsonArray  : ISuperArray;

@@ -46,7 +46,8 @@
 {   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
-
+
+
 
 unit Optix.System.Helper;
 
@@ -81,7 +82,6 @@ uses
   Optix.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TSystemHelper.NTSetPrivilege }
 class procedure TSystemHelper.NTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
 begin
   var hToken : THandle;
@@ -115,7 +115,6 @@ begin
   end;
 end;
 
-{ TSystemHelper.TryNTSetPrivilege }
 class procedure TSystemHelper.TryNTSetPrivilege(const APrivilegeName: string; const AEnabled: Boolean);
 begin
   try
@@ -125,7 +124,6 @@ begin
   end;
 end;
 
-{ TSystemHelper.FileTimeToDateTime }
 class function TSystemHelper.FileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
 begin
   var ALocalFileTime: TFileTime;
@@ -140,7 +138,6 @@ begin
   Result := SystemTimeToDateTime(ASystemTime);
 end;
 
-{ TSystemHelper.TryFileTimeToDateTime }
 class function TSystemHelper.TryFileTimeToDateTime(const AFileTime: TFileTime): TDateTime;
 begin
   try
@@ -150,7 +147,6 @@ begin
   end;
 end;
 
-{ TSystemHelper.TryFileTimeToDateTime }
 class function TSystemHelper.AccessCheck(ADesiredAccess : DWORD; const hToken : THandle;
   const ptrSecurityDescriptor : PSecurityDescriptor) : Boolean;
 begin
@@ -184,7 +180,6 @@ begin
     result := AStatus;
 end;
 
-{ TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty }
 class function TSystemHelper.IncludeTrailingPathDelimiterIfNotEmpty(const AValue : String) : String;
 begin
   if not String.IsNullOrWhiteSpace(AValue) then

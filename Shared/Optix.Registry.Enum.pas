@@ -133,13 +133,8 @@ uses
   Optix.Exceptions, Optix.WinApiEx, Optix.Shared.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(***********************************************************************************************************************
+(* TRegistryKeyInformation *)
 
-  TRegistryKeyInformation
-
-***********************************************************************************************************************)
-
-{ TRegistryKeyInformation.Create }
 constructor TRegistryKeyInformation.Create(const AName : String; const APath : String = '');
 begin
   inherited Create();
@@ -151,7 +146,6 @@ begin
   TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(APath, FPermissions);
 end;
 
-{ TRegistryKeyInformation.Assign }
 procedure TRegistryKeyInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TRegistryKeyInformation then begin
@@ -162,13 +156,8 @@ begin
     inherited;
 end;
 
-(***********************************************************************************************************************
+(* TRegistryValueInformation *)
 
-  TRegistryValueInformation
-
-***********************************************************************************************************************)
-
-{ TRegistryValueInformation.Create }
 constructor TRegistryValueInformation.Create(const AName : String; const AType : DWORD; const pData : Pointer;
   const ADataSize : DWORD);
 begin
@@ -182,7 +171,6 @@ begin
   FValue.CopyFrom(pData, ADataSize);
 end;
 
-{ TRegistryValueInformation.Destroy }
 destructor TRegistryValueInformation.Destroy();
 begin
   if Assigned(FValue) then
@@ -192,7 +180,6 @@ begin
   inherited;
 end;
 
-{ TRegistryValueInformation.Assign }
 procedure TRegistryValueInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TRegistryValueInformation then begin
@@ -208,13 +195,11 @@ begin
     inherited;
 end;
 
-{ TRegistryValueInformation.GetIsDefault }
 function TRegistryValueInformation.GetIsDefault() : Boolean;
 begin
   result := FName.IsEmpty();
 end;
 
-{ TRegistryValueInformation.ToString }
 function TRegistryValueInformation.ToString() : String;
 begin
   if not Assigned(FValue) or not FValue.HasData then
@@ -253,13 +238,8 @@ begin
   end;
 end;
 
-(***********************************************************************************************************************
+(* TOptixEnumRegistry *)
 
-  TOptixEnumRegistry
-
-***********************************************************************************************************************)
-
-{ TOptixEnumRegistry.Enum }
 class procedure TOptixEnumRegistry.Enum(const AKeyFullPath : String; var AKeys : TObjectList<TRegistryKeyInformation>;
   var AValues : TObjectList<TRegistryValueInformation>);
 begin
@@ -339,11 +319,12 @@ begin
     GetMem(pNameBuffer, ABufferSize);
     try
       // Enumerate SubKeys
+      var AKeyLength : DWORD;
       if ASubKeysCount > 0 then begin
         for var I := 0 to ASubKeysCount -1 do begin
           ZeroMemory(pNameBuffer, AMaxKeyNameLength * SizeOf(WideChar));
 
-          var AKeyLength := AMaxKeyNameLength;
+          AKeyLength := AMaxKeyNameLength;
 
           ARet := RegEnumKeyExW(hOpenedKey, I, pNameBuffer, AKeyLength, nil, nil, nil, nil);
           if ARet <> ERROR_SUCCESS then
@@ -357,17 +338,19 @@ begin
       end;
 
       if AValuesCount > 0 then begin
+        var AValueNameLength : DWORD;
+        var AValueName : String;
         for var  I := 0 to AValuesCount -1 do begin
           ZeroMemory(pNameBuffer, AMaxKeyNameLength * SizeOf(WideChar));
 
-          var AValueNameLength := AMaxValueNameLength;
+          AValueNameLength := AMaxValueNameLength;
 
           ARet := RegEnumValueW(hOpenedKey, I, pNameBuffer, AValueNameLength, nil, nil, nil, nil);
           if ARet <> ERROR_SUCCESS then
             continue;
 
           ///
-          var AValueName := String(pNameBuffer);
+          AValueName := String(pNameBuffer);
           if AValueName.IsEmpty then
             ADefaultValueExists := True;
           try
