@@ -38,14 +38,27 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.OpenSSL.Context;
 
 interface
 
-uses System.Classes, System.SyncObjs, Optix.OpenSSL.Headers, Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SyncObjs,
+
+  Optix.OpenSSL.Headers, Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOpenSSLMethod = (
@@ -80,11 +93,15 @@ type
 
 implementation
 
-uses Winapi.Windows, System.SysUtils, Optix.OpenSSL.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, Winapi.Windows,
+
+  Optix.OpenSSL.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* Local *)
 
-{ _.OpenSSLVerifyCallback }
 function OpenSSLVerifyCallback(AOk: Integer; AContext: Pointer): Integer; cdecl;
 begin
   OPENSSL_VERIFY_CALLBACK_LOCK.Acquire();
@@ -97,7 +114,6 @@ end;
 
 (* TOptixOpenSSLContext *)
 
-{ TOptixOpenSSLContext.CreateContext }
 procedure TOptixOpenSSLContext.CreateContext();
 begin
   var pOpenSSLMethod := nil;
@@ -118,7 +134,6 @@ begin
   SSL_CTX_set_verify(FContext, SSL_VERIFY_PEER or SSL_VERIFY_FAIL_IF_NO_PEER_CERT, @OpenSSLVerifyCallback);
 end;
 
-{ TOptixOpenSSLContext.LoadCertificate }
 procedure TOptixOpenSSLContext.LoadCertificate(const ACertificateFile : String);
 begin
   if not Assigned(FContext) then
@@ -138,7 +153,6 @@ begin
     raise EOpenSSLBaseException.Create();
 end;
 
-{ TOptixOpenSSLContext.LoadCertificate }
 procedure TOptixOpenSSLContext.LoadCertificate(const ACertificate : TX509Certificate);
 begin
   if SSL_CTX_use_certificate(FContext, ACertificate.pX509) <> 1 then
@@ -151,7 +165,6 @@ begin
     raise EOpenSSLBaseException.Create();
 end;
 
-{ TOptixOpenSSLContext.Create }
 constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod);
 begin
   inherited Create();
@@ -163,7 +176,6 @@ begin
   CreateContext();
 end;
 
-{ TOptixOpenSSLContext.Create }
 constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificateFile : String);
 begin
   Create(AOpenSSLMethod);
@@ -172,7 +184,6 @@ begin
   LoadCertificate(ACertificateFile);
 end;
 
-{ TOptixOpenSSLContext.Create }
 constructor TOptixOpenSSLContext.Create(const AOpenSSLMethod : TOpenSSLMethod; const ACertificate : TX509Certificate);
 begin
   Create(AOpenSSLMethod);
@@ -181,7 +192,6 @@ begin
   LoadCertificate(ACertificate);
 end;
 
-{ TOptixOpenSSLContext.Destroy }
 destructor TOptixOpenSSLContext.Destroy();
 begin
   if Assigned(FContext) then begin

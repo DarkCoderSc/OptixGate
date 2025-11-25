@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit uFormMain;
 
@@ -100,8 +108,6 @@ type
     Certificates1: TMenuItem;
     rustedCertificates1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -459,11 +465,6 @@ begin
   end;
 end;
 
-procedure TFormMain.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TFormMain.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
   var Result: Integer);
 begin
@@ -489,11 +490,6 @@ begin
       {$ENDIF}
     end;
   end;
-end;
-
-procedure TFormMain.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TFormMain.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);

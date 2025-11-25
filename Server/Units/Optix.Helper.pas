@@ -10,13 +10,44 @@
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
 {                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Helper;
 
@@ -28,37 +59,10 @@ uses
 
   Generics.Collections,
 
-  Winapi.ShellAPI,
+  Winapi.ShellAPI, Winapi.Windows,
 
   VCL.Controls;
 // ---------------------------------------------------------------------------------------------------------------------
-
-type
-  TContentFormater = class
-  public
-    type
-      TStringKind  = (skAnsi, skUnicode);
-      TStringKinds = set of TStringKind;
-
-      TStringInformation = record
-        Offset : Pointer;
-        Size   : UInt64;  // In Bytes
-        Kind   : TStringKind;
-
-        {@M}
-        function ToString() : String;
-        function Length() : UInt64;
-      end;
-  public
-    class function ProbeForStrings(const pBuffer : Pointer;
-      const ABufferSize : UInt64; const AMinLength : Cardinal = 0) : TList<TStringInformation>; static;
-    class function ExtractStrings(const pBuffer : Pointer; const ABufferSize : UInt64;
-      const AMinLength : Cardinal = 0; AStringKinds : TStringKinds = []) : String; static;
-    class function OutputPrintableChar(const AByte : Byte) : Char; overload; static;
-    class function OutputPrintableChar(const pBuffer : Pointer; const ABufferSize : UInt64) : String; overload; static;
-    class function ToHexTable(const pBuffer : Pointer; const ABufferSize : UInt64;
-      const AStartOffset : UInt64 = 0; const AColumnLength : Cardinal = 16) : String; static;
-  end;
 
 // Format Utilities
 function FormatInt(const AInteger : Integer) : String;
@@ -93,234 +97,10 @@ function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
-uses System.IOUtils,
-
-     Winapi.Windows;
+uses
+  System.IOUtils;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(* TContentFormater *)
-
-{ TContentFormater.TStringInformation.ToString }
-function TContentFormater.TStringInformation.ToString() : String;
-begin
-  if Kind = skUnicode then
-    SetString(Result, PWideChar(Offset), Size div SizeOf(WideChar))
-  else begin
-    var ATemp : AnsiString;
-
-    SetString(ATemp, PAnsiChar(Offset), Size div SizeOf(AnsiChar));
-
-    ///
-    Result := String(ATemp);
-  end;
-end;
-
-{ TContentFormater.TStringInformation.Length }
-function TContentFormater.TStringInformation.Length() : UInt64;
-begin
-  // TODO : Delphi CE >= 13 use Ternary
-  if Kind = skUnicode then
-    result := Size div SizeOf(WideChar)
-  else
-    result := Size;
-end;
-
-{ TContentFormater.ProbeForStrings }
-class function TContentFormater.ProbeForStrings(const pBuffer : Pointer; const ABufferSize : UInt64;
-  const AMinLength : Cardinal = 0) : TList<TStringInformation>;
-
-  var
-    pCurByte, pLastByte : PByte;
-    AStringInformation : TStringInformation;
-
-  { _.IsPrintable }
-  function IsPrintable(const AByte : Byte) : Boolean;
-  begin
-    Result := AByte in [9, 32..126];
-  end;
-
-  { _.RegisterStringInformation }
-  procedure RegisterStringInformation();
-  begin
-    if (AStringInformation.Offset <> nil) then begin
-      AStringInformation.Size   := NativeUInt(pCurByte) - NativeUInt(AStringInformation.Offset);
-
-      if (AMinLength = 0) or (AStringInformation.Size >= AMinLength)  then
-        result.Add(AStringInformation);
-
-      ///
-      AStringInformation.Offset := nil;
-      AStringInformation.Size   := 0;
-    end;
-  end;
-
-begin
-  result := TList<TStringInformation>.Create();
-  ///
-
-  if not Assigned(pBuffer) then
-    Exit();
-
-  pCurByte := pBuffer;
-  pLastByte := pCurByte + ABufferSize;
-
-  AStringInformation.Offset := nil;
-  AStringInformation.Size   := 0;
-
-  while pCurByte < pLastByte do begin
-    // Unicode Strings -------------------------------------------------------------------------------------------------
-    if ((AStringInformation.Offset = nil) or (AStringInformation.Kind = skUnicode)) and (pCurByte + 1 < pLastByte) and
-       (IsPrintable(pCurByte^)) and (PWord(pCurByte)^ and $00FF = pCurByte^) and (PWord(pCurByte)^ shr 8 = 0) then begin
-
-      if AStringInformation.Offset = nil then begin
-        AStringInformation.Kind := skUnicode;
-        AStringInformation.Offset := pCurByte;
-      end;
-
-      ///
-      Inc(pCurByte, 2);
-    // Ansi Strings ----------------------------------------------------------------------------------------------------
-    end else
-    if ((AStringInformation.Offset = nil) or (AStringInformation.Kind = skAnsi)) and IsPrintable(pCurByte^) then begin
-      if AStringInformation.Offset = nil then begin
-        AStringInformation.Kind := skAnsi;
-        AStringInformation.Offset := pCurByte;
-      end;
-
-      ///
-      Inc(pCurByte);
-    end else begin
-      RegisterStringInformation();
-
-      ///
-      Inc(pCurByte);
-    end;
-    // -----------------------------------------------------------------------------------------------------------------
-  end;
-
-  ///
-  RegisterStringInformation();
-end;
-
-{ TContentFormater.ExtractStrings }
-class function TContentFormater.ExtractStrings(const pBuffer : Pointer; const ABufferSize : UInt64;
-  const AMinLength : Cardinal = 0; AStringKinds : TStringKinds = []) : String;
-begin
-  result := '';
-  ///
-
-  if AStringKinds = [] then
-    AStringKinds := [skAnsi, skUnicode];
-
-  var AStringInformations := ProbeForStrings(pBuffer, ABufferSize, AMinLength);
-  try
-    var ACharCount := UInt64(0);
-    ///
-
-    for var AStringInformation in AStringInformations do
-      Inc(ACharCount, AStringInformation.Length);
-
-    var AStringBuilder := TStringBuilder.Create(ACharCount);
-    try
-      for var AStringInformation in AStringInformations do begin
-        // TODO: Delphi CE13 "not in"
-        if not (AStringInformation.Kind in AStringKinds) then
-          continue;
-        ///
-
-        AStringBuilder.AppendLine(AStringInformation.ToString);
-      end;
-    finally
-      result := AStringBuilder.ToString();
-
-      FreeAndNil(AStringBuilder);
-    end;
-  finally
-    if Assigned(AStringInformations) then
-      FreeAndNil(AStringInformations);
-  end;
-end;
-
-{ TContentFormater.PrintableChar }
-class function TContentFormater.OutputPrintableChar(const AByte : Byte) : Char;
-begin
-  if AByte in [32..126] then
-    result := Chr(AByte)
-  else
-    result := '.';
-end;
-
-{ TContentFormater.PrintableChar }
-class function TContentFormater.OutputPrintableChar(const pBuffer : Pointer; const ABufferSize : UInt64) : String;
-begin
-  SetLength(result, ABufferSize);
-  ///
-
-  for var I := 0 to ABufferSize -1 do
-    result[I +1] := OutputPrintableChar(PByte(NativeUInt(pBuffer) + I)^);
-end;
-
-{ TContentFormater.Hexize }
-class function TContentFormater.ToHexTable(const pBuffer : Pointer; const ABufferSize : UInt64;
-  const AStartOffset : UInt64 = 0; const AColumnLength : Cardinal = 16) : String;
-begin
-  result := '';
-  ///
-
-  if (ABufferSize = 0) or not Assigned(pBuffer) then
-    Exit();
-
-  var AOutputBuilder := TStringBuilder.Create(SizeOf(NativeUInt) + (AColumnLength * 3) + (AColumnLength -1) + 16);
-  try
-    var ARowHex   : array of String;
-    var ARowAscii : array of String;
-    ///
-
-    SetLength(ARowHex, AColumnLength);
-    SetLength(ARowAscii, AColumnLength);
-    ///
-
-    var ATotalBytesRead := UInt64(0);
-    repeat
-      var ABytesToRead := Min(ABufferSize - ATotalBytesRead, AColumnLength);
-      ///
-
-      for var I := 0 to ABytesToRead -1 do begin
-        var ptrByte := PByte(NativeUInt(pBuffer) + ATotalBytesRead + I);
-        ///
-
-        ARowHex[I]   := IntToHex(ptrByte^);
-        ARowAscii[I] := OutputPrintableChar(ptrByte^);
-      end;
-
-      if ABytesToRead < AColumnLength then
-        for var I := ABytesToRead to AColumnLength -1 do begin
-          ARowHex[I]   := '';
-          ARowAscii[I] := '';
-        end;
-
-      AOutputBuilder.AppendFormat('%p %-' + IntToStr((AColumnLength * 2) + AColumnLength) + 's| %s%s', [
-        Pointer(AStartOffset + ATotalBytesRead),
-        String.Join(' ', ARowHex),
-        String.Join('', ARowAscii),
-        sLineBreak
-      ]);
-
-      ///
-      Inc(ATotalBytesRead, ABytesToRead);
-    until ATotalBytesRead = ABufferSize;
-
-    ///
-    result := AOutputBuilder.ToString;
-  finally
-    if Assigned(AOutputBuilder) then
-      FreeAndNil(AOutputBuilder);
-  end;
-end;
-
-(* _ *)
-
-{ _.CompareDateTimeEx }
 function CompareDateTimeEx(const ADate1 : TDateTime; const ADate1IsSet : Boolean; const ADate2 : TDateTime; const ADate2IsSet : Boolean) : Integer;
 begin
   if not ADate1IsSet and not ADate2IsSet then
@@ -333,7 +113,6 @@ begin
     result := CompareDateTime(ADate1, ADate2);
 end;
 
-{ _.CompareObjectAssignement }
 function CompareObjectAssignement(const AObject1, AObject2 : TObject) : Integer;
 begin
   if not Assigned(AObject1) and not Assigned(AObject2) then
@@ -344,7 +123,6 @@ begin
     Result := -1
 end;
 
-{ _.ComparePointerAssigmenet }
 function ComparePointerAssigmenet(const pPtr1, pPtr2 : Pointer) : Integer;
 begin
   if (pPtr1 = nil) and (pPtr2 = nil) then
@@ -355,7 +133,6 @@ begin
     Result := -1
 end;
 
-{ _.CheckCertificateFingerprint }
 procedure CheckCertificateFingerprint(const AValue : String);
 begin
   if not TRegEx.IsMatch(AValue, '^([0-9A-Fa-f]{2}:){63}[0-9A-Fa-f]{2}$') then
@@ -365,13 +142,11 @@ begin
     );
 end;
 
-{ _.Open }
 procedure Open(const ACommand : String);
 begin
   ShellExecute(0, 'open', PWideChar(ACommand), nil, nil, SW_SHOW);
 end;
 
-{ _.GetWindowsDirectory }
 function GetWindowsDirectory() : string;
 begin
   SetLength(result, MAX_PATH);
@@ -386,7 +161,6 @@ begin
   result := IncludeTrailingPathDelimiter(result);
 end;
 
-{ _.InitializeSystemIcons }
 procedure InitializeSystemIcons(var AImages : TImageList; var AFileInfo : TSHFileInfo; const ALargeIcon : Boolean = False);
 var AFlags : Integer;
 begin
@@ -407,7 +181,6 @@ begin
   );
 end;
 
-{ _.SystemFileIcon }
 function SystemFileIcon(const AFileName : string; AExtensionMode : Boolean = False) : Integer;
 var AFileInfo : TSHFileInfo;
 begin
@@ -426,7 +199,6 @@ begin
   Result := AFileInfo.iIcon;
 end;
 
-{ _.SystemFolderIcon }
 function SystemFolderIcon(APath : String = '') : Integer;
 var AFileInfo : TSHFileInfo;
 begin
@@ -443,7 +215,6 @@ begin
   Result := AFileInfo.iIcon;
 end;
 
-{ _.FormatFileSize }
 function FormatFileSize(const ASize : Int64) : string;
 const AByteDescription : array[0..9-1] of string = (
   'Bytes', 'KiB', 'MB', 'GiB', 'TB',
@@ -462,7 +233,6 @@ begin
   );
 end;
 
-{ _.ReadResourceString }
 function ReadResourceString(const AResourceName : String) : String;
 begin
   var AResourceStream := TResourceStream.Create(hInstance, AResourceName, RT_RCDATA);
@@ -473,7 +243,6 @@ begin
   end;
 end;
 
-{ _.TryReadResourceString }
 function TryReadResourceString(const AResourceName : String) : String;
 begin
   try
@@ -483,7 +252,6 @@ begin
   end;
 end;
 
-{ _.DefaultIfEmpty }
 function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;
 begin
   if String.IsNullOrEmpty(AValue) then
@@ -492,7 +260,6 @@ begin
     result := AValue;
 end;
 
-{ _.FormatInt }
 function FormatInt(const AInteger : Integer) : String;
 begin
   result := Format('%d (0x%p)', [
@@ -501,7 +268,6 @@ begin
   ]);
 end;
 
-{ _.ElapsedTime }
 function ElapsedTime(const ADays, AHours, AMinutes, ASeconds : UInt64) : String;
 begin
   if ADays > 0 then
@@ -526,7 +292,6 @@ begin
     result := Format('%d seconds ago.', [ASeconds]);
 end;
 
-{ _.ElapsedTime }
 function ElapsedTime(const AMilliseconds : UInt64) : String;
 var ASpan : TTimeSpan;
 begin
@@ -541,7 +306,6 @@ begin
   );
 end;
 
-{ _.ElapsedDateTime }
 function ElapsedDateTime(const AFirstDateTime, ASecondDateTime : TDateTime) : String;
 var AElaspedTime  : TDateTime;
     ADays         : Integer;

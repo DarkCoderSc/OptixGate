@@ -38,14 +38,25 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Exceptions;
 
 interface
 
-uses System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   EWindowsException = class(Exception)
@@ -59,9 +70,16 @@ type
     property ErrorCode : Integer read FErrorCode;
   end;
 
+  EOptixSystemException = class(Exception)
+  public
+    {@C}
+    constructor Create(const ASystemmErrorIdentifier : TGUID); overload;
+  end;
+
 implementation
 
-{ EWindowsException.Create }
+(* EWindowsException *)
+
 constructor EWindowsException.Create(const WindowsAPIName : String; const AErrorCode : Cardinal = 0);
 begin
   if AErrorCode = 0 then
@@ -78,6 +96,13 @@ begin
 
   ///
   inherited Create(AFormatedMessage);
+end;
+
+(* EOptixSystemException *)
+
+constructor EOptixSystemException.Create(const ASystemmErrorIdentifier : TGUID);
+begin
+  inherited Create(Format('Optix System Error: "%s"', [ASystemmErrorIdentifier.ToString]));
 end;
 
 end.

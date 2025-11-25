@@ -244,6 +244,15 @@
         <DCCReference Include="Units\Forms\Control\uControlFormSetupContentReader.pas">
             <Form>ControlFormSetupContentReader</Form>
         </DCCReference>
+        <DCCReference Include="Units\Frames\Components\uFrameHexEditor.pas">
+            <Form>FrameHexEditor</Form>
+            <DesignClass>TFrame</DesignClass>
+        </DCCReference>
+        <DCCReference Include="Units\Forms\Control\uControlFormRegistryEditor.pas">
+            <Form>ControlFormRegistryEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\Shared\Optix.Shared.Helper.pas"/>
         <None Include="..\Shared\XSuperObject.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
@@ -269,8 +278,20 @@
             </Delphi.Personality>
             <Deployment Version="5">
                 <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Debug" Class="ProjectFile"/>
+                <DeployFile LocalName="..\Shared\XSuperObject.inc" Configuration="Release" Class="ProjectFile">
+                    <Platform Name="Win64">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win32\Release\OptixGate.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="bins\NoSSL\Win32\Debug\OptixGate.exe" Configuration="Debug" Class="ProjectOutput"/>
+                <DeployFile LocalName="bins\NoSSL\Win64\Release\OptixGate.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>OptixGate.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

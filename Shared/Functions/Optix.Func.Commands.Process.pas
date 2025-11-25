@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Func.Commands.Process;
 
@@ -53,14 +61,12 @@ uses
 
   Winapi.Windows,
 
-  XSuperObject,
-
   Optix.Func.Commands.Base, Optix.Process.Enum, Optix.Shared.Classes;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   {@TEMPLATE}
-  TOptixCommandAndResponseProcess = class(TOptixCommandActionResponse)
+  TOptixCommandProcessActionResponse = class(TOptixCommandActionResponse)
   private
     [OptixSerializableAttribute]
     FProcessId : Cardinal;
@@ -72,13 +78,15 @@ type
     property ProcessId : Cardinal read FProcessId;
   end;
 
-  TOptixCommandKillProcess = class(TOptixCommandAndResponseProcess)
+  TOptixCommandTerminateProcess = class(TOptixCommandProcessActionResponse)
   public
     {@M}
+    {$IFNDEF SERVER}
     procedure DoAction(); override;
+    {$ENDIF}
   end;
 
-  TOptixCommandProcessDump = class(TOptixCommandTask)
+  TOptixCommandDumpProcess = class(TOptixCommandTask)
   private
     [OptixSerializableAttribute]
     FProcessId : Cardinal;
@@ -96,7 +104,9 @@ type
     constructor Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD); overload;
 
     {@M}
+    {$IFNDEF SERVER}
     function CreateTask(const ACommand : TOptixCommand) : TOptixTask; override;
+    {$ENDIF}
 
     {@G}
     property ProcessId    : Cardinal read FProcessId;
@@ -105,40 +115,34 @@ type
     property TypesValue   : DWORD    read FTypesValue;
   end;
 
-  TOptixCommandRefreshProcess = class(TOptixCommandActionResponse)
+  TOptixCommandEnumRunningProcesses = class(TOptixCommandActionResponse)
   private
-    FList : TObjectList<TProcessInformation>;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    [OptixSerializableAttribute]
+    FProcesses : TObjectList<TProcessInformation>;
   public
     {@M}
-    function Serialize() : ISuperObject; override;
+    {$IFNDEF SERVER}
     procedure DoAction(); override;
+    {$ENDIF}
+    procedure AfterCreate(); override;
 
     {@C}
-    constructor Create(); override;
     destructor Destroy(); override;
 
     {@G}
-    property List : TObjectList<TProcessInformation> read FList;
+    property Processes : TObjectList<TProcessInformation> read FProcesses;
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.Process.Helper, Optix.Task.ProcessDump;
+  Optix.Process.Helper{$IFNDEF SERVER}, Optix.Task.ProcessDump{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
-(***********************************************************************************************************************
+(* TOptixCommandProcessActionResponse *)
 
-  TOptixCommandAndResponseProcess
-
-***********************************************************************************************************************)
-
-{ TOptixCommandAndResponseProcess.Create }
-constructor TOptixCommandAndResponseProcess.Create(const AProcessId : Cardinal);
+constructor TOptixCommandProcessActionResponse.Create(const AProcessId : Cardinal);
 begin
   inherited Create();
   ///
@@ -146,26 +150,18 @@ begin
   FProcessId := AProcessId;
 end;
 
-(***********************************************************************************************************************
+(* TOptixCommandTerminateProcess *)
 
-  TOptixCommandKillProcess
-
-***********************************************************************************************************************)
-
-{ TOptixCommandKillProcess.DoAction }
-procedure TOptixCommandKillProcess.DoAction();
+{$IFNDEF SERVER}
+procedure TOptixCommandTerminateProcess.DoAction();
 begin
   TProcessHelper.TerminateProcess(FProcessId);
 end;
+{$ENDIF}
 
-(***********************************************************************************************************************
+(* TOptixCommandDumpProcess *)
 
-  TOptixCommandProcessDump
-
-***********************************************************************************************************************)
-
-{ TOptixCommandProcessDump.Create }
-constructor TOptixCommandProcessDump.Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD);
+constructor TOptixCommandDumpProcess.Create(const AProcessId : Cardinal; const ADestFilePath : String; const ATypesValue : DWORD);
 begin
   inherited Create();
   ///
@@ -181,72 +177,40 @@ begin
   FTypesValue := ATypesValue;
 end;
 
-{ TOptixCommandProcessDump.CreateTask }
-function TOptixCommandProcessDump.CreateTask(const ACommand : TOptixCommand) : TOptixTask;
+{$IFNDEF SERVER}
+function TOptixCommandDumpProcess.CreateTask(const ACommand : TOptixCommand) : TOptixTask;
 begin
   if Assigned(ACommand) then
     result := TOptixProcessDumpTask.Create(ACommand)
   else
     result := nil;
 end;
+{$ENDIF}
 
-(***********************************************************************************************************************
+(* TOptixCommandEnumRunningProcesses *)
 
-  TOptixCommandRefreshProcess
-
-***********************************************************************************************************************)
-
-{ TOptixCommandRefreshProcess.Refresh }
-procedure TOptixCommandRefreshProcess.DoAction();
+{$IFNDEF SERVER}
+procedure TOptixCommandEnumRunningProcesses.DoAction();
 begin
-  TOptixEnumProcess.Enum(FList);
+  TOptixEnumProcess.Enum(FProcesses);
 end;
+{$ENDIF}
 
-{ TOptixCommandRefreshProcess.DeSerialize }
-procedure TOptixCommandRefreshProcess.DeSerialize(const ASerializedObject : ISuperObject);
+procedure TOptixCommandEnumRunningProcesses.AfterCreate();
 begin
   inherited;
   ///
 
-  FList.Clear();
-
-  for var I := 0 to ASerializedObject.A['List'].Length -1 do
-    FList.Add(TProcessInformation.Create(ASerializedObject.A['List'].O[I]));
+  FProcesses := TObjectList<TProcessInformation>.Create(True);
 end;
 
-{ TOptixCommandRefreshProcess.Serialize }
-function TOptixCommandRefreshProcess.Serialize() : ISuperObject;
+destructor TOptixCommandEnumRunningProcesses.Destroy();
 begin
-  result := inherited;
-  ///
-
-  var AJsonArray := TSuperArray.Create();
-
-  for var AItem in FList do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['List'] := AJsonArray;
-end;
-
-{ TOptixCommandRefreshProcess.Create }
-constructor TOptixCommandRefreshProcess.Create();
-begin
-  inherited;
-  ///
-
-  FList := TObjectList<TProcessInformation>.Create(True);
-end;
-
-{ TOptixCommandRefreshProcess.Destroy }
-destructor TOptixCommandRefreshProcess.Destroy();
-begin
-  if Assigned(FList) then
-    FreeAndNil(FList);
+  if Assigned(FProcesses) then
+    FreeAndNil(FProcesses);
 
   ///
   inherited;
 end;
-
 
 end.

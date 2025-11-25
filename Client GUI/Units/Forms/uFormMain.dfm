@@ -41,9 +41,7 @@ object FormMain: TFormMain
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
-    OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
-    OnFocusChanged = VSTFocusChanged
     OnFreeNode = VSTFreeNode
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex

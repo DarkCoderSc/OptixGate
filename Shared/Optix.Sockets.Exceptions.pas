@@ -38,15 +38,26 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Sockets.Exceptions;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses System.SysUtils,
+
      Winapi.Winsock2;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   ESocketException = class(Exception)
@@ -66,7 +77,6 @@ implementation
 
 (* ESocketException *)
 
-{ ESocketException.Create }
 constructor ESocketException.Create(const ASocketAPI : String);
 var AFormatedMessage : String;
 begin

@@ -37,9 +37,7 @@ object ControlFormLogs: TControlFormLogs
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
-    OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
-    OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize

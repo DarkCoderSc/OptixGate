@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Registry.Enum;
 
@@ -86,26 +94,28 @@ type
     FName : String;
 
     [OptixSerializableAttribute]
-    FValue : String;
+    FValue : TOptixMemoryObject;
 
     [OptixSerializableAttribute]
     FType : DWORD;
 
     {@M}
     function GetIsDefault() : Boolean;
-    function GetValue() : String;
   public
     {@C}
-    constructor Create(const AName, AValue : String; AType : DWORD); overload;
+    constructor Create(const AName : String; const AType : DWORD; const pData : Pointer;
+      const ADataSize : DWORD); overload;
+    destructor Destroy(); override;
 
     {@M}
+    function ToString() : String; override;
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Name      : String  read FName;
-    property Value     : String  read GetValue;
-    property _Type     : DWORD   read FType;
-    property IsDefault : Boolean read GetIsDefault;
+    property Name      : String             read FName;
+    property Value     : TOptixMemoryObject read FValue;
+    property _Type     : DWORD              read FType;
+    property IsDefault : Boolean            read GetIsDefault;
   end;
 
   TOptixEnumRegistry = class
@@ -114,25 +124,17 @@ type
       var AValues : TObjectList<TRegistryValueInformation>); static;
   end;
 
-  const
-    REG_MSZ_LINE_SEP = '{/\$/\@/\0\n/%\//\!/\}';
-
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
   System.SysUtils,
 
-  Optix.Exceptions, Optix.WinApiEx;
+  Optix.Exceptions, Optix.WinApiEx, Optix.Shared.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(***********************************************************************************************************************
+(* TRegistryKeyInformation *)
 
-  TRegistryKeyInformation
-
-***********************************************************************************************************************)
-
-{ TRegistryKeyInformation.Create }
 constructor TRegistryKeyInformation.Create(const AName : String; const APath : String = '');
 begin
   inherited Create();
@@ -144,7 +146,6 @@ begin
   TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(APath, FPermissions);
 end;
 
-{ TRegistryKeyInformation.Assign }
 procedure TRegistryKeyInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TRegistryKeyInformation then begin
@@ -155,57 +156,90 @@ begin
     inherited;
 end;
 
-(***********************************************************************************************************************
+(* TRegistryValueInformation *)
 
-  TRegistryValueInformation
-
-***********************************************************************************************************************)
-
-{ TRegistryValueInformation.Create }
-constructor TRegistryValueInformation.Create(const AName, AValue : String; AType : DWORD);
+constructor TRegistryValueInformation.Create(const AName : String; const AType : DWORD; const pData : Pointer;
+  const ADataSize : DWORD);
 begin
   inherited Create();
   ///
 
   FName  := AName;
-  FValue := AValue;
   FType  := AType;
+
+  FValue := TOptixMemoryObject.Create();
+  FValue.CopyFrom(pData, ADataSize);
 end;
 
+destructor TRegistryValueInformation.Destroy();
+begin
+  if Assigned(FValue) then
+    FreeAndNil(FValue);
 
-{ TRegistryValueInformation.Assign }
+  ///
+  inherited;
+end;
+
 procedure TRegistryValueInformation.Assign(ASource : TPersistent);
 begin
   if ASource is TRegistryValueInformation then begin
-    FName  := TRegistryValueInformation(ASource).FName;
-    FValue := TRegistryValueInformation(ASource).FValue;
-    FType  := TRegistryValueInformation(ASource).FType;
+    FName := TRegistryValueInformation(ASource).FName;
+    FType := TRegistryValueInformation(ASource).FType;
+
+    if Assigned(TRegistryValueInformation(ASource).FValue) then begin
+      FValue := TOptixMemoryObject.Create();
+      FValue.CopyFrom(TRegistryValueInformation(ASource).FValue);
+    end else
+      FValue := nil;
   end else
     inherited;
 end;
 
-{ TRegistryValueInformation.GetIsDefault }
 function TRegistryValueInformation.GetIsDefault() : Boolean;
 begin
   result := FName.IsEmpty();
 end;
 
-{ TRegistryValueInformation.GetValue }
-function TRegistryValueInformation.GetValue() : String;
+function TRegistryValueInformation.ToString() : String;
 begin
-  if FType = REG_MULTI_SZ then
-    result := FValue.Replace(REG_MSZ_LINE_SEP, #13#10, [rfReplaceAll])
-  else
-    result := FValue;
+  if not Assigned(FValue) or not FValue.HasData then
+    Exit('');
+  ///
+
+  case FType of
+    REG_SZ, REG_EXPAND_SZ:
+      result := TMemoryUtils.MemoryToString(FValue.Address, FValue.Size);
+
+    REG_MULTI_SZ:
+      result := TMemoryUtils.MemoryMultiStringToString(FValue.Address, FValue.Size);
+
+    REG_DWORD:
+      result := Format('0x%.8X (%d)', [PDWORD(FValue.Address)^, PDWORD(FValue.Address)^]);
+
+    REG_QWORD:
+      result := Format('0x%.16X (%u)', [PUInt64(FValue.Address)^, PUInt64(FValue.Address)^]);
+
+    REG_BINARY: begin
+      var AStringBuilder := TStringBuilder.Create(FValue.Size * 3 (* 1 Byte = 2 (Hex) + 1 (Space) *));
+      try
+        for var n := 0 to FValue.Size -1 do
+          AStringBuilder.AppendFormat('%.2X ', [PByte(NativeUInt(FValue.Address) + n)^]);
+
+        ///
+        result := AStringBuilder.ToString.TrimRight;
+      finally
+        if Assigned(AStringBuilder) then
+          FreeAndNil(AStringBuilder);
+      end;
+    end;
+
+    else
+      result := '<could not read>';
+  end;
 end;
 
-(***********************************************************************************************************************
+(* TOptixEnumRegistry *)
 
-  TOptixEnumRegistry
-
-***********************************************************************************************************************)
-
-{ TOptixEnumRegistry.Enum }
 class procedure TOptixEnumRegistry.Enum(const AKeyFullPath : String; var AKeys : TObjectList<TRegistryKeyInformation>;
   var AValues : TObjectList<TRegistryValueInformation>);
 begin
@@ -225,6 +259,8 @@ begin
   var AHive : HKEY;
   var AKeyPath := '';
   TRegistryHelper.ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
+
+  var ADefaultValueExists := False;
 
   if not String.IsNullOrWhiteSpace(AKeyPath) then begin
     var ARet := RegOpenKeyEx(
@@ -283,11 +319,12 @@ begin
     GetMem(pNameBuffer, ABufferSize);
     try
       // Enumerate SubKeys
+      var AKeyLength : DWORD;
       if ASubKeysCount > 0 then begin
         for var I := 0 to ASubKeysCount -1 do begin
           ZeroMemory(pNameBuffer, AMaxKeyNameLength * SizeOf(WideChar));
 
-          var AKeyLength := AMaxKeyNameLength;
+          AKeyLength := AMaxKeyNameLength;
 
           ARet := RegEnumKeyExW(hOpenedKey, I, pNameBuffer, AKeyLength, nil, nil, nil, nil);
           if ARet <> ERROR_SUCCESS then
@@ -300,108 +337,47 @@ begin
         end;
       end;
 
-      // Enumerate Key-Values
-      var ADefaultValueExists := False;
-
       if AValuesCount > 0 then begin
+        var AValueNameLength : DWORD;
+        var AValueName : String;
         for var  I := 0 to AValuesCount -1 do begin
           ZeroMemory(pNameBuffer, AMaxKeyNameLength * SizeOf(WideChar));
 
-          var AValueNameLength := AMaxValueNameLength;
+          AValueNameLength := AMaxValueNameLength;
 
           ARet := RegEnumValueW(hOpenedKey, I, pNameBuffer, AValueNameLength, nil, nil, nil, nil);
           if ARet <> ERROR_SUCCESS then
             continue;
 
           ///
-          var AValueName := String(pNameBuffer);
-          var AValueType : DWORD;
-          var AValueDataSize : DWORD;
-          var AData := '';
+          AValueName := String(pNameBuffer);
+          if AValueName.IsEmpty then
+            ADefaultValueExists := True;
+          try
+            var AValueKind    : DWORD;
+            var ADataAsString : String;
+            var pData         : Pointer;
+            var ADataSize     : DWORD;
 
-          ARet := RegGetValueW(hOpenedKey, nil, PWideChar(AValueName), RRF_RT_ANY, AValueType, nil, AValueDataSize);
-          if ARet = ERROR_SUCCESS then begin
-            var pData : Pointer;
-            GetMem(pData, AValueDataSize * SizeOf(WideChar));
+            TRegistryHelper.ReadValue(hOpenedKey, AValueName, AValueKind, pData, ADataSize);
             try
-              ARet := RegGetValueW(
-                hOpenedKey,
-                nil,
-                PWideChar(AValueName),
-                RRF_RT_ANY,
-                AValueType,
-                pData,
-                AValueDataSize
-              );
-              if ARet <> ERROR_SUCCESS then
-                continue;
-
-              if AValueName.IsEmpty then
-                ADefaultValueExists := True;
-
-              case AValueType of
-                REG_SZ, REG_EXPAND_SZ:
-                  AData := String(PWideChar(pData));
-
-                REG_MULTI_SZ: begin
-                  var AStringList := TStringList.Create();
-                  try
-                    var p := PWideChar(pData);
-                    while p^ <> #0 do begin
-                      AStringList.Add(String(p));
-
-                      ///
-                      Inc(p, lstrlenW(p) + 1);
-                    end;
-
-                    ///
-                    AStringList.LineBreak := REG_MSZ_LINE_SEP;
-                    AData := AStringList.Text;
-                  finally
-                    if Assigned(AStringList) then
-                      FreeAndNil(AStringList);
-                  end;
-                end;
-
-                REG_DWORD:
-                  AData := Format('0x%.8X (%d)', [PDWORD(pData)^, PDWORD(pData)^]);
-
-                REG_QWORD:
-                  AData := Format('0x%.16X (%d)', [PUInt64(pData)^, PUInt64(pData)^]);
-
-                REG_BINARY: begin
-                  var AStringBuilder := TStringBuilder.Create(AValueDataSize * 3 (* 1 Byte = 2 (Hex) + 1 (Space) *));
-                  try
-                    for var n := 0 to AValueDataSize -1 do begin
-                      AStringBuilder.AppendFormat('%.2X ', [PByte(NativeUInt(pData) + n)^]);
-                    end;
-
-                    ///
-                    AData := AStringBuilder.ToString.TrimRight;
-                  finally
-                    if Assigned(AStringBuilder) then
-                      FreeAndNil(AStringBuilder);
-                  end;
-                end;
-              end;
-
-              ///
-              AValues.Add(TRegistryValueInformation.Create(AValueName, AData, AValueType));
+              AValues.Add(TRegistryValueInformation.Create(AValueName, AValueKind, pData, ADataSize));
             finally
-              FreeMem(pData, AValueDataSize);
+              if Assigned(pData) then
+                FreeMem(pData, ADataSize);
             end;
-          end else
-            AData := '<could not read>';
+          except
+          end;
         end;
       end;
-
-      ///
-      if not ADefaultValueExists then
-        AValues.Add(TRegistryValueInformation.Create('', '', REG_SZ));
     finally
       FreeMem(pNameBuffer, ABufferSize);
     end;
   finally
+    if not ADefaultValueExists then
+        AValues.Add(TRegistryValueInformation.Create('', REG_SZ, nil, 0));
+    ///
+
     if ACloseKey then
       RegCloseKey(hOpenedKey);
   end;

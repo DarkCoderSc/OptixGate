@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Protocol.Server;
 
@@ -142,7 +150,6 @@ uses
 
 (* TOptixServerThread *)
 
-{ TOptixServerThread.ThreadExecute }
 procedure TOptixServerThread.ThreadExecute();
 var AClient : TClientSocket;
 begin
@@ -252,14 +259,12 @@ begin
   end;
 end;
 
-{ TOptixServerThread.Close }
 procedure TOptixServerThread.Close();
 begin
   if Assigned(FServer) then
     FServer.Close();
 end;
 
-{ TOptixServerThread.TerminatedSet }
 procedure TOptixServerThread.TerminatedSet();
 begin
   self.Close();
@@ -268,7 +273,6 @@ begin
   inherited TerminatedSet();
 end;
 
-{ TOptixServerThread.Create }
 constructor TOptixServerThread.Create({$IFDEF USETLS}const ACertificate : TX509Certificate; {$ENDIF}const ABindAddress : String; const ABindPort : Word; const AIPVersion : TIPVersion);
 begin
   inherited Create();
@@ -296,7 +300,6 @@ begin
   FClientSockets := TList<TSocket>.Create();
 end;
 
-{ TOptixServerThread.Destroy }
 destructor TOptixServerThread.Destroy();
 begin
   if Assigned(FClientSockets) then begin

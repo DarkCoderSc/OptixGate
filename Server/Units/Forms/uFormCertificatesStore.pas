@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit uFormCertificatesStore;
 
@@ -84,8 +92,6 @@ type
     CopySelectedFingerprint1: TMenuItem;
     N3: TMenuItem;
     procedure GeneratenewCertificate1Click(Sender: TObject);
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
@@ -337,11 +343,6 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormCertificatesStore.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
 procedure TFormCertificatesStore.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;
   Column: TColumnIndex; var Result: Integer);
 begin
@@ -359,11 +360,6 @@ begin
       3 : Result := CompareText(pData1^.Certificate.Fingerprint, pData2^.Certificate.Fingerprint);
     end;
   end;
-end;
-
-procedure TFormCertificatesStore.VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TFormCertificatesStore.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);

@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit uControlFormContentReader;
 
@@ -56,30 +64,19 @@ uses
 
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.Types,
 
-  __uBaseFormControl__,
+  __uBaseFormControl__, uFrameHexEditor,
 
-  Optix.Protocol.Packet, Optix.Func.Commands.ContentReader;
+  Optix.Protocol.Packet, Optix.Func.Commands.ContentReader, OMultiPanel;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TControlFormContentReader = class(TBaseFormControl)
-    Pages: TPageControl;
-    TabHexView: TTabSheet;
-    TabStrings: TTabSheet;
-    RichHex: TRichEdit;
     PanelActions: TPanel;
     ButtonBack: TSpeedButton;
     ButtonForward: TSpeedButton;
-    TabHexTable: TTabSheet;
     ButtonDownload: TSpeedButton;
     StatusBar: TStatusBar;
     ButtonBrowsePage: TSpeedButton;
-    VST: TVirtualStringTree;
-    PopupRichHex: TPopupMenu;
-    Copy1: TMenuItem;
-    SelectAll1: TMenuItem;
-    N3: TMenuItem;
-    RichStrings: TRichEdit;
     PopupRichStrings: TPopupMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -92,34 +89,35 @@ type
     NoMinimum1: TMenuItem;
     Custom1: TMenuItem;
     ButtonUpdatePageSize: TSpeedButton;
+    MultiPanel: TOMultiPanel;
+    PanelHex: TPanel;
+    PanelStrings: TPanel;
+    RichStrings: TRichEdit;
+    ButtonToggleStrings: TSpeedButton;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ButtonDownloadClick(Sender: TObject);
     procedure ButtonBackClick(Sender: TObject);
     procedure ButtonForwardClick(Sender: TObject);
     procedure ButtonBrowsePageClick(Sender: TObject);
-    procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: string);
-    procedure SelectAll1Click(Sender: TObject);
-    procedure Copy1Click(Sender: TObject);
     procedure MenuItem1Click(Sender: TObject);
     procedure MenuItem3Click(Sender: TObject);
     procedure Ansi1Click(Sender: TObject);
     procedure Unicode1Click(Sender: TObject);
     procedure NoMinimum1Click(Sender: TObject);
-    procedure PopupRichStringsPopup(Sender: TObject);
     procedure Custom1Click(Sender: TObject);
     procedure ButtonUpdatePageSizeClick(Sender: TObject);
-    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
-      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure PopupRichStringsPopup(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure ButtonToggleStringsClick(Sender: TObject);
   private
-    FCurrentPage              : TOptixCommandContentReaderPage;
+    FFrameHexEditor           : TFrameHexEditor;
+    FCurrentPage              : TOptixCommandReadContentReaderPage;
     FMinExtractedStringLength : Cardinal;
 
     {@M}
     procedure UpdateFormElements();
     procedure BrowsePage(APageNumber : UInt64);
-    procedure InitializeHexGrid();
   protected
     {@M}
     procedure RefreshCaption(); override;
@@ -138,7 +136,7 @@ implementation
 uses
   System.Math,
 
-  Optix.Helper, Optix.FileSystem.Helper;
+  Optix.Helper, Optix.FileSystem.Helper, Optix.Shared.Helper, Optix.Constants;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -165,18 +163,6 @@ begin
   );
 end;
 
-procedure TControlFormContentReader.InitializeHexGrid();
-begin
-  var ARowCount := Cardinal(ceil(FCurrentPage.DataSize / 16));
-  ///
-
-  if ARowCount = VST.RootNodeCount then
-    Exit();
-  ///
-
-  VST.RootNodeCount := ARowCount;
-end;
-
 procedure TControlFormContentReader.MenuItem1Click(Sender: TObject);
 begin
   RichStrings.SelectAll;
@@ -191,8 +177,10 @@ procedure TControlFormContentReader.NoMinimum1Click(Sender: TObject);
 begin
   FMinExtractedStringLength := 0;
 
-  ///
   RefreshExtractedStrings();
+
+  ///
+  TMenuItem(Sender).Checked := True;
 end;
 
 procedure TControlFormContentReader.PopupRichStringsPopup(Sender: TObject);
@@ -215,7 +203,7 @@ begin
     APageNumber := FCurrentPage.PageCount;
   ///
 
-  SendCommand(TOptixCommandBrowseContentReader.Create(APageNumber));
+  SendCommand(TOptixCommandGetContentReaderPage.Create(APageNumber));
 end;
 
 procedure TControlFormContentReader.RefreshCaption();
@@ -229,11 +217,6 @@ begin
         Caption,
         FCurrentPage.FilePath
       ]);
-end;
-
-procedure TControlFormContentReader.SelectAll1Click(Sender: TObject);
-begin
-  RichHex.SelectAll();
 end;
 
 procedure TControlFormContentReader.ButtonBackClick(Sender: TObject);
@@ -281,6 +264,21 @@ begin
     BrowsePage(FCurrentPage.PageNumber +1);
 end;
 
+procedure TControlFormContentReader.ButtonToggleStringsClick(Sender: TObject);
+begin
+  if ButtonToggleStrings.ImageIndex = IMAGE_SHOW_STRINGS then begin
+    RefreshExtractedStrings();
+
+    ButtonToggleStrings.ImageIndex := IMAGE_HIDE_STRINGS
+  end else begin
+    ButtonToggleStrings.ImageIndex := IMAGE_SHOW_STRINGS;
+
+    RichStrings.Clear();
+  end;
+
+  MultiPanel.PanelCollection.Items[1].Visible := ButtonToggleStrings.ImageIndex = IMAGE_HIDE_STRINGS;
+end;
+
 procedure TControlFormContentReader.ButtonUpdatePageSizeClick(Sender: TObject);
 begin
   var AValue := '';
@@ -301,12 +299,7 @@ begin
     APageSize := TContentReader.MAX_PAGE_SIZE;
 
   ///
-  SendCommand(TOptixCommandBrowseContentReader.Create(0, APageSize));
-end;
-
-procedure TControlFormContentReader.Copy1Click(Sender: TObject);
-begin
-  RichHex.CopyToClipboard;
+  SendCommand(TOptixCommandGetContentReaderPage.Create(0, APageSize));
 end;
 
 procedure TControlFormContentReader.Custom1Click(Sender: TObject);
@@ -320,6 +313,9 @@ begin
     Exit();
 
   RefreshExtractedStrings();
+
+  ///
+  TMenuItem(Sender).Checked := True;
 end;
 
 procedure TControlFormContentReader.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -327,7 +323,7 @@ begin
   Action := caFree;
   ///
 
-  SendCommand(TOptixCommandCloseContentReader.Create());
+  SendCommand(TOptixCommandDeleteContentReader.Create());
 
   if Assigned(FCurrentPage) then
     FreeAndNil(FCurrentPage);
@@ -339,8 +335,19 @@ begin
 
   FMinExtractedStringLength := 0;
 
+  FFrameHexEditor := TFrameHexEditor.Create(PanelHex);
+  FFramehexEditor.Parent := PanelHex;
+  FFrameHexEditor.Align := alClient;
+  FFrameHexEditor.Expandable := False;
+
   ///
   UpdateFormElements();
+end;
+
+procedure TControlFormContentReader.FormDestroy(Sender: TObject);
+begin
+  if Assigned(FFrameHexEditor) then
+    FreeAndNil(FFrameHexEditor);
 end;
 
 procedure TControlFormContentReader.Unicode1Click(Sender: TObject);
@@ -367,6 +374,7 @@ begin
   ButtonForward.Enabled        := FCurrentPage.PageNumber < FCurrentPage.PageCount -1;
   ButtonBrowsePage.Enabled     := FCurrentPage.PageCount > 1;
   ButtonUpdatePageSize.Enabled := True;
+  ButtonToggleStrings.Enabled   := Assigned(FCurrentPage);
   ///
 
   StatusBar.Panels.Items[0].Text := Format('Page: %d / %d', [
@@ -384,89 +392,14 @@ begin
   RefreshCaption();
 end;
 
-procedure TControlFormContentReader.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas;
-  Node: PVirtualNode; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
-begin
-  var AColor := clNone;
-
-  case Column of
-    0 : AColor := clBlack;
-
-    1..16 : begin
-      if odd(Column mod 2) then
-        AColor := clBlack;
-    end;
-
-    17 : AColor := clBlack;
-  end;
-
-  if AColor <> clNone then begin
-    TargetCanvas.Brush.Color := AColor;
-    TargetCanvas.FillRect(CellRect);
-  end;
-end;
-
-procedure TControlFormContentReader.VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
-  TextType: TVSTTextType; var CellText: string);
-const ROW_SIZE = 16; // TODO: Customize
-begin
-  CellText := '';
-  ///
-
-  if not Assigned(FCurrentPage) or not Assigned(FCurrentPage.Data) then
-    Exit();
-  ///
-
-  var pRowOffset := PByte(NativeUInt(FCurrentPage.Data) + (Node.Index * ROW_SIZE));
-
-  case Column of
-    // Offset
-
-    // TODO: When Delphi CE 13
-//    0 : CellText := IntToHex(
-//      FCurrentPage.PageOffset + (Node.Index * ROW_SIZE),
-//      (if FCurrentPage.TotalSize > High(Integer) then 16 else 8)
-//    );
-    // ---
-
-    0 : begin
-      var AWidth := IfThen(FCurrentPage.TotalSize > High(Integer), 16, 8);
-      CellText := IntToHex(FCurrentPage.PageOffset + (Node.Index * ROW_SIZE), AWidth);
-    end;
-
-    // Hex
-    1..ROW_SIZE : begin
-      var pColumnOffset := PByte(NativeUInt(pRowOffset) + (* CAST Removes Warning *) Cardinal(Column -1));
-      if NativeUInt(pColumnOffset) < NativeUInt(FCurrentPage.Data) + FCurrentPage.DataSize then
-        CellText := IntToHex(pColumnOffset^);
-    end;
-
-    // Ascii
-    ROW_SIZE +1 : begin
-      var ARemainingBytes := FCurrentPage.DataSize - (Node.Index * ROW_SIZE);
-      if ARemainingBytes > ROW_SIZE then
-        ARemainingBytes := ROW_SIZE;
-      ///
-
-      CellText := TContentFormater.OutputPrintableChar(pRowOffset, ARemainingBytes);
-    end;
-  end;
-end;
-
 procedure TControlFormContentReader.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
 begin
   // -------------------------------------------------------------------------------------------------------------------
-  if AOptixPacket is TOptixCommandContentReaderPage then begin
-    var ACommand := TOptixCommandContentReaderPage(AOptixPacket);
+  if AOptixPacket is TOptixCommandReadContentReaderPage then begin
+    var ACommand := TOptixCommandReadContentReaderPage(AOptixPacket);
     if not Assigned(ACommand.Data) then
       Exit();
     ///
-
-    RichHex.Text := TContentFormater.ToHexTable(
-      TOptixCommandContentReaderPage(AOptixPacket).Data,
-      TOptixCommandContentReaderPage(AOptixPacket).DataSize,
-      TOptixCommandContentReaderPage(AOptixPacket).PageOffset
-    );
 
     AHandleMemory := True;
 
@@ -474,13 +407,10 @@ begin
       FCurrentPage.Free;
     ///
 
-    FCurrentPage := TOptixCommandContentReaderPage(AOptixPacket);
+    FCurrentPage := TOptixCommandReadContentReaderPage(AOptixPacket);
 
-    InitializeHexGrid();
-
-    VST.Refresh;
-
-    RefreshExtractedStrings();
+    if Assigned(FFrameHexEditor) then
+      FFrameHexEditor.LoadData(FCurrentPage.Data, FCurrentPage.DataSize, True (* Readonly *));
 
     ///
     UpdateFormElements();

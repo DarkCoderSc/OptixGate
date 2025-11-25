@@ -38,14 +38,31 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Config.Helper;
 
 interface
 
-uses System.Classes, Winapi.Windows, System.Win.Registry, XSuperObject, Optix.Interfaces;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.Win.Registry,
+
+  Winapi.Windows,
+
+  XSuperObject,
+
+  Optix.Interfaces;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixConfigBase = class
@@ -83,11 +100,13 @@ type
 
 implementation
 
-uses System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixConfigBase *)
 
-{ TOptixConfigBase.Create }
 constructor TOptixConfigBase.Create(const AJsonString : String);
 begin
   inherited Create();
@@ -100,13 +119,11 @@ begin
   end;
 end;
 
-{ TOptixConfigBase.Clear }
 procedure TOptixConfigBase.Clear();
 begin
   FJsonObject := SO();
 end;
 
-{ TOptixConfigBase.ToString }
 function TOptixConfigBase.ToString() : String;
 begin
   result := FJsonObject.AsJson();
@@ -114,7 +131,6 @@ end;
 
 (* TOptixConfigHelper *)
 
-{ TOptixConfigHelper.Create }
 constructor TOptixConfigHelper.Create(const AKeyName : String; const AHive : HKEY);
 begin
   inherited Create();
@@ -128,7 +144,6 @@ begin
   Open();
 end;
 
-{ TOptixConfigHelper.Destroy }
 destructor TOptixConfigHelper.Destroy();
 begin
   if Assigned(FRegistry) then
@@ -138,7 +153,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixConfigHelper.Open }
 procedure TOptixConfigHelper.Open();
 begin
   var AKeyPath := 'Software\' + FKeyName;

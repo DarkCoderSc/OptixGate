@@ -38,14 +38,25 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.WinApiEx;
 
 interface
 
-uses Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   //--------------------------------------------------------------------------------------------------------------------
@@ -431,6 +442,8 @@ function RegGetValueW(
   var pcbData : DWORD
 ) : LONG; stdcall; external 'Advapi32.dll';
 
+function RegDeleteTreeW(hKey: HKEY; lpSubKey: PWideChar): Longint; stdcall; external 'Advapi32.dll';
+
 (* NTDLL.dll *)
 
 function NtQuerySystemInformation(
@@ -474,7 +487,6 @@ function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : 
 
 implementation
 
-{ _.ProcessorArchitectureToString }
 function ProcessorArchitectureToString(const AValue : TProcessorArchitecture) : String;
 begin
   case AValue of

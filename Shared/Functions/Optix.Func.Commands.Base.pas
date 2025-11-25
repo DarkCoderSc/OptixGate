@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Func.Commands.Base;
 
@@ -57,12 +65,13 @@ uses
 type
   TOptixCommand = class(TOptixPacket);
 
-  TOptixSimpleCommand = class(TOptixCommand);
+  TOptixBasicCommand = class(TOptixCommand);
 
   TOptixCommandAction = class(TOptixCommand)
   public
-    {@M}
+    {$IFNDEF SERVER}
     procedure DoAction(); virtual; abstract;
+    {$ENDIF}
   end;
 
   TOptixCommandActionResponse = class(TOptixCommandAction);
@@ -182,8 +191,9 @@ type
 
   TOptixCommandTask = class(TOptixCommand)
   public
-    {@M}
+    {$IFNDEF SERVER}
     function CreateTask(const ACommand : TOptixCommand) : TOptixTask; virtual; abstract;
+    {$ENDIF}
   end;
 
 implementation
@@ -199,7 +209,6 @@ uses
 
 (* TOptixTaskCallback *)
 
-{ TOptixTaskCallback.Create }
 constructor TOptixTaskCallback.Create(const ATask : TOptixTask);
 begin
   inherited Create();
@@ -227,7 +236,6 @@ begin
   end;
 end;
 
-{ TOptixTaskCallback.Destroy }
 destructor TOptixTaskCallback.Destroy();
 begin
   if Assigned(FResult) then
@@ -237,7 +245,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixTaskCallback.DeSerialize }
 procedure TOptixTaskCallback.DeSerialize(const ASerializedObject : ISuperObject);
 begin
   inherited;
@@ -256,7 +263,6 @@ begin
   end;
 end;
 
-{ TOptixTaskCallback.Serialize }
 function TOptixTaskCallback.Serialize() : ISuperObject;
 begin
   result := inherited;
@@ -270,7 +276,6 @@ end;
 
 (* TOptixTask *)
 
-{ TOptixTask.Execute }
 function TOptixTask.Execute() : TOptixTaskResult;
 begin
   result := nil;
@@ -295,19 +300,16 @@ begin
   end;
 end;
 
-{ TOptixTask.IsCompleted }
 function TOptixTask.IsCompleted() : Boolean;
 begin
   result := Assigned(FTask) and (FTask.Status in [TTaskStatus.Completed, TTaskStatus.Exception]);
 end;
 
-{ TOptixTask.IsRunning }
 function TOptixTask.IsRunning() : Boolean;
 begin
   result := Assigned(FTask) and (FTask.Status in [TTaskStatus.Running]);
 end;
 
-{ TOptixTask.Start }
 procedure TOptixTask.Start();
 begin
   if FTask = nil then
@@ -318,13 +320,11 @@ begin
     );
 end;
 
-{ TOptixTask.SetTaskId }
 procedure TOptixTask.SetTaskId(const ATaskId : TGUID);
 begin
   FId := ATaskId;
 end;
 
-{ TOptixTask.GetResult }
 function TOptixTask.GetResult(const APullResult : Boolean = false) : TOptixTaskResult;
 begin
   result := nil;
@@ -347,13 +347,11 @@ begin
   end;
 end;
 
-{ TOptixTask.PullResult }
 function TOptixTask.PullResult() : TOptixTaskResult;
 begin
   result := GetResult(True);
 end;
 
-{ TOptixTask.Create }
 constructor TOptixTask.Create(const ACommand : TOptixCommand);
 begin
   inherited Create();
@@ -366,8 +364,6 @@ begin
   FSuccess        := False;
   FResultIsPulled := False;
 end;
-
-{ TOptixTask.Destroy }
 destructor TOptixTask.Destroy();
 begin
   if Assigned(FCommand) then
@@ -385,7 +381,6 @@ end;
 
 (* TOptixTaskResult *)
 
-{ TOptixTaskResult.Create }
 constructor TOptixTaskResult.Create();
 begin
   inherited Create();
@@ -396,7 +391,6 @@ begin
   FTaskDuration     := 0;
 end;
 
-{ TOptixTaskResult.Create }
 constructor TOptixTaskResult.Create(const ASerializedObject : ISuperObject);
 begin
   Create();
@@ -406,7 +400,6 @@ begin
     DeSerialize(ASerializedObject);
 end;
 
-{ TOptixTaskResult.Destroy }
 destructor TOptixTaskResult.Destroy();
 begin
 
@@ -414,19 +407,16 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixTaskResult.SetTaskDuration }
 procedure TOptixTaskResult.SetTaskDuration(const AValue : UInt64);
 begin
   FTaskDuration := AValue;
 end;
 
-{ TOptixTaskResult.GetExtendedDescription }
 function TOptixTaskResult.GetExtendedDescription() : String;
 begin
   result := '';
 end;
 
-{ TOptixTaskResult.GetDescription }
 function TOptixTaskResult.GetDescription() : String;
 begin
   result := '';
@@ -450,21 +440,18 @@ begin
     result := Format('Task Failed: %s', [FExceptionMessage]);
 end;
 
-{ TOptixTaskResult.TaskFailed }
 procedure TOptixTaskResult.TaskFailed(const AExceptionMessage : String);
 begin
   FSuccess          := False;
   FExceptionMessage := AExceptionMessage;
 end;
 
-{ TOptixTaskResult.TaskSucceed }
 procedure TOptixTaskResult.TaskSucceed();
 begin
   FSuccess          := True;
   FExceptionMessage := '';
 end;
 
-{ TOptixTaskResult.Serialize }
 function TOptixTaskResult.Serialize() : ISuperObject;
 begin
   result := inherited;

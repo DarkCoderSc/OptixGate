@@ -14,213 +14,8 @@ object ControlFormContentReader: TControlFormContentReader
   ShowHint = True
   OnClose = FormClose
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   TextHeight = 15
-  object Pages: TPageControl
-    AlignWithMargins = True
-    Left = 4
-    Top = 34
-    Width = 816
-    Height = 562
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
-    ActivePage = TabHexTable
-    Align = alClient
-    TabOrder = 0
-    ExplicitWidth = 806
-    ExplicitHeight = 530
-    object TabHexTable: TTabSheet
-      Caption = 'Hex Table (Beta)'
-      ImageIndex = 2
-      object VST: TVirtualStringTree
-        Left = 0
-        Top = 0
-        Width = 800
-        Height = 519
-        Margins.Left = 2
-        Margins.Top = 2
-        Margins.Right = 2
-        Margins.Bottom = 2
-        AccessibleName = '0F'
-        Align = alClient
-        BackGroundImageTransparent = True
-        BorderStyle = bsNone
-        Color = clWhite
-        Colors.UnfocusedColor = clWindowText
-        DefaultNodeHeight = 19
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Courier New'
-        Font.Style = []
-        Header.AutoSizeIndex = -1
-        Header.DefaultHeight = 25
-        Header.MainColumn = 1
-        Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-        Images = FormMain.VirtualImageList
-        Indent = 0
-        ParentFont = False
-        TabOrder = 0
-        TreeOptions.PaintOptions = [toHideFocusRect, toHideSelection, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toAlwaysHideSelection]
-        TreeOptions.SelectionOptions = [toDisableDrawSelection]
-        OnBeforeCellPaint = VSTBeforeCellPaint
-        OnGetText = VSTGetText
-        Touch.InteractiveGestures = [igPan, igPressAndTap]
-        Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-        Columns = <
-          item
-            Alignment = taCenter
-            Position = 0
-            Text = 'Offset (h)'
-            Width = 150
-          end
-          item
-            Alignment = taCenter
-            Position = 1
-            Text = '00'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 2
-            Text = '01'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 3
-            Text = '02'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 4
-            Text = '03'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 5
-            Text = '04'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 6
-            Text = '05'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 7
-            Text = '06'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 8
-            Text = '07'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 9
-            Text = '08'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 10
-            Text = '09'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 11
-            Text = '0A'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 12
-            Text = '0B'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 13
-            Text = '0C'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 14
-            Text = '0D'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 15
-            Text = '0E'
-            Width = 30
-          end
-          item
-            Alignment = taCenter
-            Position = 16
-            Text = '0F'
-            Width = 30
-          end
-          item
-            Position = 17
-            Width = 150
-          end>
-      end
-    end
-    object TabHexView: TTabSheet
-      Caption = 'Plain Hex'
-      object RichHex: TRichEdit
-        Left = 0
-        Top = 0
-        Width = 800
-        Height = 519
-        Align = alClient
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Courier New'
-        Font.Style = []
-        ParentFont = False
-        PlainText = True
-        PopupMenu = PopupRichHex
-        ReadOnly = True
-        ScrollBars = ssBoth
-        TabOrder = 0
-      end
-    end
-    object TabStrings: TTabSheet
-      Caption = 'Strings'
-      ImageIndex = 1
-      object RichStrings: TRichEdit
-        Left = 0
-        Top = 0
-        Width = 800
-        Height = 519
-        Align = alClient
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Courier New'
-        Font.Style = []
-        ParentFont = False
-        PlainText = True
-        PopupMenu = PopupRichStrings
-        ReadOnly = True
-        ScrollBars = ssBoth
-        TabOrder = 0
-      end
-    end
-  end
   object PanelActions: TPanel
     AlignWithMargins = True
     Left = 4
@@ -233,8 +28,7 @@ object ControlFormContentReader: TControlFormContentReader
     Margins.Bottom = 0
     Align = alTop
     BevelOuter = bvNone
-    TabOrder = 1
-    ExplicitWidth = 806
+    TabOrder = 0
     object ButtonBack: TSpeedButton
       AlignWithMargins = True
       Left = 36
@@ -327,6 +121,25 @@ object ControlFormContentReader: TControlFormContentReader
       OnClick = ButtonUpdatePageSizeClick
       ExplicitLeft = 184
     end
+    object ButtonToggleStrings: TSpeedButton
+      AlignWithMargins = True
+      Left = 172
+      Top = 4
+      Width = 30
+      Height = 22
+      Hint = 'Update Page Size'
+      Margins.Left = 2
+      Margins.Top = 4
+      Margins.Right = 2
+      Margins.Bottom = 4
+      Align = alLeft
+      ImageIndex = 74
+      ImageName = 'control-rich-text-edit-eye'
+      Images = FormMain.VirtualImageList
+      OnClick = ButtonToggleStringsClick
+      ExplicitLeft = 218
+      ExplicitTop = 1
+    end
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -341,22 +154,74 @@ object ControlFormContentReader: TControlFormContentReader
         Alignment = taRightJustify
         Width = 50
       end>
-    ExplicitTop = 568
-    ExplicitWidth = 814
   end
-  object PopupRichHex: TPopupMenu
-    Left = 332
-    Top = 333
-    object SelectAll1: TMenuItem
-      Caption = 'Select All'
-      OnClick = SelectAll1Click
+  object MultiPanel: TOMultiPanel
+    Left = 0
+    Top = 30
+    Width = 824
+    Height = 570
+    PanelType = ptVertical
+    PanelCollection = <
+      item
+        Control = PanelHex
+        Position = 0.500000000000000000
+        Visible = True
+        Index = 0
+      end
+      item
+        Control = PanelStrings
+        Position = 1.000000000000000000
+        Visible = False
+        Index = 1
+      end>
+    MinPosition = 0.020000000000000000
+    Align = alClient
+    TabOrder = 2
+    ExplicitLeft = 280
+    ExplicitTop = 88
+    ExplicitWidth = 185
+    ExplicitHeight = 41
+    DesignSize = (
+      824
+      570)
+    object PanelHex: TPanel
+      Left = 0
+      Top = 0
+      Width = 824
+      Height = 285
+      Anchors = []
+      BevelOuter = bvNone
+      TabOrder = 0
     end
-    object N3: TMenuItem
-      Caption = '-'
-    end
-    object Copy1: TMenuItem
-      Caption = 'Copy'
-      OnClick = Copy1Click
+    object PanelStrings: TPanel
+      Left = 0
+      Top = 288
+      Width = 824
+      Height = 282
+      Anchors = []
+      BevelOuter = bvNone
+      TabOrder = 1
+      Visible = False
+      object RichStrings: TRichEdit
+        Left = 0
+        Top = 0
+        Width = 824
+        Height = 282
+        Align = alClient
+        Font.Charset = ANSI_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -12
+        Font.Name = 'Courier New'
+        Font.Style = []
+        ParentFont = False
+        PlainText = True
+        PopupMenu = PopupRichStrings
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        ExplicitWidth = 800
+        ExplicitHeight = 519
+      end
     end
   end
   object PopupRichStrings: TPopupMenu
@@ -395,14 +260,12 @@ object ControlFormContentReader: TControlFormContentReader
     object MinimumLength1: TMenuItem
       Caption = 'Minimum Length'
       object NoMinimum1: TMenuItem
-        AutoCheck = True
         Caption = 'No Minimum'
         Checked = True
         RadioItem = True
         OnClick = NoMinimum1Click
       end
       object Custom1: TMenuItem
-        AutoCheck = True
         Caption = 'Custom'
         RadioItem = True
         OnClick = Custom1Click

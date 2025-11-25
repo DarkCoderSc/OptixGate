@@ -38,14 +38,27 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Config.CertificatesStore;
 
 interface
 
-uses XSuperObject, Optix.Config.Helper, Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  XSuperObject,
+
+  Optix.Config.Helper, Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   // TODO: Create a custom iterator for..in
@@ -67,9 +80,11 @@ type
 
 implementation
 
-uses Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixConfigCertificatesStore.GetCount }
 function TOptixConfigCertificatesStore.GetCount() : Integer;
 begin
   result := 0;
@@ -81,7 +96,6 @@ begin
   result := FJsonObject.A['Items'].Length;
 end;
 
-{ TOptixConfigCertificatesStore.GetItem }
 function TOptixConfigCertificatesStore.GetItem(AIndex: Integer): TX509Certificate;
 begin
   ZeroMemory(@result, SizeOf(TX509Certificate));
@@ -103,13 +117,11 @@ begin
   end;
 end;
 
-{ TOptixConfigCertificatesStore.Add }
 procedure TOptixConfigCertificatesStore.Add(const ACertificate : TX509Certificate);
 begin
   SetItem(-1, ACertificate);
 end;
 
-{ TOptixConfigCertificatesStore.SetItem }
 procedure TOptixConfigCertificatesStore.SetItem(AIndex: Integer; const AValue: TX509Certificate);
 begin
   var AJsonArray  : ISuperArray;

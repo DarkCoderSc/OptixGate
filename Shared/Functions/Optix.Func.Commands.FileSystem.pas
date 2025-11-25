@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Func.Commands.FileSystem;
 
@@ -53,13 +61,11 @@ uses
 
   Winapi.Windows,
 
-  XSuperObject,
-
   Optix.Func.Commands.Base, Optix.FileSystem.Enum, Optix.FileSystem.Helper, Optix.Shared.Classes;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixRequestFileInformation = class(TOptixCommandActionResponse)
+  TOptixCommandReceiveFileInformation = class(TOptixCommandActionResponse)
   private
     [OptixSerializableAttribute]
     FFileName : String;
@@ -71,10 +77,12 @@ type
     FFileInformation : TFileInformation;
   public
     {@M}
+    {$IFNDEF SERVER}
     procedure DoAction(); override;
+    {$ENDIF}
+    procedure AfterCreate(); override;
 
     {@C}
-    constructor Create(); override;
     constructor Create(const AFileName : String; const AIsDirectory : Boolean); overload;
     destructor Destroy(); override;
 
@@ -84,29 +92,28 @@ type
     property FileInformation : TFileInformation read FFileInformation;
   end;
 
-  {@ALIASES: TOptixRequestFileInformation}
-  TOptixRequestUploadedFileInformation = class(TOptixRequestFileInformation);
+  {@ALIASES: TOptixCommandReceiveFileInformation}
+  TOptixCommandGetUploadedFileInformation = class(TOptixCommandReceiveFileInformation);
 
-  TOptixCommandRefreshDrives = class(TOptixCommandActionResponse)
+  TOptixCommandEnumDrives = class(TOptixCommandActionResponse)
   private
-    FList : TObjectList<TDriveInformation>;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    [OptixSerializableAttribute]
+    FDrives : TObjectList<TDriveInformation>;
   public
     {@M}
-    function Serialize() : ISuperObject; override;
+    {$IFNDEF SERVER}
     procedure DoAction(); override;
+    {$ENDIF}
+    procedure AfterCreate(); override;
 
     {@C}
-    constructor Create(); override;
     destructor Destroy(); override;
 
     {@G}
-    property List : TObjectList<TDriveInformation> read FList;
+    property Drives : TObjectList<TDriveInformation> read FDrives;
   end;
 
-  TOptixCommandRefreshFiles = class(TOptixCommandActionResponse)
+  TOptixCommandEnumDirectoryFiles = class(TOptixCommandActionResponse)
   private
     [OptixSerializableAttribute]
     FPath : String;
@@ -117,18 +124,19 @@ type
     [OptixSerializableAttribute]
     FIsRoot : Boolean;
 
+    [OptixSerializableAttribute]
     FParentFolders : TObjectList<TSimpleFolderInformation>;
-    FFiles         : TObjectList<TFileInformation>;
-  protected
-    {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+
+    [OptixSerializableAttribute]
+    FFiles : TObjectList<TFileInformation>;
   public
     {@M}
-    function Serialize() : ISuperObject; override;
+    {$IFNDEF SERVER}
     procedure DoAction(); override;
+    {$ENDIF}
+    procedure AfterCreate(); override;
 
     {@C}
-    constructor Create(); override;
     constructor Create(const APath : String); overload;
     destructor Destroy(); override;
 
@@ -176,23 +184,17 @@ uses
   System.IOUtils;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(***********************************************************************************************************************
+(* TOptixCommandReceiveFileInformation *)
 
-  TOptixRequestFileInformation
-
-(**********************************************************************************************************************)
-
-{ TOptixRequestFileInformation.Create }
-constructor TOptixRequestFileInformation.Create();
+procedure TOptixCommandReceiveFileInformation.AfterCreate();
 begin
-  inherited Create();
+  inherited;
   ///
 
   FFileInformation := TFileInformation.Create();
 end;
 
-{ TOptixRequestFileInformation.Create }
-constructor TOptixRequestFileInformation.Create(const AFileName : String; const AIsDirectory : Boolean);
+constructor TOptixCommandReceiveFileInformation.Create(const AFileName : String; const AIsDirectory : Boolean);
 begin
   Create();
   ///
@@ -201,8 +203,7 @@ begin
   FIsDirectory := AIsDirectory;
 end;
 
-{ TOptixRequestFileInformation.Destroy }
-destructor TOptixRequestFileInformation.Destroy();
+destructor TOptixCommandReceiveFileInformation.Destroy();
 begin
   if Assigned(FFileInformation) then
     FreeAndNil(FFileInformation);
@@ -211,8 +212,8 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixRequestFileInformation.DoAction }
-procedure TOptixRequestFileInformation.DoAction();
+{$IFNDEF SERVER}
+procedure TOptixCommandReceiveFileInformation.DoAction();
 begin
   inherited;
   ///
@@ -222,73 +223,38 @@ begin
 
   FFileInformation := TFileInformation.Create(FFileName, FIsDirectory);
 end;
+{$ENDIF}
 
-(***********************************************************************************************************************
+(* TOptixCommandEnumDrives *)
 
-  TOptixCommandRefreshDrives
-
-(**********************************************************************************************************************)
-
-{ TOptixCommandRefreshDrives.DoAction }
-procedure TOptixCommandRefreshDrives.DoAction();
+{$IFNDEF SERVER}
+procedure TOptixCommandEnumDrives.DoAction();
 begin
-  TOptixEnumDrives.Enum(FList);
+  TOptixEnumDrives.Enum(FDrives);
 end;
+{$ENDIF}
 
-{ TOptixCommandRefreshDrives.DeSerialize }
-procedure TOptixCommandRefreshDrives.DeSerialize(const ASerializedObject : ISuperObject);
+procedure TOptixCommandEnumDrives.AfterCreate();
 begin
   inherited;
   ///
 
-  FList.Clear();
-
-  for var I := 0 to ASerializedObject.A['List'].Length -1 do
-    FList.Add(TDriveInformation.Create(ASerializedObject.A['List'].O[I]));
+  FDrives := TObjectList<TDriveInformation>.Create(True);
 end;
 
-{ TOptixCommandRefreshDrives.Serialize }
-function TOptixCommandRefreshDrives.Serialize() : ISuperObject;
+destructor TOptixCommandEnumDrives.Destroy();
 begin
-  result := inherited;
-  ///
-
-  var AJsonArray := TSuperArray.Create();
-
-  for var AItem in FList do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['List'] := AJsonArray;
-end;
-
-{ TOptixCommandRefreshDrives.Create }
-constructor TOptixCommandRefreshDrives.Create();
-begin
-  inherited;
-  ///
-
-  FList := TObjectList<TDriveInformation>.Create(True);
-end;
-
-{ TOptixCommandRefreshDrives.Destroy }
-destructor TOptixCommandRefreshDrives.Destroy();
-begin
-  if Assigned(FList) then
-    FreeAndNil(FList);
+  if Assigned(FDrives) then
+    FreeAndNil(FDrives);
 
   ///
   inherited;
 end;
 
-(***********************************************************************************************************************
+(* TOptixCommandEnumDirectoryFiles *)
 
-  TOptixCommandRefreshFiles
-
-(**********************************************************************************************************************)
-
-{ TOptixCommandRefreshFiles.DoAction }
-procedure TOptixCommandRefreshFiles.DoAction();
+{$IFNDEF SERVER}
+procedure TOptixCommandEnumDirectoryFiles.DoAction();
 begin
   FParentFolders.Clear();
   ///
@@ -319,53 +285,9 @@ begin
   ///
   TOptixEnumFiles.Enum(FPath, FFiles, FIsRoot, FAccess);
 end;
+{$ENDIF}
 
-{ TOptixCommandRefreshFiles.DeSerialize }
-procedure TOptixCommandRefreshFiles.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FParentFolders.Clear();
-
-  for var I := 0 to ASerializedObject.A['ParentFolders'].Length -1 do
-    FParentFolders.Add(TSimpleFolderInformation.Create(ASerializedObject.A['ParentFolders'].O[I]));
-
-  ///
-
-  FFiles.Clear();
-
-  for var I := 0 to ASerializedObject.A['Files'].Length -1 do
-    FFiles.Add(TFileInformation.Create(ASerializedObject.A['Files'].O[I]));
-end;
-
-{ TOptixCommandRefreshFiles.Serialize }
-function TOptixCommandRefreshFiles.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  var AJsonArray := TSuperArray.Create();
-
-  for var AItem in FParentFolders do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['ParentFolders'] := AJsonArray;
-
-  ///
-
-  AJsonArray := TSuperArray.Create();
-
-  for var AItem in FFiles do
-    AJsonArray.Add(AItem.Serialize);
-
-  ///
-  result.A['Files'] := AJsonArray;
-end;
-
-{ TOptixCommandRefreshFiles.Create }
-constructor TOptixCommandRefreshFiles.Create();
+procedure TOptixCommandEnumDirectoryFiles.AfterCreate();
 begin
   inherited;
   ///
@@ -374,8 +296,7 @@ begin
   FFiles := TObjectList<TFileInformation>.Create(True);
 end;
 
-{ TOptixCommandRefreshFiles.Create }
-constructor TOptixCommandRefreshFiles.Create(const APath : String);
+constructor TOptixCommandEnumDirectoryFiles.Create(const APath : String);
 begin
   Create();
   ///
@@ -385,8 +306,7 @@ begin
   FIsRoot := False;
 end;
 
-{ TOptixCommandRefreshFiles.Destroy }
-destructor TOptixCommandRefreshFiles.Destroy();
+destructor TOptixCommandEnumDirectoryFiles.Destroy();
 begin
   if Assigned(FFiles) then
     FreeAndNil(FFiles);
@@ -398,13 +318,8 @@ begin
   inherited;
 end;
 
-(***********************************************************************************************************************
+(* TOptixCommandTransfer *)
 
-  TOptixCommandTransfer
-
-***********************************************************************************************************************)
-
-{ TOptixCommandTransfer.Create }
 constructor TOptixCommandTransfer.Create(const AFilePath : String; const ATransferId : TGUID);
 begin
   inherited Create();

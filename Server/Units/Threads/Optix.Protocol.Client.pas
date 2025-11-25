@@ -38,15 +38,29 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Protocol.Client;
 
 interface
 
-uses System.Classes, Optix.Sockets.Helper, Optix.Thread, System.SyncObjs,
-     Generics.Collections;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SyncObjs,
+
+  Generics.Collections,
+
+  Optix.Sockets.Helper, Optix.Thread;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOnClientDisconnect = procedure(Sender : TObject; const AClient : TClientSocket) of object;
@@ -81,21 +95,25 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.Sockets.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-{ TOptixClientThread.Initialize }
+  Winapi.Windows,
+
+  Optix.Sockets.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TOptixClientThread.Initialize();
 begin
   ///
 end;
 
-{ TOptixClientThread.Finalize }
 procedure TOptixClientThread.Finalize();
 begin
   ///
 end;
 
-{ TOptixClientThread.Create }
 constructor TOptixClientThread.Create(const AClient : TClientSocket);
 begin
   inherited Create();
@@ -110,7 +128,6 @@ begin
   Initialize();
 end;
 
-{ TOptixClientThread.Destroy }
 destructor TOptixClientThread.Destroy();
 begin
   if Assigned(FClient) then
@@ -131,7 +148,6 @@ begin
     end);
 end;
 
-{ TOptixClientThread.ThreadExecute }
 procedure TOptixClientThread.ThreadExecute();
 begin
   if not Assigned(FClient) then
@@ -147,7 +163,6 @@ begin
   end;
 end;
 
-{ TOptixClientThread.TerminatedSet }
 procedure TOptixClientThread.TerminatedSet();
 begin
   inherited TerminatedSet();

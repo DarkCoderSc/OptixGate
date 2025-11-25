@@ -40,9 +40,7 @@ object FormTrustedCertificates: TFormTrustedCertificates
     TabOrder = 0
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-    OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
-    OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize

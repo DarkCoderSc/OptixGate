@@ -12,6 +12,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
   Font.Style = []
   Menu = MainMenu
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
   TextHeight = 15
   object OMultiPanel: TOMultiPanel
     Left = 0
@@ -34,8 +35,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 701
-    ExplicitHeight = 368
+    ExplicitWidth = 721
     DesignSize = (
       711
       400)
@@ -64,10 +64,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       TabOrder = 0
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnChange = VSTKeysChange
       OnCompareNodes = VSTKeysCompareNodes
       OnDblClick = VSTKeysDblClick
-      OnFocusChanged = VSTKeysFocusChanged
       OnFreeNode = VSTKeysFreeNode
       OnGetText = VSTKeysGetText
       OnGetImageIndex = VSTKeysGetImageIndex
@@ -101,12 +99,12 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
       Header.SortColumn = 0
       Images = FormMain.VirtualImageList
+      PopupMenu = PopupValues
       TabOrder = 1
       TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
       TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnChange = VSTValuesChange
       OnCompareNodes = VSTValuesCompareNodes
-      OnFocusChanged = VSTValuesFocusChanged
+      OnDblClick = VSTValuesDblClick
       OnFreeNode = VSTValuesFreeNode
       OnGetText = VSTValuesGetText
       OnGetImageIndex = VSTValuesGetImageIndex
@@ -145,7 +143,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     BevelOuter = bvRaised
     ReadOnly = True
     TabOrder = 1
-    ExplicitWidth = 693
   end
   object MainMenu: TMainMenu
     Left = 408
@@ -159,6 +156,10 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       end
       object N1: TMenuItem
         Caption = '-'
+      end
+      object CreateKey1: TMenuItem
+        Caption = 'Create Key'
+        OnClick = CreateKey1Click
       end
       object GoTo1: TMenuItem
         Caption = 'Go To'
@@ -189,6 +190,63 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     end
     object FullCollapse2: TMenuItem
       Caption = '-'
+    end
+    object CreateSubKey1: TMenuItem
+      Caption = 'Create Sub Key'
+      OnClick = CreateSubKey1Click
+    end
+    object DeleteSelectedKey1: TMenuItem
+      Caption = 'Delete Selected Key'
+      OnClick = DeleteSelectedKey1Click
+    end
+  end
+  object PopupValues: TPopupMenu
+    OnPopup = PopupValuesPopup
+    Left = 520
+    Top = 191
+    object Refresh2: TMenuItem
+      Caption = 'Refresh'
+      OnClick = Refresh2Click
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object New1: TMenuItem
+      Caption = 'New'
+      object NewKey1: TMenuItem
+        Caption = 'Key'
+        OnClick = NewKey1Click
+      end
+      object N2: TMenuItem
+        Caption = '-'
+      end
+      object NewStringValue1: TMenuItem
+        Caption = 'String (SZ)'
+        OnClick = NewStringValue1Click
+      end
+      object NewMultiLineStringValue1: TMenuItem
+        Caption = 'Multi Line String (MSZ)'
+        OnClick = NewMultiLineStringValue1Click
+      end
+      object NewDWORDValue1: TMenuItem
+        Caption = 'DWORD (4 Byte)'
+        OnClick = NewDWORDValue1Click
+      end
+      object NewQWORDValue1: TMenuItem
+        Caption = 'QWORD (8 Bytes)'
+        OnClick = NewQWORDValue1Click
+      end
+      object NewBinaryValue1: TMenuItem
+        Caption = 'Binary'
+        OnClick = NewBinaryValue1Click
+      end
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object EditSelectedValue1: TMenuItem
+      Caption = 'Edit Selected'
+      OnClick = EditSelectedValue1Click
     end
   end
 end

@@ -38,15 +38,33 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Protocol.Client.Handler;
 
 interface
 
-uses Optix.Protocol.Client, Optix.Protocol.Packet, Generics.Collections, Optix.Sockets.Helper, System.SysUtils,
-     XSuperObject, Winapi.Windows, Optix.Protocol.Preflight;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows,
+
+  Generics.Collections,
+
+  XSuperObject,
+
+  Optix.Protocol.Client, Optix.Protocol.Packet, Optix.Sockets.Helper, Optix.Protocol.Preflight;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixClientHandlerThread = class(TOptixClientThread)
@@ -78,15 +96,18 @@ type
 
 implementation
 
-uses Optix.Sockets.Exceptions, System.SyncObjs{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SyncObjs,
 
-{ TOptixClientHandlerThread.PollActions }
+  Optix.Sockets.Exceptions{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TOptixClientHandlerThread.PollActions();
 begin
   ///
 end;
 
-{ TOptixClientHandlerThread.ClientExecute }
 procedure TOptixClientHandlerThread.ClientExecute();
 var APacket           : TOptixPacket;
     ASerializedPacket : ISuperObject;
@@ -152,7 +173,6 @@ begin
   end; // while not Terminated do begin
 end;
 
-{ TOptixClientHandlerThread.Initialize }
 procedure TOptixClientHandlerThread.Initialize();
 begin
   inherited;
@@ -161,7 +181,6 @@ begin
   FPacketQueue := TThreadedQueue<TOptixPacket>.Create(1024, INFINITE, 500);
 end;
 
-{ TOptixClientHandlerThread.Finalize }
 procedure TOptixClientHandlerThread.Finalize();
 begin
   inherited;
@@ -185,7 +204,6 @@ begin
   end;
 end;
 
-{ TOptixClientHandlerThread.AddPacket }
 procedure TOptixClientHandlerThread.AddPacket(const APacket : TOptixPacket);
 begin
   if not Assigned(APacket) then
@@ -196,7 +214,6 @@ begin
 end;
 
 {$IFDEF SERVER}
-{ TOptixClientHandlerThread.Create }
 constructor TOptixClientHandlerThread.Create(const AClient : TClientSocket; const AHandlerId : TGUID);
 begin
   inherited Create(AClient);

@@ -38,6 +38,12 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
 
@@ -81,7 +87,6 @@ uses
   Optix.Helper, Optix.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TOptixConfigServers.GetCount }
 function TOptixConfigServers.GetCount() : Integer;
 begin
   result := 0;
@@ -93,7 +98,6 @@ begin
   result := FJsonObject.A['Items'].Length;
 end;
 
-{ TOptixConfigServers.GetItem }
 function TOptixConfigServers.GetItem(AIndex: Integer): TServerConfiguration;
 begin
   ZeroMemory(@result, SizeOf(TServerConfiguration));
@@ -135,13 +139,11 @@ begin
   end;
 end;
 
-{ TOptixConfigServers.Add }
 procedure TOptixConfigServers.Add(const AServerConfiguration : TServerConfiguration);
 begin
   SetItem(-1, AServerConfiguration);
 end;
 
-{ TOptixConfigServers.SetItem }
 procedure TOptixConfigServers.SetItem(AIndex: Integer; const AServerConfiguration : TServerConfiguration);
 begin
   var AJsonArray  : ISuperArray;

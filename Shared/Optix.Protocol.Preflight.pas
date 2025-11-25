@@ -38,14 +38,22 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Protocol.Preflight;
 
 interface
 
-const OPTIX_PROTOCOL_VERSION = 'v1.3.0' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
+const OPTIX_PROTOCOL_VERSION = 'v1.4.0' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
 
 type
   TClientKind = (
@@ -68,8 +76,6 @@ implementation
 
 {$IFDEF CLIENT}
 uses Optix.Protocol.Packet;
-
-{ TOptixPreflightRequest.Initialize }
 class operator TOptixPreflightRequest.Initialize(out ADestRecord : TOptixPreflightRequest);
 begin
   ADestRecord.ProtocolVersion := OPTIX_PROTOCOL_VERSION;

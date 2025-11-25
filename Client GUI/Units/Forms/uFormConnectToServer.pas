@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit uFormConnectToServer;
 
@@ -222,7 +230,6 @@ begin
     TSpinEdit(Sender).Value := 65535;
 end;
 
-{ TFormConnectToServer.Create }
 procedure TFormConnectToServer.ComboIpVersionChange(Sender: TObject);
 begin
   case TComboBox(Sender).ItemIndex of

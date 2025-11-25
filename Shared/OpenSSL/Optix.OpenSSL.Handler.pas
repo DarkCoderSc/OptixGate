@@ -38,14 +38,27 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.OpenSSL.Handler;
 
 interface
 
-uses Winapi.Winsock2, Optix.OpenSSL.Context;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Winsock2,
+
+  Optix.OpenSSL.Context;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixOpenSSLHandler = class
@@ -75,9 +88,15 @@ type
 
 implementation
 
-uses System.SysUtils, Winapi.Windows, Optix.OpenSSL.Exceptions, Optix.OpenSSL.Headers, Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-{ TOptixOpenSSLHandler.Create }
+  Winapi.Windows,
+
+  Optix.OpenSSL.Exceptions, Optix.OpenSSL.Headers, Optix.OpenSSL.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+
 constructor TOptixOpenSSLHandler.Create(AContext : TOptixOpenSSLContext; const ASocketFd : TSocket);
 begin
   inherited Create();
@@ -89,7 +108,6 @@ begin
   FSSLConnection := nil;
 end;
 
-{ TOptixOpenSSLHandler.Destroy }
 destructor TOptixOpenSSLHandler.Destroy();
 begin
   SSLFree();
@@ -98,7 +116,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixOpenSSLHandler.SSLFree }
 procedure TOptixOpenSSLHandler.SSLFree();
 begin
   if Assigned(FSSLConnection) then begin
@@ -108,7 +125,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHandler.SSLConnect }
 procedure TOptixOpenSSLHandler.Connect();
 begin
   if not Assigned(FContext) or (FSocketFd = INVALID_SOCKET) then
@@ -138,7 +154,6 @@ begin
     raise EOpenSSLBaseException.Create.Create(FSSLConnection);
 end;
 
-{ TOptixOpenSSLHandler.Send }
 procedure TOptixOpenSSLHandler.Send(const buf; const len : Integer);
 begin
   while True do begin
@@ -157,7 +172,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHandler.Recv }
 procedure TOptixOpenSSLHandler.Recv(var buf; const len : Integer);
 begin
   while True do begin
@@ -176,13 +190,11 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHandler.IsDataPending }
 function TOptixOpenSSLHandler.IsDataPending() : Boolean;
 begin
   result := SSL_pending(FSSLConnection) > 0;
 end;
 
-{ TOptixOpenSSLHandler.IsConnectionAlive }
 function TOptixOpenSSLHandler.IsConnectionAlive() : Boolean;
 begin
   var ADummyBuffer : array[0..0] of Byte;
@@ -203,7 +215,6 @@ begin
   end;
 end;
 
-{ TOptixOpenSSLHandler.GetPeerCertificateFingerprint }
 function TOptixOpenSSLHandler.GetPeerCertificateFingerprint() : String;
 begin
   result := '';

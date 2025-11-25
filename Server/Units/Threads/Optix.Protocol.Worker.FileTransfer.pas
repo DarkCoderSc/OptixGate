@@ -38,15 +38,29 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Protocol.Worker.FileTransfer;
 
 interface
 
-uses System.Classes, System.SysUtils, Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer,
-     Generics.Collections;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Generics.Collections,
+
+  Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOnRequestTransferTask = procedure(Sender : TObject; const ATransferId : TGUID; var ATask : TOptixTransferTask) of object;
@@ -80,10 +94,15 @@ type
 
 implementation
 
-uses Winapi.Windows, Optix.Exceptions, System.Diagnostics, Optix.Sockets.Exceptions
-     {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Diagnostics,
 
-{ TOptixFileTransferWorker.Initialize }
+  Winapi.Windows,
+
+  Optix.Exceptions, Optix.Sockets.Exceptions{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TOptixFileTransferWorker.Initialize();
 begin
   inherited;
@@ -96,7 +115,6 @@ begin
   FOnTransferEnds        := nil;
 end;
 
-{ TOptixFileTransferWorker.UpdateAllTasks }
 procedure TOptixFileTransferWorker.UpdateAllTasks(const ATasks : TObjectDictionary<TGUID, TOptixTransferTask>);
 begin
   if not Assigned(ATasks) or not Assigned(FOnTransferUpdate) then
@@ -119,10 +137,8 @@ begin
   end;
 end;
 
-{ TOptixFileTransferWorker.ClientExecute }
 procedure TOptixFileTransferWorker.ClientExecute();
 
-  { _.SendAcknowledgement }
   procedure SendAcknowledgement(const AValue : Boolean);
   begin
     if Assigned(FClient) then

@@ -38,8 +38,16 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Registry.Helper;
 
@@ -67,16 +75,20 @@ type
 
   TRegistryKeyPermissions = set of TRegistryKeyPermission;
 
+
   TRegistryHelper = class
   private
     class var FRegistryHives : TDictionary<String, HKEY>;
   public
+    const
+      REG_MSZ_LINE_SEP = '{/\$/\@/\0\n/%\//\!/\}';
+
     {@C}
     class constructor Create();
     class destructor Destroy();
 
     {@M}
-    class procedure ExtractKeyPathInformation(const AFullPath: String; var AHive: HKEY; var APath: String); static;
+    class procedure ExtractKeyPathInformation(const AFullPath: String; out AHive: HKEY; out APath: String); static;
     class function GetRegistryACLString(const AKeyFullPath : String = '') : String; static;
     class function TryGetFileACLString(const AKeyFullPath : String) : String; static;
     class procedure GetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
@@ -85,7 +97,21 @@ type
       var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
     class function HiveToString(const AHive : HKEY) : String; static;
     class function ExpandHiveShortName(const AKeyFullPath : String) : String; static;
+    class function OpenRegistryKey(const ARegistryHive : HKEY; const AKeyPath : String;
+      const ADesiredAccess : REGSAM) : HKEY; overload; static;
+    class procedure SplitRegKeyFullPath(AKeyFullPath: String; out ARootKeyPath, AKeyName: String); static;
+    class function OpenRegistryKey(const AKeyFullPath : String; const ADesiredAccess : REGSAM) : HKEY; overload; static;
     class procedure CheckRegistryPath(const AKeyFullPath : String); static;
+    class procedure CreateSubKey(ANewKeyFullPath : String); overload; static;
+    class procedure CreateSubKey(const AKeyFullPath, ANewKeyName : String); overload; static;
+    class procedure DeleteKey(const AKeyFullPath : String); static;
+    class procedure SetValue(const AKeyFullPath : String; const AName : String; const AValueKind : DWORD;
+      const pData : Pointer; const ADataSize : UInt64); static;
+    class function ValueKindToString(const AValueKind : DWORD) : String; static;
+    class procedure ReadValue(const hOpenedKey : HKEY; const AValueName : String; out AValueType : DWORD;
+      out pData : Pointer; out ADataSize : DWORD); overload; static;
+    class procedure ReadValue(const AFullKeyPath : String; const AValueName : String; out AValueType : DWORD;
+      out pData : Pointer; out ADataSize : DWORD); overload;static;
 
     {@G}
     class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
@@ -95,12 +121,11 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils,
+  System.Classes, System.SysUtils, System.IOUtils, System.StrUtils,
 
   Optix.Exceptions, Optix.WinApiEx, Optix.System.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-{ TRegistryHelper.Create }
 class constructor TRegistryHelper.Create();
 begin
   FRegistryHives := TDictionary<String, HKEY>.Create();
@@ -114,19 +139,15 @@ begin
   FRegistryHives.Add('HKEY_CURRENT_CONFIG', HKEY_CURRENT_CONFIG);
   FRegistryHives.Add('HKEY_DYN_DATA', HKEY_DYN_DATA);
 end;
-
-{ TRegistryHelper.Destroy }
 class destructor TRegistryHelper.Destroy();
 begin
   if Assigned(FRegistryHives) then
     FreeAndNil(FRegistryHives);
 end;
 
-{ TRegistryHelper.ExtractKeyPathInformation }
-class procedure TRegistryHelper.ExtractKeyPathInformation(const AFullPath: String; var AHive: HKEY; var APath: String);
+class procedure TRegistryHelper.ExtractKeyPathInformation(const AFullPath: String; out AHive: HKEY; out APath: String);
 begin
   AHive := 0;
-  APath := '';
 
   var APosSlash := Pos('\', AFullPath);
   var AHiveName := '';
@@ -143,7 +164,6 @@ begin
     raise Exception.Create(Format('"%s" is not a valid registry hive.', [AHiveName]));
 end;
 
-{ TRegistryHelper.GetRegistryACLString }
 class function TRegistryHelper.GetRegistryACLString(const AKeyFullPath : String = '') : String;
 begin
   result := '';
@@ -203,7 +223,6 @@ begin
   end;
 end;
 
-{ TRegistryHelper.TryGetFileACLString }
 class function TRegistryHelper.TryGetFileACLString(const AKeyFullPath : String) : String;
 begin
   try
@@ -213,7 +232,6 @@ begin
   end;
 end;
 
-{ TRegistryHelper.GetCurrentUserRegistryKeyAccess }
 class procedure TRegistryHelper.GetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
  var ARegistryKeyPermissions : TRegistryKeyPermissions);
 begin
@@ -300,7 +318,6 @@ begin
   end;
 end;
 
-{ TRegistryHelper.TryGetCurrentUserRegistryKeyAccess }
 class procedure TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
  var ARegistryKeyPermissions : TRegistryKeyPermissions);
 begin
@@ -311,7 +328,6 @@ begin
   end;
 end;
 
-{ TRegistryHelper.HiveToString }
 class function TRegistryHelper.HiveToString(const AHive : HKEY) : String;
 begin
   result := '';
@@ -346,21 +362,167 @@ begin
   end;
 end;
 
-{ TRegistryHelper.CheckRegistryPath }
-class procedure TRegistryHelper.CheckRegistryPath(const AKeyFullPath : String);
+class function TRegistryHelper.OpenRegistryKey(const ARegistryHive : HKEY; const AKeyPath : String;
+  const ADesiredAccess : REGSAM) : HKEY;
+begin
+  var AResult := RegOpenKeyExW(ARegistryHive, PWideChar(AKeyPath), 0, ADesiredAccess, result);
+  if AResult <> ERROR_SUCCESS then
+    raise EWindowsException.Create('RegOpenKeyW', AResult);
+end;
+
+class procedure TRegistryHelper.SplitRegKeyFullPath(AKeyFullPath: String; out ARootKeyPath, AKeyName: String);
+begin
+  if (AKeyFullPath <> '') and (AKeyFullPath[Length(AKeyFullPath)] = '\') then
+    SetLength(AKeyFullPath, Length(AKeyFullPath) - 1);
+  ///
+
+  var ADirectories := SplitString(AKeyFullPath, '\');
+
+  if Length(ADirectories) = 1 then
+    ARootKeyPath := ADirectories[0]
+  else if Length(ADirectories) > 1 then begin
+    ARootKeyPath := String.Join('\', Copy(ADirectories, 0, High(ADirectories)));
+    AKeyName := ADirectories[High(ADirectories)];
+  end;
+end;
+
+class function TRegistryHelper.OpenRegistryKey(const AKeyFullPath : String; const ADesiredAccess : REGSAM) : HKEY;
 begin
   var AHive : HKEY;
   var AKeyPath := '';
+  ///
 
   ExtractKeyPathInformation(AKeyFullPath, AHive, AKeyPath);
 
-  var AKeyHandle : HKEY;
+  ///
+  result := OpenRegistryKey(AHive, AKeyPath, ADesiredAccess);
+end;
 
-  var AResult := RegOpenKeyExW(AHive, PWideChar(AKeyPath), 0, READ_CONTROL, AKeyHandle);
-  if AResult <> ERROR_SUCCESS then
-    raise EWindowsException.Create('RegOpenKeyW', AResult);
+class procedure TRegistryHelper.CheckRegistryPath(const AKeyFullPath : String);
+begin
+  var AKeyHandle := OpenRegistryKey(AKeyFullPath, READ_CONTROL);
 
+  ///
   RegCloseKey(AKeyHandle);
+end;
+
+class procedure TRegistryHelper.CreateSubKey(const AKeyFullPath, ANewKeyName : String);
+begin
+  var AKeyHandle := OpenRegistryKey(AKeyFullPath, KEY_CREATE_SUB_KEY);
+  try
+    var ANewKeyHandle : HKEY;
+
+    var AResult := RegCreateKeyW(AKeyHandle, PWideChar(ANewKeyName), ANewKeyHandle);
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegCreateKeyW', AResult);
+
+    ///
+    RegCloseKey(ANewKeyHandle);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+class procedure TRegistryHelper.CreateSubKey(ANewKeyFullPath : String);
+begin
+  var ARootKeyPath := '';
+  var AKeyName := '';
+
+  SplitRegKeyFullPath(ANewKeyFullPath, ARootKeyPath, AKeyName);
+
+  ///
+  CreateSubKey(ARootKeyPath, AKeyName);
+end;
+
+class procedure TRegistryHelper.DeleteKey(const AKeyFullPath : String);
+begin
+  var ARootKeyPath := '';
+  var AKeyName := '';
+
+  SplitRegKeyFullPath(AKeyFullPath, ARootKeyPath, AKeyName);
+
+  var AKeyHandle := OpenRegistryKey(ARootKeyPath, _DELETE);
+  try
+    var AResult := RegDeleteTreeW(AKeyHandle, PWideChar(AKeyName));
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegDeleteKeyW', AResult);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+class procedure TRegistryHelper.SetValue(const AKeyFullPath : String; const AName : String; const AValueKind : DWORD;
+  const pData : Pointer; const ADataSize : UInt64);
+begin
+  var AKeyHandle := OpenRegistryKey(AKeyFullPath, KEY_SET_VALUE);
+  try
+    var AResult := RegSetValueExW(
+      AKeyHandle,
+      PWideChar(AName),
+      0,
+      AValueKind,
+      pData,
+      ADataSize
+    );
+    if AResult <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegSetValueExW', AResult);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+class function TRegistryHelper.ValueKindToString(const AValueKind : DWORD) : String;
+begin
+  case AValueKind of
+    REG_SZ       : result := 'String (SZ)';
+    REG_MULTI_SZ : result := 'Multi Line String (MSZ)';
+    REG_DWORD    : result := 'DWORD';
+    REG_QWORD    : result := 'QWORD';
+    REG_BINARY   : result := 'Binary';
+    else
+      result := 'None';
+  end;
+end;
+
+class procedure TRegistryHelper.ReadValue(const hOpenedKey : HKEY; const AValueName : String;
+  out AValueType : DWORD; out pData : Pointer; out ADataSize : DWORD);
+begin
+  pData := nil;
+  ADataSize := 0;
+  ///
+
+  var ARet := RegGetValueW(hOpenedKey, nil, PWideChar(AValueName), RRF_RT_ANY, AValueType, nil, ADataSize);
+  if (ARet <> ERROR_SUCCESS) and (ARet <> ERROR_MORE_DATA) then
+    Exit();
+  ///
+
+  GetMem(pData, ADataSize * SizeOf(WideChar));
+  try
+    ARet := RegGetValueW(
+      hOpenedKey,
+      nil,
+      PWideChar(AValueName),
+      RRF_RT_ANY,
+      AValueType,
+      pData,
+      ADataSize
+    );
+    if ARet <> ERROR_SUCCESS then
+      raise EWindowsException.Create('RegGetValueW');
+  except
+    FreeMem(pData, ADataSize);
+  end;
+end;
+
+class procedure TRegistryHelper.ReadValue(const AFullKeyPath : String; const AValueName : String;
+  out AValueType : DWORD; out pData : Pointer; out ADataSize : DWORD);
+begin
+  var AKeyHandle := OpenRegistryKey(AFullKeyPath, KEY_QUERY_VALUE);
+  try
+    ReadValue(AKeyHandle, AValueName, AValueType, pData, ADataSize);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
 end;
 
 end.

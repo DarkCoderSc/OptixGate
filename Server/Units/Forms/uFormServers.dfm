@@ -42,16 +42,13 @@ object FormServers: TFormServers
     TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
-    OnChange = VSTChange
     OnCompareNodes = VSTCompareNodes
-    OnFocusChanged = VSTFocusChanged
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
     OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitTop = -7
     Columns = <
       item
         Position = 0

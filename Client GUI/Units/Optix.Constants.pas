@@ -38,14 +38,27 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Constants;
 
 interface
 
-uses Winapi.Windows, VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows,
+
+  VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
 
 const
   IMAGE_CLIENT_DISCONNECTED = 1;

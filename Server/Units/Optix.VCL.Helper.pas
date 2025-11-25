@@ -10,19 +10,57 @@
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
 {                   License: GPL v3                                            }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
+{                                                                              }
+{                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.VCL.Helper;
 
 interface
 
-uses VCL.Menus, VirtualTrees, VirtualTrees.Types, VCL.Forms, VirtualTrees.BaseTree, Generics.Collections;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Generics.Collections,
+
+  VCL.Menus, VCL.Forms,
+
+  VirtualTrees, VirtualTrees.BaseTree, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOptixVCLHelper = class
@@ -60,11 +98,15 @@ type
 
 implementation
 
-uses Winapi.Windows, Winapi.Messages, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
+
+  Winapi.Windows, Winapi.Messages;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixVirtualTreesFolderTreeHelper *)
 
-{ TOptixVirtualTreesFolderTreeHelper.UpdateTree }
 class procedure TOptixVirtualTreesFolderTreeHelper.UpdateTree<T>(const AVST : TVirtualStringTree;
   const AParentsItems: TEnumerable<T>; ALevelItems: TEnumerable<T>;
   const AGetNameFromDataFunc : TGetFolderNameFromDataCallback;
@@ -74,9 +116,6 @@ begin
   if not Assigned(AVST) then
     Exit();
   ///
-
-  if not Assigned(ALevelItems) then
-    Exit();
 
   var pParentNode := PVirtualNode(nil);
   var pChildNode := PVirtualNode(nil);
@@ -108,52 +147,54 @@ begin
       end;
     end;
 
-    // Generate Or Update Level Folder
-    var ALevelNodesCache := TDictionary<String, PVirtualNode>.Create(); // For Optimization
-    var ALevelItemsCache := TList<String>.Create();
-    try
-      // Fill Cache with Existing Nodes
-      pNode := AVST.GetFirstChild(pParentNode);
-      while Assigned(pNode) do begin
-        if pNode.GetData <> nil then
-          ALevelNodesCache.Add(AGetNameFromDataFunc(pNode.GetData), pNode);
+    if Assigned(ALevelItems) then begin
+      // Generate Or Update Level Folder
+      var ALevelNodesCache := TDictionary<String, PVirtualNode>.Create(); // For Optimization
+      var ALevelItemsCache := TList<String>.Create();
+      try
+        // Fill Cache with Existing Nodes
+        pNode := AVST.GetFirstChild(pParentNode);
+        while Assigned(pNode) do begin
+          if pNode.GetData <> nil then
+            ALevelNodesCache.Add(AGetNameFromDataFunc(pNode.GetData), pNode);
 
-        ///
-        pNode := AVST.GetNextSibling(pNode);
+          ///
+          pNode := AVST.GetNextSibling(pNode);
+        end;
+
+        // Insert or Update Nodes
+        var AItemName : String;
+        var ANewNode : Boolean;
+
+        for var AItem in ALevelItems do begin
+          pNode := nil;
+          pChildNode := AVST.GetFirstChild(pParentNode);
+          ///
+
+          AItemName := AGetNameFromItemFunc(AItem);
+
+          ALevelItemsCache.Add(AItemName);
+
+          ANewNode := not ALevelNodesCache.TryGetValue(AItemName, pNode);
+
+          ///
+          ASetupNodeDataFunc(pNode, pParentNode, AItem);
+
+          if ANewNode then
+            ALevelNodesCache.Add(AItemName, pNode);
+        end;
+
+        // Delete Missing Nodes
+        for var APair in ALevelNodesCache do
+          if not ALevelItemsCache.Contains(APair.Key) then
+            AVST.DeleteNode(APair.Value);
+      finally
+        if Assigned(ALevelItemsCache) then
+          FreeAndNil(ALevelItemsCache);
+
+        if Assigned(ALevelNodesCache) then
+          FreeAndNil(ALevelNodesCache);
       end;
-
-      // Insert or Update Nodes
-      var AItemName : String;
-      var ANewNode : Boolean;
-
-      for var AItem in ALevelItems do begin
-        pNode := nil;
-        pChildNode := AVST.GetFirstChild(pParentNode);
-        ///
-
-        AItemName := AGetNameFromItemFunc(AItem);
-
-        ALevelItemsCache.Add(AItemName);
-
-        ANewNode := not ALevelNodesCache.TryGetValue(AItemName, pNode);
-
-        ///
-        ASetupNodeDataFunc(pNode, pParentNode, AItem);
-
-        if ANewNode then
-          ALevelNodesCache.Add(AItemName, pNode);
-      end;
-
-      // Delete Missing Nodes
-      for var APair in ALevelNodesCache do
-        if not ALevelItemsCache.Contains(APair.Key) then
-          AVST.DeleteNode(APair.Value);
-    finally
-      if Assigned(ALevelItemsCache) then
-        FreeAndNil(ALevelItemsCache);
-
-      if Assigned(ALevelNodesCache) then
-        FreeAndNil(ALevelNodesCache);
     end;
   finally
     if Assigned(pParentNode) then begin
@@ -170,7 +211,6 @@ end;
 
 (* TOptixVirtualTreesHelper *)
 
-{ TOptixVirtualTreesHelper.GetVisibleNodesCount }
 class function TOptixVirtualTreesHelper.GetVisibleNodesCount(const AVST : TVirtualStringTree) : UInt64;
 begin
   result := 0;
@@ -185,7 +225,6 @@ begin
   end;
 end;
 
-{ TOptixVirtualTreesHelper.GetColumnIndexByName }
 class function TOptixVirtualTreesHelper.GetColumnIndexByName(const AVST : TVirtualStringTree; const AName : String) : Integer;
 begin
   result := -1;
@@ -204,7 +243,6 @@ begin
   end;
 end;
 
-{ TOptixVirtualTreesHelper.UpdateColumnVisibility }
 class procedure TOptixVirtualTreesHelper.UpdateColumnVisibility(const AVST : TVirtualStringTree; const AName : String; AVisible : Boolean);
 begin
   var AColumnIndex := GetColumnIndexByName(AVST, AName);
@@ -220,7 +258,6 @@ begin
     AColumn.Options := AColumn.Options - [coVisible];
 end;
 
-{ TOptixVirtualTreesHelper.GetRootParentNode }
 class function TOptixVirtualTreesHelper.GetRootParentNode(const AVST : TVirtualStringTree;
   const pNode : PVirtualNode) : PVirtualNode;
 begin
@@ -236,7 +273,6 @@ begin
     result := AVST.NodeParent[result];
 end;
 
-{ TOptixVirtualTreesHelper.SelectNode }
 class procedure TOptixVirtualTreesHelper.SelectNode(const AVST : TVirtualStringTree; const pNode : PVirtualNode);
 begin
   if not Assigned(AVST) or not Assigned(pNode) then
@@ -253,7 +289,6 @@ end;
 
 (* TOptixVCLHelper *)
 
-{ TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility }
 class procedure TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility(const APopupMenu : TPopupMenu; const AVisible : Boolean);
 begin
   if not Assigned(APopupMenu) then
@@ -264,19 +299,16 @@ begin
     APopupMenu.Items[I].Visible := AVisible;
 end;
 
-{ TOptixVCLHelper.HideAllPopupMenuRootItems }
 class procedure TOptixVCLHelper.HideAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
 begin
   UpdatePopupMenuRootItemsVisibility(APopupMenu, False);
 end;
 
-{ TOptixVCLHelper.ShowAllPopupMenuRootItems }
 class procedure TOptixVCLHelper.ShowAllPopupMenuRootItems(const APopupMenu : TPopupMenu);
 begin
   UpdatePopupMenuRootItemsVisibility(APopupMenu, True);
 end;
 
-{ TOptixVCLHelper.ShowForm }
 class procedure TOptixVCLHelper.ShowForm(const AForm : TForm);
 begin
   if not Assigned(AForm) then

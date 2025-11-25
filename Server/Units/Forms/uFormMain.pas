@@ -38,6 +38,12 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
 
@@ -72,7 +78,7 @@ uses
 type
   TTreeData = record
     Handler            : TOptixSessionHandlerThread;
-    SessionInformation : TOptixSessionInformation;
+    SessionInformation : TOptixCommandReceiveSessionInformation;
     SpawnDate          : TDateTime;
     Forms              : TObjectList<TBaseFormControl>;
     Workers            : TObjectList<TOptixThread>;
@@ -124,9 +130,6 @@ type
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
     procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure VSTFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex);
-    procedure VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure TimerRefreshTimer(Sender: TObject);
@@ -163,14 +166,12 @@ type
     FFileInfo : TSHFileInfo;
 
     {@M}
-    procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
+    procedure RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixCommandReceiveSessionInformation);
     function GetNodeByHandler(const AHandler : TOptixSessionHandlerThread) : PVirtualNode;
     function GetHandlerByHandlerId(const AHandlerId : TGUID) : TOptixSessionHandlerThread;
     function GetNodeByHandlerId(const AHandlerId : TGUID) : PVirtualNode;
     function GetNodeByControlForm(const AForm : TBaseFormControl) : PVirtualNode;
     procedure CreateOrOpenControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass);
-    function CreateNewControlForm(const pNode : PVirtualNode;
-      const AFormClass : TBaseFormControlClass) : TBaseFormControl;
   public
     {@M}
     function GetControlForm(const pNode : PVirtualNode; const AClass : TClass) : TBaseFormControl; overload;
@@ -181,6 +182,11 @@ type
     function ControlFormExists(const pNode : PVirtualNode; const AClass : TClass) : Boolean;
     procedure SendCommand(const pNode : PVirtualNode; const ACommand : TOptixCommand); overload;
     procedure SendCommand(const ACaller : TBaseFormControl; const ACommand : TOptixCommand); overload;
+
+    function CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass;
+      const ADoShow : Boolean = True) : TBaseFormControl; overload;
+    function CreateNewControlForm(const AControlForm : TBaseFormControl; const AFormClass : TBaseFormControlClass;
+      const ADoShow : Boolean = True) : TBaseFormControl; overload;
 
     {@ME}
     procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
@@ -210,8 +216,6 @@ uses
 {$R *.dfm}
 
 (* TTreeData *)
-
-{ TTreeData.ToString }
 function TTreeData.ToString: String;
 begin
   if not Assigned(SessionInformation) or not Assigned(Handler) then
@@ -224,7 +228,6 @@ begin
     ]);
 end;
 
-{ TTreeData.GetUPN }
 function TTreeData.GetUPN() : String;
 begin
   if Assigned(SessionInformation) then
@@ -441,8 +444,8 @@ begin
     TOptixVCLHelper.ShowForm(AForm);
 end;
 
-function TFormMain.CreateNewControlForm(const pNode : PVirtualNode;
-  const AFormClass : TBaseFormControlClass) : TBaseFormControl;
+function TFormMain.CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass;
+  const ADoShow : Boolean = True) : TBaseFormControl;
 begin
   result := nil;
   ///
@@ -459,8 +462,14 @@ begin
 
   result := AForm;
 
-  ///
-  TOptixVCLHelper.ShowForm(AForm);
+  if ADoShow then
+    TOptixVCLHelper.ShowForm(AForm);
+end;
+
+function TFormMain.CreateNewControlForm(const AControlForm : TBaseFormControl; const AFormClass : TBaseFormControlClass;
+  const ADoShow : Boolean = True) : TBaseFormControl;
+begin
+  result := CreateNewControlForm(GetNodeByControlForm(AControlForm), AFormClass, ADoShow);
 end;
 
 procedure TFormMain.Logs1Click(Sender: TObject);
@@ -488,7 +497,7 @@ begin
   end;
 end;
 
-procedure TFormMain.RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixSessionInformation);
+procedure TFormMain.RegisterSession(const AHandler : TOptixSessionHandlerThread; const ASessionInformation : TOptixCommandReceiveSessionInformation);
 begin
   if not Assigned(ASessionInformation) or not Assigned(AHandler) then
     Exit();
@@ -559,17 +568,6 @@ begin
     ///
     TargetCanvas.FillRect(CellRect);
   end;
-end;
-
-procedure TFormMain.VSTChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-begin
-  TVirtualStringTree(Sender).Refresh();
-end;
-
-procedure TFormMain.VSTFocusChanged(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex);
-begin
-  TVirtualStringTree(Sender).Refresh();
 end;
 
 procedure TFormMain.VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -772,11 +770,11 @@ begin
         raise Exception.Create(Format('Unknown or Unregistered Packet Class=[%s]', [AClassName]));
       ///
 
-      if AOptixPacket is TOptixSessionInformation then begin
+      if AOptixPacket is TOptixCommandReceiveSessionInformation then begin
         AHandleMemory := True;
 
         ///
-        RegisterSession(Sender, TOptixSessionInformation(AOptixPacket));
+        RegisterSession(Sender, TOptixCommandReceiveSessionInformation(AOptixPacket));
       end else begin
         var pNode := GetNodeByHandler(Sender);
         if not Assigned(pNode) then
@@ -784,17 +782,17 @@ begin
         ///
 
         // -------------------------------------------------------------------------------------------------------------
-        if AOptixPacket is TOptixCommandContentReaderFirstPage then begin
+        if AOptixPacket is TOptixCommandReadContentReaderPageFirstPage then begin
           var AForm := CreateNewControlForm(pNode, TControlFormContentReader);
 
           ///
-          AForm.OverrideWindowGUID(AOptixPacket.WindowGUID);
+          AForm.__WARNING__OverrideWindowGUID(AOptixPacket.WindowGUID);
         end;
         // -------------------------------------------------------------------------------------------------------------
 
         if AWindowGUID.IsEmpty then begin
           // -----------------------------------------------------------------------------------------------------------
-          if (AOptixPacket is TLogNotifier) or (AOptixPacket is TLogTransferException) then begin
+          if (AOptixPacket is TOptixCommandReceiveLogMessage) or (AOptixPacket is TOptixCommandReceiveTransferException) then begin
             var ALogsForm := GetControlForm(pNode, TControlFormLogs);
             if Assigned(ALogsForm) then
               ALogsForm.ReceivePacket(AOptixPacket, AHandleMemory);
@@ -909,7 +907,7 @@ end;
 
 procedure TFormMain.erminate1Click(Sender: TObject);
 begin
-  SendCommand(VST.FocusedNode, TOptixCommandTerminate.Create());
+  SendCommand(VST.FocusedNode, TOptixCommandTerminateCurrentProcess.Create());
 end;
 
 procedure TFormMain.FileManager1Click(Sender: TObject);

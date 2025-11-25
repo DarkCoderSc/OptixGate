@@ -38,14 +38,27 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Constants;
 
 interface
 
-uses VCL.Graphics, Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  Winapi.Windows,
+
+  VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
 
 const
  (* IMAGES *)
@@ -111,6 +124,8 @@ const
  IMAGE_BUG                          = 66;
  IMAGE_REG_SZ                       = 68;
  IMAGE_REG_DATA                     = 69;
+ IMAGE_SHOW_STRINGS                 = 74;
+ IMAGE_HIDE_STRINGS                 = 75;
 
 var
  (* COLORS *)

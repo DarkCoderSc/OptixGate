@@ -38,14 +38,29 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit Optix.Shared.Protocol.FileTransfer;
 
 interface
 
-uses System.Classes, Winapi.Windows, Optix.Sockets.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows,
+
+  Optix.Sockets.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 const
   FILE_CHUNK_SIZE = 8192;
@@ -114,11 +129,15 @@ type
 
 implementation
 
-uses System.SysUtils, Optix.Exceptions, System.Math;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Math,
+
+  Optix.Exceptions;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixTransferTask *)
 
-{ TOptixTransferTask.Create }
 constructor TOptixTransferTask.Create(const AFilePath : String);
 begin
   inherited Create();
@@ -131,7 +150,6 @@ begin
   FCanceled   := False;
 end;
 
-{ TOptixTransferTask.Destroy }
 destructor TOptixTransferTask.Destroy();
 begin
   if FFileHandle <> INVALID_HANDLE_VALUE then
@@ -141,7 +159,6 @@ begin
   inherited Destroy();
 end;
 
-{ TOptixTransferTask.IncWorkCount }
 procedure TOptixTransferTask.IncWorkCount(const AValue : UInt64);
 begin
   if FWorkCount = FFileSize then
@@ -153,7 +170,6 @@ begin
     FWorkCount := FFileSize;
 end;
 
-{ TOptixTransferTask.GetState }
 function TOptixTransferTask.GetState() : TOptixTransferState;
 begin
   if FWorkCount = 0 then
@@ -168,7 +184,6 @@ end;
 
 (* TOptixDownloadTask *)
 
-{ TOptixDownloadTask.DownloadChunk }
 procedure TOptixDownloadTask.DownloadChunk(const AClient : TClientSocket);
 begin
   if (FFileHandle = INVALID_HANDLE_VALUE) or (FFileSize = 0) or not Assigned(AClient) then
@@ -186,7 +201,6 @@ begin
   IncWorkCount(ABufferSize);
 end;
 
-{ TOptixDownloadTask.SetFileSize }
 procedure TOptixDownloadTask.SetFileSize(const AValue : Int64);
 begin
   FIsEmpty := AValue = 0;
@@ -195,7 +209,6 @@ begin
   FFileSize := AValue;
 end;
 
-{ TOptixDownloadTask.WriteChunk }
 constructor TOptixDownloadTask.Create(const AFilePath : String);
 begin
   inherited Create(AFilePath);
@@ -209,7 +222,6 @@ end;
 
 (* TOptixUploadTask *)
 
-{ TOptixUploadTask.UploadChunk }
 procedure TOptixUploadTask.UploadChunk(const AClient : TClientSocket);
 begin
   if (FFileHandle = INVALID_HANDLE_VALUE) or (FFileSize = 0) or not Assigned(AClient) then
@@ -226,7 +238,6 @@ begin
   IncWorkCount(ABufferSize);
 end;
 
-{ TOptixUploadTask.WriteChunk }
 constructor TOptixUploadTask.Create(const AFilePath : String);
 begin
   inherited Create(AFilePath);

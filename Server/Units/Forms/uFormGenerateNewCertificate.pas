@@ -38,16 +38,29 @@
 {    internet generally.                                                       }
 {                                                                              }
 {                                                                              }
+{  Authorship (No AI):                                                         }
+{  -------------------                                                         }
+{   All code contained in this unit was written and developed by the author    }
+{   without the assistance of artificial intelligence systems, large language  }
+{   models (LLMs), or automated code generation tools. Any external libraries  }
+{   or frameworks used comply with their respective licenses.	                 }
 {                                                                              }
 {******************************************************************************}
+
+
 
 unit uFormGenerateNewCertificate;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+  System.SysUtils, System.Variants, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormGenerateNewCertificate = class(TForm)
@@ -84,7 +97,12 @@ var
 
 implementation
 
-uses uFormMain, Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  uFormMain,
+
+  Optix.Constants;
+// ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
