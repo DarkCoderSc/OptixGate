@@ -1,0 +1,31 @@
+If you do not fully understand English, you must not continue. Make sure you clearly understand every part of the information below before authorizing remote access.
+
+Allowing remote control gives another party the ability to view your screen, access your files, and perform actions on your computer. This includes installing or removing software, viewing personal documents, modifying system settings, and accessing sensitive information. Once access is granted, you may not be able to prevent unwanted actions.
+
+You should never authorize remote access when contacted unexpectedly or by someone you do not fully trust. Be extremely cautious in situations such as the following:
+
+- Unsolicited phone calls claiming to be from technical support, a bank, an insurance company, or a government agency. Legitimate organizations do not call you to request remote control of your computer.
+- People telling you that your computer has a virus or security problem and insisting that you must install special software to fix it. This is a common tactic used to gain control of your system.
+- Messages or pop-ups warning that your computer is infected and urging you to call a number or download a tool immediately. These alerts are often fraudulent.
+- Individuals asking for remote access to confirm a payment, unlock an account, process a refund, or verify your identity. Reputable institutions will never require remote control for these tasks.
+- Anyone pressuring you to act quickly, creating a sense of urgency, or telling you that your data will be lost if you do not comply. Scammers often rely on stress and confusion to obtain access.
+
+If you proceed, do so only with a person or organization you know, trust completely, and have contacted yourself using verified information. Never allow remote access based on fear, pressure, or unexpected contact.
+
+If you have any doubt, even a small one, you should stop immediately.
+
+DISCLAIMER
+
+This software and code is provided for educational purposes and general informational use only. While it may be applicable in real-world scenarios and can be used in legally compliant contexts, the software and code is provided "as is" without any warranties, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.
+
+The developer makes no representations or guarantees regarding the accuracy, reliability, suitability, or effectiveness of the software when used in any specific application or environment, including but not limited to professional, commercial, or legal contexts.
+
+By using this software and code, you acknowledge and agree that:
+
+- You are solely responsible for how the software is used and for ensuring its suitability for your specific needs.
+- You assume all risks associated with its use, including any direct, indirect, incidental, or consequential damages that may result.
+- The developer shall not be held liable for any loss, damage, or legal claims arising from your use or misuse of the software, whether in an educational, personal, or professional capacity.
+
+Modifying or redistributing the code is done entirely at your own responsibility.
+
+Use of this software and code constitutes acceptance of this disclaimer. If you do not agree to these terms, you should not use the software and code.

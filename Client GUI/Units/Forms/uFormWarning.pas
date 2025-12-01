@@ -47,158 +47,165 @@
 {                                                                              }
 {******************************************************************************}
 
+// TODO: Improve this beta form.
 
-
-unit Optix.ClassesRegistry;
+unit uFormWarning;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes, System.SysUtils, System.Rtti, System.TypInfo,
+  System.SysUtils, System.Variants, System.Classes,
 
-  Generics.Collections;
+  Winapi.Windows, Winapi.Messages,
+
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TClassesRegistry = class
+  TFormWarning = class(TForm)
+    PanelFooter: TPanel;
+    PanelHeader: TPanel;
+    ImageWarning: TVirtualImage;
+    ButtonAcceptTheRisk: TButton;
+    ButtonCancel: TButton;
+    Label1: TLabel;
+    Panel1: TPanel;
+    Shape1: TShape;
+    Timer: TTimer;
+    PanelBody: TPanel;
+    PanelAcceptSentence: TPanel;
+    LabelAccept: TLabel;
+    EditAccept: TEdit;
+    RichAgreement: TRichEdit;
+    procedure FormCreate(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure TimerTimer(Sender: TObject);
+    procedure ButtonAcceptTheRiskClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    class var FRegisteredClasses : TDictionary<String, TClass>;
-  public
-    {@C}
-    class constructor Create();
-    class destructor Destroy();
+    FValidated : Boolean;
 
     {@M}
-    class function CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject; static;
-    class procedure RegisterClass(const AClass : TClass); static;
-    class procedure RegisterClasses(const AClasses : array of TClass); static;
+    procedure DoResize();
+  public
+    {@G}
+    property Validated : Boolean read FValidated;
   end;
+
+var
+  FormWarning: TFormWarning;
+
+const
+  MAGIC_SENTENCE = 'I understand and accept the risk and accept the full agreement and disclaimer';
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.Func.Commands.FileSystem, Optix.Func.Commands.Process, Optix.Func.Commands, Optix.Func.Commands.Shell,
-  Optix.Task.ProcessDump, Optix.Func.Commands.Base, Optix.Func.SessionInformation, Optix.Func.LogNotifier,
-  Optix.Func.Commands.Registry, Optix.Func.Commands.ContentReader;
+  uFormMain, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-class constructor TClassesRegistry.Create();
+{$R *.dfm}
+{$R control_agreement.res}
+
+procedure TFormWarning.DoResize();
 begin
-  FRegisteredClasses := TDictionary<String, TClass>.Create();
+  ButtonAcceptTheRisk.Left := PanelFooter.Width - ButtonAcceptTheRisk.Width - ScaleValue(8);
+  ButtonCancel.Left        := ButtonAcceptTheRisk.Left - ButtonAcceptTheRisk.Width - ScaleValue(4);
+
+  ButtonAcceptTheRisk.Top  := (PanelFooter.Height div 2) - (ButtonAcceptTheRisk.Height div 2);
+  ButtonCancel.Top         := ButtonAcceptTheRisk.Top;
+
+  LabelAccept.Top := (PanelAcceptSentence.Height div 2) - ((LabelAccept.Height + EditAccept.Height + ScaleValue(4)) div 2);
+  EditAccept.Top  := LabelAccept.Top + LabelAccept.Height + ScaleValue(4);
+
+  LabelAccept.Left := ScaleValue(8);
+  EditAccept.Left  := LabelAccept.Left;
+
+  EditAccept.Width := PanelAcceptSentence.Width - (ScaleValue(8) * 2);
 end;
 
-class destructor TClassesRegistry.Destroy();
+procedure TFormWarning.ButtonAcceptTheRiskClick(Sender: TObject);
 begin
-  if Assigned(FRegisteredClasses) then
-    FreeAndNil(FRegisteredClasses);
-end;
+  if String.Compare(Trim(EditAccept.Text), MAGIC_SENTENCE, True) = 0 then begin
+    FValidated := True;
 
-class function TClassesRegistry.CreateInstance(const AClassName: String; const AParams: array of TValue) : TObject;
-begin
-  result := nil;
-  ///
-
-  if not Assigned(FRegisteredClasses) or (FRegisteredClasses.Count = 0) then
-    Exit();
-  ///
-
-  var AClass : TClass;
-  if not FRegisteredClasses.TryGetValue(AClassName, AClass) then
-    Exit();
-  ///
-
-  var AContext := TRttiContext.Create();
-
-  var AType := AContext.GetType(AClass);
-
-  for var AMethod in AType.GetMethods() do begin
-    if not AMethod.IsConstructor then
-      continue;
-    ///
-
-    var AParameters := AMethod.GetParameters();
-    if Length(AParameters) = Length(AParams) then begin
-      for var I := Low(AParameters) to High(AParameters) do begin
-        if AParams[I].IsType(AParameters[I].ParamType.Handle) then begin
-          result := AMethod.Invoke(AClass, AParams).AsObject();
-
-          break;
-        end;
-      end;
-
-      if Assigned(result) then
-        break;
-    end;
+    Close();
   end;
 end;
 
-class procedure TClassesRegistry.RegisterClass(const AClass : TClass);
+procedure TFormWarning.ButtonCancelClick(Sender: TObject);
 begin
-  if Assigned(FRegisteredClasses) and not FRegisteredClasses.ContainsKey(AClass.ClassName) then
-    FRegisteredClasses.Add(AClass.ClassName, AClass);
+  Close;
 end;
 
-class procedure TClassesRegistry.RegisterClasses(const AClasses : array of TClass);
+procedure TFormWarning.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  for var AClass in AClasses do
-    RegisterClass(AClass);
+  Timer.Enabled := False;
 end;
 
-initialization
-  (* Commands *)
-  TClassesRegistry.RegisterClasses([
-    // General
-    TOptixCommandTerminateCurrentProcess,
-    TOptixCommandReceiveSessionInformation,
+procedure TFormWarning.FormCreate(Sender: TObject);
+begin
+  FValidated := False;
 
-    // File System Commands
-    TOptixCommandReceiveFileInformation,
-    TOptixCommandGetUploadedFileInformation,
-    TOptixCommandEnumDrives,
-    TOptixCommandEnumDirectoryFiles,
-    TOptixCommandDownloadFile,
-    TOptixCommandUploadFile,
+  DoResize();
+end;
 
-    // System & Process Commands
-    TOptixCommandTerminateProcess,
-    TOptixCommandDumpProcess,
-    TOptixCommandEnumRunningProcesses,
+procedure TFormWarning.FormResize(Sender: TObject);
+begin
+  DoResize();
+end;
 
-    // Shell Commands
-    TOptixCommandCreateShellInstance,
-    TOptixCommandDeleteShellInstance,
-    TOptixCommandSigIntShellInstance,
-    TOptixCommandWriteShellInstance,
-    TOptixCommandReadShellInstance,
+procedure TFormWarning.FormShow(Sender: TObject);
+begin
+  DoResize();
+  ///
+  try
+    RichAgreement.Text := ReadResourceString('CONTROL_AGREEMENT');
 
-    // Logs
-    TOptixCommandReceiveLogMessage,
-    TOptixCommandReceiveTransferException,
+    RichAgreement.SelStart := Length(RichAgreement.Text);
 
-    // Registry Manager
-    TOptixCommandEnumRegistryHives,
-    TOptixCommandEnumRegistryKeys,
-    TOptixCommandCreateRegistryKey,
-    TOptixCommandDeleteRegistryKey,
-    TOptixCommandSetRegistryValue,
-    TOptixCommandSetRegistryKeyName,
-    TOptixCommandSetRegistryValueName,
-    TOptixCommandDeleteRegistryValue,
+    RichAgreement.SelAttributes.Color := $0000D0D0;
 
-    // File Readers
-    TOptixCommandCreateFileContentReader,
-    TOptixCommandDeleteContentReader,
-    TOptixCommandGetContentReaderPage,
-    TOptixCommandReadContentReaderPageFirstPage,
-    TOptixCommandReadContentReaderPage,
+    RichAgreement.SelText := #13#10 +
+      'To continue, you are required to type the complete acknowledgment statement exactly as ' +
+      Format('written: "%s"', [MAGIC_SENTENCE]);
 
-    (* Tasks *)
+    RichAgreement.SelStart := 0;
+    RichAgreement.SetFocus;
+  except
+    Application.Terminate;
+  end;
 
-    TOptixTaskResult,
-    TOptixTaskCallback,
-    TOptixTaskGetProcessDumpResult
-  ]);
+  ///
+  Timer.Enabled := True;
+end;
+
+procedure TFormWarning.TimerTimer(Sender: TObject);
+begin
+  ButtonAcceptTheRisk.Enabled := String.Compare(Trim(EditAccept.Text), MAGIC_SENTENCE, True) = 0;
+
+  ///
+
+  if PanelAcceptSentence.Visible then
+    Exit();
+
+  var AScrollInfo : TScrollInfo;
+  AScrollInfo.cbSize := SizeOf(TScrollInfo);
+  AScrollInfo.fMask := SIF_ALL;
+
+  var ASuccess : Boolean;
+
+  if GetScrollInfo(RichAgreement.Handle, SB_VERT, AScrollInfo) then
+    ASuccess := AScrollInfo.nPos + Integer(AScrollInfo.nPage) >= AScrollInfo.nMax
+  else
+    ASuccess := True;
+
+  ///
+  PanelAcceptSentence.Visible := ASuccess;
+end;
 
 end.

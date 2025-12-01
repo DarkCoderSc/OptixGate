@@ -92,9 +92,9 @@ type
     class function GetRegistryACLString(const AKeyFullPath : String = '') : String; static;
     class function TryGetFileACLString(const AKeyFullPath : String) : String; static;
     class procedure GetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
-      var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
+      out ARegistryKeyPermissions : TRegistryKeyPermissions); static;
     class procedure TryGetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
-      var ARegistryKeyPermissions : TRegistryKeyPermissions); static;
+      out ARegistryKeyPermissions : TRegistryKeyPermissions); static;
     class function HiveToString(const AHive : HKEY) : String; static;
     class function ExpandHiveShortName(const AKeyFullPath : String) : String; static;
     class function OpenRegistryKey(const ARegistryHive : HKEY; const AKeyPath : String;
@@ -105,13 +105,20 @@ type
     class procedure CreateSubKey(ANewKeyFullPath : String); overload; static;
     class procedure CreateSubKey(const AKeyFullPath, ANewKeyName : String); overload; static;
     class procedure DeleteKey(const AKeyFullPath : String); static;
-    class procedure SetValue(const AKeyFullPath : String; const AName : String; const AValueKind : DWORD;
-      const pData : Pointer; const ADataSize : UInt64); static;
+    class procedure SetValue(const hOpenedKey : HKEY; const AName : String; const AValueKind : DWORD;
+      const pData : Pointer; const ADataSize : UInt64); overload; static;
+    class procedure SetValue(const AKeyFullPath, AName : String; const AValueKind : DWORD;
+      const pData : Pointer; const ADataSize : UInt64); overload; static;
     class function ValueKindToString(const AValueKind : DWORD) : String; static;
     class procedure ReadValue(const hOpenedKey : HKEY; const AValueName : String; out AValueType : DWORD;
       out pData : Pointer; out ADataSize : DWORD); overload; static;
     class procedure ReadValue(const AFullKeyPath : String; const AValueName : String; out AValueType : DWORD;
-      out pData : Pointer; out ADataSize : DWORD); overload;static;
+      out pData : Pointer; out ADataSize : DWORD); overload; static;
+    class procedure RenameKey(const hOpenedKey : HKEY; const ASubKeyName, ANewKeyName : String); overload; static;
+    class procedure RenameKey(const AFullKeyPath, ASubKeyName, ANewKeyName : String); overload; static;
+    class procedure DeleteValue(const hOpenedKey : HKEY; const AValueName : String); overload; static;
+    class procedure DeleteValue(const AFullKeyPath : String; const AValueName : String); overload; static;
+    class procedure RenameValue(const AFullKeyPath, AValueName, ANewValueName : String); static;
 
     {@G}
     class property RegistryHives : TDictionary<String, HKEY> read FRegistryHives;
@@ -233,7 +240,7 @@ begin
 end;
 
 class procedure TRegistryHelper.GetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
- var ARegistryKeyPermissions : TRegistryKeyPermissions);
+ out ARegistryKeyPermissions : TRegistryKeyPermissions);
 begin
   ARegistryKeyPermissions := [];
   ///
@@ -319,7 +326,7 @@ begin
 end;
 
 class procedure TRegistryHelper.TryGetCurrentUserRegistryKeyAccess(const AKeyFullPath : String;
- var ARegistryKeyPermissions : TRegistryKeyPermissions);
+ out ARegistryKeyPermissions : TRegistryKeyPermissions);
 begin
   try
     GetCurrentUserRegistryKeyAccess(AKeyFullPath, ARegistryKeyPermissions);
@@ -451,21 +458,27 @@ begin
   end;
 end;
 
-class procedure TRegistryHelper.SetValue(const AKeyFullPath : String; const AName : String; const AValueKind : DWORD;
+class procedure TRegistryHelper.SetValue(const hOpenedKey : HKEY; const AName : String; const AValueKind : DWORD;
   const pData : Pointer; const ADataSize : UInt64);
 begin
-  var AKeyHandle := OpenRegistryKey(AKeyFullPath, KEY_SET_VALUE);
-  try
-    var AResult := RegSetValueExW(
-      AKeyHandle,
+  var AResult := RegSetValueExW(
+      hOpenedKey,
       PWideChar(AName),
       0,
       AValueKind,
       pData,
       ADataSize
     );
-    if AResult <> ERROR_SUCCESS then
-      raise EWindowsException.Create('RegSetValueExW', AResult);
+  if AResult <> ERROR_SUCCESS then
+    raise EWindowsException.Create('RegSetValueExW', AResult);
+end;
+  
+class procedure TRegistryHelper.SetValue(const AKeyFullPath, AName : String; const AValueKind : DWORD;
+  const pData : Pointer; const ADataSize : UInt64);
+begin
+  var AKeyHandle := OpenRegistryKey(AKeyFullPath, KEY_SET_VALUE);
+  try
+    SetValue(AKeyHandle, AName, AValueKind, pData, ADataSize);  
   finally
     RegCloseKey(AKeyHandle);
   end;
@@ -521,6 +534,65 @@ begin
   try
     ReadValue(AKeyHandle, AValueName, AValueType, pData, ADataSize);
   finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+class procedure TRegistryHelper.RenameKey(const hOpenedKey : HKEY; const ASubKeyName, ANewKeyName : String);
+begin
+  var ARet := RegRenameKey(hOpenedKey, PWideChar(ASubKeyName), PWideChar(ANewKeyName));
+  if ARet <> ERROR_SUCCESS then
+    raise EWindowsException.Create('RegRenameKey', ARet);
+end;
+
+class procedure TRegistryHelper.RenameKey(const AFullKeyPath, ASubKeyName, ANewKeyName : String);
+begin
+  var AKeyHandle := OpenRegistryKey(AFullKeyPath, KEY_WRITE);
+  try
+    RenameKey(AKeyHandle, ASubKeyName, ANewKeyName);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+class procedure TRegistryHelper.DeleteValue(const hOpenedKey : HKEY; const AValueName : String);
+begin
+  var ARet := RegDeleteValueW(hOpenedKey, PWideChar(AValueName));
+  if ARet <> ERROR_SUCCESS then
+    raise EWindowsException.Create('RegDeleteValueW');
+end;
+
+class procedure TRegistryHelper.DeleteValue(const AFullKeyPath : String; const AValueName : String);
+begin
+  var AKeyHandle := OpenRegistryKey(AFullKeyPath, KEY_SET_VALUE);
+  try
+    DeleteValue(AKeyHandle, AValueName);
+  finally
+    RegCloseKey(AKeyHandle);
+  end;
+end;
+
+class procedure TRegistryHelper.RenameValue(const AFullKeyPath, AValueName, ANewValueName : String);
+begin
+  var pData := nil;
+  var ADataSize : DWORD;
+  ///
+  
+  var AKeyHandle := OpenRegistryKey(AFullKeyPath, KEY_QUERY_VALUE or KEY_SET_VALUE);
+  try
+    var AValueType : DWORD;        
+
+    ReadValue(AKeyHandle, AValueName, AValueType, pData, ADataSize);
+    
+    SetValue(AKeyHandle, ANewValueName, AValueType, pData, ADataSize);
+
+    ///
+    DeleteValue(AKeyHandle, AValueName);
+  finally
+    if Assigned(pData) then
+      FreeMem(pData, ADataSize);
+    
+    ///
     RegCloseKey(AKeyHandle);
   end;
 end;

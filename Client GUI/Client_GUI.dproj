@@ -156,8 +156,8 @@
         <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
-        <DCCReference Include="..\Client\Units\Threads\Optix.Protocol.SessionHandler.pas"/>
-        <DCCReference Include="..\Client\Units\Threads\Optix.Protocol.Client.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Client.pas"/>
         <DCCReference Include="..\Shared\XSuperJSON.pas"/>
         <DCCReference Include="..\Shared\XSuperObject.pas"/>
         <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
@@ -168,10 +168,10 @@
         <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
         <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
-        <DCCReference Include="..\Client\Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
+        <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
         <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
-        <DCCReference Include="..\Client\Units\Actions\Optix.Actions.ProcessHandler.pas"/>
+        <DCCReference Include="Units\Actions\Optix.Actions.ProcessHandler.pas"/>
         <DCCReference Include="..\Server\Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="..\Server\Units\Optix.Helper.pas"/>
         <DCCReference Include="Units\Optix.Constants.pas"/>
@@ -200,6 +200,9 @@
         <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ContentReader.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Helper.pas"/>
+        <DCCReference Include="Units\Forms\uFormWarning.pas">
+            <Form>FormWarning</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
