@@ -143,6 +143,9 @@ uses
 
 procedure TControlFormContentReader.RefreshExtractedStrings();
 begin
+  RichStrings.Clear();
+  ///
+
   if not Assigned(FCurrentPage) or not Assigned(FCurrentPage.Data) then
     Exit();
   ///
@@ -410,7 +413,15 @@ begin
     FCurrentPage := TOptixCommandReadContentReaderPage(AOptixPacket);
 
     if Assigned(FFrameHexEditor) then
-      FFrameHexEditor.LoadData(FCurrentPage.Data, FCurrentPage.DataSize, True (* Readonly *));
+      FFrameHexEditor.LoadData(
+        FCurrentPage.Data,
+        FCurrentPage.DataSize,
+        FCurrentPage.PageNumber * FCurrentPage.PageSize,
+        True
+      );
+
+    if ButtonToggleStrings.ImageIndex = IMAGE_HIDE_STRINGS then
+      RefreshExtractedStrings();
 
     ///
     UpdateFormElements();

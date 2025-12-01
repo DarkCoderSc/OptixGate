@@ -494,7 +494,7 @@ begin
           EditSZ.Text := TContentFormater.ExtractStrings(
             FFrameHexEditor.Data,
             FFrameHexEditor.DataSize
-          );
+          ).Replace(#13#10, '\0', [rfReplaceAll]);
         else
           EditSZ.Clear();
       end;

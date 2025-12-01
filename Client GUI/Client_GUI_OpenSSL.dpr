@@ -40,14 +40,10 @@
 {                                                                              }
 {  Authorship (No AI):                                                         }
 {  -------------------                                                         }
-{  All code contained in this unit was written and developed by the author     }
+{   All code contained in this unit was written and developed by the author    }
 {   without the assistance of artificial intelligence systems, large language  }
 {   models (LLMs), or automated code generation tools. Any external libraries  }
 {   or frameworks used comply with their respective licenses.	                 }
-{                                                                              }
-{   The author grants permission for this code to be used, reproduced, and     }
-{   included in datasets for the purpose of training or improving machine      }
-{   learning models, including large language models (LLMs).                   }
 {                                                                              }
 {******************************************************************************}
 
@@ -72,8 +68,8 @@ uses
   Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
   Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
   Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Protocol.SessionHandler in '..\Client\Units\Threads\Optix.Protocol.SessionHandler.pas',
-  Optix.Protocol.Client in '..\Client\Units\Threads\Optix.Protocol.Client.pas',
+  Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
+  Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
   XSuperJSON in '..\Shared\XSuperJSON.pas',
   XSuperObject in '..\Shared\XSuperObject.pas',
   Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
@@ -84,10 +80,10 @@ uses
   Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
   Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
   Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Protocol.Worker.FileTransfer in '..\Client\Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
+  Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
   Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
   Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.Actions.ProcessHandler in '..\Client\Units\Actions\Optix.Actions.ProcessHandler.pas',
+  Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
   Optix.VCL.Helper in '..\Server\Units\Optix.VCL.Helper.pas',
   Optix.Helper in '..\Server\Units\Optix.Helper.pas',
   Optix.Constants in 'Units\Optix.Constants.pas',
@@ -96,7 +92,7 @@ uses
   Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
   Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
   Optix.OpenSSL.Handler in '..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas',
-  Optix.DebugCertificate in '..\Client\Units\Optix.DebugCertificate.pas',
+  Optix.DebugCertificate in 'Units\Optix.DebugCertificate.pas',
   Optix.Config.CertificatesStore in '..\Server\Units\Configs\Optix.Config.CertificatesStore.pas',
   Optix.Config.Helper in '..\Server\Units\Configs\Optix.Config.Helper.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
@@ -118,7 +114,8 @@ uses
   Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
   Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
   Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas',
-  Optix.Shared.Helper in '..\Shared\Optix.Shared.Helper.pas';
+  Optix.Shared.Helper in '..\Shared\Optix.Shared.Helper.pas',
+  uFormWarning in 'Units\Forms\uFormWarning.pas' {FormWarning};
 
 {$R *.res}
 {$R ..\Server\data.res}
@@ -160,12 +157,13 @@ begin
     Application.Initialize;
     Application.MainFormOnTaskbar := True;
     TStyleManager.TrySetStyle('Glossy');
+
     Application.CreateForm(TFormMain, FormMain);
     Application.CreateForm(TFormAbout, FormAbout);
     Application.CreateForm(TFormDebugThreads, FormDebugThreads);
     Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
     Application.CreateForm(TFormTrustedCertificates, FormTrustedCertificates);
-  // Application.CreateForm(TFormConnectToServer, FormConnectToServer);
+
     Application.Run;
   finally
     CloseHandle(AMutex);
