@@ -16,6 +16,7 @@ object FormMain: TFormMain
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   TextHeight = 15
   object VST: TVirtualStringTree
     Left = 0

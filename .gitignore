@@ -7,5 +7,5 @@
 **/Win64
 **/bins
 **/Dist
-Client/
+Client
 dist.bat

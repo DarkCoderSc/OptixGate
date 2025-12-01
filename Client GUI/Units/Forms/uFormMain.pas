@@ -129,6 +129,7 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FormShow(Sender: TObject);
   private
     FNotifications : TList<TGUID>;
 
@@ -241,6 +242,7 @@ begin
   UpdateNodeStatus(Sender, csConnected);
   ///
 
+  {$IFNDEF DEBUG}
   FNotifications.Add(DisplayNotification(
     'Connected',
     Format(
@@ -252,6 +254,7 @@ begin
           Sender.RemotePort
        ]
     )));
+  {$ENDIF}
 end;
 
 procedure TFormMain.OnDisconnectedFromServer(Sender : TOptixSessionHandlerThread);
@@ -421,6 +424,31 @@ begin
 
   if Assigned(FNotifications) then
     FreeAndNil(FNotifications);
+end;
+
+procedure TFormMain.FormShow(Sender: TObject);
+begin
+  {$IFDEF DEBUG}
+    // Ipv4
+    var AClientConfiguration : TClientConfiguration;
+    AClientConfiguration.Address := '127.0.0.1';
+    AClientConfiguration.Port    := 2801;
+    AClientConfiguration.Version := ipv4;
+
+    {$IFDEF USETLS}
+    AClientConfiguration.CertificateFingerprint := Optix.DebugCertificate.DEBUG_CERTIFICATE_FINGERPRINT;
+    {$ENDIF}
+
+    AddClient(AClientConfiguration);
+
+    // Ipv6
+//    AClientConfiguration.Version := ipv6;
+//    AClientConfiguration.Address := '::1';
+//    AddClient(AClientConfiguration);
+
+    // Minimize main window to taskbar on app startup (during development / debug)
+    WindowState := wsMinimized;
+  {$ENDIF}
 end;
 
 procedure TFormMain.PopupMenuPopup(Sender: TObject);

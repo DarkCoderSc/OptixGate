@@ -100,6 +100,7 @@ type
       FBuffer                : Pointer;
       FTotalBufferSize       : UInt64;
       FRealSize              : UInt64;
+      FOffsetBase            : UInt64;
 
       FSelKind               : TGridSectionKind;
       FSelStart              : Int64;
@@ -129,7 +130,9 @@ type
     destructor Destroy(); override;
 
     {@M}
-    procedure LoadData(const pData : Pointer; const ADataSize : UInt64; const AReadOnly : Boolean = False);
+    procedure LoadData(const pData : Pointer; const ADataSize : UInt64; const AOffsetBase : UInt64 = 0;
+      const AReadOnly : Boolean = False);
+
     procedure Clear();
 
     {@G}
@@ -140,7 +143,7 @@ type
     {@G/S}
     property Expandable            : Boolean read FExpandable            write FExpandable;
     property SelectFirstCellOnInit : Boolean read FSelectFirstCellOnInit write FSelectFirstCellOnInit;
-    property PageSize              : UInt64   read FPageSize             write SetPageSize;
+    property PageSize              : UInt64  read FPageSize              write SetPageSize;
   end;
 
 implementation
@@ -190,6 +193,7 @@ begin
   FTotalBufferSize := FPageSize;
   FRealSize        := 0;
   FEditHexCellPos  := 0;
+  FOffsetBase      := 0;
 
   GetMem(FBuffer, FPageSize);
   ZeroMemory(FBuffer, FPageSize);
@@ -303,8 +307,9 @@ begin
   case Column of
     // Offset
     0 : begin
-      var AWidth := IfThen(FRealSize > High(Cardinal), 16, 8);
-      CellText := IntToHex(Node.Index * ROW_SIZE, AWidth);
+      var AOffset := FOffsetBase + (Node.Index * ROW_SIZE);
+      var AWidth := IfThen(AOffset > High(Cardinal), 16, 8);
+      CellText := IntToHex(AOffset, AWidth);
     end;
 
     // Hex
@@ -345,7 +350,11 @@ begin
   ///
 
   case Key of
-    VK_BACK   : FreeBytesAndRelocate(FSelStart-1);
+    VK_BACK : begin
+      if FSelStart > 0 then
+        FreeBytesAndRelocate(FSelStart-1);
+    end;
+
     VK_DELETE : FreeBytesAndRelocate(FSelStart);
   end;
 end;
@@ -563,7 +572,8 @@ begin
   end;
 end;
 
-procedure TFrameHexEditor.LoadData(const pData : Pointer; const ADataSize : UInt64; const AReadOnly : Boolean = False);
+procedure TFrameHexEditor.LoadData(const pData : Pointer; const ADataSize : UInt64; const AOffsetBase : UInt64 = 0;
+  const AReadOnly : Boolean = False);
 begin
   if not Assigned(pData) or (ADataSize = 0) then
     Exit();
@@ -575,9 +585,9 @@ begin
     FTotalBufferSize := ADataSize;
   end;
 
-  FRealSize := ADataSize;
-
-  FReadOnly := AReadOnly;
+  FRealSize   := ADataSize;
+  FOffsetBase := AOffsetBase;
+  FReadOnly   := AReadOnly;
 
   CopyMemory(FBuffer, pData, ADataSize);
   ZeroMemory(PByte(NativeUInt(FBuffer) + ADataSize), FTotalBufferSize - ADataSize);

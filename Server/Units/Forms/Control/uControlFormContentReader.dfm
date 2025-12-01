@@ -29,6 +29,7 @@ object ControlFormContentReader: TControlFormContentReader
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 806
     object ButtonBack: TSpeedButton
       AlignWithMargins = True
       Left = 36
@@ -137,7 +138,6 @@ object ControlFormContentReader: TControlFormContentReader
       ImageName = 'control-rich-text-edit-eye'
       Images = FormMain.VirtualImageList
       OnClick = ButtonToggleStringsClick
-      ExplicitLeft = 218
       ExplicitTop = 1
     end
   end
@@ -154,6 +154,8 @@ object ControlFormContentReader: TControlFormContentReader
         Alignment = taRightJustify
         Width = 50
       end>
+    ExplicitTop = 568
+    ExplicitWidth = 814
   end
   object MultiPanel: TOMultiPanel
     Left = 0
@@ -177,10 +179,8 @@ object ControlFormContentReader: TControlFormContentReader
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
-    ExplicitLeft = 280
-    ExplicitTop = 88
-    ExplicitWidth = 185
-    ExplicitHeight = 41
+    ExplicitWidth = 814
+    ExplicitHeight = 538
     DesignSize = (
       824
       570)
@@ -219,8 +219,8 @@ object ControlFormContentReader: TControlFormContentReader
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitWidth = 800
-        ExplicitHeight = 519
+        ExplicitWidth = 814
+        ExplicitHeight = 266
       end
     end
   end
