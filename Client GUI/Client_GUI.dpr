@@ -107,7 +107,8 @@ uses
   Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
   Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
   Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas',
-  Optix.Shared.Helper in '..\Shared\Optix.Shared.Helper.pas';
+  Optix.Shared.Helper in '..\Shared\Optix.Shared.Helper.pas',
+  uFormWarning in 'Units\Forms\uFormWarning.pas' {FormWarning};
 
 {$R *.res}
 {$R ..\Server\data.res}

@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uFormConnectToServer;
 
 interface
@@ -126,7 +124,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  uFormMain;
+  uFormMain, uFormWarning;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -166,6 +164,18 @@ begin
     raise Exception.Create(
       'You must select an existing certificate (via its fingerprint) for the server to start listening.'
     );
+
+  {$IFNDEF DEBUG}
+  var AForm := TFormWarning.Create(self);
+  try
+    AForm.ShowModal;
+
+    if not AForm.Validated then
+      Exit();
+  finally
+    FreeAndNil(AForm);
+  end;
+  {$ENDIF}
 
   FCanceled := False;
 

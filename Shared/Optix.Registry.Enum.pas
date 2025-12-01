@@ -83,7 +83,8 @@ type
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Name        : String                  read FName;
+    property Name : String read FName write FName;
+
     property ACL_SSDL    : String                  read FACL_SSDL;
     property Permissions : TRegistryKeyPermissions read FPermissions;
   end;
@@ -112,10 +113,12 @@ type
     procedure Assign(ASource : TPersistent); override;
 
     {@G}
-    property Name      : String             read FName;
     property Value     : TOptixMemoryObject read FValue;
     property _Type     : DWORD              read FType;
     property IsDefault : Boolean            read GetIsDefault;
+
+    {@G/S}
+    property Name : String read FName write FName;
   end;
 
   TOptixEnumRegistry = class

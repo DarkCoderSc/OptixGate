@@ -216,6 +216,10 @@
         <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
         <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ContentReader.pas"/>
         <DCCReference Include="..\Shared\Optix.Shared.Helper.pas"/>
+        <DCCReference Include="Units\Forms\uFormWarning.pas">
+            <Form>FormWarning</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -248,6 +252,18 @@
                 <DeployFile LocalName="bins\OpenSSL\Win32\Debug\Client_GUI_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>Client_GUI_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\Client_GUI_OpenSSL.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>Client_GUI_OpenSSL.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="bins\OpenSSL\Win64\Debug\Client_GUI_OpenSSL.rsm" Configuration="Debug" Class="DebugSymbols">
+                    <Platform Name="Win64">
+                        <RemoteName>Client_GUI_OpenSSL.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

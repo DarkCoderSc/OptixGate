@@ -35,7 +35,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 721
+    ExplicitWidth = 701
+    ExplicitHeight = 368
     DesignSize = (
       711
       400)
@@ -143,6 +144,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     BevelOuter = bvRaised
     ReadOnly = True
     TabOrder = 1
+    ExplicitWidth = 693
   end
   object MainMenu: TMainMenu
     Left = 408
@@ -194,6 +196,10 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     object CreateSubKey1: TMenuItem
       Caption = 'Create Sub Key'
       OnClick = CreateSubKey1Click
+    end
+    object RenameSelectedKey1: TMenuItem
+      Caption = 'Rename Selected Key'
+      OnClick = RenameSelectedKey1Click
     end
     object DeleteSelectedKey1: TMenuItem
       Caption = 'Delete Selected Key'
@@ -247,6 +253,17 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     object EditSelectedValue1: TMenuItem
       Caption = 'Edit Selected'
       OnClick = EditSelectedValue1Click
+    end
+    object RenameSelectedValue1: TMenuItem
+      Caption = 'Rename Selected Value'
+      OnClick = RenameSelectedValue1Click
+    end
+    object N5: TMenuItem
+      Caption = '-'
+    end
+    object DeleteSelectedValue1: TMenuItem
+      Caption = 'Delete Selected Value'
+      OnClick = DeleteSelectedValue1Click
     end
   end
 end

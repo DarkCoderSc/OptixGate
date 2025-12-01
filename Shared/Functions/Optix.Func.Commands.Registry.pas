@@ -170,6 +170,65 @@ type
     property NewValue    : TRegistryValueInformation read FNewValue;
   end;
 
+  TOptixCommandSetRegistryKeyName = class(TOptixCommandRegistryActionResponse)
+  private
+    [OptixSerializableAttribute]
+    FExistingName : String;
+
+    [OptixSerializableAttribute]
+    FNewName : String;
+  public
+    {@C}
+    constructor Create(const AKeyPath, AExistingName, ANewName : String); overload;
+
+    {@M}
+    {$IFNDEF SERVER}
+    procedure DoAction(); override;
+    {$ENDIF}
+
+    {@G}
+    property NewName      : String read FNewName;
+    property ExistingName : String read FExistingName;
+  end;
+
+  TOptixCommandSetRegistryValueName = class(TOptixCommandRegistryActionResponse)
+  private
+    [OptixSerializableAttribute]
+    FExistingName : String;
+
+    [OptixSerializableAttribute]
+    FNewName : String;
+  public
+    {@C}
+    constructor Create(const AKeyPath, AExistingName, ANewName : String); overload;
+
+    {@M}
+    {$IFNDEF SERVER}
+    procedure DoAction(); override;
+    {$ENDIF}
+
+    {@G}
+    property ExistingName : String read FExistingName;
+    property NewName      : String read FNewName;
+  end;
+
+  TOptixCommandDeleteRegistryValue = class(TOptixCommandRegistryActionResponse)
+  private
+    [OptixSerializableAttribute]
+    FName : String;
+  public
+    {@C}
+    constructor Create(const AKeyPath, AName : String); overload;
+
+    {@M}
+    {$IFNDEF SERVER}
+    procedure DoAction(); override;
+    {$ENDIF}
+
+    {@G}
+    property Name : String read FName;
+  end;
+
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -320,6 +379,59 @@ begin
     FNewValue.Value.Address,
     FNewValue.Value.Size
   );
+end;
+{$ENDIF}
+
+(* TOptixCommandSetRegistryKeyName *)
+
+constructor TOptixCommandSetRegistryKeyName.Create(const AKeyPath, AExistingName, ANewName : String);
+begin
+  inherited Create(AKeyPath);
+  ///
+
+  FNewName := ANewName;
+  FExistingName := AExistingName;
+end;
+
+{$IFNDEF SERVER}
+procedure TOptixCommandSetRegistryKeyName.DoAction();
+begin
+  TRegistryHelper.RenameKey(FKeyPath, FExistingName, FNewName);
+end;
+{$ENDIF}
+
+(* TOptixCommandSetRegistryValueName *)
+
+constructor TOptixCommandSetRegistryValueName.Create(const AKeyPath, AExistingName, ANewName : String);
+begin
+  inherited Create(AKeyPath);
+  ///
+
+  FExistingName := AExistingName;
+  FNewName := ANewName;
+end;
+
+{$IFNDEF SERVER}
+procedure TOptixCommandSetRegistryValueName.DoAction();
+begin
+  TRegistryHelper.RenameValue(FKeyPath, FExistingName, FNewName);
+end;
+{$ENDIF}
+
+(* TOptixCommandDeleteRegistryValue *)
+
+constructor TOptixCommandDeleteRegistryValue.Create(const AKeyPath, AName : String);
+begin
+  inherited Create(AKeyPath);
+  ///
+
+  FName := AName;
+end;
+
+{$IFNDEF SERVER}
+procedure TOptixCommandDeleteRegistryValue.DoAction();
+begin
+  TRegistryHelper.DeleteValue(FKeyPath, FName);
 end;
 {$ENDIF}
 

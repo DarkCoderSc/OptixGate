@@ -397,6 +397,7 @@ const
 //----------------------------------------------------------------------------------------------------------------------
 
 (* Netapi32.dll *)
+
 function DsGetDcNameW(
   ComputerName         : LPCWSTR;
   DomainName           : LPCWSTR;
@@ -443,6 +444,8 @@ function RegGetValueW(
 ) : LONG; stdcall; external 'Advapi32.dll';
 
 function RegDeleteTreeW(hKey: HKEY; lpSubKey: PWideChar): Longint; stdcall; external 'Advapi32.dll';
+
+function RegRenameKey(hKey : HKEY; lpSubKeyName, lpNewKeyName : String) : Longint; stdcall; external 'Advapi32.dll'
 
 (* NTDLL.dll *)
 
