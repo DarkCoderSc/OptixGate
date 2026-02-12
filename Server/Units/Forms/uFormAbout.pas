@@ -138,7 +138,7 @@ end;
 procedure TFormAbout.FormShow(Sender: TObject);
 begin
   if FFirstShow then begin
-    Disclaimer.Text := TryReadResourceString('DISCLAIMER');
+    Disclaimer.Text := TOptixHelper.TryReadResourceString('DISCLAIMER');
 
     ///
     FFirstShow := False;

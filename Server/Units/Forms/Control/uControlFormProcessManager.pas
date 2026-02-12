@@ -65,7 +65,7 @@ uses
 
   __uBaseFormControl__, uControlFormDumpProcess,
 
-  Optix.Process.Enum, Optix.WinApiEx, Optix.Func.Commands.Process, Optix.Protocol.Packet;
+  OptixCore.System.Process, OptixCore.WinApiEx, OptixCore.Commands.Process, OptixCore.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -156,7 +156,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Func.Commands;
+  OptixCore.Types, Optix.Constants, Optix.Helper, OptixCore.Commands;
  // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -520,8 +520,8 @@ begin
           CellText := pData^.ProcessInformation.Name;
       end;
 
-      1  : CellText := FormatInt(pData^.ProcessInformation.Id);
-      2  : CellText := FormatInt(pData^.ProcessInformation.ParentId);
+      1  : CellText := TOptixHelper.FormatInt(pData^.ProcessInformation.Id);
+      2  : CellText := TOptixHelper.FormatInt(pData^.ProcessInformation.ParentId);
       3  : CellText := IntToStr(pData^.ProcessInformation.ThreadCount);
       4  : CellText := pData^.ProcessInformation.Username;
       5  : CellText := pData^.ProcessInformation.Domain;
@@ -534,7 +534,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormProcessManager.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,

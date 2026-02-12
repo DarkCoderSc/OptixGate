@@ -149,7 +149,6 @@ object FormConnectToServer: TFormConnectToServer
       Align = alTop
       Style = csDropDownList
       TabOrder = 2
-      ExplicitWidth = 235
     end
     object ComboIpVersion: TComboBox
       Left = 8
@@ -165,7 +164,6 @@ object FormConnectToServer: TFormConnectToServer
       Items.Strings = (
         'IPv4'
         'IPv6')
-      ExplicitWidth = 235
     end
   end
   object PanelBottom: TPanel
@@ -193,8 +191,8 @@ object FormConnectToServer: TFormConnectToServer
       Width = 83
       Height = 25
       Caption = 'Cancel'
+      ModalResult = 2
       TabOrder = 1
-      OnClick = ButtonCancelClick
     end
   end
 end

@@ -135,7 +135,7 @@ implementation
 uses
   uFormMain,
 
-  Optix.WinApiEx, Optix.Func.Commands.Process;
+  OptixCore.WinApiEx, OptixCore.Commands.Process;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}

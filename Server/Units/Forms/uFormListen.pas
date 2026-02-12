@@ -87,7 +87,6 @@ type
     RadioBindCustom: TRadioButton;
     EditServerBindAddress: TEdit;
     procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -97,21 +96,14 @@ type
     procedure RadioBindLocalClick(Sender: TObject);
     procedure RadioBindAllClick(Sender: TObject);
   private
-    FCanceled : Boolean;
-
     {@M}
     procedure DoResize();
   public
+    {@C}
+    constructor Create(AOwner : TComponent); override;
+
     {@M}
     function GetServerConfiguration() : TServerConfiguration;
-
-    {@G}
-    property Canceled : Boolean read FCanceled;
-
-    {$IFDEF USETLS}
-    {@C}
-    constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); reintroduce;
-    {$ENDIF}
   end;
 
 var
@@ -123,9 +115,11 @@ implementation
 uses
   uFormMain,
 
-  Optix.Helper, Optix.Sockets.Helper
+  OptixCore.Sockets.Helper, Optix.Helper
 
-  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+  {$IFDEF USETLS}, Optix.DebugCertificate,
+
+  uFormCertificatesStore{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -200,7 +194,7 @@ procedure TFormListen.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftSta
 begin
   case Key of
     13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+    27 : ModalResult := mrCancel;
   end;
 end;
 
@@ -211,8 +205,6 @@ end;
 
 procedure TFormListen.FormCreate(Sender: TObject);
 begin
-  FCanceled := True;
-
   ComboIpVersion.ItemIndex := 0;
 
   {$IFNDEF USETLS}
@@ -238,37 +230,50 @@ begin
     TSpinEdit(Sender).Value := 65535;
 end;
 
-procedure TFormListen.ButtonCancelClick(Sender: TObject);
-begin
-  Close();
-end;
-
 procedure TFormListen.ButtonConnectClick(Sender: TObject);
 begin
-  if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
-    raise Exception.Create(
-      'You must select an existing certificate (via its fingerprint) for the server to start listening.'
-    );
-
-  FCanceled := False;
-
-  Close();
-end;
-
-{$IFDEF USETLS}
-constructor TFormListen.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
-begin
-  inherited Create(AOwner);
+  var AConfiguration := GetServerConfiguration();
   ///
 
-  ComboCertificate.Clear();
+  var AErrorDialog := TOptixErrorDialog.Create(self);
+  try
+    if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
+      AErrorDialog.Add(
+        'You must select an existing certificate (via its fingerprint) for the server to start listening.'
+      );
 
-  if not Assigned(ACertificatesFingerprints) then
-    Exit();
+    if FormServers.ServerPortExists(AConfiguration.Port, AConfiguration.Version) then
+      AErrorDialog.Add(
+        'The specified port is already present in the server list. A port can only be bound and listened to by one ' +
+        'server instance at a time.'
+      );
 
-  for var AFingerprint in ACertificatesFingerprints do
-    ComboCertificate.Items.Add(AFingerprint);
+    if AErrorDialog.ShowErrors then
+      Exit();
+  finally
+    FreeAndNil(AErrorDialog);
+  end;
+
+  ///
+  ModalResult := mrOk;
 end;
-{$ENDIF}
+
+constructor TFormListen.Create(AOwner : TComponent);
+begin
+  inherited;
+  ///
+
+  {$IFDEF USETLS}
+    ComboCertificate.Clear();
+
+    var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
+    try
+      for var AFingerprint in AFingerprints do
+        ComboCertificate.Items.Add(AFingerprint);
+    finally
+      FreeAndNil(AFingerprints);
+    end;
+  {$ENDIF}
+end;
 
 end.

@@ -66,7 +66,7 @@ uses
 
   __uBaseFormControl__, uFrameHexEditor,
 
-  Optix.Protocol.Packet, Optix.Func.Commands.ContentReader, OMultiPanel;
+  OptixCore.Protocol.Packet, OptixCore.Commands.ContentReader, OMultiPanel;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -136,7 +136,7 @@ implementation
 uses
   System.Math,
 
-  Optix.Helper, Optix.FileSystem.Helper, Optix.Shared.Helper, Optix.Constants;
+  Optix.Helper, OptixCore.System.FileSystem, OptixCore.Helper, Optix.Constants;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -386,9 +386,9 @@ begin
   ]);
 
   StatusBar.Panels.Items[1].Text := Format('Data Size: %s (Page Size: %s), Total Size: %s', [
-    FormatFileSize(FCurrentPage.DataSize),
-    FormatFileSize(FCurrentPage.PageSize),
-    FormatFileSize(FCurrentPage.TotalSize)
+    TOptixHelper.FormatFileSize(FCurrentPage.DataSize),
+    TOptixHelper.FormatFileSize(FCurrentPage.PageSize),
+    TOptixHelper.FormatFileSize(FCurrentPage.TotalSize)
   ]);
 
   ///

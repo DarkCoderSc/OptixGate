@@ -65,7 +65,7 @@ uses
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
 
-  Optix.OpenSSL.Helper;
+  OptixCore.OpenSSL.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -143,8 +143,8 @@ uses
 
   {$IFDEF SERVER}, uFormServers{$ENDIF},
 
-  Optix.OpenSSL.Headers, Optix.Helper, Optix.Constants, Optix.Config.CertificatesStore, Optix.Config.Helper,
-  Optix.VCL.Helper, Optix.OpenSSL.Exceptions
+  OptixCore.OpenSSL.Headers, Optix.Constants, Optix.Config.CertificatesStore, Optix.Config.Helper,
+  Optix.Helper, OptixCore.OpenSSL.Exceptions
 
   {$IFDEF DEBUG}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -263,7 +263,7 @@ end;
 
 procedure TFormCertificatesStore.PopupMenuPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
 
   var pCertificate := GetCertificateFromNode(VST.FocusedNode);
   if not Assigned(pCertificate) then
@@ -414,7 +414,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 function TFormCertificatesStore.GetCertificateFromNode(const pNode : PVirtualNode) : PX509Certificate;
@@ -504,7 +504,7 @@ begin
     AForm.ShowModal();
     ///
 
-    if AForm.Canceled then
+    if AForm.ModalResult <> mrOk then
       Exit();
 
     var ACertificate : TX509Certificate;

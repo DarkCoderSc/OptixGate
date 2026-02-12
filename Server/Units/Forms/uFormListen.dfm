@@ -43,8 +43,8 @@ object FormListen: TFormListen
       Width = 83
       Height = 25
       Caption = 'Cancel'
+      ModalResult = 2
       TabOrder = 1
-      OnClick = ButtonCancelClick
     end
   end
   object PanelClient: TPanel
@@ -125,7 +125,6 @@ object FormListen: TFormListen
       Align = alTop
       Style = csDropDownList
       TabOrder = 1
-      ExplicitWidth = 322
     end
     object CheckBoxAutoStart: TCheckBox
       AlignWithMargins = True
@@ -157,7 +156,6 @@ object FormListen: TFormListen
       Items.Strings = (
         'IPv4'
         'IPv6')
-      ExplicitWidth = 322
     end
     object GroupBox1: TGroupBox
       Left = 8

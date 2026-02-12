@@ -63,7 +63,7 @@ uses
 
   VCL.Forms, VCL.Controls,
 
-  Optix.Func.Commands.Base, Optix.Protocol.Packet;
+  OptixCore.Commands.Base, OptixCore.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -179,7 +179,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Func.Commands.ContentReader,
+  OptixCore.Commands.ContentReader,
 
   uFormMain, uControlFormTransfers;
 // ---------------------------------------------------------------------------------------------------------------------

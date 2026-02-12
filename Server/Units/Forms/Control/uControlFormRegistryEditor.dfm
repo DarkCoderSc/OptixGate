@@ -31,7 +31,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Left = 0
       Top = 0
       Caption = 'SZ'
-      ExplicitWidth = 0
       ExplicitHeight = 174
       object PanelSZ: TPanel
         Left = 0
@@ -92,7 +91,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           AlignWithMargins = True
           Left = 8
           Top = 8
-          Width = 365
+          Width = 31
           Height = 15
           Margins.Left = 0
           Margins.Top = 0
@@ -100,7 +99,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           Margins.Bottom = 4
           Align = alTop
           Caption = 'Value:'
-          ExplicitWidth = 31
         end
         object RichMSZ: TRichEdit
           Left = 8
@@ -116,8 +114,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           ParentFont = False
           ScrollBars = ssBoth
           TabOrder = 0
-          ExplicitWidth = 355
-          ExplicitHeight = 110
         end
       end
     end
@@ -291,7 +287,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       AlignWithMargins = True
       Left = 8
       Top = 8
-      Width = 365
+      Width = 35
       Height = 15
       Margins.Left = 0
       Margins.Top = 0
@@ -299,7 +295,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Margins.Bottom = 4
       Align = alTop
       Caption = 'Name:'
-      ExplicitWidth = 35
     end
     object EditName: TEdit
       Left = 8

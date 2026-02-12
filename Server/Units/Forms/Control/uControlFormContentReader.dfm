@@ -179,8 +179,7 @@ object ControlFormContentReader: TControlFormContentReader
     MinPosition = 0.020000000000000000
     Align = alClient
     TabOrder = 2
-    ExplicitWidth = 814
-    ExplicitHeight = 538
+    ExplicitWidth = 834
     DesignSize = (
       824
       570)
@@ -219,8 +218,6 @@ object ControlFormContentReader: TControlFormContentReader
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
-        ExplicitWidth = 814
-        ExplicitHeight = 266
       end
     end
   end

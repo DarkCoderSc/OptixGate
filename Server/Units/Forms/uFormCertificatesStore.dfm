@@ -77,10 +77,12 @@ object FormCertificatesStore: TFormCertificatesStore
       Caption = 'Certificate'
       object GeneratenewCertificate1: TMenuItem
         Caption = 'Generate New'
+        ShortCut = 16462
         OnClick = GeneratenewCertificate1Click
       end
       object Import1: TMenuItem
         Caption = 'Import'
+        ShortCut = 16457
         OnClick = Import1Click
       end
     end

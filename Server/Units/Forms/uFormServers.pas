@@ -63,7 +63,7 @@ uses
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
 
-  Optix.Protocol.Server, Optix.Sockets.Helper;
+  Optix.Protocol.Server, OptixCore.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -104,6 +104,8 @@ type
     Start1: TMenuItem;
     N1: TMenuItem;
     AutoStart1: TMenuItem;
+    Certificate1: TMenuItem;
+    Certificates1: TMenuItem;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -122,6 +124,8 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure AutoStart1Click(Sender: TObject);
+    procedure Certificate1Click(Sender: TObject);
+    procedure Certificates1Click(Sender: TObject);
   private
     {@M}
     function GetNodeByPort(const APort : Word; const AVersion : TIPVersion) : PVirtualNode;
@@ -131,8 +135,6 @@ type
     {$ENDIF}
     procedure UpdateStatus(const pNode : PVirtualNode; const AStatus : TServerStatus; const AStatusMessage : String = ''); overload;
     procedure UpdateStatus(const AServer : TOptixServerThread; const AStatus : TServerStatus; const AStatusMessage : String = ''); overload;
-    procedure RegisterServer(const AServerConfiguration : TServerConfiguration);
-    procedure StartServer(const pNode : PVirtualNode);
 
     procedure OnServerStart(Sender : TOptixServerThread; const ASocketFd : TSocket);
     procedure OnServerStop(Sender : TOptixServerThread);
@@ -141,8 +143,13 @@ type
     procedure Save();
     procedure Load();
   public
-    {$IFDEF USETLS}
     {@M}
+    function RegisterServer(const AServerConfiguration : TServerConfiguration) : PVirtualNode;
+    procedure TryRegisterServer(const AServerConfiguration : TServerConfiguration;
+      const ADeleteServerNodeOnException : Boolean);
+    procedure StartServer(const pNode : PVirtualNode);
+    function ServerPortExists(const APort : Word; const AIpVersion : TIpVersion) : Boolean;
+    {$IFDEF USETLS}
     function ServerCertificateIsInUse(const AFingerprint : String) : Boolean;
     {$ENDIF}
   end;
@@ -158,10 +165,10 @@ uses
 
   uFormMain, uFormListen
 
-  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
+  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates , uFormSelectCertificate{$ENDIF},
 
   Optix.Helper, Optix.Constants, Optix.Config.Servers, Optix.Config.Helper
-  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF}
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Helper{$ENDIF}
 
   {$IF Defined(DEBUG) and Defined(USETLS)}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -204,9 +211,8 @@ begin
         if String.IsNullOrWhitespace(AServerConfiguration.Address) then
           continue;
 
-
         ///
-        RegisterServer(AServerConfiguration);
+        TryRegisterServer(AServerConfiguration, False);
       end;
     finally
       VST.EndUpdate();
@@ -278,8 +284,11 @@ begin
         Start1.Caption := 'Stop';
     end;
 
-  Remove1.Visible    := Assigned(pData);
-  AutoStart1.Visible := Assigned(pData);
+  Remove1.Visible      := Assigned(pData);
+  AutoStart1.Visible   := Assigned(pData);
+  Certificate1.Visible := {$IFDEF USETLS}
+                            Assigned(pData) and (FormCertificatesStore.CertificateCount > 1)
+                          {$ELSE}False{$ENDIF};
 
   if AutoStart1.Visible then
     AutoStart1.Checked := pData^.ServerConfiguration.AutoStart;
@@ -307,6 +316,45 @@ begin
   end;
 end;
 
+procedure TFormServers.Certificate1Click(Sender: TObject);
+begin
+  {$IFDEF USETLS}
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if not Assigned(pData) then
+    Exit();
+
+  var AForm := TFormSelectCertificate.Create(self, pData^.ServerConfiguration.CertificateFingerprint);
+  try
+    AForm.ShowModal();
+
+    if AForm.ModalResult <> mrOk then
+      Exit();
+
+    VST.BeginUpdate();
+    try
+      pData^.ServerConfiguration.CertificateFingerprint := AForm.ComboCertificate.Text;
+
+      ///
+      StartServer(VST.FocusedNode);
+    finally
+      VST.EndUpdate();
+    end;
+  finally
+    FreeAndNil(AForm);
+  end;
+  {$ENDIF}
+end;
+
+procedure TFormServers.Certificates1Click(Sender: TObject);
+begin
+  {$IFDEF USETLS}
+  FormCertificatesStore.Show();
+  {$ENDIF}
+end;
+
 procedure TFormServers.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Save();
@@ -316,6 +364,9 @@ procedure TFormServers.FormCreate(Sender: TObject);
 begin
   {$IFNDEF USETLS}
   VST.Header.Columns[4].Options := VST.Header.Columns[4].Options - [coVisible];
+  Certificates1.Visible := False;
+  {$ELSE}
+
   {$ENDIF}
 
   ///
@@ -379,17 +430,18 @@ begin
 end;
 {$ENDIF}
 
-procedure TFormServers.RegisterServer(const AServerConfiguration : TServerConfiguration);
+function TFormServers.RegisterServer(const AServerConfiguration : TServerConfiguration) : PVirtualNode;
 begin
-  if GetNodeByPort(AServerConfiguration.Port, AServerConfiguration.Version) <> nil then
-    raise Exception.Create('The specified port is already present in the server list. A port can only be bound and ' +
-                           'listened to by one server instance at a time.');
+  result := nil;
   ///
+
+  if ServerPortExists(AServerConfiguration.Port, AServerConfiguration.Version) then
+    Exit();
 
   VST.BeginUpdate();
   try
-    var pNode := VST.AddChild(nil);
-    var pData := PTreeData(pNode.GetData);
+    result := VST.AddChild(nil);
+    var pData := PTreeData(result.GetData);
     ///
 
     pData^.ServerConfiguration := AServerConfiguration;
@@ -398,11 +450,34 @@ begin
     pData^.StartDateTime       := Now;
 
     if AServerConfiguration.AutoStart then
-      StartServer(pNode)
+      StartServer(result)
     else
       pData^.Server := nil;
   finally
     VST.EndUpdate();
+  end;
+end;
+
+function TFormServers.ServerPortExists(const APort : Word; const AIpVersion : TIpVersion) : Boolean;
+begin
+  result := GetNodeByPort(APort, AIpVersion) <> nil;
+end;
+
+procedure TFormServers.TryRegisterServer(const AServerConfiguration : TServerConfiguration;
+  const ADeleteServerNodeOnException : Boolean);
+begin
+  var pServerNode := nil;
+  try
+    pServerNode := RegisterServer(AServerConfiguration);
+  except
+    if Assigned(pServerNode) then begin
+      VST.BeginUpdate();
+      try
+        VST.DeleteNode(pServerNode);
+      finally
+        VST.EndUpdate();
+      end;
+    end;
   end;
 end;
 
@@ -451,18 +526,18 @@ begin
   if not Assigned(pData) then
     Exit();
 
+  if Assigned(pData^.Server) then
+    pData^.Server.Terminate;
+
   {$IFDEF USETLS}
     var ACertificate : TX509Certificate;
 
     if not FormCertificatesStore.GetCertificateKeys(pData^.ServerConfiguration.CertificateFingerprint, ACertificate)
     then begin
-      Application.MessageBox(
-        'Server certificate fingerprint does not exist in the store. Please import an existing certificate first or ' +
-        'generate a new one.',
-        'Start Server',
-        MB_ICONERROR
-      );
+      pData^.StatusMessage := 'Server certificate fingerprint does not exist in the store. Please import an existing ' +
+                              'certificate first or generate a new one.';
 
+      ///
       Exit();
     end;
   {$ENDIF}
@@ -494,37 +569,12 @@ end;
 
 procedure TFormServers.New1Click(Sender: TObject);
 begin
-  var AForm : TFormListen;
-
-  {$IFDEF USETLS}
-  var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
-  try
-    if AFingerprints.Count = 0 then
-      raise Exception.Create('No existing certificate was found in the certificate store. You cannot start ' +
-                             'listening for clients without registering at least one certificate.');
-    ///
-
-//  if FormTrustedCertificates.TrustedCertificateCount = 0 then
-//    raise Exception.Create('No trusted certificate (fingerprint) was found in the trusted certificate ' +
-//                           'store. You cannot start listening for clients without registering at least one ' +
-//                           'trusted certificate. A trusted certificate represents the fingerprint of a ' +
-//                           'client certificate and is required for mutual authentication, ensuring that ' +
-//                           'network communications are secure and not tampered with or eavesdropped on.');
-
-    AForm := TFormListen.Create(self, AFingerprints);
-  finally
-    FreeAndNil(AFingerprints);
-  end;
-{$ELSE}
-  AForm := TFormListen.Create(self);
-{$ENDIF}
+  var AForm := TFormListen.Create(self);
   try
     AForm.ShowModal();
-    if AForm.Canceled then
-      Exit();
 
-    ///
-    RegisterServer(AForm.GetServerConfiguration());
+    if AForm.ModalResult = mrOk then
+      FormServers.RegisterServer(AForm.GetServerConfiguration);
   finally
     FreeAndNil(AForm);
   end;
@@ -645,7 +695,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TFormServers.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);

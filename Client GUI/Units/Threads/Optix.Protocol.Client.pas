@@ -59,9 +59,9 @@ uses
 
   Generics.Collections,
 
-  Optix.Sockets.Helper, Optix.Thread, Optix.Protocol.Preflight
+  OptixCore.Sockets.Helper, OptixCore.Thread, OptixCore.Protocol.Preflight
 
-  {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Context, OptixCore.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -164,9 +164,9 @@ uses
 
   Winapi.Windows,
 
-  Optix.Sockets.Exceptions, Optix.Protocol.Exceptions
+  OptixCore.Sockets.Exceptions, OptixCore.Protocol.Exceptions
 
-  {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Exceptions{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure TOptixClientThread.Connected();

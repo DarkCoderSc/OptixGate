@@ -59,7 +59,7 @@ uses
 
   Generics.Collections,
 
-  Optix.Sockets.Helper, Optix.Thread;
+  OptixCore.Sockets.Helper, OptixCore.Thread;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -101,7 +101,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Sockets.Exceptions;
+  OptixCore.Sockets.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure TOptixClientThread.Initialize();

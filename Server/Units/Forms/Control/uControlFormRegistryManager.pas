@@ -64,7 +64,7 @@ uses
   VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.Types,
   OMultiPanel,
 
-  Optix.Protocol.Packet, Optix.Func.Commands.Registry, Optix.Registry.Enum, Optix.Registry.Helper,
+  OptixCore.Protocol.Packet, OptixCore.Commands.Registry, OptixCore.System.Registry,
 
   __uBaseFormControl__;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -202,7 +202,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Optix.Constants, Optix.System.Helper, Optix.VCL.Helper,
+  Optix.Constants, OptixCore.System.Helper, Optix.Helper,
 
   uControlFormRegistryEditor;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -259,7 +259,7 @@ begin
   end;
 
   ///
-  TOptixVCLHelper.ShowForm(AForm);
+  TOptixHelper.ShowForm(AForm);
 end;
 
 function TControlFormRegistryManager.GetNodeByKeyPath(const AKeyPath : String) : PVirtualNode;
@@ -416,7 +416,7 @@ begin
 
             pData^.KeyInformation := TRegistryKeyInformation.Create();
 
-            pData^.ImageIndex := SystemFolderIcon();
+            pData^.ImageIndex := TOptixHelper.SystemFolderIcon();
 
             if Assigned(pParentNode) then begin
               var pParentData := PKeysTreeData(pParentNode.GetData);
@@ -844,7 +844,7 @@ end;
 
 procedure TControlFormRegistryManager.PopupValuesPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility(TPopupMenu(Sender), not String.IsNullOrWhiteSpace(FCurrentKeyPath));
+  TOptixHelper.UpdatePopupMenuRootItemsVisibility(TPopupMenu(Sender), not String.IsNullOrWhiteSpace(FCurrentKeyPath));
 
   ///
   NewKey1.Enabled := rkpCreateSubKey in FCurrentKeyPermissions;
@@ -875,9 +875,9 @@ begin
   ///
 
   if not Assigned(pData1) or not Assigned(pData2) then
-    Result := ComparePointerAssigmenet(pData1, pData2)
+    Result := TOptixHelper.ComparePointerAssigmenet(pData1, pData2)
   else if not Assigned(pData1^.KeyInformation) or not Assigned(pData2^.KeyInformation) then
-    Result := CompareObjectAssignement(pData1^.KeyInformation, pData2^.KeyInformation)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.KeyInformation, pData2^.KeyInformation)
   else
     Result := CompareText(pData1^.KeyInformation.Name, pData2^.KeyInformation.Name);
 end;
@@ -945,9 +945,9 @@ begin
   var pData2 := PValuesTreeData(Node2.GetData);
 
   if not Assigned(pData1) or not Assigned(pData2) then
-    Result := ComparePointerAssigmenet(pData1, pData2)
+    Result := TOptixHelper.ComparePointerAssigmenet(pData1, pData2)
   else if not Assigned(pData1^.ValueInformation) or not Assigned(pData2^.ValueInformation) then
-    Result := CompareObjectAssignement(pData1^.ValueInformation, pData2^.ValueInformation)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.ValueInformation, pData2^.ValueInformation)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.ValueInformation.Name, pData2^.ValueInformation.Name);

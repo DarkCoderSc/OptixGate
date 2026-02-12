@@ -66,7 +66,7 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Protocol.Packet;
+  OptixCore.Protocol.FileTransfer, OptixCore.LogNotifier, OptixCore.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -147,8 +147,8 @@ uses
 
   uFormMain, uControlFormFileManager,
 
-  Optix.Func.Commands, Optix.Helper, VCL.FileCtrl, Optix.FileSystem.Helper, Optix.Exceptions, Optix.Constants,
-  Optix.VCL.Helper, Optix.Func.Commands.FileSystem;
+  OptixCore.Commands, VCL.FileCtrl, OptixCore.System.FileSystem, OptixCore.Exceptions, Optix.Constants,
+  Optix.Helper, OptixCore.Commands.FileSystem;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -219,7 +219,7 @@ end;
 
 procedure TControlFormTransfers.PopupMenuPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
   ///
 
   UploadaFile1.Visible   := True;
@@ -368,7 +368,7 @@ begin
     pData^.DestinationFilePath := TFileSystemHelper.UniqueFileName(ADestinationFilePath.Trim());
     pData^.Direction           := ADirection;
     pData^.Context             := AContext;
-    pData^.ImageIndex          := SystemFileIcon(pData^.SourceFilePath, (ADirection = otdClientIsUploading));
+    pData^.ImageIndex          := TOptixHelper.SystemFileIcon(pData^.SourceFilePath, (ADirection = otdClientIsUploading));
 
     ///
     result := pData^.Id;
@@ -385,7 +385,7 @@ begin
     end;
 
   ///
-  TOptixVCLHelper.ShowForm(self);
+  TOptixHelper.ShowForm(self);
 end;
 
 function TControlFormTransfers.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
@@ -542,7 +542,7 @@ begin
       end;
       3 : begin
         if pData^.FileSize > 0 then
-          CellText := FormatFileSize(pData^.FileSize);
+          CellText := TOptixHelper.FormatFileSize(pData^.FileSize);
       end;
       4 : begin
         case pData^.State of
@@ -551,8 +551,8 @@ begin
             if pData^.FileSize > 0 then
               CellText := Format('%d%% (%s/%s)', [
                 (pData^.WorkCount * 100) div pData^.FileSize,
-                FormatFileSize(pData^.WorkCount),
-                FormatFileSize(pData^.FileSize)
+                TOptixHelper.FormatFileSize(pData^.WorkCount),
+                TOptixHelper.FormatFileSize(pData^.FileSize)
               ]);
           end;
           tsEnded         : CellText := 'Ended';
@@ -568,7 +568,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormTransfers.CancelTransfer1Click(Sender: TObject);

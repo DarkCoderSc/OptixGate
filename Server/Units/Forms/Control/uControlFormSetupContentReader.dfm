@@ -37,7 +37,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       AlignWithMargins = True
       Left = 8
       Top = 8
-      Width = 330
+      Width = 48
       Height = 15
       Margins.Left = 0
       Margins.Top = 0
@@ -45,13 +45,12 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Margins.Bottom = 0
       Align = alTop
       Caption = 'File Path:'
-      ExplicitWidth = 48
     end
     object LabelPageSize: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 54
-      Width = 330
+      Width = 108
       Height = 15
       Margins.Left = 0
       Margins.Top = 8
@@ -59,7 +58,6 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Page Size (%d - %d):'
-      ExplicitWidth = 108
     end
     object EditPath: TEdit
       Left = 8

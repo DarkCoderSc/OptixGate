@@ -103,7 +103,7 @@ implementation
 uses
   uFormMain, uControlFormRemoteShell,
 
-  Optix.Func.Commands, Optix.Helper, Optix.Constants, Optix.Func.Commands.Shell;
+  OptixCore.Commands, Optix.Helper, Optix.Constants, OptixCore.Commands.Shell;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -183,7 +183,7 @@ end;
 procedure TFrameRemoteShellInstance.ShellLinkClick(Sender: TCustomRichEdit; const URL: string; Button: TMouseButton);
 begin
   case Button of
-    TMouseButton.mbLeft : Open(Url);
+    TMouseButton.mbLeft : TOptixHelper.Open(Url);
 
     TMouseButton.mbRight : ;
     TMouseButton.mbMiddle : ;

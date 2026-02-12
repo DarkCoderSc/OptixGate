@@ -47,8 +47,8 @@ object FormGenerateNewCertificate: TFormGenerateNewCertificate
       Width = 83
       Height = 25
       Caption = 'Cancel'
+      ModalResult = 2
       TabOrder = 1
-      OnClick = ButtonCancelClick
     end
   end
   object PanelClient: TPanel

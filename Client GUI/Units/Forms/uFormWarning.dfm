@@ -88,8 +88,8 @@ object FormWarning: TFormWarning
       AlignWithMargins = True
       Left = 80
       Top = 8
-      Width = 640
-      Height = 49
+      Width = 639
+      Height = 45
       Margins.Left = 8
       Margins.Top = 8
       Margins.Right = 8
@@ -110,8 +110,6 @@ object FormWarning: TFormWarning
       Transparent = True
       WordWrap = True
       StyleElements = [seClient, seBorder]
-      ExplicitWidth = 639
-      ExplicitHeight = 45
     end
   end
   object Panel1: TPanel
@@ -190,8 +188,6 @@ object FormWarning: TFormWarning
       ScrollBars = ssVertical
       TabOrder = 1
       StyleElements = [seClient, seBorder]
-      ExplicitWidth = 718
-      ExplicitHeight = 365
     end
   end
   object Timer: TTimer

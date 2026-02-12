@@ -62,7 +62,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask,
   Vcl.Samples.Spin,
 
-  Optix.Sockets.Helper;
+  OptixCore.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -94,14 +94,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure SpinPortChange(Sender: TObject);
     procedure ComboIpVersionChange(Sender: TObject);
   private
-    FCanceled : Boolean;
-
     {@M}
     procedure DoResize();
   public
@@ -112,9 +109,6 @@ type
 
     {@M}
     function GetClientConfiguration() : TClientConfiguration;
-
-    {@G}
-    property Canceled : Boolean read FCanceled;
   end;
 
 var
@@ -124,6 +118,8 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  Optix.Helper,
+
   uFormMain, uFormWarning;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -140,30 +136,33 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormConnectToServer.ButtonCancelClick(Sender: TObject);
-begin
-  Close();
-end;
-
 procedure TFormConnectToServer.ButtonConnectClick(Sender: TObject);
 begin
-  if String.IsNullOrWhiteSpace(EditServerAddress.Text) or
-     not TOptixSocketHelper.IsValidHost(EditServerAddress.Text, TIPVersion(ComboIpVersion.ItemIndex))
-  then begin
-    EditServerAddress.SetFocus();
+  var AErrorDialog := TOptixErrorDialog.Create(self);
+  try
+    if String.IsNullOrWhiteSpace(EditServerAddress.Text) or
+       not TOptixSocketHelper.IsValidHost(EditServerAddress.Text, TIPVersion(ComboIpVersion.ItemIndex))
+    then begin
+      EditServerAddress.SetFocus();
 
-    raise Exception.Create(
-      'You must specify a valid server address. For IPv4, use an address such as "127.0.0.1" for localhost or any ' +
-      'valid LAN or WAN IPv4 address. For IPv6, use "::1" for localhost or a full IPv6 address such as ' +
-      '"fd00:abcd:1234::100". You can also use a hostname that resolves to the appropriate IP version depending on ' +
-      'the selected IP version mode.'
-    );
+      AErrorDialog.Add(
+        'You must specify a valid server address. For IPv4, use an address such as "127.0.0.1" for localhost or any ' +
+        'valid LAN or WAN IPv4 address. For IPv6, use "::1" for localhost or a full IPv6 address such as ' +
+        '"fd00:abcd:1234::100". You can also use a hostname that resolves to the appropriate IP version depending on ' +
+        'the selected IP version mode.'
+      );
+    end;
+
+    if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
+      AErrorDialog.Add(
+        'You must select an existing certificate (via its fingerprint) for the server to start listening.'
+      );
+
+    if AErrorDialog.ShowErrors() then
+      Exit();
+  finally
+    FreeAndNil(AErrorDialog);
   end;
-
-  if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
-    raise Exception.Create(
-      'You must select an existing certificate (via its fingerprint) for the server to start listening.'
-    );
 
   {$IFNDEF DEBUG}
   var AForm := TFormWarning.Create(self);
@@ -177,9 +176,7 @@ begin
   end;
   {$ENDIF}
 
-  FCanceled := False;
-
-  Close();
+  ModalResult := mrOk;
 end;
 
 procedure TFormConnectToServer.DoResize();
@@ -202,8 +199,6 @@ end;
 
 procedure TFormConnectToServer.FormCreate(Sender: TObject);
 begin
-  FCanceled := True;
-
   {$IFNDEF USETLS}
   LabelCertificate.Visible := False;
   ComboCertificate.Visible := False;
@@ -214,7 +209,7 @@ procedure TFormConnectToServer.FormKeyUp(Sender: TObject; var Key: Word; Shift: 
 begin
   case Key of
     13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+    27 : ModalResult := mrCancel;
   end;
 end;
 

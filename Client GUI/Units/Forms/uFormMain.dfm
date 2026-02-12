@@ -1,7 +1,6 @@
 object FormMain: TFormMain
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
   Caption = 'Optix Gate - Client GUI (Mode)'
   ClientHeight = 226
   ClientWidth = 665
@@ -5397,20 +5396,27 @@ object FormMain: TFormMain
         Name = 'warning'
       end>
     ImageCollection = ImageCollectionDark
-    Left = 328
-    Top = 104
+    Left = 344
+    Top = 96
   end
   object PopupMenu: TPopupMenu
     OnPopup = PopupMenuPopup
-    Left = 88
-    Top = 200
+    Left = 456
+    Top = 96
     object RemoveClient1: TMenuItem
       Caption = 'Remove Client'
       OnClick = RemoveClient1Click
     end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Certificate1: TMenuItem
+      Caption = 'Certificate'
+      OnClick = Certificate1Click
+    end
   end
   object NotificationCenter: TNotificationCenter
-    Left = 408
-    Top = 200
+    Left = 528
+    Top = 96
   end
 end

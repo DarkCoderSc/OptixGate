@@ -74,8 +74,8 @@ uses
 
   __uBaseFormControl__,
 
-   VirtualTrees.Types, Optix.FileSystem.Helper, Optix.FileSystem.Enum, Optix.Func.Commands.FileSystem,
-   Optix.Protocol.Packet;
+   VirtualTrees.Types, OptixCore.System.FileSystem, OptixCore.Commands.FileSystem,
+   OptixCore.Protocol.Packet;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -215,7 +215,7 @@ uses
 
   uFormMain,
 
-  Optix.Func.Commands, Optix.Helper, Optix.Constants, Optix.VCL.Helper;
+  OptixCore.Commands, Optix.Constants, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -277,9 +277,9 @@ begin
     pData^.FileInformation.Assign(AFileInformation);
 
     if AFileInformation.IsDirectory then
-      pData^.ImageIndex := SystemFolderIcon()
+      pData^.ImageIndex := TOptixHelper.SystemFolderIcon()
     else
-      pData^.ImageIndex := SystemFileIcon(pData^.Name, True);
+      pData^.ImageIndex := TOptixHelper.SystemFileIcon(pData^.Name, True);
   finally
     VSTFiles.EndUpdate();
   end;
@@ -350,9 +350,9 @@ begin
         pData^.Information.Assign(AItem);
 
         if AItem.IsRoot then
-          pData^.ImageIndex := SystemFileIcon(AItem.Path)
+          pData^.ImageIndex := TOptixHelper.SystemFileIcon(AItem.Path)
         else
-          pData^.ImageIndex := SystemFolderIcon();
+          pData^.ImageIndex := TOptixHelper.SystemFolderIcon();
       end
     )
   );
@@ -589,7 +589,7 @@ end;
 
 procedure TControlFormFileManager.PopupMenuPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
   ///
 
   if EditPath.Visible then begin
@@ -846,9 +846,9 @@ begin
       2 : begin
         if pData^.DriveInformation.TotalSize > 0 then
           CellText := Format('%s(%d%%) / %s', [
-            FormatFileSize(pData^.DriveInformation.UsedSize),
+            TOptixHelper.FormatFileSize(pData^.DriveInformation.UsedSize),
             pData^.DriveInformation.UsedPercentage,
-            FormatFileSize(pData^.DriveInformation.TotalSize)
+            TOptixHelper.FormatFileSize(pData^.DriveInformation.TotalSize)
           ]);
       end;
     end;
@@ -865,7 +865,7 @@ begin
 
         2 : begin
           if not pData^.FileInformation.IsDirectory then
-            CellText := FormatFileSize(pData^.FileInformation.Size);
+            CellText := TOptixHelper.FormatFileSize(pData^.FileInformation.Size);
         end;
 
         3 : CellText := AccessSetToReadableString(pData^.FileInformation.Access);
@@ -884,7 +884,7 @@ begin
   // -------------------------------------------------------------------------------------------------------------------
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormFileManager.VSTFilesMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
@@ -959,7 +959,7 @@ begin
     end;
   end;
 
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormFileManager.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);
@@ -997,7 +997,7 @@ begin
       pData^.DriveInformation := TDriveInformation.Create();
       pData^.DriveInformation.Assign(ADrive);
       pData^.FileInformation := nil;
-      pData^.ImageIndex  := SystemFileIcon(IncludeTrailingPathDelimiter(ADrive.Letter));
+      pData^.ImageIndex  := TOptixHelper.SystemFileIcon(IncludeTrailingPathDelimiter(ADrive.Letter));
 
       ///
       AFolders.Add(TSimpleFolderInformation.Create(ADrive.Letter, ADrive.Letter, [], True));
@@ -1040,7 +1040,7 @@ begin
       pData^.FileInformation.Assign(AFile);
 
       if AFile.IsDirectory then begin
-        pData^.ImageIndex := SystemFolderIcon();
+        pData^.ImageIndex := TOptixHelper.SystemFolderIcon();
 
         ///
         if not MatchStr(pData^.FileInformation.Name, ['.', '..']) then
@@ -1053,7 +1053,7 @@ begin
             )
           );
       end else
-        pData^.ImageIndex := SystemFileIcon(AFile.Name, True);
+        pData^.ImageIndex := TOptixHelper.SystemFileIcon(AFile.Name, True);
     end;
   finally
     RegisterFoldersInTree(AList.ParentFolders, AFolders);

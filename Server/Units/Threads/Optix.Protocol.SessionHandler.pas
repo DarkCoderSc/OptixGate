@@ -61,7 +61,7 @@ uses
 
   XSuperObject,
 
-  Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Sockets.Helper;
+  OptixCore.Protocol.Client.Handler, OptixCore.Protocol.Packet, OptixCore.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type

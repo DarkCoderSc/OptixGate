@@ -97,6 +97,10 @@ object FormServers: TFormServers
         OnClick = New1Click
       end
     end
+    object Certificates1: TMenuItem
+      Caption = 'Certificates'
+      OnClick = Certificates1Click
+    end
   end
   object PopupMenu: TPopupMenu
     OnPopup = PopupMenuPopup
@@ -118,6 +122,10 @@ object FormServers: TFormServers
       Caption = 'Auto Start'
       Checked = True
       OnClick = AutoStart1Click
+    end
+    object Certificate1: TMenuItem
+      Caption = 'Certificate'
+      OnClick = Certificate1Click
     end
   end
 end

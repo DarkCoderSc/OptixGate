@@ -136,7 +136,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Generics.Collections, Optix.Constants, Optix.VCL.Helper;
+  Generics.Collections, Optix.Constants, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -371,7 +371,7 @@ begin
 
   var AForm := GetFormByGUID(ATargetGUID);
   if Assigned(AForm) then
-    TOptixVCLHelper.ShowForm(AForm);
+    TOptixHelper.ShowForm(AForm);
 end;
 
 procedure TControlFormControlForms.TimerRefreshTimer(Sender: TObject);
@@ -421,7 +421,7 @@ begin
     Result := 0
   else begin
     if (Column in [2..4, 6]) and (not Assigned(pData1^.FormInformation) or not Assigned(pData2^.FormInformation)) then
-      Result := CompareObjectAssignement(pData1^.FormInformation, pData2^.FormInformation)
+      Result := TOptixHelper.CompareObjectAssignement(pData1^.FormInformation, pData2^.FormInformation)
     else begin
       case Column of
         0 : Result := CompareText(pData1^.Title, pData2^.Title);
@@ -510,7 +510,7 @@ begin
       3 : CellText := DateTimeToStr(pData^.FormInformation.CreatedTime);
       4 :begin
         if pData^.FormInformation.HasReceivedData then
-          CellText := ElapsedDateTime(
+          CellText := TOptixHelper.ElapsedDateTime(
             pData^.FormInformation.LastReceivedDataTime,
             Now
           );
@@ -521,7 +521,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormControlForms.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,

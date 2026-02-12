@@ -71,8 +71,9 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Thread, Optix.Protocol.Preflight, Optix.Protocol.Server, Optix.Sockets.Helper, Optix.Func.SessionInformation,
-  Optix.Protocol.SessionHandler, Optix.Func.Commands.Base, Optix.Func.Commands;
+  OptixCore.Thread, OptixCore.Protocol.Preflight, Optix.Protocol.Server, OptixCore.Sockets.Helper,
+  OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base,
+  OptixCore.Commands;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -208,8 +209,9 @@ uses
   uControlFormRegistryManager, uControlFormSetupContentReader, uControlFormContentReader
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
-  Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
-  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.ClassesRegistry, Optix.Func.Commands.ContentReader
+  OptixCore.Protocol.Packet, Optix.Helper, Optix.Constants, OptixCore.System.Process,
+  OptixCore.LogNotifier, Optix.Protocol.Worker.FileTransfer, OptixCore.ClassesRegistry,
+  OptixCore.Commands.ContentReader
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -441,7 +443,7 @@ begin
   end;
 
   if Assigned(AForm) then
-    TOptixVCLHelper.ShowForm(AForm);
+    TOptixHelper.ShowForm(AForm);
 end;
 
 function TFormMain.CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass;
@@ -463,7 +465,7 @@ begin
   result := AForm;
 
   if ADoShow then
-    TOptixVCLHelper.ShowForm(AForm);
+    TOptixHelper.ShowForm(AForm);
 end;
 
 function TFormMain.CreateNewControlForm(const AControlForm : TBaseFormControl; const AFormClass : TBaseFormControlClass;
@@ -648,9 +650,9 @@ begin
   end;
 
   if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
-    Result := CompareObjectAssignement(pData1^.SessionInformation, pData2^.SessionInformation)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.SessionInformation, pData2^.SessionInformation)
   else if not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler) then
-    Result := CompareObjectAssignement(pData1^.Handler, pData2^.Handler)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.Handler, pData2^.Handler)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
@@ -680,10 +682,10 @@ begin
     case Column of
       0 : CellText := pData^.Handler.PeerAddress;
       1 : CellText := pData^.GetUPN;
-      2 : CellText := DefaultIfEmpty(pData^.SessionInformation.Langroup);
-      3 : CellText := DefaultIfEmpty(pData^.SessionInformation.DomainName);
+      2 : CellText := TOptixHelper.DefaultIfEmpty(pData^.SessionInformation.Langroup);
+      3 : CellText := TOptixHelper.DefaultIfEmpty(pData^.SessionInformation.DomainName);
       4 : CellText := pData^.SessionInformation.WindowsVersion;
-      5 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
+      5 : CellText := TOptixHelper.ElapsedDateTime(pData^.SpawnDate, Now);
       6 : CellText := pData^.SessionInformation.ProcessDetail;
       7 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
       8 : CellText := BoolToStr(pData^.SessionInformation.IsInAdminGroup, True);
@@ -691,7 +693,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TFormMain.VSTInitNode(Sender: TBaseVirtualTree; ParentNode,
@@ -724,7 +726,7 @@ end;
 
 procedure TFormMain.PopupMenuPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
 
   var AVisible := VST.FocusedNode <> nil;
 
@@ -922,7 +924,7 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  InitializeSystemIcons(ImageSystem, FFileInfo);
+  TOptixHelper.InitializeSystemIcons(ImageSystem, FFileInfo);
   ///
 
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);

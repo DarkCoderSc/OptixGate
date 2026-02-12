@@ -120,7 +120,7 @@ uses
 
   uFormMain,
 
-  Optix.Thread, Optix.Constants, Optix.Helper, Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer
+  OptixCore.Thread, Optix.Constants, Optix.Helper, Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer
 
   {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -351,13 +351,13 @@ begin
       0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
       1 : CellText := pData^.ClassName;
       2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
-      3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
+      3 : CellText := TOptixHelper.ElapsedDateTime(pData^.CreatedTime, Now);
       4 : CellText := ThreadPriorityToString(pData^.Priority);
     end;
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 end.

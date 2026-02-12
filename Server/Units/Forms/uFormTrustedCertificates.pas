@@ -217,7 +217,7 @@ begin
   if not InputQuery('Add Trusted Certificate', 'Please enter a valid SHA-512 certificate fingerprint:', AFingerprint) then
     Exit();
 
-  CheckCertificateFingerprint(AFingerprint);
+  TOptixHelper.CheckCertificateFingerprint(AFingerprint);
 
   AddTrustedCertificate(AFingerprint);
 end;
@@ -306,7 +306,7 @@ begin
     end;
   end;
 
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 end.

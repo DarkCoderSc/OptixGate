@@ -61,7 +61,7 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.Menus,
 
-  Optix.Registry.Helper, Optix.Shared.Classes,
+  OptixCore.System.Registry, OptixCore.Classes,
 
   __uBaseFormControl__, uFrameHexEditor;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -152,7 +152,7 @@ implementation
 uses
   System.Math, System.StrUtils,
 
-  Optix.Func.Commands.Registry, Optix.Shared.Helper;
+  OptixCore.Commands.Registry, OptixCore.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}

@@ -97,7 +97,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  Optix.Func.Commands.ContentReader, Optix.FileSystem.Helper;
+  OptixCore.Commands.ContentReader, OptixCore.System.FileSystem;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}

@@ -164,7 +164,7 @@ begin
   DoResize();
   ///
   try
-    RichAgreement.Text := ReadResourceString('CONTROL_AGREEMENT');
+    RichAgreement.Text := TOptixHelper.ReadResourceString('CONTROL_AGREEMENT');
 
     RichAgreement.SelStart := Length(RichAgreement.Text);
 

@@ -70,7 +70,7 @@ uses
 
   Optix.Protocol.SessionHandler, Optix.Protocol.Client
 
-  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF};
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -107,6 +107,8 @@ type
     Stores1: TMenuItem;
     Certificates1: TMenuItem;
     rustedCertificates1: TMenuItem;
+    N2: TMenuItem;
+    Certificate1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
@@ -130,6 +132,7 @@ type
       var Result: Integer);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormShow(Sender: TObject);
+    procedure Certificate1Click(Sender: TObject);
   private
     FNotifications : TList<TGUID>;
 
@@ -161,11 +164,11 @@ implementation
 uses
   System.Math,
 
-  uFormAbout, uFormDebugThreads
-  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
+  OptixCore.Thread, Optix.Helper, Optix.Constants, OptixCore.Protocol.Preflight, OptixCore.Sockets.Helper
+  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF},
 
-  Optix.Thread, Optix.VCL.Helper, Optix.Helper, Optix.Constants, Optix.Protocol.Preflight, Optix.Sockets.Helper
-  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+  uFormAbout, uFormDebugThreads
+  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, uFormSelectCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -286,6 +289,39 @@ begin
   FormAbout.ShowModal();
 end;
 
+procedure TFormMain.Certificate1Click(Sender: TObject);
+begin
+  {$IFDEF USETLS}
+  if VST.FocusedNode = nil then
+    Exit();
+
+  var pData := PTreeData(VST.FocusedNode.GetData);
+  if not Assigned(pData) then
+    Exit();
+
+  var AForm := TFormSelectCertificate.Create(self, pData^.ClientConfiguration.CertificateFingerprint);
+  try
+    AForm.ShowModal();
+
+    if AForm.ModalResult <> mrOk then
+      Exit();
+
+    VST.BeginUpdate();
+    try
+      pData^.ClientConfiguration.CertificateFingerprint := AForm.ComboCertificate.Text;
+
+      ///
+      AddClient(pData^.ClientConfiguration);
+      VST.DeleteNode(VST.FocusedNode);
+    finally
+      VST.EndUpdate();
+    end;
+  finally
+    FreeAndNil(AForm);
+  end;
+  {$ENDIF}
+end;
+
 procedure TFormMain.Certificates1Click(Sender: TObject);
 begin
   {$IFDEF USETLS}
@@ -384,7 +420,7 @@ begin
   {$ENDIF}
   try
     AForm.ShowModal();
-    if AForm.Canceled then
+    if AForm.ModalResult <> mrOk then
       Exit();
     ///
 
@@ -457,7 +493,10 @@ end;
 
 procedure TFormMain.PopupMenuPopup(Sender: TObject);
 begin
-  RemoveClient1.Visible :=  VST.FocusedNode <> nil;
+  RemoveClient1.Visible := VST.FocusedNode <> nil;
+  Certificate1.Visible  := {$IFDEF USETLS}
+                             (VST.FocusedNode <> nil) and (FormCertificatesStore.CertificateCount > 1)
+                           {$ELSE}False{$ENDIF};
 end;
 
 procedure TFormMain.RemoveClient1Click(Sender: TObject);
@@ -589,7 +628,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TFormMain.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);

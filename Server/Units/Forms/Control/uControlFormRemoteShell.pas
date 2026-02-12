@@ -64,7 +64,7 @@ uses
 
   __uBaseFormControl__, uFrameRemoteShellInstance,
 
-  Optix.Protocol.Packet;
+  OptixCore.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -121,7 +121,7 @@ implementation
 uses
   uFormMain,
 
-  Optix.Func.Commands, Optix.Func.Commands.Shell, Optix.Constants, Optix.VCL.Helper;
+  OptixCore.Commands, OptixCore.Commands.Shell, Optix.Constants, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -277,7 +277,7 @@ end;
 
 procedure TControlFormRemoteShell.PopupTabsPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
 
   if not Assigned(FHitTab) then
     Exit();
