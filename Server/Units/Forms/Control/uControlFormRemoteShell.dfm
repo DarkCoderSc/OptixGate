@@ -2,8 +2,8 @@ object ControlFormRemoteShell: TControlFormRemoteShell
   Left = 0
   Top = 0
   Caption = 'Remote Shell'
-  ClientHeight = 347
-  ClientWidth = 698
+  ClientHeight = 421
+  ClientWidth = 908
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -14,36 +14,19 @@ object ControlFormRemoteShell: TControlFormRemoteShell
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object Pages: TPageControl
-    AlignWithMargins = True
-    Left = 43
-    Top = 4
-    Width = 651
-    Height = 339
-    Margins.Left = 0
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
-    Align = alClient
-    Images = FormMain.VirtualImageList
-    TabOrder = 0
-    OnChange = PagesChange
-    OnContextPopup = PagesContextPopup
-    ExplicitWidth = 661
-  end
   object PanelActions: TPanel
     AlignWithMargins = True
     Left = 4
     Top = 4
     Width = 35
-    Height = 339
+    Height = 413
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
     Margins.Bottom = 4
     Align = alLeft
     BevelOuter = bvNone
-    TabOrder = 1
+    TabOrder = 0
     ExplicitHeight = 307
     object ButtonNewInstance: TSpeedButton
       Left = 0
@@ -78,6 +61,89 @@ object ControlFormRemoteShell: TControlFormRemoteShell
       OnClick = ButtonBreakClick
       ExplicitLeft = 2
       ExplicitTop = 35
+    end
+  end
+  object PanelMain: TFlatPanel
+    Left = 43
+    Top = 0
+    Width = 865
+    Height = 421
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    Padding.Left = 4
+    Padding.Top = 4
+    Padding.Right = 4
+    Padding.Bottom = 4
+    ExplicitLeft = 44
+    ExplicitTop = -4
+    object PanelVST: TFlatPanel
+      Left = 4
+      Top = 4
+      Width = 201
+      Height = 413
+      BorderTop = 2
+      BorderLeft = 2
+      BorderRight = 2
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
+      Align = alLeft
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 0
+      Padding.Left = 2
+      Padding.Top = 2
+      Padding.Right = 2
+      Padding.Bottom = 2
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitHeight = 421
+    end
+    object PanelPages: TFlatPanel
+      AlignWithMargins = True
+      Left = 209
+      Top = 4
+      Width = 652
+      Height = 413
+      Margins.Left = 4
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
+      BorderTop = 2
+      BorderLeft = 2
+      BorderRight = 2
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
+      Align = alClient
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 1
+      Padding.Left = 2
+      Padding.Top = 2
+      Padding.Right = 2
+      Padding.Bottom = 2
+      ExplicitLeft = 212
     end
   end
   object PopupTabs: TPopupMenu

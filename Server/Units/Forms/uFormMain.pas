@@ -73,7 +73,9 @@ uses
 
   OptixCore.Thread, OptixCore.Protocol.Preflight, Optix.Protocol.Server, OptixCore.Sockets.Helper,
   OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base,
-  OptixCore.Commands;
+  OptixCore.Commands,
+
+  NeoFlat.CaptionBar, NeoFlat.Form, NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -91,13 +93,7 @@ type
   PTreeData = ^TTreeData;
 
   TFormMain = class(TForm)
-    MainMenu: TMainMenu;
-    Server1: TMenuItem;
-    About1: TMenuItem;
-    File1: TMenuItem;
-    Close1: TMenuItem;
-    VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     ProcessManager1: TMenuItem;
     N1: TMenuItem;
     FileManager1: TMenuItem;
@@ -113,19 +109,29 @@ type
     Logs1: TMenuItem;
     ControlForms1: TMenuItem;
     ImageSystem: TImageList;
-    Debug1: TMenuItem;
-    hreads1: TMenuItem;
     asks1: TMenuItem;
-    ImageCollectionDark: TImageCollection;
-    Stores1: TMenuItem;
-    Certificates1: TMenuItem;
-    rustedCertificates1: TMenuItem;
     FileSystem1: TMenuItem;
     System1: TMenuItem;
     N6: TMenuItem;
     N7: TMenuItem;
     N2: TMenuItem;
     ContentReader1: TMenuItem;
+    FamFamFamSilkCollection: TImageCollection;
+    FlatForm: TFlatForm;
+    CaptionBar: TFlatCaptionBar;
+    FlatMainMenu: TFlatPopupMenu;
+    Server1: TMenuItem;
+    Stores2: TMenuItem;
+    Certificates1: TMenuItem;
+    rustedCertificates1: TMenuItem;
+    Debug2: TMenuItem;
+    hreads1: TMenuItem;
+    N8: TMenuItem;
+    About1: TMenuItem;
+    N9: TMenuItem;
+    Close1: TMenuItem;
+    N11: TMenuItem;
+    VST: TVirtualStringTree;
     procedure Close1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -611,20 +617,21 @@ begin
   ///
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected: begin
-      if pData^.SessionInformation.IsSystem then
-        ImageIndex := IMAGE_USER_SYSTEM
-      else begin
-        if pData^.SessionInformation.ElevatedStatus = esElevated then
-          ImageIndex := IMAGE_USER_ELEVATED
-        else begin
-          if pData^.SessionInformation.IsInAdminGroup then
-            ImageIndex := IMAGE_USER_ADMIN
-          else
-            ImageIndex := IMAGE_USER;
-        end;
-      end;
-    end;
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected:
+      ImageIndex := IMAGE_USER;
+//      if pData^.SessionInformation.IsSystem then
+//        ImageIndex := IMAGE_USER_SYSTEM
+//      else begin
+//        if pData^.SessionInformation.ElevatedStatus = esElevated then
+//          ImageIndex := IMAGE_USER_ELEVATED
+//        else begin
+//          if pData^.SessionInformation.IsInAdminGroup then
+//            ImageIndex := IMAGE_USER_ADMIN
+//          else
+//            ImageIndex := IMAGE_USER;
+//        end;
+//      end;
+//    end;
     TVTImageKind.ikState: ;
     TVTImageKind.ikOverlay: ;
   end;
@@ -928,6 +935,7 @@ begin
   ///
 
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
+  CaptionBar.Caption := Caption;
 
   {$IFNDEF USETLS}
   Stores1.Visible := False;

@@ -327,27 +327,6 @@ var ARect       : TRect;
     ABorder     : TColor;
     AGlyph      : TByteArrayArray;
 
-  {
-    Draw the CheckBox Glyph in Canvas
-  }
-  procedure DrawAGlyph(const AGlyphMatrix : TByteArrayArray; const X, Y : Integer; const AGlyphColor : TColor);
-  var I, N         : Integer;
-      AGlyphWidth  : Integer;
-      AGlyphHeight : Integer;
-  begin
-    AGlyphWidth  := High(AGlyphMatrix[1]) + 1;
-    AGlyphHeight := High(AGlyphMatrix) + 1;
-    ///
-
-    for I := 0 to AGlyphWidth -1 do begin
-      for N := 0 to AGlyphHeight -1 do begin
-        if AGlyphMatrix[N][I] <> 0 then begin
-          Canvas.Pixels[(X + I), (Y + N)] := AGlyphColor;
-        end;
-      end;
-    end;
-  end;
-
 begin
   Canvas.Lock();
   try
@@ -446,9 +425,9 @@ begin
           X := (ARect.Left + FMetrics._1);
           Y := (ARect.Top + FMetrics._1);
 
-          ScaleGlyph(CHECKBOX_GLYPH_TEMPLATE, AGlyph, round(ScaleFactor));
+          ScaleMatrixGlyph(CHECKBOX_GLYPH_TEMPLATE, AGlyph, round(ScaleFactor));
 
-          DrawAGlyph(AGlyph, X, Y, MAIN_ACCENT);
+          DrawMatrixGlyph(Canvas, AGlyph, X, Y, MAIN_ACCENT);
         end;
       end;
 
@@ -495,9 +474,9 @@ begin
         Y := (ARect.Top + FMetrics._3);
 
         if FChecked then begin
-          ScaleGlyph(RADIOBOX_GLYPH_TEMPLATE, AGlyph, round(ScaleFactor));
+          ScaleMatrixGlyph(RADIOBOX_GLYPH_TEMPLATE, AGlyph, round(ScaleFactor));
 
-          DrawAGlyph(AGlyph, X, Y, MAIN_ACCENT);
+          DrawMatrixGlyph(Canvas, AGlyph, X, Y, MAIN_ACCENT);
         end;
       end;
     end;

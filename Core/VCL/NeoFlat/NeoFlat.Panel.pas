@@ -94,6 +94,7 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnStartDrag;
+    property Padding;
   end;
 
 implementation

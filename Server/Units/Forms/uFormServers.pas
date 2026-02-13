@@ -591,7 +591,7 @@ begin
   var AColor := clNone;
 
   case pData^.Status of
-    ssListening : AColor := COLOR_LIST_LIMY;
+    ssListening : AColor := COLOR_LIST_GREEN;
   end;
 
   if AColor <> clNone then begin

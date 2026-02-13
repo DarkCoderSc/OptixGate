@@ -150,7 +150,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.StrUtils, System.Math;
+  System.StrUtils, System.Math, Optix.Constants;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -253,7 +253,7 @@ begin
   var AGridSectionKind := gskNone;
 
   case Column of
-    0 : AColor := clBlack;
+    0 : AColor := COLOR_LIST_GRAY;
 
     1..ROW_SIZE : begin
       AByteIndex := Column - 1;
@@ -261,7 +261,7 @@ begin
       AGridSectionKind := gskHex;
 
       if odd(Column mod 2) then
-        AColor := clBlack;
+        AColor := COLOR_LIST_GRAY;
     end;
 
     ROW_SIZE +1..(ROW_SIZE * 2) +1 : begin

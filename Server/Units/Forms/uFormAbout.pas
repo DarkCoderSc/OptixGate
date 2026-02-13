@@ -126,7 +126,6 @@ procedure TFormAbout.FormCreate(Sender: TObject);
 begin
   FFirstShow := True;
 
-  ImageLogo.ImageCollection := FormMain.ImageCollectionDark;
   ImageLogo.ImageIndex := IMAGE_OPTIX_FACE;
 end;
 

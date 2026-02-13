@@ -398,7 +398,7 @@ begin
   if pData^.FormInformation.HasUnseenData then
     AColor := COLOR_LIST_BLUE
   else if pData^.FormInformation.HasFocus then
-    AColor := COLOR_LIST_LIMY
+    AColor := COLOR_LIST_GREEN
   else if pData^.FormInformation.State = fcsClosed then
     AColor := COLOR_LIST_GRAY
   else if pData^.FormInformation.State = fcsWaitFree then
@@ -468,22 +468,23 @@ begin
   ///
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
-      if pData^.FormInformation.HasUnseenData then
-        ImageIndex := IMAGE_FORM_CONTROL_DATA
-      else if pData^.FormInformation.HasFocus then
-        ImageIndex := IMAGE_FORM_CONTROL_ACTIVE
-      else if pData^.FormInformation.State = fcsClosed then
-        ImageIndex := IMAGE_FORM_CONTROL_CLOSED
-      else
-        ImageIndex := IMAGE_FORM_CONTROL;
-    end;
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected : // begin
+//      if pData^.FormInformation.HasUnseenData then
+//        ImageIndex := IMAGE_FORM_CONTROL_DATA
+//      else if pData^.FormInformation.HasFocus then
+//        ImageIndex := IMAGE_FORM_CONTROL_ACTIVE
+//      else if pData^.FormInformation.State = fcsClosed then
+//        ImageIndex := IMAGE_FORM_CONTROL_CLOSED
+//      else
+//        ImageIndex := IMAGE_FORM_CONTROL;
+      ImageIndex := IMAGE_CONTROL_APP;
+//    end;
 
     TVTImageKind.ikState : begin
       if pData^.Special then
-        ImageIndex := IMAGE_STAR_FILLED
+        ImageIndex := IMAGE_ANCHOR
       else
-        ImageIndex := IMAGE_STAR_EMPTY;
+        ImageIndex := 1000;
     end;
   end;
 end;

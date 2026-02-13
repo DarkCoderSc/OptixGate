@@ -22,8 +22,7 @@ unit NeoFlat.Form;
 
 interface
 
-uses Winapi.Windows, System.Classes, VCL.Controls, VCL.Forms, Winapi.Messages,
-     VCL.Graphics;
+uses Winapi.Windows, System.Classes, VCL.Controls, VCL.Forms, Winapi.Messages, VCL.Graphics;
 
 type
   TFlatForm = class(TComponent)
@@ -145,7 +144,6 @@ begin
   FOwnerForm.DoubleBuffered := True;
   FOwnerForm.BorderStyle    := bsNone;
   FOwnerForm.Font.Name      := FONT_1;
-  FOwnerForm.Font.Size      := 8;
 
   SetShowBorder(True);
 

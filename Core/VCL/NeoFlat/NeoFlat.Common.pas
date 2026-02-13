@@ -28,14 +28,36 @@ function FadeBitmap32Opacity(var ABitmap : TBitmap; AOpacity : word = 200) : Boo
 procedure InitializeBitmap32(var ABmp : TBitmap; AWidth, AHeight : Integer);
 function GetParentChain(ABase : TComponent) : String;
 procedure DrawGlyph(const ACanvas : TCanvas; const AImageList : TCustomImageList; const AImageIndex : Integer; const X, Y : Integer; const AEnabled : Boolean);
-procedure ScaleGlyph(const AGlyph: TByteArrayArray; var AScaledGlyph : TByteArrayArray; const AScaleFactor : Integer);
+procedure ScaleMatrixGlyph(const AGlyph: TByteArrayArray; var AScaledGlyph : TByteArrayArray; const AScaleFactor : Integer);
+procedure DrawMatrixGlyph(const ACanvas : TCanvas; const AGlyphMatrix : TByteArrayArray; const X, Y : Integer; const AGlyphColor : TColor);
 
 implementation
 
 uses System.SysUtils;
 
-{ _.DoubleGridSize }
-procedure ScaleGlyph(const AGlyph: TByteArrayArray; var AScaledGlyph : TByteArrayArray; const AScaleFactor : Integer);
+procedure DrawMatrixGlyph(const ACanvas : TCanvas; const AGlyphMatrix : TByteArrayArray; const X, Y : Integer; const AGlyphColor : TColor);
+var I, N         : Integer;
+    AGlyphWidth  : Integer;
+    AGlyphHeight : Integer;
+begin
+  if not Assigned(ACanvas) then
+    Exit();
+  ///
+
+  AGlyphWidth  := High(AGlyphMatrix[1]) + 1;
+  AGlyphHeight := High(AGlyphMatrix) + 1;
+  ///
+
+  for I := 0 to AGlyphWidth -1 do begin
+    for N := 0 to AGlyphHeight -1 do begin
+      if AGlyphMatrix[N][I] <> 0 then begin
+        ACanvas.Pixels[(X + I), (Y + N)] := AGlyphColor;
+      end;
+    end;
+  end;
+end;
+
+procedure ScaleMatrixGlyph(const AGlyph: TByteArrayArray; var AScaledGlyph : TByteArrayArray; const AScaleFactor : Integer);
 var
   AOriginalRows : Integer;
   AOriginalCols : Integer;

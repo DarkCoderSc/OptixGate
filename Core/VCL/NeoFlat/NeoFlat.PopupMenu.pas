@@ -47,7 +47,7 @@ type
 
 implementation
 
-uses NeoFlat.Theme;
+uses NeoFlat.Theme, NeoFlat.CheckBox, NeoFlat.Common, NeoFlat.Types;
 
 { TFlatPopupMenu.InitializeMenu }
 procedure TFlatPopupMenu.InitializeMenu(const AMenuHandle : HMENU);
@@ -132,6 +132,7 @@ begin
 //        ARect.Bottom := ARect.Bottom - FMetrics._8
 //    end;
 
+    // Draw Text
     ACanvas.Brush.Color := AColor;
 
     if M.Enabled then
@@ -143,12 +144,22 @@ begin
     ACanvas.Font.Name  := FONT_1;
     ACanvas.Font.Size  := 9;
 
-
     ACanvas.FillRect(ARect);
 
     Inc(ARect.Left, FMetrics._16);
 
     ACanvas.TextRect(ARect, ACaption, [tfSingleLine, tfVerticalCenter]);
+
+
+    // Draw CheckBox
+    if M.Checked then begin
+      var AGlyph : TByteArrayArray;
+
+      ScaleMatrixGlyph(CHECKBOX_GLYPH_TEMPLATE, AGlyph, round(FMetrics.ScaleFactor));
+
+      var Y := ARect.Top + ((ARect.Height div 2) - (Length(AGlyph) div 2));
+      DrawMatrixGlyph(ACanvas, AGlyph, FMetrics._4, Y, MAIN_ACCENT);
+    end;
   end;
 end;
 

@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 {
   TODO:
     - Lock GUI during refresh (Folders), Unlock if : Refresh Success / Refresh Error
@@ -70,12 +68,13 @@ uses
   Vcl.ExtCtrls,
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL,
-  OMultiPanel,
+  OMultiPanel, VirtualTrees.Types,
 
   __uBaseFormControl__,
 
-   VirtualTrees.Types, OptixCore.System.FileSystem, OptixCore.Commands.FileSystem,
-   OptixCore.Protocol.Packet;
+  OptixCore.System.FileSystem, OptixCore.Commands.FileSystem, OptixCore.Protocol.Packet,
+
+  NeoFlat.Form, NeoFlat.CaptionBar, NeoFlat.Panel, NeoFlat.Edit, NeoFlat.ImageButton, NeoFlat.Button, NeoFlat.PopupMenu;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -102,31 +101,37 @@ type
   );
 
   TControlFormFileManager = class(TBaseFormControl)
-    VSTFiles: TVirtualStringTree;
-    EditPath: TEdit;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     DownloadFile1: TMenuItem;
     UploadToFolder1: TMenuItem;
-    PanelActions: TPanel;
-    ButtonHome: TSpeedButton;
-    ButtonRefresh: TSpeedButton;
-    ButtonUpload: TSpeedButton;
-    ButtonOptions: TSpeedButton;
-    PopupMenuOptions: TPopupMenu;
+    PopupMenuOptions: TFlatPopupMenu;
     ColoredFoldersAccessView1: TMenuItem;
-    LabelAccess: TLabel;
-    ButtonBack: TSpeedButton;
-    ButtonForward: TSpeedButton;
-    ButtonGoTo: TSpeedButton;
-    MultiPanel: TOMultiPanel;
-    VSTFolders: TVirtualStringTree;
     N1: TMenuItem;
     ShowFolderTree1: TMenuItem;
-    PopupFoldersTree: TPopupMenu;
+    PopupFoldersTree: TFlatPopupMenu;
     FullExpand1: TMenuItem;
     FullCollapse1: TMenuItem;
     N2: TMenuItem;
     StreamFileContentOpen1: TMenuItem;
+    PanelMain: TFlatPanel;
+    MultiPanel: TOMultiPanel;
+    PanelVSTFolders: TFlatPanel;
+    VSTFolders: TVirtualStringTree;
+    PanelVSTFiles: TFlatPanel;
+    VSTFiles: TVirtualStringTree;
+    PanelPath: TFlatPanel;
+    EditPath: TFlatEdit;
+    PanelActions: TFlatPanel;
+    ButtonHome: TFlatButton;
+    LabelAccess: TLabel;
+    PanelDirection: TFlatPanel;
+    ButtonBack: TFlatButton;
+    ButtonForward: TFlatButton;
+    Shape1: TShape;
+    ButtonRefresh: TFlatButton;
+    ButtonGoTo: TFlatButton;
+    ButtonUpload: TFlatButton;
+    ButtonOptions: TFlatButton;
     procedure VSTFilesGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
       var ImageIndex: TImageIndex);
@@ -513,10 +518,10 @@ end;
 
 procedure TControlFormFileManager.ButtonOptionsClick(Sender: TObject);
 begin
-  var APoint := self.ClientToScreen(
+  var APoint := PanelActions.ClientToScreen(
     Point(
-      TSpeedButton(Sender).Left,
-      TSpeedButton(Sender).Top + TSpeedButton(Sender).Height
+      TFlatButton(Sender).Left,
+      TFlatButton(Sender).Top + TFlatButton(Sender).Height
     )
   );
 

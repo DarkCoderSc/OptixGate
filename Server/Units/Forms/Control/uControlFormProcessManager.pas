@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uControlFormProcessManager;
 
 interface
@@ -65,7 +63,9 @@ uses
 
   __uBaseFormControl__, uControlFormDumpProcess,
 
-  OptixCore.System.Process, OptixCore.WinApiEx, OptixCore.Commands.Process, OptixCore.Protocol.Packet;
+  OptixCore.System.Process, OptixCore.WinApiEx, OptixCore.Commands.Process, OptixCore.Protocol.Packet,
+
+  NeoFlat.PopupMenu, NeoFlat.Panel;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -81,8 +81,7 @@ type
   TFilterKinds = set of TFilterKind;
 
   TControlFormProcessManager = class(TBaseFormControl)
-    PopupMenu: TPopupMenu;
-    VST: TVirtualStringTree;
+    PopupMenu: TFlatPopupMenu;
     Refresh1: TMenuItem;
     N1: TMenuItem;
     Exclude1: TMenuItem;
@@ -95,6 +94,7 @@ type
     N3: TMenuItem;
     Clear1: TMenuItem;
     DumpProcess1: TMenuItem;
+    VST: TVirtualStringTree;
     procedure Refresh1Click(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
@@ -394,7 +394,7 @@ begin
   var AColor := clNone;
 
   if pData^.ProcessInformation.IsCurrentProcess then
-    AColor := COLOR_LIST_LIMY
+    AColor := COLOR_LIST_YELLOW
   else begin
     if pData^.ProcessInformation.IsSystem then
       AColor := COLOR_USER_SYSTEM
@@ -469,17 +469,18 @@ begin
     Exit();
 
   if pData^.ProcessInformation.IsCurrentProcess then
-    result := IMAGE_PROCESS_SELF
-  else begin
-    if (FRemoteProcessorArchitecture = pa86_64) and
-       (pData^.ProcessInformation.IsWow64Process <> brError) then begin
-      if pData^.ProcessInformation.IsWow64Process = brTrue then
-        result := IMAGE_PROCESS_X86_32
-      else
-        result := IMAGE_PROCESS_X86_64;
-    end else
-      result := IMAGE_PROCESS;
-  end;
+    result := IMAGE_EMO_TONG
+  else // begin
+    result := IMAGE_APP;
+//    if (FRemoteProcessorArchitecture = pa86_64) and
+//       (pData^.ProcessInformation.IsWow64Process <> brError) then begin
+//      if pData^.ProcessInformation.IsWow64Process = brTrue then
+//        result := IMAGE_PROCESS_X86_32
+//      else
+//        result := IMAGE_PROCESS_X86_64;
+//    end else
+//      result := IMAGE_PROCESS;
+//  end;
 end;
 
 procedure TControlFormProcessManager.VSTGetImageIndex(Sender: TBaseVirtualTree;

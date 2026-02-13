@@ -34,6 +34,8 @@ requires
   VirtualTreesR;
 
 contains
+  XSuperObject in '..\..\..\ExtLibraries\Delphi Libraries\XSuperObject.pas',
+  XSuperJson in '..\..\..\ExtLibraries\Delphi Libraries\XSuperJson.pas',
   NeoFlat.Button in 'NeoFlat.Button.pas',
   NeoFlat.CaptionBar in 'NeoFlat.CaptionBar.pas',
   NeoFlat.CheckBox in 'NeoFlat.CheckBox.pas',
@@ -57,16 +59,14 @@ contains
   NeoFlat.PopupMenu in 'NeoFlat.PopupMenu.pas',
   NeoFlat.Reg in 'NeoFlat.Reg.pas',
   NeoFlat.ScrollingCredit in 'NeoFlat.ScrollingCredit.pas',
-  NeoFlat.SettingHandler in 'NeoFlat.SettingHandler.pas',
   NeoFlat.StatusBar in 'NeoFlat.StatusBar.pas',
   NeoFlat.Theme in 'NeoFlat.Theme.pas',
   NeoFlat.Timer in 'NeoFlat.Timer.pas',
   NeoFlat.TreeView in 'NeoFlat.TreeView.pas',
   NeoFlat.Types in 'NeoFlat.Types.pas',
   NeoFlat.Validators in 'NeoFlat.Validators.pas',
-  XSuperJSON in '..\..\Shared\XSuperJSON.pas',
-  XSuperObject in '..\..\Shared\XSuperObject.pas',
   NeoFlat.Metrics in 'NeoFlat.Metrics.pas',
-  NeoFlat.Utils in 'NeoFlat.Utils.pas';
+  NeoFlat.Utils in 'NeoFlat.Utils.pas',
+  NeoFlat.SettingHandler in 'NeoFlat.SettingHandler.pas';
 
 end.

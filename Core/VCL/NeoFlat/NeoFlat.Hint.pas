@@ -47,7 +47,7 @@ type
     procedure SetActive(const AValue : Boolean);
   public
     {@C}
-    constructor Create(AOwner : TComponent);
+    constructor Create(AOwner : TComponent); override;
   published
     {@G/S}
     property Active : Boolean read FActive write SetActive;

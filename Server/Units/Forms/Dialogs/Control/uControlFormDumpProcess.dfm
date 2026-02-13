@@ -482,7 +482,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
       Top = 0
       Width = 32
       Height = 32
-      ImageCollection = FormMain.ImageCollectionDark
       ImageWidth = 0
       ImageHeight = 0
       ImageIndex = -1

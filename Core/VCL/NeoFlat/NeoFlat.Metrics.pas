@@ -31,6 +31,7 @@ type
 
     {@M}
     function GetMetric(const AIndex : Integer) : Integer;
+    function GetScaleFactor() : Single;
   public
     {@C}
     constructor Create(const AControl : TControl);
@@ -56,6 +57,8 @@ type
     property _18 : Integer index 18 read GetMetric;
     property _19 : Integer index 19 read GetMetric;
     property _20 : Integer index 20 read GetMetric;
+
+    property ScaleFactor : Single read GetScaleFactor;
   end;
 
 implementation
@@ -76,6 +79,14 @@ begin
   ///
 
   FControl := AControl;
+end;
+
+function TFlatMetrics.GetScaleFactor() : Single;
+begin
+  if not Assigned(FControl) then
+    result := 1
+  else
+    result := FControl.ScaleFactor;
 end;
 
 end.

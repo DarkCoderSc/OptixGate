@@ -61,21 +61,23 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
 
-  __uBaseFormControl__, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+  __uBaseFormControl__, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls, NeoFlat.Panel, System.Skia,
+  Vcl.Skia, NeoFlat.Button, NeoFlat.Edit;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TControlFormSetupContentReader = class(TBaseFormControl)
-    PanelClient: TPanel;
-    Label1: TLabel;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
+    PanelForm: TFlatPanel;
+    PanelLeft: TFlatPanel;
+    SkSvg1: TSkSvg;
+    PanelBottom: TFlatPanel;
+    ButtonCancel: TFlatButton;
+    ButtonStart: TFlatButton;
     LabelPageSize: TLabel;
-    EditPath: TEdit;
-    SpinPageSize: TSpinEdit;
-    PanelBottom: TPanel;
-    ButtonStart: TButton;
-    ButtonCancel: TButton;
+    PanelMain: TFlatPanel;
+    EditPath: TFlatEdit;
+    Label2: TLabel;
+    EditPageSize: TFlatEdit;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -116,7 +118,13 @@ begin
     raise Exception.Create('You must enter a valid file path.');
   end;
 
-  StreamFileContent(EditPath.Text, SpinPageSize.Value);
+  var APageSize := StrToInt(EditPageSize.Text);
+  if APageSize < TContentReader.MIN_PAGE_SIZE then
+    APageSize := TContentReader.MIN_PAGE_SIZE
+  else if APageSize > TContentReader.MAX_PAGE_SIZE then
+    APageSize := TContentReader.MAX_PAGE_SIZE;
+
+  StreamFileContent(EditPath.Text, APageSize);
 
   ///
   Close();
@@ -127,14 +135,8 @@ begin
   ButtonStart.Top := (PanelBottom.Height div 2) - (ButtonStart.Height div 2);
   ButtonCancel.Top  := ButtonStart.Top;
 
-  ButtonStart.Left := PanelBottom.Width - ButtonStart.Width - 8;
-  ButtonCancel.Left  := ButtonStart.Left - ButtonStart.Width - 8;
-
-  var ANewHeight := PanelBottom.Height;
-
-  Inc(ANewHeight, SpinPageSize.Top + SpinPageSize.Height + 8);
-
-  ClientHeight := ANewHeight;
+  ButtonStart.Left := PanelBottom.Width - ButtonStart.Width;
+  ButtonCancel.Left  := ButtonStart.Left - ButtonStart.Width - ScaleValue(4);
 end;
 
 procedure TControlFormSetupContentReader.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -148,10 +150,6 @@ begin
     TContentReader.MIN_PAGE_SIZE,
     TContentReader.MAX_PAGE_SIZE
   ]);
-
-  ///
-  SpinPageSize.MinValue := TContentReader.MIN_PAGE_SIZE;
-  SpinPageSize.MaxValue := TContentReader.MAX_PAGE_SIZE;
 end;
 
 procedure TControlFormSetupContentReader.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -23,7 +23,7 @@ unit NeoFlat.TreeView;
 interface
 
 uses System.Classes, VirtualTrees, VirtualTrees.Types, VCL.Graphics, WinAPI.Windows,
-     VCL.ImgList;
+     VCL.ImgList, System.UITypes;
 
 type
   TTreeData = record

@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit __uBaseFormControl__;
 
 interface
@@ -63,7 +61,9 @@ uses
 
   VCL.Forms, VCL.Controls,
 
-  OptixCore.Commands.Base, OptixCore.Protocol.Packet;
+  OptixCore.Commands.Base, OptixCore.Protocol.Packet,
+
+  NeoFlat.Form, NeoFlat.CaptionBar;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -113,6 +113,8 @@ type
   TBaseFormControl = class(TForm)
   private
     FOriginalCaption  : String;
+    FCaptionBar       : TFlatCaptionBar;
+    FFlatForm         : TFlatForm;
     FDialogs          : TObjectList<TForm>;
     FFirstShow        : Boolean;
 
@@ -324,7 +326,7 @@ end;
 
 procedure TBaseFormControl.OnFirstShow();
 begin
-  ///
+  Height := Height +1;
 end;
 
 constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String;
@@ -333,7 +335,13 @@ begin
   inherited Create(AOwner);
   ///
 
-  FOriginalCaption := self.Caption; // Default
+  FFlatForm := TFlatForm.Create(self);
+
+  FCaptionBar := TFlatCaptionBar.Create(self);
+  FCaptionBar.Form := FFlatForm;
+  FCaptionBar.Parent := self;
+
+  FOriginalCaption := Caption; // Default
   FSpecialForm     := ASpecialForm;
   FFirstShow       := True;
   FFormInformation := TFormControlInformation.Create();
@@ -351,6 +359,12 @@ begin
 
   if Assigned(FDialogs) then
     FreeAndNil(FDialogs);
+
+  if Assigned(FCaptionBar) then
+    FreeAndNil(FCaptionBar);
+
+  if Assigned(FFlatForm) then
+    FreeAndNil(FFlatForm);
 
   ///
   inherited;
@@ -421,6 +435,10 @@ begin
       FOriginalCaption,
       FFormINformation.UserIdentifier
     ]);
+
+  ///
+  if Assigned(FCaptionBar) then
+    FCaptionBar.Caption := Caption;
 end;
 
 function TBaseFormControl.GetGUID() : TGUID;

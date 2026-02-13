@@ -63,6 +63,15 @@ uses
 const
  (* IMAGES *)
  IMAGE_USER                         = 0;
+ IMAGE_APP                          = 1;
+ IMAGE_EMO_TONG                     = 2;
+ IMAGE_ANCHOR                       = 3;
+ IMAGE_CONTROL_APP                  = 4;
+
+
+
+
+
  IMAGE_USER_ADMIN                   = 1;
  IMAGE_USER_ELEVATED                = 2;
  IMAGE_USER_SYSTEM                  = 3;
@@ -131,7 +140,8 @@ var
  (* COLORS *)
  COLOR_LIST_BLUE     : TColor;
  COLOR_LIST_PURPLE   : TColor;
- COLOR_LIST_LIMY     : TColor;
+ COLOR_LIST_GREEN    : TColor;
+ COLOR_LIST_YELLOW   : TColor;
  COLOR_LIST_RED      : TColor;
  COLOR_LIST_GRAY     : TColor;
  COLOR_LIST_ORANGE   : TColor;
@@ -150,26 +160,23 @@ var
 implementation
 
 initialization
-  // Dark
-  COLOR_LIST_BLUE         := RGB(40, 70, 90);
-  COLOR_USER_ELEVATED     := COLOR_LIST_BLUE;
+  COLOR_LIST_GREEN        := RGB(227, 238, 197);
+  COLOR_LIST_YELLOW       := RGB(255, 254, 224);
+  COLOR_LIST_BLUE         := RGB(225, 242, 255);
+  COLOR_LIST_PURPLE       := RGB(241, 230, 254);
+  COLOR_LIST_RED          := RGB(255, 230, 230);
+  COLOR_LIST_GRAY         := RGB(244, 244, 244);
+  COLOR_LIST_ORANGE       := RGB(255, 240, 225);
 
-  COLOR_LIST_PURPLE       := RGB(60, 45, 75);
+  COLOR_USER_ELEVATED     := COLOR_LIST_BLUE;
   COLOR_USER_SYSTEM       := COLOR_LIST_PURPLE;
 
-  COLOR_LIST_LIMY         := RGB(40, 70, 40);
-  COLOR_LIST_RED          := RGB(90, 50, 60);
-
-  COLOR_LIST_GRAY         := RGB(40, 40, 40);
-
   COLOR_TEXT_WARNING      := RGB(243, 156, 18);
-
-  COLOR_LIST_ORANGE       := RGB(90, 55, 40);
 
   COLOR_FILE_WRITE_ONLY   := COLOR_LIST_PURPLE;
   COLOR_FILE_READ_ONLY    := COLOR_LIST_BLUE;
   COLOR_FILE_EXECUTE_ONLY := COLOR_LIST_ORANGE;
-  COLOR_FILE_ALL_ACCESS   := COLOR_LIST_LIMY;
+  COLOR_FILE_ALL_ACCESS   := COLOR_LIST_GREEN;
   COLOR_FILE_NO_ACCESS    := COLOR_LIST_RED;
 
 
