@@ -87,7 +87,8 @@ object ControlFormControlForms: TControlFormControlForms
         Width = 100
       end>
   end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnChange = PopupMenuChange
     Left = 160
     Top = 96

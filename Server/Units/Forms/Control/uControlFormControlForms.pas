@@ -63,7 +63,9 @@ uses
 
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees,  VirtualTrees.Types,
 
-   __uBaseFormControl__;
+   __uBaseFormControl__,
+
+   NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -79,7 +81,7 @@ type
 
   TControlFormControlForms = class(TBaseFormControl)
     VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Refresh1: TMenuItem;
     TimerRefresh: TTimer;
     N1: TMenuItem;

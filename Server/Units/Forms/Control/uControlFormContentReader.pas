@@ -69,12 +69,11 @@ uses
 
   OptixCore.Protocol.Packet, OptixCore.Commands.ContentReader,
 
-  NeoFlat.Panel, NeoFlat.Button, NeoFlat.PopupMenu;
+  NeoFlat.Panel, NeoFlat.Button, NeoFlat.PopupMenu, NeoFlat.StatusBar;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TControlFormContentReader = class(TBaseFormControl)
-    StatusBar: TStatusBar;
     PopupRichStrings: TFlatPopupMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
@@ -103,6 +102,7 @@ type
     ButtonOptions: TFlatButton;
     PopupMenuOptions: TFlatPopupMenu;
     ShowStrings1: TMenuItem;
+    StatusBar: TFlatStatusBar;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ButtonDownloadClick(Sender: TObject);
@@ -144,7 +144,7 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Math,
+  System.Math, System.Types,
 
   Optix.Helper, OptixCore.System.FileSystem, OptixCore.Helper, Optix.Constants;
 // ---------------------------------------------------------------------------------------------------------------------

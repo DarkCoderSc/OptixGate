@@ -67,8 +67,27 @@ const
  IMAGE_EMO_TONG                     = 2;
  IMAGE_ANCHOR                       = 3;
  IMAGE_CONTROL_APP                  = 4;
-
-
+ IMAGE_TERMINAL                     = 6;
+ IMAGE_RIGHT_ARROW                  = 7;
+ IMAGE_BULLET_GREEN                 = 8;
+ IMAGE_BULLET_YELLOW                = 9;
+ IMAGE_BULLET_ORANGE                = 10;
+ IMAGE_BULLET_BLUE                  = 11;
+ IMAGE_BULLET_PINK                  = 12;
+ IMAGE_BULLET_PURPLE                = 13;
+ IMAGE_BULLET_RED                   = 14;
+ IMAGE_BULLET_WHITE                 = 15;
+ IMAGE_BULLET_BLACK                 = 16;
+ IMAGE_APP_ERROR                    = 24;
+ IMAGE_FOLDER_NORMAL                = 25;
+ IMAGE_FOLDER_PREV                  = IMAGE_FOLDER_NORMAL;
+ IMAGE_FOLDER_FULLACCESS            = 26;
+ IMAGE_FOLDER_READONLY              = 27;
+ IMAGE_FOLDER_WRITEONLY             = 28;
+ IMAGE_FOLDER_EXECONLY              = 29;
+ IMAGE_FOLDER_DENIED                = 30;
+ IMAGE_PAGE                         = 31;
+ IMAGE_PAGE_SYS                     = 32;
 
 
 
@@ -103,13 +122,7 @@ const
  IMAGE_FILE_TRANSFER_CANCELED       = IMAGE_CANCEL;
  IMAGE_CANCEL_REQUEST               = 30;
  IMAGE_FILE_TRANSFER_CANCEL_REQUEST = IMAGE_CANCEL_REQUEST;
- IMAGE_FOLDER_NORMAL                = 31;
- IMAGE_FOLDER_READONLY              = 32;
- IMAGE_FOLDER_FULLACCESS            = 33;
- IMAGE_FOLDER_WRITEONLY             = 34;
- IMAGE_FOLDER_EXECONLY              = 62;
- IMAGE_FOLDER_DENIED                = 35;
- IMAGE_FOLDER_PREV                  = 36;
+
  IMAGE_THREAD_RUNNING               = 37;
  IMAGE_THREAD_STOP_WAIT             = 38;
  IMAGE_THREAD_STOPPED               = 39;
@@ -138,18 +151,19 @@ const
 
 var
  (* COLORS *)
- COLOR_LIST_BLUE     : TColor;
- COLOR_LIST_PURPLE   : TColor;
- COLOR_LIST_GREEN    : TColor;
- COLOR_LIST_YELLOW   : TColor;
- COLOR_LIST_RED      : TColor;
- COLOR_LIST_GRAY     : TColor;
- COLOR_LIST_ORANGE   : TColor;
+ COLOR_LIST_BLUE         : TColor;
+ COLOR_LIST_DARKER_BLUE  : TColor;
+ COLOR_LIST_PURPLE       : TColor;
+ COLOR_LIST_GREEN        : TColor;
+ COLOR_LIST_YELLOW       : TColor;
+ COLOR_LIST_RED          : TColor;
+ COLOR_LIST_GRAY         : TColor;
+ COLOR_LIST_ORANGE       : TColor;
 
- COLOR_TEXT_WARNING  : TColor;
+ COLOR_TEXT_WARNING      : TColor;
 
- COLOR_USER_ELEVATED : TColor;
- COLOR_USER_SYSTEM   : TColor;
+ COLOR_USER_ELEVATED     : TColor;
+ COLOR_USER_SYSTEM       : TColor;
 
  COLOR_FILE_WRITE_ONLY   : TColor;
  COLOR_FILE_READ_ONLY    : TColor;
@@ -163,6 +177,7 @@ initialization
   COLOR_LIST_GREEN        := RGB(227, 238, 197);
   COLOR_LIST_YELLOW       := RGB(255, 254, 224);
   COLOR_LIST_BLUE         := RGB(225, 242, 255);
+  COLOR_LIST_DARKER_BLUE  := RGB(190, 220, 245);
   COLOR_LIST_PURPLE       := RGB(241, 230, 254);
   COLOR_LIST_RED          := RGB(255, 230, 230);
   COLOR_LIST_GRAY         := RGB(244, 244, 244);
@@ -171,7 +186,7 @@ initialization
   COLOR_USER_ELEVATED     := COLOR_LIST_BLUE;
   COLOR_USER_SYSTEM       := COLOR_LIST_PURPLE;
 
-  COLOR_TEXT_WARNING      := RGB(243, 156, 18);
+  COLOR_TEXT_WARNING      := RGB(255, 140, 0);
 
   COLOR_FILE_WRITE_ONLY   := COLOR_LIST_PURPLE;
   COLOR_FILE_READ_ONLY    := COLOR_LIST_BLUE;

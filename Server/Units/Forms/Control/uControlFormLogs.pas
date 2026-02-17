@@ -217,7 +217,7 @@ begin
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
       case pData^.LogKind of
-        lkException : ImageIndex := IMAGE_EXCEPTION;
+        lkException : ImageIndex := IMAGE_APP_ERROR;
         // ... //
       end;
     end;

@@ -5,16 +5,37 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
 {                                                                              }
 {******************************************************************************}
 
@@ -22,11 +43,9 @@ unit NeoFlat.Hint;
 
 interface
 
-uses System.Classes, VCL.Controls, Winapi.Windows, VCl.Graphics;
+uses System.Classes, VCL.Controls, Winapi.Windows, VCl.Graphics, NeoFlat.Helper, NeoFlat.Types;
 
 type
-  TByteArrayArray = array of array of Byte;
-
   TArrowPos = (apBottomRight, apBottomLeft, apTopRight, apTopLeft);
 
   THintInfo = record
@@ -55,7 +74,8 @@ type
 
   TFlatHintWindow = class(THintWindow)
   private
-    FArrowPos: TArrowPos;
+    FMetrics  : TFlatMetrics;
+    FArrowPos : TArrowPos;
   protected
     {@M}
     procedure CreateParams(var AParams: TCreateParams); override;
@@ -64,23 +84,30 @@ type
   public
     {@M}
     procedure ActivateHint(AHintRect: TRect; const AHint: String); override;
+
+    {@C}
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy(); override;
   end;
+
+  const ARROW_TOP_RIGHT_GLYPH : TMatrixGlyph = [
+                                                    [$0, $1, $1, $1, $1, $1, $1, $1],
+                                                    [$0, $1, $1, $1, $1, $1, $1, $1],
+                                                    [$0, $0, $0, $1, $1, $1, $1, $1],
+                                                    [$0, $0, $1, $1, $1, $1, $1, $1],
+                                                    [$0, $1, $1, $1, $1, $1, $1, $1],
+                                                    [$1, $1, $1, $1, $1, $0, $1, $1],
+                                                    [$1, $1, $1, $1, $0, $0, $1, $1],
+                                                    [$0, $1, $1, $0, $0, $0, $0, $0]
+                                              ];
+
 
 implementation
 
-uses VCL.Forms, NeoFlat.Theme, System.Types;
+uses VCL.Forms, NeoFlat.Theme, System.Types, System.SysUtils;
 
-{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+(* TFlatHint *)
 
-
-   TFlatHint
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-
-{-------------------------------------------------------------------------------
-  ___constructor
--------------------------------------------------------------------------------}
 constructor TFlatHint.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
@@ -93,9 +120,6 @@ begin
   FOldHintWindowClass := nil;
 end;
 
-{-------------------------------------------------------------------------------
-  Getters / Setters
--------------------------------------------------------------------------------}
 procedure TFlatHint.SetActive(const AValue : Boolean);
 begin
   if FActive = AValue then
@@ -104,7 +128,7 @@ begin
   FActive := AValue;
 
   if (csDesigning in ComponentState) then
-    Exit;
+    Exit();
 
   if FActive then begin
     FOldHintWindowClass := HintWindowClass;
@@ -129,17 +153,33 @@ begin
   end;
 end;
 
-{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+(* TFlatHintWindow *)
+
+constructor TFlatHintWindow.Create(AOwner : TComponent);
+begin
+  inherited;
+  ///
+
+  var ACursorPos : TPoint;
+  GetCursorPos(ACursorPos);
+  var AWinControl := FindVCLWindow(ACursorPos);
+  if not Assigned(AWinControl) then
+    Exit();
+  ///
+
+  FMetrics := TFlatMetrics.Create(AWinControl);
+end;
+
+destructor TFlatHintWindow.Destroy();
+begin
+  if Assigned(FMetrics) then
+    FreeAndNil(FMetrics);
+
+  ///
+  inherited;
+end;
 
 
-   TFlatHintWindow
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-
-{-------------------------------------------------------------------------------
-  Modify Window Attributes
--------------------------------------------------------------------------------}
 procedure TFlatHintWindow.CreateParams(var AParams: TCreateParams);
 begin
   inherited CreateParams(AParams);
@@ -150,9 +190,6 @@ begin
   AParams.WindowClass.Style := AParams.WindowClass.Style - CS_DROPSHADOW;
 end;
 
-{-------------------------------------------------------------------------------
-  Modify Window Attributes
--------------------------------------------------------------------------------}
 procedure TFlatHintWindow.ActivateHint(AHintRect: TRect; const AHint: String);
 var ACurWidth       : Integer;
     APoint          : TPoint;
@@ -162,24 +199,25 @@ var ACurWidth       : Integer;
     ATopLeftRect    : TRect;
     ATopRightRect   : TRect;
     ABottomLeftRect : TRect;
-
-const HINT_WIDTH = 200;
 begin
+  const HINT_WIDTH = FMetrics.ScaleValue(400);
+  ///
+
   Caption := AHint;
 
   Canvas.Font.Name  := FONT_1;
   Canvas.Font.Size  := 9;
-  Canvas.Font.Color := clWhite;
+  Canvas.Font.Color := MAIN_ACCENT;
 
-  AHintRect.Right := AHintRect.Left + HINT_WIDTH - 22;
+  AHintRect.Right := AHintRect.Left + HINT_WIDTH - FMetrics.ScaleValue(22);
 
   DrawText(Canvas.Handle, @AHint[1], Length(AHint), AHintRect, DT_CALCRECT or DT_WORDBREAK or DT_NOPREFIX);
 
-  Inc(AHintRect.Right, 22);
-  Inc(AHintRect.Bottom, 6);
+  Inc(AHintRect.Right, FMetrics.ScaleValue(22));
+  Inc(AHintRect.Bottom, FMetrics._6);
 
-  ATopLeftRect    :=  Rect(0, 0, Screen.Width div 2, Screen.Height div 2);
-  ATopRightRect   :=  Rect(Screen.Width div 2, 0, Screen.Width, Screen.Height div 2);
+  ATopLeftRect    := Rect(0, 0, Screen.Width div 2, Screen.Height div 2);
+  ATopRightRect   := Rect(Screen.Width div 2, 0, Screen.Width, Screen.Height div 2);
   ABottomLeftRect := Rect(0, Screen.Height div 2, Screen.Width div 2, Screen.Height);
 
   GetCursorPos(APoint);
@@ -194,171 +232,161 @@ begin
     FArrowPos := apBottomRight;
 
   if FArrowPos = apTopLeft then
-    ACurWidth := 12
+    ACurWidth := FMetrics._12
   else
-    ACurWidth := 5;
+    ACurWidth := FMetrics._5;
 
   AHintHeight := AHintRect.Bottom - AHintRect.Top;
   AHintWidth  := AHintRect.Right - AHintRect.Left;
 
   case FArrowPos of
-    apTopLeft     : AHintRect := Rect(APoint.x + ACurWidth, APoint.y + ACurWidth, APoint.x + AHintWidth + ACurWidth, APoint.y + AHintHeight + ACurWidth);
-    apTopRight    : AHintRect := Rect(APoint.x - AHintWidth - ACurWidth, APoint.y + ACurWidth, APoint.x - ACurWidth, APoint.y + AHintHeight + ACurWidth);
-    apBottomLeft  : AHintRect := Rect(APoint.x + ACurWidth, APoint.y - AHintHeight - ACurWidth, APoint.x + AHintWidth + ACurWidth, APoint.y - ACurWidth);
-    apBottomRight : AHintRect := Rect(APoint.x - AHintWidth - ACurWidth, APoint.y - AHintHeight - ACurWidth, APoint.x - ACurWidth, APoint.y - ACurWidth);
+    apTopLeft : AHintRect := Rect(
+      APoint.x + ACurWidth,
+      APoint.y + ACurWidth,
+      APoint.x + AHintWidth + ACurWidth,
+      APoint.y + AHintHeight + ACurWidth
+    );
+
+    apTopRight : AHintRect := Rect(
+      APoint.x - AHintWidth - ACurWidth,
+      APoint.y + ACurWidth,
+      APoint.x - ACurWidth,
+      APoint.y + AHintHeight + ACurWidth
+    );
+
+    apBottomLeft  : AHintRect := Rect(
+      APoint.x + ACurWidth,
+      APoint.y - AHintHeight - ACurWidth,
+      APoint.x + AHintWidth + ACurWidth,
+      APoint.y - ACurWidth
+    );
+
+    apBottomRight : AHintRect := Rect(
+      APoint.x - AHintWidth - ACurWidth,
+      APoint.y - AHintHeight - ACurWidth,
+      APoint.x - ACurWidth,
+      APoint.y - ACurWidth
+    );
   end;
 
   BoundsRect := AHintRect;
 
   APoint := ClientToScreen(Point(0, 0));
 
-  {
-    Spawn and Place Window
-  }
-  SetWindowPos(
-                self.Handle,
-                HWND_TOPMOST,
-                APoint.X,
-                APoint.Y,
-                0,
-                0,
-                (SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOSIZE)
-  );
+  ///
+  SetWindowPos(Handle, HWND_TOPMOST, APoint.X, APoint.Y, 0, 0, (SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOSIZE));
 end;
 
-{-------------------------------------------------------------------------------
-  ___paint
--------------------------------------------------------------------------------}
 procedure TFlatHintWindow.Paint();
-var AArrowAreaRect : TRect;
-    ATextRect      : TRect;
-    AArrowPos      : TPoint;
 begin
-  case FArrowPos of
-    apTopLeft, apBottomLeft:
-      begin
-        AArrowAreaRect := Rect(ClientRect.Left + 1, ClientRect.Top + 1, ClientRect.Left + 15, ClientRect.Bottom - 1);
-        ATextRect      := Rect(ClientRect.Left + 15, ClientRect.Top + 1, ClientRect.Right - 1, ClientRect.Bottom - 1);
-      end;
+  var AArrowAreaRect := TRect.Empty;
+  var ATextRect      := TRect.Empty;
 
-    apTopRight, apBottomRight:
-      begin
-        AArrowAreaRect := Rect(ClientRect.Right - 15, ClientRect.Top + 1, ClientRect.Right - 1, ClientRect.Bottom - 1);
-        ATextRect      := Rect(ClientRect.Left + 1, ClientRect.Top + 1, ClientRect.Right - 15, ClientRect.Bottom - 1);
-      end;
+  case FArrowPos of
+    apTopLeft, apBottomLeft: begin
+      AArrowAreaRect := Rect(
+        ClientRect.Left + FMetrics._1,
+        ClientRect.Top + FMetrics._1,
+        ClientRect.Left + FMetrics._15,
+        ClientRect.Bottom - FMetrics._1
+      );
+
+      ATextRect := Rect(
+        ClientRect.Left + FMetrics._15,
+        ClientRect.Top + FMetrics._1,
+        ClientRect.Right - FMetrics._1,
+        ClientRect.Bottom - FMetrics._1
+      );
+    end;
+
+    apTopRight, apBottomRight: begin
+        AArrowAreaRect := Rect(
+          ClientRect.Right - FMetrics._15,
+          ClientRect.Top + FMetrics._1,
+          ClientRect.Right - FMetrics._1,
+          ClientRect.Bottom - FMetrics._1
+        );
+
+        ATextRect := Rect(
+          ClientRect.Left + FMetrics._1,
+          ClientRect.Top + FMetrics._1,
+          ClientRect.Right - FMetrics._15,
+          ClientRect.Bottom - FMetrics._1
+        );
+    end;
   end;
 
-  self.Canvas.Lock();
+  Canvas.Lock();
   try
     Canvas.Brush.Style := bsSolid;
 
-    {
-      Draw Backgrounds
-    }
+    // Draw Container Background
+    Canvas.Brush.Color := MAIN_ACCENT;
+    Canvas.FillRect(ClientRect);
 
     // Text Background
-    Canvas.Brush.Color := clBlack;
+    Canvas.Brush.Color := LIGHT_GRAY;
     Canvas.FillRect(ATextRect);
 
     // Arrow Area Background
-    Canvas.Brush.Color := MAIN_ACCENT;
+    Canvas.Brush.Color := MAIN_GRAY;
     Canvas.FillRect(AArrowAreaRect);
 
-    {
-      Draw Border
-    }
-    Canvas.Brush.Color := MAIN_GRAY;
-    Canvas.FrameRect(self.ClientRect);
+    // Draw Glyph (Arrow)
+    var AGlyph : TMatrixGlyph;
+    ScaleMatrixGlyph(ARROW_TOP_RIGHT_GLYPH, AGlyph, round(FMetrics.ScaleFactor));
+    if not IsValidMatrixGlyph(AGlyph) then
+      Exit();
 
-    {
-      Draw Arrow
-    }
-    Canvas.Pen.Color := clWhite;
+    var AArrowPos : TPoint;
+
     case FArrowPos of
       apTopLeft : begin
-        AArrowPos := Point(AArrowAreaRect.Left + 2, AArrowAreaRect.Top + 2);
-        ///
+        AArrowPos := Point(
+          AArrowAreaRect.Left + FMetrics._2, // X
+          AArrowAreaRect.Top + FMetrics._2   // Y
+        );
 
-        Canvas.Polyline([
-                           Point(AArrowPos.x,     AArrowPos.y),     Point(AArrowPos.x, AArrowPos.y + 6),
-                           Point(AArrowPos.x + 1, AArrowPos.y + 6), Point(AArrowPos.x + 1, AArrowPos.y),
-                           Point(AArrowPos.x + 6, AArrowPos.y),     Point(AArrowPos.x + 6, AArrowPos.y + 1),
-                           Point(AArrowPos.x + 2, AArrowPos.y + 1), Point(AArrowPos.x + 2, AArrowPos.y + 4),
-                           Point(AArrowPos.x + 5, AArrowPos.y + 7), Point(AArrowPos.x + 6, AArrowPos.y + 7),
-                           Point(AArrowPos.x + 3, AArrowPos.y + 4), Point(AArrowPos.x + 3, AArrowPos.y + 3),
-                           Point(AArrowPos.x + 6, AArrowPos.y + 6), Point(AArrowPos.x + 7, AArrowPos.y + 6),
-                           Point(AArrowPos.x + 3, AArrowPos.y + 2), Point(AArrowPos.x + 4, AArrowPos.y + 2),
-                           Point(AArrowPos.x + 7, AArrowPos.y + 5), Point(AArrowPos.x + 7, AArrowPos.y + 6)
-        ]);
+        AGlyph := RotateMatrixGlyph(AGlyph, False);
       end;
 
-      apTopRight : begin
-        AArrowPos := Point(AArrowAreaRect.Right - 3, AArrowAreaRect.Top + 2);
-        ///
-
-        Canvas.Polyline([
-                           Point(AArrowPos.x,     AArrowPos.y),     Point(AArrowPos.x, AArrowPos.y + 6),
-                           Point(AArrowPos.x - 1, AArrowPos.y + 6), Point(AArrowPos.x - 1, AArrowPos.y),
-                           Point(AArrowPos.x - 6, AArrowPos.y),     Point(AArrowPos.x - 6, AArrowPos.y + 1),
-                           Point(AArrowPos.x - 2, AArrowPos.y + 1), Point(AArrowPos.x - 2, AArrowPos.y + 4),
-                           Point(AArrowPos.x - 5, AArrowPos.y + 7), Point(AArrowPos.x - 6, AArrowPos.y + 7),
-                           Point(AArrowPos.x - 3, AArrowPos.y + 4), Point(AArrowPos.x - 3, AArrowPos.y + 3),
-                           Point(AArrowPos.x - 6, AArrowPos.y + 6), Point(AArrowPos.x - 7, AArrowPos.y + 6),
-                           Point(AArrowPos.x - 3, AArrowPos.y + 2), Point(AArrowPos.x - 4, AArrowPos.y + 2),
-                           Point(AArrowPos.x - 7, AArrowPos.y + 5), Point(AArrowPos.x - 7, AArrowPos.y + 6)
-        ]);
-      end;
+      apTopRight :
+        AArrowPos := Point(
+          AArrowAreaRect.Right - FMetrics._3 - Length(AGlyph[0]), // X
+          AArrowAreaRect.Top + FMetrics._2                        // Y
+        );
 
       apBottomLeft : begin
-        AArrowPos := Point(AArrowAreaRect.Left + 2, AArrowAreaRect.Bottom - 3);
-        ///
+        AArrowPos := Point(
+          AArrowAreaRect.Left + FMetrics._2,                   // X
+          AArrowAreaRect.Bottom - FMetrics._3 - Length(AGlyph) // Y
+        );
 
-        Canvas.Polyline([
-                          Point(AArrowPos.x,     AArrowPos.y),     Point(AArrowPos.x, AArrowPos.y - 6),
-                          Point(AArrowPos.x + 1, AArrowPos.y - 6), Point(AArrowPos.x + 1, AArrowPos.y),
-                          Point(AArrowPos.x + 6, AArrowPos.y),     Point(AArrowPos.x + 6, AArrowPos.y - 1),
-                          Point(AArrowPos.x + 2, AArrowPos.y - 1), Point(AArrowPos.x + 2, AArrowPos.y - 4),
-                          Point(AArrowPos.x + 5, AArrowPos.y - 7), Point(AArrowPos.x + 6, AArrowPos.y - 7),
-                          Point(AArrowPos.x + 3, AArrowPos.y - 4), Point(AArrowPos.x + 3, AArrowPos.y - 3),
-                          Point(AArrowPos.x + 6, AArrowPos.y - 6), Point(AArrowPos.x + 7, AArrowPos.y - 6),
-                          Point(AArrowPos.x + 3, AArrowPos.y - 2), Point(AArrowPos.x + 4, AArrowPos.y - 2),
-                          Point(AArrowPos.x + 7, AArrowPos.y - 5), Point(AArrowPos.x + 7, AArrowPos.y - 6)
-        ]);
+        AGlyph := RotateMatrixGlyph(AGlyph, True);
+        AGlyph := RotateMatrixGlyph(AGlyph, True);
       end;
 
       apBottomRight : begin
-        AArrowPos := Point(AArrowAreaRect.Right - 3, AArrowAreaRect.Bottom - 3);
-        ///
+        AArrowPos := Point(
+          AArrowAreaRect.Right - FMetrics._3 - Length(AGlyph[0]), // X
+          AArrowAreaRect.Bottom - FMetrics._3 - Length(AGlyph)    // Y
+        );
 
-        Canvas.Polyline([
-                           Point(AArrowPos.x,     AArrowPos.y),     Point(AArrowPos.x, AArrowPos.y - 6),
-                           Point(AArrowPos.x - 1, AArrowPos.y - 6), Point(AArrowPos.x - 1, AArrowPos.y),
-                           Point(AArrowPos.x - 6, AArrowPos.y),     Point(AArrowPos.x - 6, AArrowPos.y - 1),
-                           Point(AArrowPos.x - 2, AArrowPos.y - 1), Point(AArrowPos.x - 2, AArrowPos.y - 4),
-                           Point(AArrowPos.x - 5, AArrowPos.y - 7), Point(AArrowPos.x - 6, AArrowPos.y - 7),
-                           Point(AArrowPos.x - 3, AArrowPos.y - 4), Point(AArrowPos.x - 3, AArrowPos.y - 3),
-                           Point(AArrowPos.x - 6, AArrowPos.y - 6), Point(AArrowPos.x - 7, AArrowPos.y - 6),
-                           Point(AArrowPos.x - 3, AArrowPos.y - 2), Point(AArrowPos.x - 4, AArrowPos.y - 2),
-                           Point(AArrowPos.x - 7, AArrowPos.y - 5), Point(AArrowPos.x - 7, AArrowPos.y - 6)
-        ]);
+        AGlyph := RotateMatrixGlyph(AGlyph, True);
       end;
     end;
 
-    {
-      Draw Text
-    }
-    Canvas.brush.Style := bsClear;
-    InflateRect(ATextRect, -3, -1);
+    DrawMatrixGlyph(Canvas, AGlyph, AArrowPos, GLYPH_COLOR);
 
-    DrawText(
-              Canvas.handle,
-              PWideChar(Caption),
-              Length(Caption),
-              ATextRect,
-              (DT_WORDBREAK or DT_NOPREFIX)
-    );
+    // Draw Text
+    InflateRect(ATextRect, FMetrics.ScaleValue(-3), FMetrics.ScaleValue(-1));
+
+    Canvas.Brush.Color := LIGHT_GRAY;
+
+    ///
+    DrawText(Canvas.Handle, PWideChar(Caption), Length(Caption), ATextRect, (DT_WORDBREAK or DT_NOPREFIX));
   finally
-    self.Canvas.Unlock();
+    Canvas.Unlock();
   end;
 end;
 

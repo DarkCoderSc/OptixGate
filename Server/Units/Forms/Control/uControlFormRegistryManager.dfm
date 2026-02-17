@@ -2,182 +2,272 @@ object ControlFormRegistryManager: TControlFormRegistryManager
   Left = 0
   Top = 0
   Caption = 'Registry Manager'
-  ClientHeight = 431
-  ClientWidth = 711
+  ClientHeight = 311
+  ClientWidth = 537
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
-  Menu = MainMenu
   Position = poOwnerFormCenter
   OnCreate = FormCreate
   TextHeight = 15
-  object OMultiPanel: TOMultiPanel
+  object PanelMain: TFlatPanel
     Left = 0
-    Top = 31
-    Width = 711
-    Height = 400
-    PanelCollection = <
-      item
-        Control = VSTKeys
-        Position = 0.333333333333333300
-        Visible = True
-        Index = 0
-      end
-      item
-        Control = VSTValues
-        Position = 1.000000000000000000
-        Visible = True
-        Index = 1
-      end>
-    MinPosition = 0.020000000000000000
+    Top = 0
+    Width = 537
+    Height = 311
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 721
-    DesignSize = (
-      711
-      400)
-    object VSTKeys: TVirtualStringTree
-      Left = 0
-      Top = 0
-      Width = 237
-      Height = 400
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      Anchors = []
-      BackGroundImageTransparent = True
-      BorderStyle = bsNone
-      Color = clWhite
-      Colors.UnfocusedColor = clWindowText
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = 0
-      Header.DefaultHeight = 25
-      Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoHeaderClickAutoSort]
-      Header.SortColumn = 0
-      Images = FormMain.ImageSystem
-      PopupMenu = PopupKeys
-      StateImages = FormMain.VirtualImageList
+    ExplicitWidth = 527
+    ExplicitHeight = 266
+    object OMultiPanel: TOMultiPanel
+      AlignWithMargins = True
+      Left = 4
+      Top = 29
+      Width = 529
+      Height = 278
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 4
+      PanelCollection = <
+        item
+          Control = PanelVSTKeys
+          Position = 0.330000000000000000
+          Visible = True
+          Index = 0
+        end
+        item
+          Control = PanelVSTValues
+          Position = 1.000000000000000000
+          Visible = True
+          Index = 1
+        end>
+      MinPosition = 0.020000000000000000
+      SplitterHoverColor = clHighlight
+      Align = alClient
       TabOrder = 0
-      TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnCompareNodes = VSTKeysCompareNodes
-      OnDblClick = VSTKeysDblClick
-      OnFreeNode = VSTKeysFreeNode
-      OnGetText = VSTKeysGetText
-      OnGetImageIndex = VSTKeysGetImageIndex
-      OnGetNodeDataSize = VSTKeysGetNodeDataSize
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
-        item
-          Position = 0
-          Text = 'Name'
-          Width = 237
-        end>
+      ExplicitWidth = 519
+      ExplicitHeight = 233
+      DesignSize = (
+        529
+        278)
+      object PanelVSTKeys: TFlatPanel
+        Left = 0
+        Top = 0
+        Width = 175
+        Height = 278
+        BorderTop = 2
+        BorderLeft = 2
+        BorderRight = 2
+        BorderBottom = 2
+        Color = 13554645
+        BorderColor = clBlack
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        Anchors = []
+        Padding.Left = 2
+        Padding.Top = 2
+        Padding.Right = 2
+        Padding.Bottom = 2
+        object VSTKeys: TVirtualStringTree
+          Left = 2
+          Top = 2
+          Width = 171
+          Height = 274
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
+          Align = alClient
+          BackGroundImageTransparent = True
+          BorderStyle = bsNone
+          Color = clWhite
+          Colors.UnfocusedColor = clWindowText
+          DefaultNodeHeight = 17
+          Header.AutoSizeIndex = 0
+          Header.DefaultHeight = 25
+          Header.Height = 17
+          Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoHeaderClickAutoSort]
+          Header.SortColumn = 0
+          Images = FormMain.ImageSystem
+          PopupMenu = PopupKeys
+          StateImages = FormMain.VirtualImageList
+          TabOrder = 0
+          TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowRoot, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
+          TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+          OnCompareNodes = VSTKeysCompareNodes
+          OnDblClick = VSTKeysDblClick
+          OnFreeNode = VSTKeysFreeNode
+          OnGetText = VSTKeysGetText
+          OnGetImageIndex = VSTKeysGetImageIndex
+          OnGetNodeDataSize = VSTKeysGetNodeDataSize
+          Touch.InteractiveGestures = [igPan, igPressAndTap]
+          Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+          ExplicitWidth = 155
+          ExplicitHeight = 261
+          Columns = <
+            item
+              Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coSmartResize, coAllowFocus, coEditable, coStyleColor]
+              Position = 0
+              Text = 'Name'
+              Width = 171
+            end>
+        end
+      end
+      object PanelVSTValues: TFlatPanel
+        Left = 178
+        Top = 0
+        Width = 351
+        Height = 278
+        BorderTop = 2
+        BorderLeft = 2
+        BorderRight = 2
+        BorderBottom = 2
+        Color = 13554645
+        BorderColor = clBlack
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 1
+        Anchors = []
+        Padding.Left = 2
+        Padding.Top = 2
+        Padding.Right = 2
+        Padding.Bottom = 2
+        object VSTValues: TVirtualStringTree
+          Left = 2
+          Top = 2
+          Width = 347
+          Height = 274
+          Margins.Left = 2
+          Margins.Top = 2
+          Margins.Right = 2
+          Margins.Bottom = 2
+          Align = alClient
+          BackGroundImageTransparent = True
+          BorderStyle = bsNone
+          Color = clWhite
+          Colors.UnfocusedColor = clWindowText
+          DefaultNodeHeight = 17
+          Header.AutoSizeIndex = -1
+          Header.DefaultHeight = 25
+          Header.Height = 17
+          Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
+          Header.SortColumn = 0
+          Images = FormMain.VirtualImageList
+          PopupMenu = PopupValues
+          TabOrder = 0
+          TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
+          TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+          OnCompareNodes = VSTValuesCompareNodes
+          OnDblClick = VSTValuesDblClick
+          OnFreeNode = VSTValuesFreeNode
+          OnGetText = VSTValuesGetText
+          OnGetImageIndex = VSTValuesGetImageIndex
+          OnGetNodeDataSize = VSTValuesGetNodeDataSize
+          Touch.InteractiveGestures = [igPan, igPressAndTap]
+          Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+          ExplicitTop = 0
+          ExplicitWidth = 363
+          ExplicitHeight = 261
+          Columns = <
+            item
+              Position = 0
+              Text = 'Name'
+              Width = 150
+            end
+            item
+              Position = 1
+              Text = 'Type'
+              Width = 120
+            end
+            item
+              Position = 2
+              Text = 'Data'
+              Width = 200
+            end>
+        end
+      end
     end
-    object VSTValues: TVirtualStringTree
-      Left = 240
-      Top = 0
-      Width = 471
-      Height = 400
-      Margins.Left = 2
-      Margins.Top = 2
-      Margins.Right = 2
-      Margins.Bottom = 2
-      Anchors = []
-      BackGroundImageTransparent = True
-      BorderStyle = bsNone
-      Color = clWhite
-      Colors.UnfocusedColor = clWindowText
-      DefaultNodeHeight = 19
-      Header.AutoSizeIndex = -1
-      Header.DefaultHeight = 25
-      Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
-      Header.SortColumn = 0
-      Images = FormMain.VirtualImageList
-      PopupMenu = PopupValues
+    object PanelPath: TFlatPanel
+      AlignWithMargins = True
+      Left = 4
+      Top = 4
+      Width = 529
+      Height = 21
+      Margins.Left = 4
+      Margins.Top = 4
+      Margins.Right = 4
+      Margins.Bottom = 0
+      BorderTop = 2
+      BorderLeft = 2
+      BorderRight = 2
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
+      Align = alTop
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
       TabOrder = 1
-      TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
-      TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
-      OnCompareNodes = VSTValuesCompareNodes
-      OnDblClick = VSTValuesDblClick
-      OnFreeNode = VSTValuesFreeNode
-      OnGetText = VSTValuesGetText
-      OnGetImageIndex = VSTValuesGetImageIndex
-      OnGetNodeDataSize = VSTValuesGetNodeDataSize
-      Touch.InteractiveGestures = [igPan, igPressAndTap]
-      Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-      Columns = <
-        item
-          Position = 0
-          Text = 'Name'
-          Width = 150
-        end
-        item
-          Position = 1
-          Text = 'Type'
-          Width = 120
-        end
-        item
-          Position = 2
-          Text = 'Data'
-          Width = 200
-        end>
-    end
-  end
-  object EditPath: TEdit
-    AlignWithMargins = True
-    Left = 4
-    Top = 4
-    Width = 703
-    Height = 23
-    Margins.Left = 4
-    Margins.Top = 4
-    Margins.Right = 4
-    Margins.Bottom = 4
-    Align = alTop
-    BevelOuter = bvRaised
-    ReadOnly = True
-    TabOrder = 1
-    ExplicitWidth = 693
-  end
-  object MainMenu: TMainMenu
-    Left = 408
-    Top = 191
-    object Registry1: TMenuItem
-      Caption = 'Registry'
-      object Refresh1: TMenuItem
-        Caption = 'Refresh'
-        ShortCut = 16466
-        OnClick = Refresh1Click
-      end
-      object N1: TMenuItem
-        Caption = '-'
-      end
-      object CreateKey1: TMenuItem
-        Caption = 'Create Key'
-        OnClick = CreateKey1Click
-      end
-      object GoTo1: TMenuItem
-        Caption = 'Go To'
-        OnClick = GoTo1Click
-      end
-    end
-    object Options1: TMenuItem
-      Caption = 'Options'
-      object HideUnenumerableKeys1: TMenuItem
-        AutoCheck = True
-        Caption = 'Hide Unenumerable Keys'
-        Checked = True
-        OnClick = HideUnenumerableKeys1Click
+      Padding.Left = 1
+      Padding.Top = 1
+      Padding.Right = 1
+      Padding.Bottom = 1
+      ExplicitWidth = 519
+      object EditPath: TFlatEdit
+        Left = 1
+        Top = 1
+        Width = 527
+        Height = 19
+        Align = alClient
+        AutoSize = False
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ReadOnly = True
+        ShowHint = True
+        TabOrder = 0
+        Status = csNormal
+        Validators = []
+        ShowBorder = True
+        ExplicitWidth = 517
       end
     end
   end
-  object PopupKeys: TPopupMenu
+  object PopupKeys: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupKeysPopup
     Left = 64
     Top = 167
@@ -205,10 +295,11 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       OnClick = DeleteSelectedKey1Click
     end
   end
-  object PopupValues: TPopupMenu
+  object PopupValues: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupValuesPopup
-    Left = 520
-    Top = 191
+    Left = 304
+    Top = 151
     object Refresh2: TMenuItem
       Caption = 'Refresh'
       OnClick = Refresh2Click
@@ -263,6 +354,35 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     object DeleteSelectedValue1: TMenuItem
       Caption = 'Delete Selected Value'
       OnClick = DeleteSelectedValue1Click
+    end
+  end
+  object MainMenu: TFlatPopupMenu
+    OwnerDraw = True
+    Left = 366
+    Top = 101
+    object Refresh1: TMenuItem
+      Caption = 'Refresh'
+      ShortCut = 16466
+      OnClick = Refresh1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object CreateKey1: TMenuItem
+      Caption = 'Create Key'
+      OnClick = CreateKey1Click
+    end
+    object GoTo1: TMenuItem
+      Caption = 'Go To'
+      OnClick = GoTo1Click
+    end
+    object N6: TMenuItem
+      Caption = '-'
+    end
+    object HideUnenumerableKeys1: TMenuItem
+      Caption = 'Hide Unenumerable Keys'
+      Checked = True
+      OnClick = HideUnenumerableKeys1Click
     end
   end
 end

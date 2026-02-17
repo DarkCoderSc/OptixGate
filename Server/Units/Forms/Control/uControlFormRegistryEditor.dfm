@@ -2,8 +2,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
   Left = 0
   Top = 0
   Caption = 'Registry Editor'
-  ClientHeight = 282
-  ClientWidth = 381
+  ClientHeight = 533
+  ClientWidth = 457
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -11,330 +11,486 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
   Font.Name = 'Segoe UI'
   Font.Style = []
   KeyPreview = True
-  Menu = MainMenu
   Position = poOwnerFormCenter
   OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyUp = FormKeyUp
   OnShow = FormShow
   TextHeight = 15
-  object Notebook: TNotebook
+  object PanelMain: TFlatPanel
     Left = 0
-    Top = 54
-    Width = 381
-    Height = 169
+    Top = 0
+    Width = 457
+    Height = 514
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     Align = alClient
-    PageIndex = 1
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 371
-    ExplicitHeight = 137
-    object TPage
+    ExplicitWidth = 447
+    ExplicitHeight = 482
+    object PanelHeader: TFlatPanel
       Left = 0
       Top = 0
-      Caption = 'SZ'
-      ExplicitHeight = 174
-      object PanelSZ: TPanel
-        Left = 0
-        Top = 0
-        Width = 381
-        Height = 169
-        Align = alClient
-        BevelOuter = bvNone
-        Padding.Left = 8
-        Padding.Top = 8
-        Padding.Right = 8
-        Padding.Bottom = 8
+      Width = 457
+      Height = 48
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 1
+      Color = 13554645
+      BorderColor = clBlack
+      Align = alTop
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 0
+      Padding.Left = 4
+      Padding.Top = 4
+      Padding.Right = 4
+      Padding.Bottom = 4
+      ExplicitWidth = 447
+      object LabelName: TLabel
+        AlignWithMargins = True
+        Left = 4
+        Top = 4
+        Width = 449
+        Height = 13
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 4
+        Align = alTop
+        Caption = 'Name:'
+        ExplicitWidth = 31
+      end
+      object EditName: TFlatEdit
+        Left = 4
+        Top = 21
+        Width = 449
+        Height = 16
+        Align = alTop
+        AutoSize = False
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
-        ExplicitHeight = 174
-        object Label1: TLabel
-          Left = 8
-          Top = 8
-          Width = 31
-          Height = 15
-          Align = alTop
-          Caption = 'Value:'
-        end
-        object EditSZ: TEdit
-          AlignWithMargins = True
-          Left = 8
-          Top = 27
-          Width = 365
-          Height = 23
-          Margins.Left = 0
-          Margins.Top = 4
-          Margins.Right = 0
-          Margins.Bottom = 0
-          Align = alTop
-          TabOrder = 0
-        end
+        OnKeyUp = EditNameKeyUp
+        Status = csNormal
+        Validators = []
+        ShowBorder = True
+        ExplicitWidth = 439
       end
     end
-    object TPage
+    object Notebook: TNotebook
       Left = 0
-      Top = 0
-      Caption = 'MSZ'
-      ExplicitWidth = 371
-      ExplicitHeight = 137
-      object PanelMSZ: TPanel
+      Top = 48
+      Width = 457
+      Height = 430
+      Align = alClient
+      TabOrder = 1
+      ExplicitWidth = 447
+      ExplicitHeight = 398
+      object TPage
         Left = 0
         Top = 0
-        Width = 381
-        Height = 169
-        Align = alClient
-        BevelOuter = bvNone
-        Padding.Left = 8
-        Padding.Top = 8
-        Padding.Right = 8
-        TabOrder = 0
-        ExplicitWidth = 371
-        ExplicitHeight = 137
-        object Label2: TLabel
-          AlignWithMargins = True
-          Left = 8
-          Top = 8
-          Width = 31
-          Height = 15
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 0
-          Margins.Bottom = 4
-          Align = alTop
-          Caption = 'Value:'
-        end
-        object RichMSZ: TRichEdit
-          Left = 8
-          Top = 27
-          Width = 365
-          Height = 142
+        Caption = 'SZ'
+        object PanelSZ: TPanel
+          Left = 0
+          Top = 0
+          Width = 457
+          Height = 430
           Align = alClient
-          Font.Charset = ANSI_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -12
-          Font.Name = 'Segoe UI'
-          Font.Style = []
-          ParentFont = False
-          ScrollBars = ssBoth
+          BevelOuter = bvNone
+          Padding.Left = 4
+          Padding.Top = 4
+          Padding.Right = 4
+          Padding.Bottom = 4
           TabOrder = 0
+          object Label1: TLabel
+            AlignWithMargins = True
+            Left = 4
+            Top = 4
+            Width = 449
+            Height = 13
+            Margins.Left = 0
+            Margins.Top = 0
+            Margins.Right = 0
+            Margins.Bottom = 4
+            Align = alTop
+            Caption = 'Value:'
+            ExplicitWidth = 30
+          end
+          object EditSZ: TFlatEdit
+            Left = 4
+            Top = 21
+            Width = 449
+            Height = 16
+            Align = alTop
+            AutoSize = False
+            Color = clWhite
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 0
+            OnKeyUp = EditNameKeyUp
+            Status = csNormal
+            Validators = []
+            ShowBorder = True
+          end
         end
       end
-    end
-    object TPage
-      Left = 0
-      Top = 0
-      Caption = 'DQWord'
-      ExplicitWidth = 0
-      ExplicitHeight = 174
-      object PanelQDword: TPanel
+      object TPage
         Left = 0
         Top = 0
-        Width = 381
-        Height = 169
-        Align = alClient
-        BevelOuter = bvNone
-        Padding.Left = 8
-        Padding.Top = 8
-        Padding.Right = 8
-        Padding.Bottom = 8
-        TabOrder = 0
-        ExplicitHeight = 174
-        object Label3: TLabel
-          AlignWithMargins = True
-          Left = 8
-          Top = 8
-          Width = 31
-          Height = 15
-          Margins.Left = 0
-          Margins.Top = 0
-          Margins.Right = 0
-          Margins.Bottom = 4
-          Align = alTop
-          Caption = 'Value:'
-        end
-        object EditQDword: TEdit
-          Left = 8
-          Top = 27
-          Width = 365
-          Height = 23
-          Margins.Left = 0
-          Margins.Top = 4
-          Margins.Right = 0
-          Margins.Bottom = 0
-          Align = alTop
+        Caption = 'MSZ'
+        object PanelMSZ: TPanel
+          Left = 0
+          Top = 0
+          Width = 457
+          Height = 430
+          Align = alClient
+          BevelOuter = bvNone
+          Padding.Left = 4
+          Padding.Top = 4
+          Padding.Right = 4
           TabOrder = 0
-          Text = '0'
-          OnKeyPress = EditQDwordKeyPress
-        end
-        object GroupBase: TGroupBox
-          AlignWithMargins = True
-          Left = 8
-          Top = 58
-          Width = 365
-          Height = 79
-          Margins.Left = 0
-          Margins.Top = 8
-          Margins.Right = 0
-          Margins.Bottom = 0
-          Align = alTop
-          Caption = 'Base'
-          Padding.Left = 16
-          Padding.Top = 8
-          Padding.Right = 16
-          Padding.Bottom = 16
-          TabOrder = 1
-          object RadioBaseDecimal: TRadioButton
-            Left = 18
-            Top = 25
-            Width = 329
-            Height = 17
-            Align = alTop
-            Caption = 'Decimal'
-            Checked = True
-            TabOrder = 0
-            TabStop = True
-            OnClick = RadioBaseDecimalClick
-          end
-          object RadioBaseHexadecimal: TRadioButton
+          object Label2: TLabel
             AlignWithMargins = True
-            Left = 18
-            Top = 50
-            Width = 329
-            Height = 17
+            Left = 4
+            Top = 4
+            Width = 449
+            Height = 13
+            Margins.Left = 0
+            Margins.Top = 0
+            Margins.Right = 0
+            Margins.Bottom = 4
+            Align = alTop
+            Caption = 'Value:'
+            ExplicitWidth = 30
+          end
+          object PanelRichMSZ: TFlatPanel
+            AlignWithMargins = True
+            Left = 4
+            Top = 21
+            Width = 449
+            Height = 401
+            Margins.Left = 0
+            Margins.Top = 0
+            Margins.Right = 0
+            Margins.Bottom = 8
+            BorderTop = 1
+            BorderLeft = 1
+            BorderRight = 1
+            BorderBottom = 1
+            Color = 13554645
+            BorderColor = clBlack
+            Align = alClient
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            TabOrder = 0
+            Padding.Left = 1
+            Padding.Top = 1
+            Padding.Right = 1
+            Padding.Bottom = 1
+            object RichMSZ: TRichEdit
+              Left = 1
+              Top = 1
+              Width = 447
+              Height = 399
+              Align = alClient
+              BevelOuter = bvNone
+              BorderStyle = bsNone
+              Font.Charset = ANSI_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -12
+              Font.Name = 'Segoe UI'
+              Font.Style = []
+              ParentFont = False
+              ScrollBars = ssBoth
+              TabOrder = 0
+            end
+          end
+        end
+      end
+      object TPage
+        Left = 0
+        Top = 0
+        Caption = 'DQWord'
+        ExplicitWidth = 447
+        ExplicitHeight = 398
+        object PanelQDword: TPanel
+          Left = 0
+          Top = 0
+          Width = 457
+          Height = 430
+          Align = alClient
+          BevelOuter = bvNone
+          Color = 13554645
+          Padding.Left = 4
+          Padding.Top = 4
+          Padding.Right = 4
+          Padding.Bottom = 4
+          ParentBackground = False
+          TabOrder = 0
+          ExplicitTop = -3
+          object Label3: TLabel
+            AlignWithMargins = True
+            Left = 4
+            Top = 4
+            Width = 449
+            Height = 13
+            Margins.Left = 0
+            Margins.Top = 0
+            Margins.Right = 0
+            Margins.Bottom = 4
+            Align = alTop
+            Caption = 'Value:'
+            ExplicitLeft = 8
+            ExplicitTop = 8
+            ExplicitWidth = 30
+          end
+          object EditQDword: TFlatEdit
+            Left = 4
+            Top = 21
+            Width = 449
+            Height = 19
+            Align = alTop
+            AutoSize = False
+            Color = clWhite
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 0
+            Text = '0'
+            OnKeyPress = EditQDwordKeyPress
+            Status = csNormal
+            Validators = []
+            ShowBorder = True
+            ExplicitLeft = 8
+            ExplicitTop = 25
+            ExplicitWidth = 431
+          end
+          object GroupBoxBase: TFlatGroupBox
+            AlignWithMargins = True
+            Left = 4
+            Top = 48
+            Width = 449
+            Height = 77
             Margins.Left = 0
             Margins.Top = 8
             Margins.Right = 0
             Margins.Bottom = 0
             Align = alTop
-            Caption = 'Hexadecimal'
+            Caption = 'Base'
+            Font.Charset = DEFAULT_CHARSET
+            Font.Color = clBlack
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            ParentFont = False
+            Color = 13554645
+            Padding.Left = 8
+            Padding.Top = 16
+            Padding.Right = 8
+            Padding.Bottom = 8
+            ParentColor = False
             TabOrder = 1
-            OnClick = RadioBaseHexadecimalClick
+            ColorBorder = clBlack
+            ExplicitLeft = 8
+            ExplicitTop = 52
+            ExplicitWidth = 441
+            object RadioBaseDecimal: TFlatCheckBox
+              Left = 8
+              Top = 16
+              Width = 433
+              Height = 25
+              Caption = 'Decimal'
+              Mode = cbmRadioBox
+              Checked = True
+              OnStateChanged = RadioBaseDecimalStateChanged
+              Align = alTop
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clBlack
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ExplicitLeft = 0
+              ExplicitTop = 0
+              ExplicitWidth = 302
+            end
+            object RadioBaseHexadecimal: TFlatCheckBox
+              Left = 8
+              Top = 41
+              Width = 433
+              Height = 25
+              Caption = 'Hexadecimal'
+              Mode = cbmRadioBox
+              Checked = False
+              OnStateChanged = RadioBaseHexadecimalStateChanged
+              Align = alTop
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clBlack
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ExplicitLeft = 13
+              ExplicitTop = 72
+              ExplicitWidth = 270
+            end
           end
         end
       end
-    end
-    object TPage
-      Left = 0
-      Top = 0
-      Caption = 'Binary'
-      ExplicitWidth = 0
-      ExplicitHeight = 174
-      object PanelBinary: TPanel
+      object TPage
         Left = 0
         Top = 0
-        Width = 381
-        Height = 169
-        Align = alClient
-        BevelOuter = bvNone
-        TabOrder = 0
-        ExplicitHeight = 174
+        Caption = 'Binary'
+        object PanelBinary: TPanel
+          Left = 0
+          Top = 0
+          Width = 457
+          Height = 430
+          Align = alClient
+          BevelOuter = bvNone
+          TabOrder = 0
+        end
+      end
+    end
+    object PanelFooter: TFlatPanel
+      Left = 0
+      Top = 478
+      Width = 457
+      Height = 36
+      BorderTop = 1
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 0
+      Color = 13554645
+      BorderColor = clBlack
+      Align = alBottom
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 2
+      ExplicitTop = 446
+      ExplicitWidth = 447
+      object ButtonAction: TFlatButton
+        AlignWithMargins = True
+        Left = 373
+        Top = 8
+        Width = 80
+        Height = 22
+        Margins.Top = 8
+        Margins.Right = 4
+        Margins.Bottom = 6
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alRight
+        ShowHint = True
+        ImageIndex = -1
+        Caption = 'XXX'
+        Value = 0
+        OnClick = ButtonActionClick
+        Busy = False
+        ExplicitLeft = 363
+        ExplicitHeight = 25
+      end
+      object ButtonCancel: TFlatButton
+        AlignWithMargins = True
+        Left = 286
+        Top = 8
+        Width = 80
+        Height = 22
+        Margins.Left = 0
+        Margins.Top = 8
+        Margins.Right = 4
+        Margins.Bottom = 6
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alRight
+        ShowHint = True
+        ImageIndex = -1
+        Caption = 'Cancel'
+        Value = 0
+        OnClick = ButtonCancelClick
+        Busy = False
+        ExplicitLeft = 266
+        ExplicitHeight = 25
       end
     end
   end
-  object PanelFooter: TPanel
+  object StatusBar: TFlatStatusBar
     Left = 0
-    Top = 223
-    Width = 381
-    Height = 40
-    Align = alBottom
-    BevelOuter = bvNone
-    TabOrder = 1
-    ExplicitTop = 191
-    ExplicitWidth = 371
-    object ButtonAction: TButton
-      AlignWithMargins = True
-      Left = 298
-      Top = 8
-      Width = 75
-      Height = 24
-      Margins.Left = 0
-      Margins.Top = 8
-      Margins.Right = 8
-      Margins.Bottom = 8
-      Align = alRight
-      Caption = 'Action'
-      TabOrder = 0
-      OnClick = ButtonActionClick
-      ExplicitLeft = 288
-    end
-    object ButtonCancel: TButton
-      AlignWithMargins = True
-      Left = 219
-      Top = 8
-      Width = 75
-      Height = 24
-      Margins.Left = 0
-      Margins.Top = 8
-      Margins.Right = 4
-      Margins.Bottom = 8
-      Align = alRight
-      Caption = 'Cancel'
-      TabOrder = 1
-      OnClick = ButtonCancelClick
-      ExplicitLeft = 209
-    end
-  end
-  object PanelHeader: TPanel
-    Left = 0
-    Top = 0
-    Width = 381
-    Height = 54
-    Align = alTop
-    BevelOuter = bvNone
-    Padding.Left = 8
-    Padding.Top = 8
-    Padding.Right = 8
-    TabOrder = 2
-    ExplicitWidth = 371
-    object LabelName: TLabel
-      AlignWithMargins = True
-      Left = 8
-      Top = 8
-      Width = 35
-      Height = 15
-      Margins.Left = 0
-      Margins.Top = 0
-      Margins.Right = 0
-      Margins.Bottom = 4
-      Align = alTop
-      Caption = 'Name:'
-    end
-    object EditName: TEdit
-      Left = 8
-      Top = 27
-      Width = 365
-      Height = 23
-      Margins.Left = 0
-      Margins.Top = 4
-      Margins.Right = 0
-      Margins.Bottom = 0
-      Align = alTop
-      TabOrder = 0
-      OnKeyUp = EditNameKeyUp
-      ExplicitWidth = 355
-    end
-  end
-  object StatusBar: TStatusBar
-    Left = 0
-    Top = 263
-    Width = 381
+    Top = 514
+    Width = 457
     Height = 19
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
     Panels = <
       item
-        Width = 500
+        Width = 200
+        Alignment = taLeftJustify
       end>
-    ExplicitTop = 231
-    ExplicitWidth = 371
+    ExplicitTop = 482
+    ExplicitWidth = 447
   end
-  object MainMenu: TMainMenu
-    Left = 224
-    Top = 152
-    object Switch1: TMenuItem
+  object PopupMain: TFlatPopupMenu
+    OwnerDraw = True
+    Left = 136
+    Top = 185
+    object Switch2: TMenuItem
       Caption = 'Switch'
-      object String1: TMenuItem
+      object StringSZ1: TMenuItem
         Caption = 'String (SZ)'
-        OnClick = String1Click
+        OnClick = StringSZ1Click
       end
-      object MultiLineString1: TMenuItem
+      object MultiLineStringMSZ1: TMenuItem
         Caption = 'Multi Line String (MSZ)'
-        OnClick = MultiLineString1Click
+        OnClick = MultiLineStringMSZ1Click
       end
       object DWORD1: TMenuItem
         Caption = 'DWORD'

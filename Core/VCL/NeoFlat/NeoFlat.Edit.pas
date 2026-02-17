@@ -5,16 +5,37 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
 {                                                                              }
 {******************************************************************************}
 
@@ -55,10 +76,7 @@ type
     procedure AdjustBound();
 
     procedure SetEditStatus(const AValue : TControlStatus);
-
-    procedure SetEnabled(const AValue : Boolean);
     procedure SetShowBorder(const AValue : Boolean);
-    function GetEnabled() : Boolean;
     function GetIsEmpty() : Boolean;
 
     procedure SetValidators(const AValue : TValidators);
@@ -69,6 +87,8 @@ type
     {@M}
     procedure Loaded(); override;
     procedure Change(); override;
+
+    procedure SetEnabled(AValue : Boolean); override;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
@@ -78,7 +98,6 @@ type
     property IsValid : Boolean read GetIsValid;
   published
     {@G/S}
-    property Enabled    : Boolean        read GetEnabled  write SetEnabled;
     property Status     : TControlStatus read FEditStatus write SetEditStatus;
     property Validators : TValidators    read FValidators write SetValidators;
     property ShowBorder : Boolean        read FShowBorder write SetShowBorder;
@@ -201,7 +220,7 @@ var ADC           : HDC;
     ARect         : TRect;
     AClientRect   : TRect;
     AColor        : LongInt;
-    ABorderWidth  : Cardinal;
+    ABorderWidth  : Integer;
     ABrush        : HBRUSH;
 begin
   if not FShowBorder then
@@ -341,29 +360,23 @@ begin
 end;
 
 {  }
-function TFlatEdit.GetEnabled() : Boolean;
-begin
-  result := inherited Enabled;
-end;
-
-{  }
 function TFlatEdit.GetIsEmpty() : Boolean;
 begin
   result := (Length(Trim(self.text)) = 0);
 end;
 
 {  }
-procedure TFlatEdit.SetEnabled(const AValue : Boolean);
+procedure TFlatEdit.SetEnabled(AValue : Boolean);
 begin
-  if AValue = inherited Enabled then
+  if AValue = Enabled then
     Exit();
 
-  inherited Enabled := AValue;
+  inherited SetEnabled(AValue);
 
   if AValue then
-    self.Font.Color := clBlack
+    Font.Color := clBlack
   else
-    self.Font.Color := clGray;
+    Font.Color := clGray;
 end;
 
 {  }

@@ -272,7 +272,6 @@ object ControlFormFileManager: TControlFormFileManager
         Align = alClient
         AutoSize = False
         Color = clWhite
-        Enabled = True
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -331,8 +330,8 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alTop
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Home'
         Value = 0
         OnClick = ButtonHomeClick
@@ -392,8 +391,8 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alTop
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Refresh'
         Value = 0
         OnClick = ButtonRefreshClick
@@ -416,8 +415,8 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alTop
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Go To...'
         Value = 0
         OnClick = ButtonGoToClick
@@ -440,8 +439,8 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alTop
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Upload'
         Value = 0
         OnClick = ButtonUploadClick
@@ -465,8 +464,8 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alTop
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Options'
         Value = 0
         OnClick = ButtonOptionsClick
@@ -512,8 +511,8 @@ object ControlFormFileManager: TControlFormFileManager
           Font.Name = 'Tahoma'
           Font.Style = []
           Align = alLeft
+          ShowHint = True
           ImageIndex = 16
-          Enabled = True
           Caption = '<-'
           Value = 0
           OnClick = ButtonBackClick
@@ -534,8 +533,8 @@ object ControlFormFileManager: TControlFormFileManager
           Font.Name = 'Tahoma'
           Font.Style = []
           Align = alRight
+          ShowHint = True
           ImageIndex = 16
-          Enabled = True
           Caption = '->'
           Value = 0
           OnClick = ButtonForwardClick

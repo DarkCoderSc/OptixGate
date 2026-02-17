@@ -433,6 +433,9 @@ begin
     ///
     FFileTransferOrchestrator := nil;
   end;
+
+  if Assigned(FShellInstances) then
+    FShellInstances.Clear();
 end;
 
 procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);

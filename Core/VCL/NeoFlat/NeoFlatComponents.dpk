@@ -34,15 +34,12 @@ requires
   VirtualTreesR;
 
 contains
-  XSuperObject in '..\..\..\ExtLibraries\Delphi Libraries\XSuperObject.pas',
-  XSuperJson in '..\..\..\ExtLibraries\Delphi Libraries\XSuperJson.pas',
   NeoFlat.Button in 'NeoFlat.Button.pas',
   NeoFlat.CaptionBar in 'NeoFlat.CaptionBar.pas',
   NeoFlat.CheckBox in 'NeoFlat.CheckBox.pas',
   NeoFlat.Classes in 'NeoFlat.Classes.pas',
   NeoFlat.ComboBox in 'NeoFlat.ComboBox.pas',
-  NeoFlat.Common in 'NeoFlat.Common.pas',
-  NeoFlat.DockCaption in 'NeoFlat.DockCaption.pas',
+  NeoFlat.Helper in 'NeoFlat.Helper.pas',
   NeoFlat.Edit in 'NeoFlat.Edit.pas',
   NeoFlat.Form in 'NeoFlat.Form.pas',
   NeoFlat.Gauge in 'NeoFlat.Gauge.pas',
@@ -52,21 +49,14 @@ contains
   NeoFlat.InputQueryForm in 'NeoFlat.InputQueryForm.pas' {Sub7FormInputQuery},
   NeoFlat.MessageBox in 'NeoFlat.MessageBox.pas',
   NeoFlat.MessageBoxForm in 'NeoFlat.MessageBoxForm.pas' {Sub7FormMessageBox},
-  NeoFlat.OptionDialog in 'NeoFlat.OptionDialog.pas',
-  NeoFlat.OptionDialogForm in 'NeoFlat.OptionDialogForm.pas' {Sub7FormOptionDialog},
-  NeoFlat.PaintScene in 'NeoFlat.PaintScene.pas',
   NeoFlat.Panel in 'NeoFlat.Panel.pas',
   NeoFlat.PopupMenu in 'NeoFlat.PopupMenu.pas',
   NeoFlat.Reg in 'NeoFlat.Reg.pas',
-  NeoFlat.ScrollingCredit in 'NeoFlat.ScrollingCredit.pas',
   NeoFlat.StatusBar in 'NeoFlat.StatusBar.pas',
   NeoFlat.Theme in 'NeoFlat.Theme.pas',
   NeoFlat.Timer in 'NeoFlat.Timer.pas',
   NeoFlat.TreeView in 'NeoFlat.TreeView.pas',
   NeoFlat.Types in 'NeoFlat.Types.pas',
-  NeoFlat.Validators in 'NeoFlat.Validators.pas',
-  NeoFlat.Metrics in 'NeoFlat.Metrics.pas',
-  NeoFlat.Utils in 'NeoFlat.Utils.pas',
-  NeoFlat.SettingHandler in 'NeoFlat.SettingHandler.pas';
+  NeoFlat.Validators in 'NeoFlat.Validators.pas';
 
 end.

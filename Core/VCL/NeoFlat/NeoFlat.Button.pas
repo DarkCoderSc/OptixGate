@@ -5,16 +5,37 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
 {                                                                              }
 {******************************************************************************}
 
@@ -23,7 +44,7 @@ unit NeoFlat.Button;
 interface
 
 uses Winapi.Windows, System.Classes, VCL.Controls, Winapi.Messages, VCL.Graphics, NeoFlat.Theme,
-     NeoFlat.Classes, VCL.ImgList, NeoFlat.Metrics;
+     NeoFlat.Classes, VCL.ImgList, NeoFlat.Helper;
 
 type
   TFlatButton = class;
@@ -57,9 +78,6 @@ type
 
     procedure SetButtonState(AState : TFlatControlState);
 
-    function GetEnabled() : Boolean;
-    procedure SetEnabled(AValue : Boolean);
-
     function GetCaption() : String;
     procedure SetCaption(AValue : String);
     procedure SetValue(AValue : Integer);
@@ -73,19 +91,21 @@ type
   protected
     {@M}
     procedure Paint(); override;
+    procedure SetEnabled(AValue : Boolean); override;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
     destructor Destroy(); override;
   published
     {@G/S}
+    property Enabled;
     property Font;
     property Visible;
     property Align;
+    property ShowHint;
 
     property Images         : TCustomImageList read FImageList      write FImageList;
     property ImageIndex     : Integer          read FImageIndex     write SetImageIndex;
-    property Enabled        : Boolean          read GetEnabled      write SetEnabled;
     property Caption        : String           read GetCaption      write SetCaption;
     property Value          : Integer          read FValue          write SetValue;
     property OnClick        : TNotifyEvent     read FOnClick        write FOnClick;
@@ -95,7 +115,7 @@ type
 
 implementation
 
-uses System.IniFiles, System.SysUtils, NeoFlat.Common;
+uses System.IniFiles, System.SysUtils;
 
 (* TFlatButton *)
 
@@ -444,16 +464,11 @@ begin
     FOnValueChanged(self, AValue);
 end;
 
-{ TFlatButton.GetEnabled }
-function TFlatButton.GetEnabled() : Boolean;
-begin
-  result := inherited Enabled;
-end;
-
 { TFlatButton.SetEnabled }
 procedure TFlatButton.SetEnabled(AValue : Boolean);
 begin
-  inherited Enabled := AValue;
+  inherited SetEnabled(AValue);
+  ///
 
   if FBusy then
     FOldEnabledValue := AValue;

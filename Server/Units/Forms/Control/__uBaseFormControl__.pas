@@ -59,7 +59,7 @@ uses
 
   Winapi.Messages,
 
-  VCL.Forms, VCL.Controls,
+  VCL.Forms, VCL.Controls, VCL.Menus,
 
   OptixCore.Commands.Base, OptixCore.Protocol.Packet,
 
@@ -113,7 +113,6 @@ type
   TBaseFormControl = class(TForm)
   private
     FOriginalCaption  : String;
-    FCaptionBar       : TFlatCaptionBar;
     FFlatForm         : TFlatForm;
     FDialogs          : TObjectList<TForm>;
     FFirstShow        : Boolean;
@@ -121,6 +120,7 @@ type
     {@M}
     function GetGUID() : TGUID;
   protected
+    FCaptionBar      : TFlatCaptionBar;
     FSpecialForm     : Boolean;
     FFormInformation : TFormControlInformation;
 
@@ -149,6 +149,8 @@ type
     procedure CMActivate(var AMessage: TCMActivate); message CM_ACTIVATE;
     procedure CMDeactivate(var AMessage: TCMDeactivate); message CM_DEACTIVATE;
     procedure WMWindowPosChanging(var AMessage: TWMWindowPosChanging); message WM_WINDOWPOSCHANGING;
+
+    procedure SetCaptionBarDropDown(const AValue : TPopupMenu);
   public
     {@M}
     procedure SendCommand(const ACommand : TOptixCommand); overload;
@@ -163,10 +165,13 @@ type
     destructor Destroy(); override;
 
     {@G}
-    property GUID               : TGUID                   read GetGUID;
-    property SpecialForm        : Boolean                 read FSpecialForm;
-    property FormInformation    : TFormControlInformation read FFormInformation;
-    property ContextInformation : String                  read GetContextDescription;
+    property GUID                : TGUID                   read GetGUID;
+    property SpecialForm         : Boolean                 read FSpecialForm;
+    property FormInformation     : TFormControlInformation read FFormInformation;
+    property ContextInformation  : String                  read GetContextDescription;
+
+    {@S}
+    property CaptionBarDropDown : TPopupMenu write SetCaptionBarDropDown;
   end;
 
   TBaseFormControlClass = class of TBaseFormControl;
@@ -510,6 +515,12 @@ end;
 procedure TBaseFormControl.__WARNING__OverrideWindowGUID(const ANewGUID : TGUID);
 begin
   FFormInformation.GUID := ANewGUID;
+end;
+
+procedure TBaseFormControl.SetCaptionBarDropDown(const AValue : TPopupMenu);
+begin
+  if Assigned(FCaptionBar) then
+    FCaptionBar.MenuDropDown := AValue;
 end;
 
 end.

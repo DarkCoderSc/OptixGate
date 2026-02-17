@@ -100,15 +100,12 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="VirtualTreesR.dcp"/>
-        <DCCReference Include="..\..\..\ExtLibraries\Delphi Libraries\XSuperObject.pas"/>
-        <DCCReference Include="..\..\..\ExtLibraries\Delphi Libraries\XSuperJson.pas"/>
         <DCCReference Include="NeoFlat.Button.pas"/>
         <DCCReference Include="NeoFlat.CaptionBar.pas"/>
         <DCCReference Include="NeoFlat.CheckBox.pas"/>
         <DCCReference Include="NeoFlat.Classes.pas"/>
         <DCCReference Include="NeoFlat.ComboBox.pas"/>
-        <DCCReference Include="NeoFlat.Common.pas"/>
-        <DCCReference Include="NeoFlat.DockCaption.pas"/>
+        <DCCReference Include="NeoFlat.Helper.pas"/>
         <DCCReference Include="NeoFlat.Edit.pas"/>
         <DCCReference Include="NeoFlat.Form.pas"/>
         <DCCReference Include="NeoFlat.Gauge.pas"/>
@@ -122,24 +119,15 @@
         <DCCReference Include="NeoFlat.MessageBoxForm.pas">
             <Form>Sub7FormMessageBox</Form>
         </DCCReference>
-        <DCCReference Include="NeoFlat.OptionDialog.pas"/>
-        <DCCReference Include="NeoFlat.OptionDialogForm.pas">
-            <Form>Sub7FormOptionDialog</Form>
-        </DCCReference>
-        <DCCReference Include="NeoFlat.PaintScene.pas"/>
         <DCCReference Include="NeoFlat.Panel.pas"/>
         <DCCReference Include="NeoFlat.PopupMenu.pas"/>
         <DCCReference Include="NeoFlat.Reg.pas"/>
-        <DCCReference Include="NeoFlat.ScrollingCredit.pas"/>
         <DCCReference Include="NeoFlat.StatusBar.pas"/>
         <DCCReference Include="NeoFlat.Theme.pas"/>
         <DCCReference Include="NeoFlat.Timer.pas"/>
         <DCCReference Include="NeoFlat.TreeView.pas"/>
         <DCCReference Include="NeoFlat.Types.pas"/>
         <DCCReference Include="NeoFlat.Validators.pas"/>
-        <DCCReference Include="NeoFlat.Metrics.pas"/>
-        <DCCReference Include="NeoFlat.Utils.pas"/>
-        <DCCReference Include="NeoFlat.SettingHandler.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -16,22 +16,6 @@ object ControlFormContentReader: TControlFormContentReader
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object StatusBar: TStatusBar
-    Left = 0
-    Top = 600
-    Width = 824
-    Height = 19
-    Panels = <
-      item
-        Width = 150
-      end
-      item
-        Alignment = taRightJustify
-        Width = 50
-      end>
-    ExplicitTop = 568
-    ExplicitWidth = 814
-  end
   object PanelMain: TFlatPanel
     Left = 0
     Top = 0
@@ -50,7 +34,7 @@ object ControlFormContentReader: TControlFormContentReader
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
-    TabOrder = 1
+    TabOrder = 0
     ExplicitWidth = 814
     ExplicitHeight = 568
     object MultiPanel: TOMultiPanel
@@ -165,8 +149,8 @@ object ControlFormContentReader: TControlFormContentReader
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alLeft
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = '<-'
         Value = 0
         OnClick = ButtonBackClick
@@ -189,8 +173,8 @@ object ControlFormContentReader: TControlFormContentReader
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alLeft
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = '->'
         Value = 0
         OnClick = ButtonForwardClick
@@ -228,8 +212,8 @@ object ControlFormContentReader: TControlFormContentReader
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alLeft
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Download'
         Value = 0
         OnClick = ButtonDownloadClick
@@ -252,8 +236,8 @@ object ControlFormContentReader: TControlFormContentReader
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alLeft
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Go To Page...'
         Value = 0
         OnClick = ButtonBrowsePageClick
@@ -276,8 +260,8 @@ object ControlFormContentReader: TControlFormContentReader
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alLeft
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Set Page Size'
         Value = 0
         OnClick = ButtonUpdatePageSizeClick
@@ -327,8 +311,8 @@ object ControlFormContentReader: TControlFormContentReader
         Font.Name = 'Tahoma'
         Font.Style = []
         Align = alLeft
+        ShowHint = True
         ImageIndex = 17
-        Enabled = True
         Caption = 'Options'
         Value = 0
         OnClick = ButtonOptionsClick
@@ -337,6 +321,29 @@ object ControlFormContentReader: TControlFormContentReader
         ExplicitHeight = 22
       end
     end
+  end
+  object StatusBar: TFlatStatusBar
+    Left = 0
+    Top = 600
+    Width = 824
+    Height = 19
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    Panels = <
+      item
+        Width = 200
+        Alignment = taLeftJustify
+      end
+      item
+        Width = 50
+        Alignment = taRightJustify
+      end>
+    ExplicitLeft = 104
+    ExplicitTop = 96
+    ExplicitWidth = 0
   end
   object PopupRichStrings: TFlatPopupMenu
     OwnerDraw = True

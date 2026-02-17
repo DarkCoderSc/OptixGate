@@ -104,7 +104,8 @@ type
     class procedure TraverseDirectories(const APath : String;
       const ATraversedDirectoryFunc : TTraversedDirectoryCallback); static;
     class function GetFullPathName(const APath : String) : String; static;
-    class procedure PathExists(const APath : String);
+    class procedure PathExists(const APath : String); static;
+    class function CleanFileName(const AFileName : String) : String; static;
   end;
 
   TContentReader = class
@@ -716,6 +717,16 @@ class procedure TFileSystemHelper.PathExists(const APath : String);
 begin
   if GetFileAttributesW(PWideChar(APath)) = INVALID_FILE_ATTRIBUTES then
     raise EWindowsException.Create('GetFileAttributesW');
+end;
+
+class function TFileSystemHelper.CleanFileName(const AFileName : String) : String;
+begin
+  result := AFileName;
+  ///
+
+  // Or use a Regular Expression
+  for var AChar in TPath.GetInvalidFileNameChars do
+    result := result.Replace(AChar, '_');
 end;
 
 (* TContentReader *)

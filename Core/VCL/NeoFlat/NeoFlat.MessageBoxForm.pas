@@ -5,24 +5,15 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                                                                              }
-{                           +++++++++++++++++++++                              }
-{                           +       +           +                              }
-{                           +       +           +                              }
-{                           +    +++++++++      +                              }
-{                           +            +      +                              }
-{                           +            +      +                              }
-{                           +++++++      +      +                              }
-{                           +            +      +                              }
-{                           +            +      +                              }
-{                           +++++++++++++++++++++                              }
-{                                 SubSeven Legacy                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
-{                   https://www.twitter.com/                                   }
+{                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
+{                                                                              }
 {                                                                              }
 {                                                                              }
 {  Disclaimer:                                                                 }
@@ -45,10 +36,6 @@
 {    availability of, or the content located on or through it.                 }
 {    Plus, any losses or damages occurred from using these contents or the     }
 {    internet generally.                                                       }
-{                                                                              }
-{                                                                              }
-{                                                                              }
-{    I dedicate this work to my daughter.                                      }
 {                                                                              }
 {******************************************************************************}
 

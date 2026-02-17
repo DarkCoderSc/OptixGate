@@ -253,7 +253,7 @@ begin
   var AGridSectionKind := gskNone;
 
   case Column of
-    0 : AColor := COLOR_LIST_GRAY;
+    0 : AColor := RGB(240, 240, 240);
 
     1..ROW_SIZE : begin
       AByteIndex := Column - 1;
@@ -261,7 +261,7 @@ begin
       AGridSectionKind := gskHex;
 
       if odd(Column mod 2) then
-        AColor := COLOR_LIST_GRAY;
+        AColor := RGB(240, 240, 240);
     end;
 
     ROW_SIZE +1..(ROW_SIZE * 2) +1 : begin
@@ -275,9 +275,9 @@ begin
     var ABufferPos : Int64 := (Integer(Node.Index) * ROW_SIZE) + AByteIndex;
     if (ABufferPos >= FSelStart) and (ABufferPos <= FSelEnd) then begin
       if AGridSectionKind = FSelKind then
-        AColor := VST.Colors.FocusedSelectionColor
+        AColor := COLOR_LIST_DARKER_BLUE
       else
-        AColor := VST.Colors.SelectionRectangleBlendColor;
+        AColor := COLOR_LIST_BLUE;
     end;
   end;
 

@@ -53,6 +53,12 @@
     - Ternary operator
 *)
 
+(*
+    Changelog:
+      - Restructuring of core source files (Shared -> Core)
+      - New design implemented: "Neo Flat" (retro flat design)
+*)
+
 unit uFormMain;
 
 interface
@@ -75,7 +81,7 @@ uses
   OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base,
   OptixCore.Commands,
 
-  NeoFlat.CaptionBar, NeoFlat.Form, NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button;
+  NeoFlat.CaptionBar, NeoFlat.Form, NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button, NeoFlat.Hint;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -121,7 +127,7 @@ type
     CaptionBar: TFlatCaptionBar;
     FlatMainMenu: TFlatPopupMenu;
     Server1: TMenuItem;
-    Stores2: TMenuItem;
+    Stores1: TMenuItem;
     Certificates1: TMenuItem;
     rustedCertificates1: TMenuItem;
     Debug2: TMenuItem;
@@ -132,6 +138,7 @@ type
     Close1: TMenuItem;
     N11: TMenuItem;
     VST: TVirtualStringTree;
+    FlatHint: TFlatHint;
     procedure Close1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -764,6 +771,9 @@ begin
      not ASerializedPacket.Contains('FWindowGUID') then
       Exit();
   ///
+
+  // allocconsole();
+  // writeln(ASerializedPacket.AsJson(true));
 
   var AClassName := ASerializedPacket.S['PacketClass'];
   var AWindowGUID := TGUID.Create(ASerializedPacket.S['FWindowGUID']);

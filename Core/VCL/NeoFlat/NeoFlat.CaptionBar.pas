@@ -5,16 +5,37 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
 {                                                                              }
 {******************************************************************************}
 
@@ -24,7 +45,7 @@ interface
 
 uses Winapi.Windows, System.Classes, VCL.Graphics, VCL.Controls, Winapi.Messages,
      VCL.Forms, System.SysUtils, System.UITypes, NeoFlat.Form, NeoFlat.Theme,
-     VCL.Menus;
+     VCL.Menus, NeoFlat.Helper, NeoFlat.Types;
 
 type
   TFlatCaptionBar = class;
@@ -121,7 +142,6 @@ type
     procedure doMaximizeRestore();
     procedure doCollapseRestore();
     procedure doClose();
-    procedure doDock();
     procedure DisplayMenuDropDown();
 
     procedure SetCaption(AValue : String);
@@ -136,7 +156,7 @@ type
     procedure PrepareCaptionButtons();
   protected
     {@M}
-    procedure Paint(); override;
+    procedure Paint; override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
   public
     {@C}
@@ -179,101 +199,101 @@ type
   {
     Glyphs
   }
-  const CLOSE_GLYPH : TByteArrayArray = [
+  const CLOSE_GLYPH : TMatrixGlyph = [
+                                        [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                        [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                        [$0, $1, $0, $0, $0, $0, $0, $0, $1, $0],
+                                        [$0, $0, $1, $0, $0, $0, $0, $1, $0, $0],
+                                        [$0, $0, $0, $1, $0, $0, $1, $0, $0, $0],
+                                        [$0, $0, $0, $0, $1, $1, $0, $0, $0, $0],
+                                        [$0, $0, $0, $0, $1, $1, $0, $0, $0, $0],
+                                        [$0, $0, $0, $0, $1, $1, $0, $0, $0, $0],
+                                        [$0, $0, $0, $1, $0, $0, $1, $0, $0, $0],
+                                        [$0, $0, $1, $0, $0, $0, $0, $1, $0, $0],
+                                        [$0, $1, $0, $0, $0, $0, $0, $0, $1, $0],
+                                        [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                        [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
+  ];
+
+  const MINIMIZE_GLYPH : TMatrixGlyph = [
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1]
+];
+
+  const RESTORE_GLYPH : TMatrixGlyph = [
                                           [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
                                           [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                          [$0, $1, $0, $0, $0, $0, $0, $0, $1, $0],
-                                          [$0, $0, $1, $0, $0, $0, $0, $1, $0, $0],
-                                          [$0, $0, $0, $1, $0, $0, $1, $0, $0, $0],
-                                          [$0, $0, $0, $0, $1, $1, $0, $0, $0, $0],
-                                          [$0, $0, $0, $0, $1, $1, $0, $0, $0, $0],
-                                          [$0, $0, $0, $0, $1, $1, $0, $0, $0, $0],
-                                          [$0, $0, $0, $1, $0, $0, $1, $0, $0, $0],
-                                          [$0, $0, $1, $0, $0, $0, $0, $1, $0, $0],
-                                          [$0, $1, $0, $0, $0, $0, $0, $0, $1, $0],
+                                          [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                          [$0, $0, $0, $1, $1, $1, $1, $1, $1, $0],
+                                          [$0, $0, $0, $1, $0, $0, $0, $0, $1, $0],
+                                          [$0, $1, $1, $1, $1, $1, $1, $0, $1, $0],
+                                          [$0, $1, $0, $0, $0, $0, $1, $0, $1, $0],
+                                          [$0, $1, $0, $0, $0, $0, $1, $0, $1, $0],
+                                          [$0, $1, $0, $0, $0, $0, $1, $1, $1, $0],
+                                          [$0, $1, $0, $0, $0, $0, $1, $0, $0, $0],
+                                          [$0, $1, $1, $1, $1, $1, $1, $0, $0, $0],
                                           [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
                                           [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
   ];
 
-  const MINIMIZE_GLYPH : TByteArrayArray = [
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1]
-];
 
-  const RESTORE_GLYPH : TByteArrayArray = [
+  const MAXIMIZE_GLYPH : TMatrixGlyph = [
                                             [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
                                             [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                            [$0, $0, $0, $1, $1, $1, $1, $1, $1, $0],
-                                            [$0, $0, $0, $1, $0, $0, $0, $0, $1, $0],
-                                            [$0, $1, $1, $1, $1, $1, $1, $0, $1, $0],
-                                            [$0, $1, $0, $0, $0, $0, $1, $0, $1, $0],
-                                            [$0, $1, $0, $0, $0, $0, $1, $0, $1, $0],
-                                            [$0, $1, $0, $0, $0, $0, $1, $1, $1, $0],
-                                            [$0, $1, $0, $0, $0, $0, $1, $0, $0, $0],
-                                            [$0, $1, $1, $1, $1, $1, $1, $0, $0, $0],
+                                            [$0, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $1, $1, $1, $1, $1, $1, $1, $1, $1],
                                             [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
                                             [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
   ];
 
-
-  const MAXIMIZE_GLYPH : TByteArrayArray = [
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
+  const DOCK_GLYPH : TMatrixGlyph = [
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $1, $1, $1, $1, $1, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $0, $1, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $1, $0, $0, $0, $0, $0, $1],
+                                            [$0, $0, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$0, $0, $0, $1, $0, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $0, $1, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
+                                            [$0, $0, $0, $0, $1, $1, $1, $1, $1, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
   ];
 
-  const DOCK_GLYPH : TByteArrayArray = [
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $0, $1, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $1, $0, $0, $0, $0, $0, $1],
-                                              [$0, $0, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $1, $0, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $0, $1, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                              [$0, $0, $0, $0, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
-  ];
-
-  const HAMBURGER_GLYPH : TByteArrayArray = [
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                              [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
+  const HAMBURGER_GLYPH : TMatrixGlyph = [
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
+                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
   ];
 
 implementation
@@ -283,8 +303,8 @@ uses System.Types;
 { TFlatCaption.Maximize }
 procedure TFlatCaptionBar.Maximize();
 begin
-  if (biMaximize in self.BorderIcons) and (not FMaximized) then
-    self.doMaximize();
+  if (biMaximize in BorderIcons) and (not FMaximized) then
+    doMaximize();
 end;
 
 { TFlatCaption.MouseMove
@@ -380,24 +400,17 @@ begin
   FOwnerForm.Close();
 end;
 
-{ TFlatCaptionBar.doDock }
-procedure TFlatCaptionBar.doDock();
-begin
-  if Assigned(FOnDOck) then
-    FOnDock(self);
-end;
-
 { TFlatCaptionBar.Create }
 constructor TFlatCaptionBar.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
   ///
 
-  FOldWindowProc := self.WindowProc;
-  self.WindowProc := OnCustomWindowProc;
+  FOldWindowProc := WindowProc;
+  WindowProc := OnCustomWindowProc;
 
-  self.Align  := alTop;
-  ClientHeight := self.ScaleValue(25);
+  Align  := alTop;
+  ClientHeight := ScaleValue(25);
 
   FOwnerForm := nil;
 
@@ -417,9 +430,9 @@ begin
   FOldConstraintH := 0;
   FOldConstraintW := 0;
 
-  self.Font.Name   := FONT_1;
-  self.Font.Color  := clWhite;
-  self.Font.Height := -11;
+  Font.Name   := FONT_1;
+  Font.Color  := clWhite;
+  Font.Height := -11;
 
   FSubCaption := '';
 
@@ -455,6 +468,8 @@ begin
 
   FHamburgerButton := THamburgerButton.Create(self);
   FHamburgerButton.Visible := False;
+
+  BorderIcons := [biSystemMenu,biMinimize,biMaximize];
 end;
 
 
@@ -462,7 +477,7 @@ end;
 destructor TFlatCaptionBar.Destroy();
 begin
   if Assigned(FOldWindowProc) then
-    self.WindowProc := FOldWindowProc;
+    WindowProc := FOldWindowProc;
 
   if Assigned(FCloseButton) then
     FreeAndNil(FCloseButton);
@@ -486,8 +501,8 @@ end;
 { TFlatCaptionBar.PrepareCaptionButtons }
 procedure TFlatCaptionBar.PrepareCaptionButtons();
 begin
-  var AButtonWidth := (self.ClientHeight - self.ScaleValue(8)); // Minus two borders pixels
-  var AButtonY := (self.ClientHeight div 2) - (AButtonWidth div 2);
+  var AButtonWidth := (ClientHeight - ScaleValue(8)); // Minus two borders pixels
+  var AButtonY := (ClientHeight div 2) - (AButtonWidth div 2);
 
   var ARect : TRect;
 
@@ -499,7 +514,7 @@ begin
 
   // Hamburger Button
   if FHamburgerButton.Visible then begin
-    ARect.Left  := self.ScaleValue(4);
+    ARect.Left  := ScaleValue(4);
     ARect.Width := AButtonWidth;
 
     FHamburgerButton.Rect := ARect;
@@ -510,7 +525,7 @@ begin
 
   // Close Button
   if FCloseButton.Visible then begin
-    ARect.Left  := (self.ClientWidth - self.ScaleValue(4) - AButtonWidth);
+    ARect.Left  := (ClientWidth - ScaleValue(4) - AButtonWidth);
     ARect.Width := AButtonWidth;
 
     FCloseButton.Rect := ARect;
@@ -518,7 +533,7 @@ begin
 
   // Maximize Restore
   if FMaximizeButton.Visible then begin
-    ARect.Left  := (ARect.Left - self.ScaleValue(1)) - AButtonWidth;
+    ARect.Left  := (ARect.Left - ScaleValue(1)) - AButtonWidth;
     ARect.Width := AButtonWidth;
 
     FMaximizeButton.Rect := ARect;
@@ -526,7 +541,7 @@ begin
 
   // Minimize
   if FMinimizeButton.Visible then begin
-    ARect.Left  := (ARect.Left - self.ScaleValue(1)) - AButtonWidth;
+    ARect.Left  := (ARect.Left - ScaleValue(1)) - AButtonWidth;
     ARect.Width := AButtonWidth;
 
     FMinimizeButton.Rect := ARect;
@@ -534,7 +549,7 @@ begin
 
   // Dock Button
   if FDockable then begin
-    ARect.Left := (ARect.Left - self.ScaleValue(1)) - AButtonWidth;
+    ARect.Left := (ARect.Left - ScaleValue(1)) - AButtonWidth;
     ARect.Width := AButtonWidth;
 
     FDockButton.Rect := ARect;
@@ -546,64 +561,40 @@ begin
     Dec(FCaptionRect.Right, (Width - ARect.Left));
 
   if FHamburgerButton.Visible then
-    Inc(FCaptionRect.Left, AButtonWidth + self.ScaleValue(4));
+    Inc(FCaptionRect.Left, AButtonWidth + ScaleValue(4));
 end;
 
-{ TFlatCaptionBar.DrawCaptionButtons }
 function TFlatCaptionBar.DrawCaptionButtons() : Integer;
 
-    { _.DrawAButton }
-    function DrawAButton(AButton : TCaptionButton; const AGlyphMatrix : TByteArrayArray) : TRect;
-    var I, N         : Integer;
-        X, Y         : Integer;
-        AGlyphWidth  : Integer;
-        AGlyphHeight : Integer;
-        AGlyphYDelta : Integer;
-        ADrawBorder  : Boolean;
+    function DrawAButton(AButton : TCaptionButton; const AGlyphMatrix : TMatrixGlyph) : TRect;
     begin
       result := TRect.Empty();
       ///
 
-      if NOT Assigned(AButton) then
+      if not Assigned(AButton) or not IsValidMatrixGlyph(AGlyphMatrix) then
         Exit();
       ///
 
-      AGlyphYDelta := 0;
-      ADrawBorder := False;
+      var ADrawBorder := False;
       case AButton.State of
-        cbsHover : begin
+        cbsHover, cbsActive :
           ADrawBorder := True;
-        end;
-
-        cbsActive : begin
-          AGlyphYDelta := self.ScaleValue(1);
-
-          ADrawBorder := True;
-        end;
       end;
 
-      Canvas.Brush.Color := clWhite;
+      Canvas.Brush.Color := GLYPH_COLOR;
 
       // Draw Border
       if ADrawBorder then
         Canvas.FrameRect(AButton.Rect);
 
       // Draw Button Glyph
-      Canvas.MoveTo((AButton.Rect.Left - self.ScaleValue(1)), AButton.Rect.Top);
-      Canvas.LineTo((AButton.Rect.Left - self.ScaleValue(1)), AButton.Rect.Bottom);
+      Canvas.MoveTo((AButton.Rect.Left - ScaleValue(1)), AButton.Rect.Top);
+      Canvas.LineTo((AButton.Rect.Left - ScaleValue(1)), AButton.Rect.Bottom);
 
-      AGlyphWidth  := High(AGlyphMatrix[1]) + 1;
-      AGlyphHeight := High(AGlyphMatrix) + 1;
+      var X := AButton.Rect.Left + ((FCloseButton.Rect.Width div 2) - (Length(AGlyphMatrix[0]) div 2));
+      var Y := AButton.Rect.Top + ((FCloseButton.Rect.Height div 2) - (Length(AGlyphMatrix) div 2));
 
-      X := AButton.Rect.Left + ((FCloseButton.Rect.Width div 2) - (AGlyphWidth div 2));
-      Y := AButton.Rect.Top + ((FCloseButton.Rect.Height div 2) - (AGlyphHeight div 2));
-
-      for I := 0 to AGlyphWidth -1 do begin
-        for N := 0 to AGlyphHeight -1 do begin
-          if AGlyphMatrix[N][I] <> 0 then
-            Canvas.Pixels[(X + I), (Y + N + AGlyphYDelta)] := clWhite;
-        end;
-      end;
+      DrawMatrixGlyph(Canvas, AGlyphMatrix, X, Y, GLYPH_COLOR);
     end;
 
 begin
@@ -641,15 +632,15 @@ begin
 end;
 
 { TFlatCaptionBar.Paint }
-procedure TFlatCaptionBar.Paint();
+procedure TFlatCaptionBar.Paint;
 var ARect       : TRect;
     ACaption    : String;
     ATextFormat : TTextFormat;
 begin
   FCaptionRect := Rect(
-    self.ScaleValue(8),
+    ScaleValue(8),
     0,
-    (ClientWidth - self.ScaleValue(16)),
+    (ClientWidth - ScaleValue(16)),
     ClientHeight
   );
   ///
@@ -657,11 +648,11 @@ begin
   Canvas.Lock();
   try
     // Prepare Canvas
-    self.Canvas.Pen.Width := 0;
-    self.Canvas.Pen.Color := clNone;
+    Canvas.Pen.Width := 0;
+    Canvas.Pen.Color := clNone;
 
-    self.Canvas.Brush.Style := bsSolid;
-    self.Canvas.Brush.Color := clNone;
+    Canvas.Brush.Style := bsSolid;
+    Canvas.Brush.Color := clNone;
 
     Canvas.Font.Assign(inherited Font);
 
@@ -736,7 +727,7 @@ begin
     FOwnerForm.Constraints.MinHeight := 0;
     FOwnerForm.Constraints.MinWidth  := 0;
 
-    FOwnerForm.ClientHeight := self.ClientHeight;
+    FOwnerForm.ClientHeight := ClientHeight;
   end else begin
     FOwnerForm.ClientHeight := FOwnerOldClientH;
 
@@ -753,9 +744,9 @@ begin
   ///
 
   if FMaximized then
-    self.doRestore()
+    doRestore()
   else
-    self.doMaximize();
+    doMaximize();
 end;
 
 { TFlatCaptionBar.DisplayMenuDropDown }
@@ -765,7 +756,7 @@ begin
     Exit();
   ///
 
-  var APoint := self.ClientToScreen(
+  var APoint := ClientToScreen(
     Point(
       FHamburgerButton.Rect.Left,
       FHamburgerButton.Rect.Top + FHamburgerButton.Rect.Height
@@ -790,7 +781,7 @@ begin
     WM_LBUTTONDBLCLK : begin
       AButton := GetCaptionButtonFromCoord(TWMLButtonDown(AMessage).XPos, TWMLButtonDown(AMessage).YPos);
       if not Assigned(AButton) then
-        self.doMaximizeRestore();
+        doMaximizeRestore();
     end;
 
     // On mouse left button down
@@ -818,15 +809,13 @@ begin
 
         if (AButton = FButtonDown) then begin
           if AButton is TCloseButton then
-            self.DoClose()
+            DoClose()
           else if AButton is TMaximizeButton then
-            self.doMaximizeRestore()
+            doMaximizeRestore()
           else if AButton is TMinimizeButton then
-            self.DoMinimize()
-          else if AButton is TDockButton then
-            self.DoDock()
+            DoMinimize()
           else if AButton is THamburgerButton then
-            self.DisplayMenuDropDown();
+            DisplayMenuDropDown();
         end;
       end;
 
@@ -879,7 +868,7 @@ begin
 
     // Right Mouse Click
     WM_RBUTTONDOWN : begin
-      self.doCollapseRestore();
+      doCollapseRestore();
     end;
   end;
 end;
@@ -919,15 +908,12 @@ end;
 { TFlatCaptionBar.SetBorderIcons }
 procedure TFlatCaptionBar.SetBorderIcons(AValue : TBorderIcons);
 begin
-  if (AValue = FBorderIcons) then
-    Exit();
-
   FBorderIcons := AValue;
 
   // Update Border Icons visibility
-  self.FCloseButton.Visible    := (biSystemMenu in FBorderIcons);
-  self.FMaximizeButton.Visible := (biMaximize in FBorderIcons);
-  self.FMinimizeButton.Visible := (biMinimize in FBorderIcons);
+  FCloseButton.Visible    := (biSystemMenu in FBorderIcons);
+  FMaximizeButton.Visible := (biMaximize in FBorderIcons);
+  FMinimizeButton.Visible := (biMinimize in FBorderIcons);
 
   ///
   Invalidate();

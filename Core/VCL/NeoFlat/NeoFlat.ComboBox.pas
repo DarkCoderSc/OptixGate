@@ -5,27 +5,46 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
 {                                                                              }
 {******************************************************************************}
-
-// Built from TFlatComboBoxUnit.pas (Simplified & Optimized)
 
 unit NeoFlat.ComboBox;
 
 interface
 
 uses System.Classes, VCL.Controls, VCL.StdCtrls, VCL.Graphics, WinAPI.Messages,
-     WinAPI.Windows, NeoFlat.Types, NeoFlat.Metrics;
+     WinAPI.Windows, NeoFlat.Types, NeoFlat.Helper;
 
 type
   TFlatComboBox = class(TCustomComboBox)
@@ -60,12 +79,7 @@ type
     procedure PaintButton();
     function GetButtonRect(): TRect;
 
-    procedure ListWndProc(var AMessage: TMessage);
-
-    function GetEnabled() : Boolean;
     function GetIsValid() : Boolean;
-    procedure SetEnabled(const AValue : Boolean);
-
     procedure SetStatus(const AStatus : TControlStatus);
     procedure DoValidate();
     procedure SetValidators(const AValue : TValidators);
@@ -73,6 +87,8 @@ type
     {@M}
     procedure ComboWndProc(var AMessage: TMessage; ComboWnd: HWnd; ComboProc: Pointer); override;
     procedure Change; override;
+
+    procedure SetEnabled(AValue : Boolean); override;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
@@ -85,11 +101,11 @@ type
     property IsValid : Boolean read GetIsValid;
   published
     {@G/S}
-    property Enabled    : Boolean        read GetEnabled  write SetEnabled;
     property Status     : TControlStatus read FStatus     write SetStatus;
     property Validators : TValidators    read FValidators write SetValidators;
 
     property Align;
+    property Enabled;
     property Style;
     property DragMode;
     property DragCursor;
@@ -196,52 +212,6 @@ begin
 end;
 
 {  }
-procedure TFlatComboBox.ListWndProc(var AMessage: TMessage);
-
-  function GetFontHeight(Font: TFont): Integer;
-  var DC          : HDC;
-      ASaveFont   : HFont;
-      ATextMetric : TTextMetric;
-  begin
-    DC := GetDC(0);
-    try
-      ASaveFont := SelectObject(DC, Font.Handle);
-
-      GetTextMetrics(DC, ATextMetric);
-
-      SelectObject(DC, ASaveFont);
-    finally
-      ReleaseDC(0, DC);
-    end;
-
-    ///
-    result := round(ATextMetric.tmHeight + ATextMetric.tmHeight / FMetrics._8);
-  end;
-
-begin
-  case AMessage.Msg of
-    WM_WINDOWPOSCHANGING:
-      with TWMWindowPosMsg(AMessage).WindowPos^ do begin
-        if Style in [csDropDown, csDropDownList] then
-          cy := (GetFontHeight(Font)-FMetrics._2) * Min(DropDownCount, Items.Count) + FMetrics._4
-        else
-          cy := (ItemHeight) * Min(DropDownCount, Items.Count) + FMetrics._4;
-
-        if cy <= FMetrics._4  then
-          cy := FMetrics._10;
-      end;
-    else
-      AMessage.Result := CallWindowProc(
-                                          FDefListProc,
-                                          FListHandle,
-                                          AMessage.Msg,
-                                          AMessage.WParam,
-                                          AMessage.LParam
-      );
-  end;
-end;
-
-{  }
 procedure TFlatComboBox.ComboWndProc(var AMessage: TMessage; ComboWnd: HWnd; ComboProc: Pointer);
 begin
   inherited;
@@ -324,7 +294,6 @@ var ARect        : TRect;
     X, Y         : Integer;
     AArrowColor  : TColor;
     ABorderColor : TColor;
-    AButtonRect  : TRect;
 begin
   ARect := GetButtonRect();
   InflateRect(ARect, 1, 0);
@@ -573,18 +542,12 @@ begin
 end;
 
 {  }
-function TFlatComboBox.GetEnabled() : Boolean;
+procedure TFlatComboBox.SetEnabled(AValue : Boolean);
 begin
-  result := inherited Enabled;
-end;
-
-{  }
-procedure TFlatComboBox.SetEnabled(const AValue : Boolean);
-begin
-  if AValue = inherited Enabled then
+  if AValue = Enabled then
     Exit();
 
-  inherited Enabled := AValue;
+  inherited SetEnabled(AValue);
 
   if AValue then
     self.Font.Color := clWhite

@@ -5,16 +5,37 @@
 {        | | | |/ _` | '__| |/ / |   / _ \ / _` |/ _ \ '__\___ \ / __|         }
 {        | |_| | (_| | |  |   <| |__| (_) | (_| |  __/ |   ___) | (__          }
 {        |____/ \__,_|_|  |_|\_\\____\___/ \__,_|\___|_|  |____/ \___|         }
-{                              Project: Optix Neo                              }
+{                             Project: Optix Gate                              }
 {                                                                              }
 {                                                                              }
 {                   Author: DarkCoderSc (Jean-Pierre LESUEUR)                  }
 {                   https://www.twitter.com/darkcodersc                        }
+{                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: Apache License 2.0                                }
+{                   License: (!) CHECK README.md (!)                           }
 {                                                                              }
 {                                                                              }
-{    I dedicate this work to my daughter & wife                                }
+{                                                                              }
+{  Disclaimer:                                                                 }
+{  -----------                                                                 }
+{    We are doing our best to prepare the content of this app and/or code.     }
+{    However, The author cannot warranty the expressions and suggestions       }
+{    of the contents, as well as its accuracy. In addition, to the extent      }
+{    permitted by the law, author shall not be responsible for any losses      }
+{    and/or damages due to the usage of the information on our app and/or      }
+{    code.                                                                     }
+{                                                                              }
+{    By using our app and/or code, you hereby consent to our disclaimer        }
+{    and agree to its terms.                                                   }
+{                                                                              }
+{    Any links contained in our app may lead to external sites are provided    }
+{    for convenience only.                                                     }
+{    Any information or statements that appeared in these sites or app or      }
+{    files are not sponsored, endorsed, or otherwise approved by the author.   }
+{    For these external sites, the author cannot be held liable for the        }
+{    availability of, or the content located on or through it.                 }
+{    Plus, any losses or damages occurred from using these contents or the     }
+{    internet generally.                                                       }
 {                                                                              }
 {******************************************************************************}
 
@@ -24,23 +45,28 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, VCL.Forms, System.Classes,
-  VCL.Graphics, VCL.Controls, VCL.ExtCtrls;
+  VCL.Graphics, VCL.Controls, VCL.ExtCtrls, NeoFlat.Helper;
 
 type
   TFlatGroupBox = class(TCustomControl)
   private
     FBorderColor : TColor;
+    FMetrics     : TFlatMetrics;
 
-    procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
-    procedure CMTextChanged(var Message: TWmNoParams); message CM_TEXTCHANGED;
+    {@M}
+    procedure CMEnabledChanged(var AMessage: TMessage); message CM_ENABLEDCHANGED;
+    procedure CMTextChanged(var AMessage: TWmNoParams); message CM_TEXTCHANGED;
     procedure SetColors(const Index: Integer; const Value: TColor);
-    procedure CMSysColorChange(var Message: TMessage); message CM_SYSCOLORCHANGE;
-    procedure CMParentColorChanged(var Message: TWmNoParams); message CM_PARENTCOLORCHANGED;
-    procedure CMDialogChar(var Message: TCMDialogChar); message CM_DIALOGCHAR;
+    procedure CMSysColorChange(var AMessage: TMessage); message CM_SYSCOLORCHANGE;
+    procedure CMParentColorChanged(var AMessage: TWmNoParams); message CM_PARENTCOLORCHANGED;
+    procedure CMDialogChar(var AMessage: TCMDialogChar); message CM_DIALOGCHAR;
   protected
+    {@M}
     procedure Paint; override;
   public
+    {@C}
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy(); override;
   published
     property Align;
     property Cursor;
@@ -48,6 +74,7 @@ type
     property Font;
     property ParentFont;
     property Color;
+    property Padding;
     property ParentColor;
     property PopupMenu;
     property ShowHint;
@@ -58,7 +85,6 @@ type
     property TabStop;
     property Hint;
     property HelpContext;
-    property ColorBorder: TColor index 0 read FBorderColor write SetColors default $008396A0;
     property Anchors;
     property Constraints;
     property DragKind;
@@ -83,6 +109,8 @@ type
     property OnMouseMove;
     property OnMouseUp;
     property OnStartDrag;
+
+    property ColorBorder: TColor index 0 read FBorderColor write SetColors default clBlack;
   end;
 
 implementation
@@ -94,68 +122,105 @@ begin
   inherited Create(AOwner);
   ///
 
+  FMetrics := TFlatMetrics.Create(self);
+
   ControlStyle := ControlStyle + [
-                                    csAcceptsControls,
-                                    csOpaque
+    csAcceptsControls,
+    csOpaque
   ];
 
-  self.DoubleBuffered := True;
+  DoubleBuffered := True;
 
-  FBorderColor    := clGray;
-  self.Font.Name  := FONT_1;
-  self.Font.Color := clGray;
-  self.Color      := clBlack;
+  Color        := MAIN_GRAY;
+  FBorderColor := MAIN_ACCENT;
+  Font.Name    := FONT_1;
+  Font.Color   := MAIN_ACCENT;
+  Font.Height  := -11;
 
   ///
-  SetBounds(0, 0, 185, 105);
+  SetBounds(0, 0, FMetrics.ScaleValue(185), FMetrics.ScaleValue(105));
+end;
+
+destructor TFlatGroupBox.Destroy();
+begin
+  if Assigned(FMetrics) then
+    FreeAndNil(FMetrics);
+
+  ///
+  inherited Destroy();
 end;
 
 procedure TFlatGroupBox.Paint;
-var ABorderRect : TRect;
-    ATextBounds : TRect;
-    ATextHeight : Integer;
-    ATextWidth  : Integer;
-    AFormat     : Cardinal;
 begin
-  ABorderRect := ClientRect;
-
-  AFormat := DT_TOP  or
-             DT_LEFT or
-             DT_SINGLELINE;
+  var AFormat := DT_TOP or DT_LEFT or DT_SINGLELINE;
 
   Canvas.Lock();
   try
-    Canvas.Font.Assign(self.Font);
+    Canvas.Font.Assign(Font);
 
-    ATextHeight := Canvas.textHeight(Caption);
-    ATextWidth := Canvas.textWidth(Caption);
+    var ATextHeight := Canvas.TextHeight(Caption);
+    var ATextWidth := Canvas.TextWidth(Caption);
 
-    ATextBounds := Rect(ClientRect.Left + 10, ClientRect.Top, ClientRect.Left + 10 + ATextWidth,
-        ClientRect.Top + ATextHeight);
+    var ATextBounds := Rect(
+      ClientRect.Left + FMetrics._10,
+      ClientRect.Top,
+      ClientRect.Right - FMetrics._10,
+      ClientRect.Top + ATextHeight
+    );
 
-    ATextBounds := Rect(ClientRect.Left + 10, ClientRect.Top, ClientRect.Right - 10, ClientRect.Top + ATextHeight);
-
-    Canvas.Brush.Color := Self.Color;
+    Canvas.Brush.Color := Color;
     Canvas.FillRect(ClientRect);
 
     Canvas.Pen.Color := FBorderColor;
+    Canvas.Pen.Width := 1;
 
-    Canvas.Polyline([Point(ClientRect.Left + 5, ClientRect.Top + (ATextHeight div 2)),
-      Point(ClientRect.Left, ClientRect.Top + (ATextHeight div 2)), Point(ClientRect.Left,
-        ClientRect.Bottom - 1), Point(ClientRect.Right - 1, ClientRect.Bottom - 1), Point(ClientRect.Right - 1,
-        ClientRect.Top + (ATextHeight div 2)), Point(ClientRect.Left + 12 + ATextWidth,
-        ClientRect.Top + (ATextHeight div 2))]);
+    var AMidTextY := ClientRect.Top + (ATextHeight div 2);
+
+    // (!) Using Canvas.FillRect(<>) is the most reliable approach for proper HDPI rendering (preferable to using
+    // Polyline or MoveTo / LineTo for drawing thick borders)
+
+    Canvas.Brush.Color := MAIN_ACCENT;
+    Canvas.Brush.Style := bsSolid;
+
+    // Left vertical
+    Canvas.FillRect(Rect(ClientRect.Left, AMidTextY, ClientRect.Left + FMetrics._1, ClientRect.Bottom));
+
+    // Bottom horizontal
+    Canvas.FillRect(Rect(ClientRect.Left, ClientRect.Bottom - FMetrics._1, ClientRect.Right, ClientRect.Bottom));
+
+    // Right vertical
+    Canvas.FillRect(Rect(ClientRect.Right - FMetrics._1, AMidTextY, ClientRect.Right, ClientRect.Bottom));
+
+    // --- [TEXT] ----------------
+
+    // Top left segment
+    Canvas.FillRect(
+      Rect(
+        ClientRect.Left + FMetrics._5,
+        AMidTextY,
+        ClientRect.Left + FMetrics._5 + (ClientRect.Left - (ClientRect.Left + FMetrics._5)),
+        AMidTextY + FMetrics._1
+      )
+    );
+
+    // Top right segment
+    Canvas.FillRect(Rect(
+      ClientRect.Left + FMetrics._12 + ATextWidth,
+      AMidTextY,
+      ClientRect.Right,
+      AMidTextY + FMetrics._1
+    ));
 
     Canvas.Brush.Style := bsClear;
 
     if not Enabled then begin
-      OffsetRect(ATextBounds, 1, 1);
+      OffsetRect(ATextBounds, FMetrics._1, FMetrics._1);
 
       Canvas.Font.Color := clBtnHighlight;
 
       DrawText(Canvas.Handle, PWideChar(Caption), Length(Caption), ATextBounds, AFormat);
 
-      OffsetRect(ATextBounds, -1, -1);
+      OffsetRect(ATextBounds, -FMetrics._1, -FMetrics._1);
 
       Canvas.Font.Color := clBtnShadow;
 
@@ -169,50 +234,51 @@ begin
   end;
 end;
 
-procedure TFlatGroupBox.CMTextChanged(var Message: TWmNoParams);
+procedure TFlatGroupBox.CMTextChanged(var AMessage: TWmNoParams);
 begin
   inherited;
-  Invalidate;
+  ///
+
+  Invalidate();
 end;
 
 procedure TFlatGroupBox.SetColors(const Index: Integer; const Value: TColor);
 begin
   case Index of
-    0:
-      FBorderColor := Value;
+    0: FBorderColor := Value;
   end;
-  Invalidate;
+
+  Invalidate();
 end;
 
-procedure TFlatGroupBox.CMParentColorChanged(var Message: TWmNoParams);
+procedure TFlatGroupBox.CMParentColorChanged(var AMessage: TWmNoParams);
 begin
   inherited;
   ///
 
-  Invalidate;
+  Invalidate();
 end;
 
-procedure TFlatGroupBox.CMSysColorChange(var Message: TMessage);
+procedure TFlatGroupBox.CMSysColorChange(var AMessage: TMessage);
 begin
-  Invalidate;
+  Invalidate();
 end;
 
-procedure TFlatGroupBox.CMDialogChar(var Message: TCMDialogChar);
+procedure TFlatGroupBox.CMDialogChar(var AMessage: TCMDialogChar);
 begin
-  with Message do
-    if IsAccel(Message.CharCode, Caption) and CanFocus then
-    begin
-      SetFocus;
+  with AMessage do
+    if IsAccel(AMessage.CharCode, Caption) and CanFocus then begin
+      SetFocus();
 
       Result := 1;
     end;
 end;
 
-procedure TFlatGroupBox.CMEnabledChanged(var Message: TMessage);
+procedure TFlatGroupBox.CMEnabledChanged(var AMessage: TMessage);
 begin
   inherited;
-  Invalidate;
-end;
 
+  Invalidate();
+end;
 
 end.

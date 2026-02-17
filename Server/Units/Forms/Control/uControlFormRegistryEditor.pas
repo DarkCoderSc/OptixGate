@@ -63,42 +63,44 @@ uses
 
   OptixCore.System.Registry, OptixCore.Classes,
 
-  __uBaseFormControl__, uFrameHexEditor;
+  __uBaseFormControl__, uFrameHexEditor,
+
+  NeoFlat.Panel, NeoFlat.StatusBar, NeoFlat.PopupMenu, NeoFlat.Button, NeoFlat.Edit, NeoFlat.GroupBox, NeoFlat.CheckBox;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TControlFormRegistryEditor = class(TBaseFormControl)
+    PanelMain: TFlatPanel;
+    PanelHeader: TFlatPanel;
+    LabelName: TLabel;
+    StatusBar: TFlatStatusBar;
     Notebook: TNotebook;
     PanelSZ: TPanel;
     Label1: TLabel;
-    EditSZ: TEdit;
     PanelMSZ: TPanel;
     Label2: TLabel;
-    RichMSZ: TRichEdit;
     PanelQDword: TPanel;
     Label3: TLabel;
-    EditQDword: TEdit;
-    GroupBase: TGroupBox;
-    RadioBaseDecimal: TRadioButton;
-    RadioBaseHexadecimal: TRadioButton;
     PanelBinary: TPanel;
-    PanelFooter: TPanel;
-    ButtonAction: TButton;
-    ButtonCancel: TButton;
-    PanelHeader: TPanel;
-    LabelName: TLabel;
-    EditName: TEdit;
-    StatusBar: TStatusBar;
-    MainMenu: TMainMenu;
-    Switch1: TMenuItem;
-    String1: TMenuItem;
-    MultiLineString1: TMenuItem;
+    PopupMain: TFlatPopupMenu;
+    Switch2: TMenuItem;
+    StringSZ1: TMenuItem;
+    MultiLineStringMSZ1: TMenuItem;
     DWORD1: TMenuItem;
     QWORD1: TMenuItem;
     Binary1: TMenuItem;
+    PanelFooter: TFlatPanel;
+    ButtonAction: TFlatButton;
+    ButtonCancel: TFlatButton;
+    PanelRichMSZ: TFlatPanel;
+    RichMSZ: TRichEdit;
+    EditName: TFlatEdit;
+    EditSZ: TFlatEdit;
+    EditQDword: TFlatEdit;
+    GroupBoxBase: TFlatGroupBox;
+    RadioBaseDecimal: TFlatCheckBox;
+    RadioBaseHexadecimal: TFlatCheckBox;
     procedure EditQDwordKeyPress(Sender: TObject; var Key: Char);
-    procedure RadioBaseDecimalClick(Sender: TObject);
-    procedure RadioBaseHexadecimalClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonActionClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -110,6 +112,11 @@ type
     procedure QWORD1Click(Sender: TObject);
     procedure Binary1Click(Sender: TObject);
     procedure EditNameKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure StringSZ1Click(Sender: TObject);
+    procedure MultiLineStringMSZ1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure RadioBaseDecimalStateChanged(Sender: TObject);
+    procedure RadioBaseHexadecimalStateChanged(Sender: TObject);
   private
     FManagerGUID    : TGUID;
     FFullKeyPath    : String;
@@ -213,6 +220,11 @@ begin
   SetValueKind(REG_MULTI_SZ);
 end;
 
+procedure TControlFormRegistryEditor.MultiLineStringMSZ1Click(Sender: TObject);
+begin
+  SetValueKind(REG_MULTI_SZ);
+end;
+
 procedure TControlFormRegistryEditor.QWORD1Click(Sender: TObject);
 begin
   SetValueKind(REG_QWORD);
@@ -234,7 +246,7 @@ begin
 
   case FValueKind of
     REG_SZ : begin
-      ANewH := EditSZ.Top + EditSZ.Height;
+      ANewH := EditSZ.Top + EditSZ.Height + ScaleValue(8);
       ANewW := ScaleValue(400);
     end;
 
@@ -244,7 +256,7 @@ begin
     end;
 
     REG_DWORD, REG_QWORD : begin
-      ANewH := GroupBase.Top + GroupBase.Height;
+      ANewH := GroupBoxBase.Top + GroupBoxBase.Height + ScaleValue(8);
       ANewW := ScaleValue(400);
     end;
 
@@ -255,7 +267,7 @@ begin
   end;
 
   if ANewH > 0 then begin
-    Inc(ANewH, PanelHeader.Height + PanelFooter.Height + StatusBar.Height);
+    Inc(ANewH, FCaptionBar.Height + PanelHeader.Height + PanelFooter.Height + StatusBar.Height);
 
     ///
     ClientHeight := ANewH;
@@ -418,6 +430,11 @@ begin
   Action := caFree;
 end;
 
+procedure TControlFormRegistryEditor.FormCreate(Sender: TObject);
+begin
+  CaptionBarDropDown := PopupMain;
+end;
+
 procedure TControlFormRegistryEditor.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   if (FValueKind = REG_BINARY) or (FValueKind = REG_MULTI_SZ) then
@@ -447,12 +464,12 @@ begin
   DoResize();
 end;
 
-procedure TControlFormRegistryEditor.RadioBaseDecimalClick(Sender: TObject);
+procedure TControlFormRegistryEditor.RadioBaseDecimalStateChanged(Sender: TObject);
 begin
   UpdateQDWordValueBase();
 end;
 
-procedure TControlFormRegistryEditor.RadioBaseHexadecimalClick(Sender: TObject);
+procedure TControlFormRegistryEditor.RadioBaseHexadecimalStateChanged(Sender: TObject);
 begin
   UpdateQDWordValueBase();
 end;
@@ -602,11 +619,11 @@ begin
 
   Notebook.PageIndex := ANoteBookIndex;
 
-  String1.Enabled          := FValueKind <> REG_SZ;
-  MultiLineString1.Enabled := FValueKind <> REG_MULTI_SZ;
-  DWORD1.Enabled           := FValueKind <> REG_DWORD;
-  QWORD1.Enabled           := FValueKind <> REG_QWORD;
-  Binary1.Enabled          := FValueKind <> REG_BINARY;
+  StringSZ1.Enabled           := FValueKind <> REG_SZ;
+  MultiLineStringMSZ1.Enabled := FValueKind <> REG_MULTI_SZ;
+  DWORD1.Enabled              := FValueKind <> REG_DWORD;
+  QWORD1.Enabled              := FValueKind <> REG_QWORD;
+  Binary1.Enabled             := FValueKind <> REG_BINARY;
 
   RefreshCaption();
 
@@ -615,6 +632,11 @@ begin
 end;
 
 procedure TControlFormRegistryEditor.String1Click(Sender: TObject);
+begin
+  SetValueKind(REG_SZ);
+end;
+
+procedure TControlFormRegistryEditor.StringSZ1Click(Sender: TObject);
 begin
   SetValueKind(REG_SZ);
 end;

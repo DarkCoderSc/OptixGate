@@ -66,7 +66,7 @@ uses
 
   OptixCore.Protocol.Packet, OptixCore.Commands.Registry, OptixCore.System.Registry,
 
-  __uBaseFormControl__;
+  __uBaseFormControl__, NeoFlat.Panel, NeoFlat.Edit, NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -85,24 +85,12 @@ type
   PValuesTreeData = ^TValuesTreeData;
 
   TControlFormRegistryManager = class(TBaseFormControl)
-    OMultiPanel: TOMultiPanel;
-    VSTKeys: TVirtualStringTree;
-    VSTValues: TVirtualStringTree;
-    EditPath: TEdit;
-    MainMenu: TMainMenu;
-    Options1: TMenuItem;
-    HideUnenumerableKeys1: TMenuItem;
-    PopupKeys: TPopupMenu;
+    PopupKeys: TFlatPopupMenu;
     FullExpand1: TMenuItem;
     FullCollapse1: TMenuItem;
     FullCollapse2: TMenuItem;
-    Registry1: TMenuItem;
-    Refresh1: TMenuItem;
-    N1: TMenuItem;
-    GoTo1: TMenuItem;
     CreateSubKey1: TMenuItem;
-    CreateKey1: TMenuItem;
-    PopupValues: TPopupMenu;
+    PopupValues: TFlatPopupMenu;
     New1: TMenuItem;
     NewKey1: TMenuItem;
     DeleteSelectedKey1: TMenuItem;
@@ -120,6 +108,21 @@ type
     RenameSelectedValue1: TMenuItem;
     N5: TMenuItem;
     DeleteSelectedValue1: TMenuItem;
+    PanelMain: TFlatPanel;
+    OMultiPanel: TOMultiPanel;
+    PanelVSTKeys: TFlatPanel;
+    VSTKeys: TVirtualStringTree;
+    PanelVSTValues: TFlatPanel;
+    VSTValues: TVirtualStringTree;
+    PanelPath: TFlatPanel;
+    EditPath: TFlatEdit;
+    MainMenu: TFlatPopupMenu;
+    Refresh1: TMenuItem;
+    N1: TMenuItem;
+    CreateKey1: TMenuItem;
+    GoTo1: TMenuItem;
+    N6: TMenuItem;
+    HideUnenumerableKeys1: TMenuItem;
     procedure VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -520,9 +523,9 @@ begin
 
   case pData^.ValueInformation._Type of
     REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ:
-      pData^.ImageIndex := IMAGE_REG_SZ;
+      pData^.ImageIndex := IMAGE_PAGE;
     else
-      pData^.ImageIndex := IMAGE_REG_DATA;
+      pData^.ImageIndex := IMAGE_PAGE_SYS;
   end;
 end;
 
@@ -620,6 +623,7 @@ procedure TControlFormRegistryManager.FormCreate(Sender: TObject);
 begin
   FCurrentKeyPath        := '';
   FCurrentKeyPermissions := [];
+  CaptionBarDropDown     := MainMenu;
 end;
 
 procedure TControlFormRegistryManager.FullCollapse1Click(Sender: TObject);
