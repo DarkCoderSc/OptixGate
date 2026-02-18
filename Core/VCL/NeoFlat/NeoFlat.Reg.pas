@@ -43,11 +43,14 @@ unit NeoFlat.Reg;
 
 interface
 
-uses System.Classes, NeoFlat.Button, NeoFlat.CaptionBar, NeoFlat.Edit, NeoFlat.Form, 
-     NeoFlat.CheckBox, NeoFlat.Panel,
-     NeoFlat.StatusBar, NeoFlat.TreeView, NeoFlat.ImageButton, NeoFlat.ComboBox, NeoFlat.THeme, NeoFlat.MessageBox,
-     NeoFlat.Hint, NeoFlat.Gauge, NeoFlat.PopupMenu, NeoFlat.GroupBox,
-     NeoFlat.Timer;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  NeoFlat.Button, NeoFlat.CaptionBar, NeoFlat.Edit, NeoFlat.Form, NeoFlat.CheckBox, NeoFlat.Panel, NeoFlat.StatusBar,
+  NeoFlat.TreeView, NeoFlat.ImageButton, NeoFlat.ComboBox, NeoFlat.Theme, NeoFlat.Hint, NeoFlat.Gauge,
+  NeoFlat.PopupMenu, NeoFlat.GroupBox;
+// ---------------------------------------------------------------------------------------------------------------------
 
 procedure register;
 
@@ -55,23 +58,22 @@ implementation
 
 procedure register;
 begin
-  RegisterComponents('NeoFlat', [
-                              TFlatButton,
-                              TFlatCaptionbar,
-                              TFlatEdit,
-                              TFlatForm,
-                              TFlatCheckBox,
-                              TFlatPanel,
-                              TFlatStatusBar,
-                              TFlatVirtualStringTree,
-                              TFlatImageButton,
-                              TFlatComboBox,
-                              TFlatMessageBox,
-                              TFlatHint,
-                              TFlatGauge,
-                              TFlatPopupMenu,
-                              TFlatGroupBox,
-                              TFlatTimer
+  RegisterComponents('NeoFlat',
+  [
+    TFlatButton,
+    TFlatCaptionbar,
+    TFlatEdit,
+    TFlatForm,
+    TFlatCheckBox,
+    TFlatPanel,
+    TFlatStatusBar,
+    TFlatVirtualStringTree,
+    TFlatImageButton,
+    TFlatComboBox,
+    TFlatHint,
+    TFlatGauge,
+    TFlatPopupMenu,
+    TFlatGroupBox
   ]);
 end;
 

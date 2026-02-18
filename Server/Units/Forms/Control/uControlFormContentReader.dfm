@@ -133,7 +133,7 @@ object ControlFormContentReader: TControlFormContentReader
       Padding.Top = 4
       Padding.Right = 4
       Padding.Bottom = 6
-      ExplicitWidth = 814
+      ExplicitTop = -7
       object ButtonBack: TFlatButton
         Left = 4
         Top = 4
@@ -143,6 +143,7 @@ object ControlFormContentReader: TControlFormContentReader
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = '<-'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -151,7 +152,6 @@ object ControlFormContentReader: TControlFormContentReader
         Align = alLeft
         ShowHint = True
         ImageIndex = 17
-        Caption = '<-'
         Value = 0
         OnClick = ButtonBackClick
         Busy = False
@@ -167,6 +167,7 @@ object ControlFormContentReader: TControlFormContentReader
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = '->'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -175,7 +176,6 @@ object ControlFormContentReader: TControlFormContentReader
         Align = alLeft
         ShowHint = True
         ImageIndex = 17
-        Caption = '->'
         Value = 0
         OnClick = ButtonForwardClick
         Busy = False
@@ -206,6 +206,7 @@ object ControlFormContentReader: TControlFormContentReader
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Download'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -214,7 +215,6 @@ object ControlFormContentReader: TControlFormContentReader
         Align = alLeft
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Download'
         Value = 0
         OnClick = ButtonDownloadClick
         Busy = False
@@ -230,6 +230,7 @@ object ControlFormContentReader: TControlFormContentReader
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Go To Page...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -238,7 +239,6 @@ object ControlFormContentReader: TControlFormContentReader
         Align = alLeft
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Go To Page...'
         Value = 0
         OnClick = ButtonBrowsePageClick
         Busy = False
@@ -254,6 +254,7 @@ object ControlFormContentReader: TControlFormContentReader
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Set Page Size'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -262,7 +263,6 @@ object ControlFormContentReader: TControlFormContentReader
         Align = alLeft
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Set Page Size'
         Value = 0
         OnClick = ButtonUpdatePageSizeClick
         Busy = False
@@ -305,6 +305,7 @@ object ControlFormContentReader: TControlFormContentReader
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Options'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -313,7 +314,6 @@ object ControlFormContentReader: TControlFormContentReader
         Align = alLeft
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Options'
         Value = 0
         OnClick = ButtonOptionsClick
         Busy = False
@@ -341,9 +341,8 @@ object ControlFormContentReader: TControlFormContentReader
         Width = 50
         Alignment = taRightJustify
       end>
-    ExplicitLeft = 104
-    ExplicitTop = 96
-    ExplicitWidth = 0
+    ExplicitTop = 568
+    ExplicitWidth = 814
   end
   object PopupRichStrings: TFlatPopupMenu
     OwnerDraw = True

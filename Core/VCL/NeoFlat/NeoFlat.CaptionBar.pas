@@ -43,16 +43,25 @@ unit NeoFlat.CaptionBar;
 
 interface
 
-uses Winapi.Windows, System.Classes, VCL.Graphics, VCL.Controls, Winapi.Messages,
-     VCL.Forms, System.SysUtils, System.UITypes, NeoFlat.Form, NeoFlat.Theme,
-     VCL.Menus, NeoFlat.Helper, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils, System.UITypes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VCL.Graphics, VCL.Controls, VCL.Forms, VCL.Menus,
+
+  NeoFlat.Form, NeoFlat.Theme, NeoFlat.Helper, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatCaptionBar = class;
 
-  TByteArrayArray = array of array of Byte;
-
-  TCaptionButtonState = (cbsNormal, cbsHover, cbsActive);
+  TCaptionButtonState = (
+    cbsNormal,
+    cbsHover,
+    cbsActive
+  );
 
   TOnHandleSystemButton = procedure(Sender : TObject; var AHandled : Boolean) of object;
 
@@ -94,7 +103,6 @@ type
     FCloseButton     : TCloseButton;
     FMaximizeButton  : TMaximizeButton;
     FMinimizeButton  : TMinimizeButton;
-    FDockButton      : TDockButton;
     FHamburgerButton : THamburgerButton;
 
     FButtonDown      : TCaptionButton;
@@ -119,20 +127,17 @@ type
 
     FTextCenter      : Boolean;
 
-    FDockable        : Boolean;
-
     FMenuDropdown    : TPopupMenu;
 
     FOnMaximize      : TOnHandleSystemButton;
     FOnMinimize      : TOnHandleSystemButton;
     FOnRestore       : TOnHandleSystemButton;
     FOnClose         : TOnHandleSystemButton;
-    FOnDock          : TNotifyEvent;
     FOnClickCaption  : TNotifyEvent;
 
     {@M}
     procedure OnCustomWindowProc(var AMessage : TMessage);
-    function GetCaptionButtonFromCoord(X, Y : Integer) : TCaptionButton;
+    function GetCaptionButtonFromCoord(const X, Y : Integer) : TCaptionButton;
 
     function DrawCaptionButtons() : Integer;
 
@@ -144,11 +149,8 @@ type
     procedure doClose();
     procedure DisplayMenuDropDown();
 
-    procedure SetCaption(AValue : String);
-    function GetCaption() : String;
-    procedure SetDockable(const AValue : Boolean);
     procedure SetTransparent(const AValue : Boolean);
-    procedure SetBorderIcons(AValue : TBorderIcons);
+    procedure SetBorderIcons(const AValue : TBorderIcons);
     procedure SetSubCaption(const AValue : String);
     procedure SetTextCenter(const AValue : Boolean);
     procedure SetMenuDropDown(const AValue : TPopupMenu);
@@ -170,12 +172,18 @@ type
     property Maximized    : Boolean read FMaximized;
     property OldBoundRect : TRect   read FOldBoundRect;
   published
+    property Align;
+    property AlignWithMargins;
+    property Caption;
+    property Enabled;
+    property Font;
+    property Margins;
+    property Visible;
+
     {@G/S}
-    property Caption      : String       read GetCaption    write SetCaption;
     property BorderIcons  : TBorderIcons read FBordericons  write SetBorderIcons;
     property Form         : TFlatForm    read FForm         write FForm;
     property SubCaption   : String       read FSubCaption   write SetSubCaption;
-    property Dockable     : Boolean      read FDockable     write SetDockable;
     property Transparent  : Boolean      read FTransparent  write SetTransparent;
     property Collapsible  : Boolean      read FCollapsible  write FCollapsible;
     property TextCenter   : Boolean      read FTextCenter   write SetTextCenter;
@@ -185,20 +193,9 @@ type
     property OnMinimize     : TOnHandleSystemButton read FOnMinimize     write FOnMinimize;
     property OnRestore      : TOnHandleSystemButton read FOnRestore      write FOnRestore;
     property OnClose        : TOnHandleSystemButton read FOnClose        write FOnClose;
-    property OnDock         : TNotifyEvent          read FOnDock         write FOnDock;
     property OnClickCaption : TNotifyEvent          read FOnClickCaption write FOnClickCaption;
-
-    property Align;
-    property AlignWithMargins;
-    property Margins;
-    property Visible;
-    property Enabled;
-    property Font;
   end;
 
-  {
-    Glyphs
-  }
   const CLOSE_GLYPH : TMatrixGlyph = [
                                         [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
                                         [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
@@ -264,22 +261,6 @@ type
                                             [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
   ];
 
-  const DOCK_GLYPH : TMatrixGlyph = [
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
-                                            [$0, $0, $0, $0, $1, $1, $1, $1, $1, $1],
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $0, $1, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $1, $0, $0, $0, $0, $0, $1],
-                                            [$0, $0, $1, $1, $1, $1, $1, $1, $1, $1],
-                                            [$0, $0, $0, $1, $0, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $0, $1, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $1],
-                                            [$0, $0, $0, $0, $1, $1, $1, $1, $1, $1],
-                                            [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0]
-  ];
-
   const HAMBURGER_GLYPH : TMatrixGlyph = [
                                             [$0, $0, $0, $0, $0, $0, $0, $0, $0, $0],
                                             [$1, $1, $1, $1, $1, $1, $1, $1, $1, $1],
@@ -298,37 +279,40 @@ type
 
 implementation
 
-uses System.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
-{ TFlatCaption.Maximize }
+(* TFlatCaptionBar *)
+
 procedure TFlatCaptionBar.Maximize();
 begin
   if (biMaximize in BorderIcons) and (not FMaximized) then
     doMaximize();
 end;
 
-{ TFlatCaption.MouseMove
-  : Spy on mouse position over the control }
 procedure TFlatCaptionBar.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
   ///
 
   if not Assigned(FOnClickCaption) then
-    Exit();
+    Exit;
 end;
 
-{ TFlatCaptionBar.doRestore }
 procedure TFlatCaptionBar.doRestore();
-var AHandled : Boolean;
 begin
   if not FMaximized then
-    Exit();
+    Exit;
   ///
 
-  AHandled := False;
+  var AHandled := False;
   if Assigned(FOnRestore) then
     FOnRestore(self, AHandled);
+
+  if AHandled then
+    Exit;
 
   FMaximized := False;
 
@@ -338,27 +322,27 @@ begin
   FOwnerForm.BoundsRect := FOldBoundRect;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{ TFlatCaptionBar.doMaximize }
 procedure TFlatCaptionBar.doMaximize();
-var AHandled : Boolean;
 begin
   if FMaximized then
     Exit;
   ///
 
-  AHandled := False;
+  var AHandled := False;
   if Assigned(FOnMaximize) then
     FOnMaximize(self, AHandled);
+
+  if AHandled then
+    Exit;
 
   FOldBoundRect := FOwnerForm.BoundsRect;
 
   if Assigned(FForm) then
     FForm.ShowBorder := False;
 
-  // Fit window to the correct screen monitor (depending on the position of our window)
   with Screen.MonitorFromRect(FOwnerForm.BoundsRect).workAreaRect do begin
     FOwnerForm.SetBounds(Left, Top, Right - Left, Bottom - Top);
   end;
@@ -366,19 +350,17 @@ begin
   FMaximized := True;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{ TFlatCaptionBar.doMinimize }
 procedure TFlatCaptionBar.doMinimize();
-var AHandled : Boolean;
 begin
-  AHandled := False;
+  var AHandled := False;
   if Assigned(FOnMinimize) then
     FOnMinimize(self, AHandled);
 
   if AHandled then
-    Exit();
+    Exit;
 
   if FOwnerForm = Application.MainForm then
     Application.Minimize
@@ -386,21 +368,18 @@ begin
     ShowWindow(FOwnerForm.Handle, SW_MINIMIZE);
 end;
 
-{ TFlatCaptionBar.doClose }
 procedure TFlatCaptionBar.doClose();
-var AHandled : Boolean;
 begin
-  AHandled := False;
+  var AHandled := False;
   if Assigned(FOnClose) then
     FOnClose(self, AHandled);
 
   if AHandled then
-    Exit();
+    Exit;
 
   FOwnerForm.Close();
 end;
 
-{ TFlatCaptionBar.Create }
 constructor TFlatCaptionBar.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
@@ -436,7 +415,6 @@ begin
 
   FSubCaption := '';
 
-  // Get Owner Form
   if Assigned(AOwner) then begin
      var AObject : TComponent := self;
      while true do begin
@@ -457,14 +435,11 @@ begin
   FOnMinimize     := nil;
   FOnRestore      := nil;
   FOnClose        := nil;
-  FOnDock         := nil;
   FOnClickCaption := nil;
 
-  // Create Caption Buttons Classes
   FCloseButton     := TCloseButton.Create(self);
   FMaximizeButton  := TMaximizeButton.Create(self);
   FMinimizeButton  := TMinimizeButton.Create(self);
-  FDockButton      := TDockButton.Create(self);
 
   FHamburgerButton := THamburgerButton.Create(self);
   FHamburgerButton.Visible := False;
@@ -472,8 +447,6 @@ begin
   BorderIcons := [biSystemMenu,biMinimize,biMaximize];
 end;
 
-
-{ TFlatCaptionBar.Destroy }
 destructor TFlatCaptionBar.Destroy();
 begin
   if Assigned(FOldWindowProc) then
@@ -488,9 +461,6 @@ begin
   if Assigned(FMinimizeButton) then
     FreeAndNil(FMinimizeButton);
 
-  if Assigned(FDockButton) then
-    FreeAndNil(FDockButton);
-
   if Assigned(FHamburgerButton) then
     FreeAndNil(FHamburgerButton);
 
@@ -498,7 +468,6 @@ begin
   inherited Destroy();
 end;
 
-{ TFlatCaptionBar.PrepareCaptionButtons }
 procedure TFlatCaptionBar.PrepareCaptionButtons();
 begin
   var AButtonWidth := (ClientHeight - ScaleValue(8)); // Minus two borders pixels
@@ -547,17 +516,9 @@ begin
     FMinimizeButton.Rect := ARect;
   end;
 
-  // Dock Button
-  if FDockable then begin
-    ARect.Left := (ARect.Left - ScaleValue(1)) - AButtonWidth;
-    ARect.Width := AButtonWidth;
-
-    FDockButton.Rect := ARect;
-  end;
-
   ///
   if FCloseButton.Visible or FMaximizeButton.Visible or
-     FMinimizeButton.Visible or FDockable then
+     FMinimizeButton.Visible then
     Dec(FCaptionRect.Right, (Width - ARect.Left));
 
   if FHamburgerButton.Visible then
@@ -572,7 +533,7 @@ function TFlatCaptionBar.DrawCaptionButtons() : Integer;
       ///
 
       if not Assigned(AButton) or not IsValidMatrixGlyph(AGlyphMatrix) then
-        Exit();
+        Exit;
       ///
 
       var ADrawBorder := False;
@@ -622,21 +583,16 @@ begin
   if FMinimizeButton.Visible then
     DrawAButton(FMinimizeButton, MINIMIZE_GLYPH);
 
-  // Draw Dock Button
-  if FDockable then
-    DrawAButton(FDockButton, DOCK_GLYPH);
-
   // Draw Hamburger Menu Button
   if FHamburgerButton.Visible then
     DrawAButton(FHamburgerButton, HAMBURGER_GLYPH);
 end;
 
-{ TFlatCaptionBar.Paint }
 procedure TFlatCaptionBar.Paint;
-var ARect       : TRect;
-    ACaption    : String;
-    ATextFormat : TTextFormat;
 begin
+  inherited;
+  ///
+
   FCaptionRect := Rect(
     ScaleValue(8),
     0,
@@ -658,8 +614,7 @@ begin
 
     Canvas.Brush.Style := bsSolid;
 
-    ARect.Left   := 0;
-    ARect.Top    := 0;
+    var ARect := TRect.Empty;
     ARect.Height := ClientHeight;
     ARect.Width  := ClientWidth;
 
@@ -673,23 +628,23 @@ begin
     // Draw Caption Text
     Canvas.Brush.Style := bsClear;
 
-    ACaption := inherited Caption;
+    var ACaption : String := Caption;
 
     if FSubCaption <> '' then
       ACaption := Format('%s / %s', [ACaption, FSubCaption]);
 
-    ATextFormat := [tfLeft, tfVerticalCenter, tfEndEllipsis, tfSingleLine];
+    var ATextFormat : TTextFormat := [tfLeft, tfVerticalCenter, tfEndEllipsis, tfSingleLine];
     if FTextCenter then
       ATextFormat := ATextFormat + [tfCenter];
 
+    ///
     Canvas.TextRect(FCaptionRect, ACaption, ATextFormat);
   finally
     Canvas.Unlock();
   end;
 end;
 
-{ TFlatCaptionbar.GetCaptionButtonFromCoord }
-function TFlatCaptionbar.GetCaptionButtonFromCoord(X, Y : Integer) : TCaptionButton;
+function TFlatCaptionbar.GetCaptionButtonFromCoord(const X, Y : Integer) : TCaptionButton;
 begin
   result := nil;
   ///
@@ -700,17 +655,14 @@ begin
     result := FMaximizeButton
   else if ptinrect(FMinimizeButton.Rect, Point(X, Y)) then
     result := FMinimizeButton
-  else if ptinrect(FDockButton.Rect, Point(X, Y)) then
-    result := FDockButton
   else if ptinrect(FHamburgerButton.Rect, Point(X, Y)) then
     result := FHamburgerButton;
 end;
 
-{ TFlatCaptionBar.doCollapseRestore }
 procedure TFlatCaptionBar.doCollapseRestore();
 begin
   if FMaximized or not FCollapsible then
-    Exit();
+    Exit;
   ///
 
   FCollapsed := not FCollapsed;
@@ -736,11 +688,10 @@ begin
   end;
 end;
 
-{ TFlatCaptionBar.doMaximizeRestore }
 procedure TFlatCaptionBar.doMaximizeRestore();
 begin
   if (not (biMaximize in FBorderIcons)) or (FCollapsed) then
-    Exit();
+    Exit;
   ///
 
   if FMaximized then
@@ -749,11 +700,10 @@ begin
     doMaximize();
 end;
 
-{ TFlatCaptionBar.DisplayMenuDropDown }
 procedure TFlatCaptionBar.DisplayMenuDropDown();
 begin
   if not Assigned(FMenuDropDown) then
-    Exit();
+    Exit;
   ///
 
   var APoint := ClientToScreen(
@@ -766,25 +716,35 @@ begin
   FMenuDropDown.Popup(APoint.X, APoint.Y);
 end;
 
-{ TFlatCaptionBar.OnCustomWindowProc }
 procedure TFlatCaptionBar.OnCustomWindowProc(var AMessage : TMessage);
-var AButton : TCaptionButton;
 begin
   FOldWindowProc(AMessage);
   ///
 
+  case AMessage.Msg of
+    CM_TEXTCHANGED : begin
+      if Assigned(FOwnerForm) then
+        FOwnerForm.Caption := Caption;
+
+      ///
+      Invalidate;
+    end;
+  end;
+
+  ///
   if (csDesigning in ComponentState) then
     Exit;
+  ///
+
+  var AButton : TCaptionButton;
 
   case AMessage.Msg of
-    // Handle mouse double click
     WM_LBUTTONDBLCLK : begin
       AButton := GetCaptionButtonFromCoord(TWMLButtonDown(AMessage).XPos, TWMLButtonDown(AMessage).YPos);
       if not Assigned(AButton) then
         doMaximizeRestore();
     end;
 
-    // On mouse left button down
     WM_LBUTTONDOWN : begin
       AButton := GetCaptionButtonFromCoord(TWMLButtonDown(AMessage).XPos, TWMLButtonDown(AMessage).YPos);
       if Assigned(AButton) then begin
@@ -794,14 +754,12 @@ begin
       end;
       ///
 
-      // Move Owner Form
       if (NOT Assigned(AButton)) and Assigned(FOwnerForm) then begin
         ReleaseCapture();
         SendMessage(FOwnerForm.Handle, WM_SYSCOMMAND, $F012, 0);
       end;
     end;
 
-    // Button Click (Up)
     WM_LBUTTONUP : begin
       AButton := GetCaptionButtonFromCoord(TWMLButtonUp(AMessage).XPos, TWMLButtonUp(AMessage).YPos);
       if Assigned(AButton) then begin
@@ -826,10 +784,9 @@ begin
       end;
     end;
 
-    // Surface Move (Enter)
     WM_MOUSEMOVE : begin
       if Assigned(FButtonDown) then
-        Exit();
+        Exit;
       ///
 
       AButton := GetCaptionButtonFromCoord(TWMMouseMove(AMessage).XPos, TWMMouseMove(AMessage).YPos);
@@ -854,10 +811,9 @@ begin
       end;
     end;
 
-    // Surface Leave
     WM_MOUSELEAVE, {VCL ->} CM_MOUSELEAVE : begin
       if Assigned(FButtonDown) then
-        Exit();
+        Exit;
       ///
 
       if Assigned(FButtonHover) then begin
@@ -866,96 +822,60 @@ begin
       end;
     end;
 
-    // Right Mouse Click
     WM_RBUTTONDOWN : begin
       doCollapseRestore();
     end;
   end;
 end;
 
-{ TFlatCaptionBar.SetCaption }
-procedure TFlatCaptionBar.SetCaption(AValue : String);
-begin
-  if AValue = inherited Caption then
-    Exit();
-
-  inherited Caption := AValue;
-
-  FOwnerForm.Caption := AValue;
-
-  ///
-  Invalidate();
-end;
-
-{ TFlatCaptionBar.SetSubCaption }
 procedure TFlatCaptionBar.SetSubCaption(const AValue : String);
 begin
   if AValue = FSubCaption then
-    Exit();
+    Exit;
+  ///
 
   FSubCaption := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{ TFlatCaptionBar.GetCaption }
-function TFlatCaptionBar.GetCaption() : String;
-begin
-  result := inherited Caption;
-end;
-
-{ TFlatCaptionBar.SetBorderIcons }
-procedure TFlatCaptionBar.SetBorderIcons(AValue : TBorderIcons);
+procedure TFlatCaptionBar.SetBorderIcons(const AValue : TBorderIcons);
 begin
   FBorderIcons := AValue;
 
-  // Update Border Icons visibility
   FCloseButton.Visible    := (biSystemMenu in FBorderIcons);
   FMaximizeButton.Visible := (biMaximize in FBorderIcons);
   FMinimizeButton.Visible := (biMinimize in FBorderIcons);
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{ TFlatCaptionBar.SetDockable }
-procedure TFlatCaptionBar.SetDockable(const AValue : Boolean);
-begin
-  if AValue = FDockable then
-    Exit();
-
-  FDockable := AValue;
-
-  ///
-  Invalidate();
-end;
-
-{ TFlatCaptionBar.SetTransparent }
 procedure TFlatCaptionBar.SetTransparent(const AValue : Boolean);
 begin
   if AValue = FTransparent then
-    Exit();
+    Exit;
+  ///
 
   FTransparent := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{ TFlatCaptionBar.SetTransparent }
 procedure TFlatCaptionBar.SetTextCenter(const AValue : Boolean);
 begin
   if AValue = FTextCenter then
-    Exit();
+    Exit;
+  ///
 
   FTextCenter := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{ TFlatCaptionBar.SetMenuDropDown }
 procedure TFlatCaptionBar.SetMenuDropDown(const AValue : TPopupMenu);
 begin
   FMenuDropDown := AValue;
@@ -963,12 +883,11 @@ begin
   FHamburgerButton.Visible := Assigned(FMenuDropDown);
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-(* TCaptionButton.Create *)
+(* TCaptionButton *)
 
-{ TCaptionButton.Create }
 constructor TCaptionButton.Create(AOwner : TFlatCaptionBar);
 begin
   inherited Create();
@@ -981,17 +900,17 @@ begin
   FState       := cbsNormal;
 end;
 
-{ TCaptionButton.SetState }
 procedure TCaptionButton.SetState(AValue : TCaptionButtonState);
 begin
   if AValue = FState then
-    Exit();
+    Exit;
+  ///
 
   FState := AValue;
 
   ///
   if Assigned(FOwner) then
-    FOwner.Invalidate();
+    FOwner.Invalidate;
 end;
 
 end.

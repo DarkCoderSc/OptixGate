@@ -43,9 +43,16 @@ unit NeoFlat.GroupBox;
 
 interface
 
+// ---------------------------------------------------------------------------------------------------------------------
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, VCL.Forms, System.Classes,
-  VCL.Graphics, VCL.Controls, VCL.ExtCtrls, NeoFlat.Helper;
+  System.SysUtils, System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VCL.Forms, VCL.Graphics, VCL.Controls, VCL.ExtCtrls,
+
+  NeoFlat.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatGroupBox = class(TCustomControl)
@@ -56,7 +63,7 @@ type
     {@M}
     procedure CMEnabledChanged(var AMessage: TMessage); message CM_ENABLEDCHANGED;
     procedure CMTextChanged(var AMessage: TWmNoParams); message CM_TEXTCHANGED;
-    procedure SetColors(const Index: Integer; const Value: TColor);
+    procedure SetColors(const AIndex: Integer; const AValue: TColor);
     procedure CMSysColorChange(var AMessage: TMessage); message CM_SYSCOLORCHANGE;
     procedure CMParentColorChanged(var AMessage: TWmNoParams); message CM_PARENTCOLORCHANGED;
     procedure CMDialogChar(var AMessage: TCMDialogChar); message CM_DIALOGCHAR;
@@ -115,7 +122,12 @@ type
 
 implementation
 
-uses NeoFlat.Theme, System.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Types,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
 constructor TFlatGroupBox.Create(AOwner: TComponent);
 begin
@@ -239,16 +251,17 @@ begin
   inherited;
   ///
 
-  Invalidate();
+  Invalidate;
 end;
 
-procedure TFlatGroupBox.SetColors(const Index: Integer; const Value: TColor);
+procedure TFlatGroupBox.SetColors(const AIndex: Integer; const AValue: TColor);
 begin
-  case Index of
-    0: FBorderColor := Value;
+  case AIndex of
+    0: FBorderColor := AValue;
   end;
 
-  Invalidate();
+  ///
+  Invalidate;
 end;
 
 procedure TFlatGroupBox.CMParentColorChanged(var AMessage: TWmNoParams);
@@ -256,12 +269,12 @@ begin
   inherited;
   ///
 
-  Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatGroupBox.CMSysColorChange(var AMessage: TMessage);
 begin
-  Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatGroupBox.CMDialogChar(var AMessage: TCMDialogChar);
@@ -278,7 +291,8 @@ procedure TFlatGroupBox.CMEnabledChanged(var AMessage: TMessage);
 begin
   inherited;
 
-  Invalidate();
+  ///
+  Invalidate;
 end;
 
 end.

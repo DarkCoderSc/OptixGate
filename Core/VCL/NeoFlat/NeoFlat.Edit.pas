@@ -43,31 +43,39 @@ unit NeoFlat.Edit;
 
 interface
 
-uses Winapi.Windows, System.Classes, VCL.Controls, VCL.StdCtrls, Winapi.Messages, VCL.Graphics,
-     VCL.Forms, NeoFlat.Classes, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VCL.Graphics, VCL.Controls, VCL.StdCtrls, VCL.Forms,
+
+  NeoFlat.Classes, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatEdit = class(TEdit)
   private
-    FMouseHover       : Boolean;
+    FMouseHover : Boolean;
 
-    FBackground       : TFlatStateColors;
-    FBorder           : TFlatStateColors;
-    FShowBorder       : Boolean;
+    FBackground : TFlatStateColors;
+    FBorder     : TFlatStateColors;
+    FShowBorder : Boolean;
 
-    FEditStatus       : TControlStatus;
+    FEditStatus : TControlStatus;
 
-    FValidators       : TValidators;
+    FValidators : TValidators;
 
 
     {@M}
-    procedure WMNCPaint(var AMessage: TWMNCPaint);      message WM_NCPAINT;
-    procedure CMMouseEnter(var AMessage: TMessage);     message CM_MOUSEENTER;
-    procedure CMMouseLeave(var AMessage: TMessage);     message CM_MOUSELEAVE;
-    procedure WMSetFocus(var AMessage: TWMSetFocus);    message WM_SETFOCUS;
-    procedure WMKillFocus(var AMessage: TWMKillFocus);  message WM_KILLFOCUS;
-    procedure CMEnabledChanged(var AMessage: TMessage); message CM_ENABLEDCHANGED;
-    procedure CMFontChanged(var AMessage: TMessage);    message CM_FONTCHANGED;
+    procedure WMNCPaint(var AMessage: TWMNCPaint); message WM_NCPAINT;
+    procedure CMMouseEnter(var AMessage: TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var AMessage: TMessage); message CM_MOUSELEAVE;
+    procedure WMSetFocus(var AMessage: TWMSetFocus); message WM_SETFOCUS;
+    procedure WMKillFocus(var AMessage: TWMKillFocus); message WM_KILLFOCUS;
+    procedure CMEnabledChanged(var AMessage: TMessage);message CM_ENABLEDCHANGED;
+    procedure CMFontChanged(var AMessage: TMessage); message CM_FONTCHANGED;
 
     procedure DrawFlatBorder(ARegion : HRGN);
 
@@ -96,38 +104,39 @@ type
 
     {@G}
     property IsValid : Boolean read GetIsValid;
+    property IsEmpty : Boolean read GetIsEmpty;
   published
     {@G/S}
     property Status     : TControlStatus read FEditStatus write SetEditStatus;
     property Validators : TValidators    read FValidators write SetValidators;
     property ShowBorder : Boolean        read FShowBorder write SetShowBorder;
-
-    {@G}
-    property IsEmpty : Boolean read GetIsEmpty;
   end;
 
 implementation
 
-uses NeoFlat.Theme, System.SysUtils, NeoFlat.Validators;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Types,
 
-{ TFlatEdit.DoValidate }
+  NeoFlat.Theme, NeoFlat.Validators;
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TFlatEdit.DoValidate();
 begin
-  if Validate(self.Text, FValidators) then
-    self.Status := csNormal
+  if Validate(Text, FValidators) then
+    Status := cStatusNormal
   else
-    self.Status := csError;
+    Status := cStatusError;
 end;
 
-{ TFlatEdit.AdjustBound }
 procedure TFlatEdit.AdjustBound();
-var ADC       : HDC;
-    ASaveFont : HFONT;
-    AMetrics  : TTextMetric;
 begin
-  ADC := GetDC(0);
+  var AMetrics : TTextMetric;
+
+  var ADC := GetDC(0);
   try
-    ASaveFont := SelectObject(ADC, self.Font.Handle);
+    var ASaveFont := SelectObject(ADC, Font.Handle);
+
     GetTextMetrics(ADC, AMetrics);
     SelectObject(ADC, ASaveFont);
   finally
@@ -135,56 +144,51 @@ begin
   end;
 
   ///
-  Height := (AMetrics.tmHeight + self.ScaleValue(6));
+  Height := (AMetrics.tmHeight + ScaleValue(6));
 end;
 
-{ TFlatEdit.Loaded }
 procedure TFlatEdit.Loaded();
 begin
   inherited;
   ///
 
-  if NOT self.IsDesigning() then
+  if NOT IsDesigning() then
     AdjustBound();
 end;
 
-{ TFlatEdit.Change }
 procedure TFlatEdit.Change();
 begin
   inherited;
   ///
 
-  if (self.Status = csError) then
-    self.DoValidate();
+  if (Status = cStatusError) then
+    DoValidate();
 end;
 
-{ TFlatEdit.IsDesigning }
 function TFlatEdit.IsDesigning() : Boolean;
 begin
   result := (csDesigning in ComponentState);
 end;
 
-{ TFlatEdit.Create }
 constructor TFlatEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ///
 
-  self.Color       := clWhite;
-  self.Font.Height := -11;
-  self.Font.Color  := clBlack;
-  self.Font.Name   := FONT_1;
+  Color       := clWhite;
+  Font.Height := -11;
+  Font.Color  := clBlack;
+  Font.Name   := FONT_1;
 
-  FEditStatus := csNormal;
+  FEditStatus := cStatusNormal;
 
   FShowBorder := True;
 
-  self.ShowHint := True;
+  ShowHint := True;
 
-  //self.BorderStyle  := bsNone;
-  self.ControlStyle := ControlStyle - [csFramed];
-  self.Ctl3D        := False;
-  self.AutoSize     := False;
+  ControlStyle := ControlStyle - [csFramed];
+  Ctl3D        := False;
+  AutoSize     := False;
 
   FMouseHover := False;
 
@@ -201,7 +205,6 @@ begin
   FValidators := [];
 end;
 
-{ TFlatEdit.Destroy }
 destructor TFlatEdit.Destroy();
 begin
   if Assigned(FBackground) then
@@ -214,22 +217,16 @@ begin
   inherited Destroy();
 end;
 
-{ TFlatEdit.DrawFlatBorder }
 procedure TFlatEdit.DrawFlatBorder(ARegion : HRGN);
-var ADC           : HDC;
-    ARect         : TRect;
-    AClientRect   : TRect;
-    AColor        : LongInt;
-    ABorderWidth  : Integer;
-    ABrush        : HBRUSH;
 begin
   if not FShowBorder then
-    Exit();
+    Exit;
   ///
 
-  ADC := GetWindowDC(self.Handle);
+  var ADC := GetWindowDC(Handle);
   try
-    if self.Focused then begin
+    var AColor : TColor;
+    if Focused then begin
       AColor := ColorToRGB(FBorder.Focus);
     end else begin
       if FMouseHover then begin
@@ -240,42 +237,41 @@ begin
     end;
 
     // Override Outer Color if status is <> Normal
-    if (FEditStatus <> csNormal) and enabled then begin
+    if (FEditStatus <> cStatusNormal) and enabled then begin
       case FEditStatus of
-        csError : AColor := MAIN_RED;
+        cStatusError : AColor := MAIN_RED;
       end;
     end;
 
-    ABorderWidth := self.ScaleValue(1);
+    var ABorderWidth := ScaleValue(1);
 
-    ABrush := CreateSolidBrush(AColor);
+    var ABrush := CreateSolidBrush(AColor);
     try
-      GetWindowRect(self.Handle, AClientRect);
+      var AClientRect : TRect;
+      GetWindowRect(Handle, AClientRect);
 
       // Border Top
-      ARect.Top    := 0;
-      ARect.Left   := 0;
+      var ARect := TRect.Empty;
       ARect.Width  := AClientRect.Width;
       ARect.Height := ABorderWidth;
       FillRect(ADC, ARect, ABrush);
 
       // Border Left
-      ARect.Top   := 0;
-      ARect.Left  := 0;
+      ARect := TRect.Empty;
       ARect.Width := ABorderWidth;
       ARect.Height := AClientRect.Height;
       FillRect(ADC, ARect, ABrush);
 
       // Border Right
-      ARect.Top    := 0;
+      ARect := TRect.Empty;
       ARect.Left   := AClientRect.Width - ABorderWidth;
       ARect.Height := AClientRect.Height;
       ARect.Width  := ABorderWidth;
       FillRect(ADC, ARect, ABrush);
 
       // Border Bottom
+      ARect := TRect.Empty;
       ARect.Top    := AClientRect.Height - ABorderWidth;
-      ARect.Left   := 0;
       ARect.Width  := AClientRect.Width;
       ARect.Height := ABorderWidth;
       FillRect(ADC, ARect, ABrush);
@@ -283,11 +279,10 @@ begin
       DeleteObject(ABrush);
     end;
   finally
-    ReleaseDC(self.Handle, ADC);
+    ReleaseDC(Handle, ADC);
   end;
 end;
 
-{ TFlatEdit.WMNCPaint }
 procedure TFlatEdit.WMNCPaint(var AMessage: TWMNCPaint);
 begin
   inherited;
@@ -296,14 +291,13 @@ begin
   DrawFlatBorder(AMessage.RGN);
 end;
 
-{  }
 procedure TFlatEdit.CMMouseEnter(var AMessage: TMessage);
 begin
   inherited;
   ///
 
   if (GetActiveWindow = 0) then
-    Exit();
+    Exit;
   ///
 
   FMouseHover := True;
@@ -311,7 +305,6 @@ begin
   DrawFlatBorder(0);
 end;
 
-{  }
 procedure TFlatEdit.CMMouseLeave(var AMessage: TMessage);
 begin
   inherited;
@@ -322,25 +315,24 @@ begin
   DrawFlatBorder(0);
 end;
 
-{  }
 procedure TFlatEdit.WMSetFocus(var AMessage: TWMSetFocus);
 begin
   inherited;
-  if NOT self.IsDesigning() then
+  ///
+
+  if NOT IsDesigning() then
     DrawFlatBorder(0);
 end;
 
-{  }
 procedure TFlatEdit.WMKillFocus(var AMessage: TWMKillFocus);
 begin
   inherited;
   ///
 
-  if NOT self.IsDesigning() then
+  if NOT IsDesigning() then
     DrawFlatBorder(0);
 end;
 
-{  }
 procedure TFlatEdit.CMEnabledChanged(var AMessage: TMessage);
 begin
   inherited;
@@ -349,27 +341,25 @@ begin
   DrawFlatBorder(0);
 end;
 
-{  }
 procedure TFlatEdit.CMFontChanged(var AMessage: TMessage);
 begin
   inherited;
   ///
 
-  if NOT self.IsDesigning() and (csLoading in ComponentState) then
+  if NOT IsDesigning() and (csLoading in ComponentState) then
     AdjustBound();
 end;
 
-{  }
 function TFlatEdit.GetIsEmpty() : Boolean;
 begin
-  result := (Length(Trim(self.text)) = 0);
+  result := Length(Trim(Text)) = 0;
 end;
 
-{  }
 procedure TFlatEdit.SetEnabled(AValue : Boolean);
 begin
   if AValue = Enabled then
-    Exit();
+    Exit;
+  ///
 
   inherited SetEnabled(AValue);
 
@@ -379,24 +369,22 @@ begin
     Font.Color := clGray;
 end;
 
-{  }
 procedure TFlatEdit.SetValidators(const AValue : TValidators);
 begin
   if AValue = FValidators then
-    Exit();
+    Exit;
   ///
 
   FValidators := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{  }
 procedure TFlatEdit.SetEditStatus(const AValue : TControlStatus);
 begin
   if AValue = FEditStatus then
-    Exit();
+    Exit;
   ///
 
   FEditStatus := AValue;
@@ -404,28 +392,27 @@ begin
   ///
   DrawFlatBorder(0);
 
-  Invalidate();
+  Invalidate;
 end;
 
-{  }
 function TFlatEdit.GetIsValid() : Boolean;
 begin
-  self.DoValidate();
+  DoValidate();
   ///
 
-  result := (self.Status = csNormal);
+  result := (Status = cStatusNormal);
 end;
 
-{ TFlatEdit.SetShowBorder }
 procedure TFlatEdit.SetShowBorder(const AValue : Boolean);
 begin
   if AValue = FShowBorder then
-    Exit();
+    Exit;
+  ///
 
   FShowBorder := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
 end.

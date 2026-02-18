@@ -34,7 +34,8 @@ object ControlFormRemoteShell: TControlFormRemoteShell
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 690
+    ExplicitWidth = 670
+    ExplicitHeight = 262
     object OMultiPanel: TOMultiPanel
       AlignWithMargins = True
       Left = 4
@@ -58,7 +59,8 @@ object ControlFormRemoteShell: TControlFormRemoteShell
       SplitterHoverColor = clHighlight
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 682
+      ExplicitWidth = 662
+      ExplicitHeight = 225
       object PanelInstances: TFlatPanel
         Left = 0
         Top = 0
@@ -301,8 +303,6 @@ object ControlFormRemoteShell: TControlFormRemoteShell
           Margins.Top = 2
           Margins.Right = 2
           Margins.Bottom = 0
-          Status = csNormal
-          Validators = []
           Align = alTop
           Style = csDropDownList
           Font.Charset = DEFAULT_CHARSET
@@ -316,6 +316,9 @@ object ControlFormRemoteShell: TControlFormRemoteShell
           TabOrder = 0
           ItemIndex = -1
           OnChange = ComboInstanceChange
+          Status = cStatusNormal
+          Validators = []
+          ExplicitWidth = 486
         end
       end
     end

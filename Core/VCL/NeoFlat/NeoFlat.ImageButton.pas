@@ -43,8 +43,16 @@ unit NeoFlat.ImageButton;
 
 interface
 
-uses WinAPI.Windows, System.Classes, VCL.Graphics, VCL.Controls, VCL.ImgList,
-     WinAPI.Messages, NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  WinAPI.Windows, WinAPI.Messages,
+
+  VCL.Graphics, VCL.Controls, VCL.ImgList,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TOnValueChanged = procedure(Sender : TObject; ANewValue : Integer) of object;
@@ -69,10 +77,6 @@ type
 
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
-    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-
-    procedure CMMouseEnter(var Message: TMessage); message CM_MOUSEENTER;
-    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
@@ -96,11 +100,13 @@ type
 
 implementation
 
-uses NeoFlat.Helper, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Types,
 
-{-------------------------------------------------------------------------------
-  ___constructor
--------------------------------------------------------------------------------}
+  NeoFlat.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+
 constructor TFlatImageButton.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
@@ -118,9 +124,6 @@ begin
   FOnValueChanged := nil;
 end;
 
-{-------------------------------------------------------------------------------
-  ___destructor
--------------------------------------------------------------------------------}
 destructor TFlatImageButton.Destroy();
 begin
 
@@ -128,35 +131,26 @@ begin
   inherited Destroy();
 end;
 
-{-------------------------------------------------------------------------------
-  ___paint
--------------------------------------------------------------------------------}
 procedure TFlatImageButton.Paint;
-var X, Y   : Integer;
-    AGlyph : TBitmap;
 begin
   Canvas.Lock();
   try
-    {
-      Draw Background
-    }
+    // Draw Background
     Canvas.Brush.Color := FBackground;
 
     Canvas.FillRect(Rect(0, 0, Width, Height));
 
-    {
-      Draw Image
-    }
+    // Draw Image
     if Assigned(FImageList) and (FImageIndex > -1) then begin
-      X := (self.Width div 2) - (FImageList.Width div 2);
-      Y := (self.Height div 2) - (FImageList.Height div 2);
+      var X := (Width div 2) - (FImageList.Width div 2);
+      var Y := (Height div 2) - (FImageList.Height div 2);
 
       if FMouseIsDown then begin
         Inc(X);
         Inc(Y);
       end;
 
-      AGlyph := TBitmap.Create();
+      var AGlyph := TBitmap.Create();
       try
         InitializeBitmap32(AGlyph, FImageList.Width, FImageList.Height);
 
@@ -177,10 +171,6 @@ begin
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  Mouse Movement Control
--------------------------------------------------------------------------------}
-
 procedure TFlatImageButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
@@ -188,81 +178,51 @@ begin
 
   FMouseIsDown := True;
 
-  Invalidate();
+  ///
+  Invalidate;
 end;
 
 procedure TFlatImageButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var APoint : TPoint;
 begin
   inherited;
   ///
 
   FMouseIsDown := False;
 
-  APoint.X := X;
-  APoint.Y := Y;
-
-  if ptinrect(self.ClientRect, APoint) and Assigned(FOnClick) then begin
+  if ptinrect(ClientRect, Point(X, Y)) and Assigned(FOnClick) then begin
     FOnClick(self);
   end;
 
-  Invalidate();
-end;
-
-procedure TFlatImageButton.MouseMove(Shift: TShiftState; X, Y: Integer);
-//var APoint : TPoint;
-begin
-  inherited;
   ///
-
-//  APoint.X := X;
-//  APoint.X := Y;
-//
-//  FMouseIsHover := ptinrect(self.ClientRect, APoint);
+  Invalidate;
 end;
-
-procedure TFlatImageButton.CMMouseEnter(var Message: TMessage);
-begin
-  inherited;
-  ///
-
-end;
-
-procedure TFlatImageButton.CMMouseLeave(var Message: TMessage);
-begin
-  inherited;
-  ///
-
-end;
-
-{-------------------------------------------------------------------------------
-  Getters / Setters
--------------------------------------------------------------------------------}
 
 procedure TFlatImageButton.SetBackground(AValue : TColor);
 begin
   if AValue = FBackground then
-    Exit();
+    Exit;
 
   FBackground := AValue;
 
-  Invalidate();
+  ///
+  Invalidate;
 end;
 
 procedure TFlatImageButton.SetImageIndex(AValue : Integer);
 begin
   if AValue = FImageIndex then
-    Exit();
+    Exit;
 
   FImageIndex := AValue;
 
-  Invalidate();
+  ///
+  Invalidate;
 end;
 
 procedure TFlatImageButton.SetValue(AValue : Integer);
 begin
   if FValue = AValue then
-    Exit();
+    Exit;
   ///
 
   FValue := AValue;

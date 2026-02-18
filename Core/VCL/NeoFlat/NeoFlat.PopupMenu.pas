@@ -43,8 +43,16 @@ unit NeoFlat.PopupMenu;
 
 interface
 
-uses VCL.Menus, System.Classes, VCL.Graphics, Winapi.Windows, System.SysUtils, VCL.Controls,
-     NeoFlat.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.SysUtils,
+
+  Winapi.Windows,
+
+  VCL.Menus, VCL.Graphics, VCL.Controls,
+
+  NeoFlat.Helper;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatPopupMenu = class(TPopupMenu)
@@ -68,12 +76,17 @@ type
 
 implementation
 
-uses NeoFlat.Theme, NeoFlat.CheckBox, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Types,
 
-{ TFlatPopupMenu.InitializeMenu }
+  NeoFlat.Theme, NeoFlat.CheckBox, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TFlatPopupMenu.InitializeMenu(const AMenuHandle : HMENU);
-var AMenuInfo  : TMenuInfo;
 begin
+  var AMenuInfo : TMenuInfo;
+
   FillChar(AMenuInfo, SizeOf(TMenuInfo), #0);
 
   AMenuInfo.cbSize  := SizeOf(TMenuInfo);
@@ -84,46 +97,32 @@ begin
   SetMenuInfo(AMenuHandle, AMenuInfo);
 end;
 
-{ TFlatPopupMenu.MeasureItem }
 procedure TFlatPopupMenu.MeasureItem(Sender: TObject; ACanvas: TCanvas; var Width, Height: Integer);
-var M : TMenuItem;
 begin
-  M := TMenuItem(Sender);
+  var M := TMenuItem(Sender);
   ///
 
   if M.Caption = '-' then
     Height := FMetrics._10
-  else begin
+  else
     Height := FMetrics._19;
-
-    //if (M.MenuIndex = 0) or (M.MenuIndex = self.Items.Count -1) then
-    //  Inc(Height, FMetrics._8);
-  end;
 end;
 
-{ TFlatPopupMenu.DrawItem }
 procedure TFlatPopupMenu.DrawItem(Sender: TObject; ACanvas: TCanvas; ARect: TRect; Selected: Boolean);
-var AColor         : TColor;
-    ACaption       : String;
-    ASeparator     : Boolean;
-    ASeparatorRect : TRect;
-    M              : TMenuItem;
-    AFontColor     : TColor;
 begin
-  M := TMenuItem(Sender);
-  ACaption := M.Caption;
+  var M := TMenuItem(Sender);
+  var ACaption := M.Caption;
 
-  ASeparator := (ACaption = '-');
+  var ASeparator := (ACaption = '-');
 
   ACanvas.Brush.Style := bsSolid;
 
   if ASeparator then begin
-    {
-      Draw Separator Menu
-    }
     ACanvas.Brush.Color := MAIN_GRAY;
 
     ACanvas.FillRect(ARect);
+
+    var ASeparatorRect := TRect.Empty;
 
     ASeparatorRect.Left   := ARect.Left + FMetrics._8;
     ASeparatorRect.Top    := ARect.Top + (ARect.Height div 2) - FMetrics._1;
@@ -134,28 +133,15 @@ begin
 
     ACanvas.FillRect(ASeparatorRect);
   end else begin
-    {
-      Draw Menu Item
-    }
+    var AColor : TColor;
     if Selected and M.Enabled then
       AColor := DARKER_GRAY
     else
       AColor := MAIN_GRAY;
 
-//    if (M.MenuIndex = 0) or (M.MenuIndex = self.Items.Count -1) then begin
-//      ACanvas.Brush.Color := MAIN_GRAY;
-//
-//      ACanvas.FillRect(ARect);
-//
-//      if (M.MenuIndex = 0) then
-//        ARect.Top := ARect.Top + FMetrics._8
-//      else if (M.MenuIndex = self.Items.Count -1) then
-//        ARect.Bottom := ARect.Bottom - FMetrics._8
-//    end;
-
-    // Draw Text
     ACanvas.Brush.Color := AColor;
 
+    var AFontColor : TColor;
     if M.Enabled then
       AFontColor := MAIN_ACCENT
     else
@@ -171,8 +157,6 @@ begin
 
     ACanvas.TextRect(ARect, ACaption, [tfSingleLine, tfVerticalCenter]);
 
-
-    // Draw CheckBox
     if M.Checked then begin
       var AGlyph : TByteArrayArray;
 
@@ -184,22 +168,20 @@ begin
   end;
 end;
 
-{ TFlatPopupMenu.Create }
 constructor TFlatPopupMenu.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
   ///
 
-  self.OwnerDraw := True;
+  OwnerDraw := True;
 
   FMetrics := TFlatMetrics.Create(TControl(AOwner));
 
   FMenuBrushHandle := CreateSolidBrush(ColorToRGB(MAIN_ACCENT));
 
-  self.InitializeMenu(self.Handle);
+  InitializeMenu(Handle);
 end;
 
-{ TFlatPopupMenu.Destroy }
 destructor TFlatPopupMenu.Destroy();
 begin
   DeleteObject(FMenuBrushHandle);
@@ -211,7 +193,6 @@ begin
   inherited Destroy();
 end;
 
-{ TFlatPopupMenu.CustomizeMenu }
 procedure TFlatPopupMenu.CustomizeMenu(const AMenu : TObject);
 
   procedure ApplyCustomization(const AMenuItem : TMenuItem);
@@ -240,7 +221,6 @@ begin
   end;
 end;
 
-{ TFlatPopupMenu.DoPopup }
 procedure TFlatPopupMenu.DoPopup(Sender: TObject);
 begin
   inherited;

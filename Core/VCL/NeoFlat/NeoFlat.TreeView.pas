@@ -43,8 +43,16 @@ unit NeoFlat.TreeView;
 
 interface
 
-uses System.Classes, VirtualTrees, VirtualTrees.Types, VCL.Graphics, WinAPI.Windows,
-     VCL.ImgList, System.UITypes;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes, System.UITypes,
+
+  WinAPI.Windows,
+
+  VCL.Graphics, VCL.ImgList,
+
+  VirtualTrees, VirtualTrees.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TTreeData = record
@@ -60,16 +68,22 @@ type
   private
     FOnItemClick : TOnItemClick;
   protected
-    procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType); override;
-    procedure DoBeforeCellPaint(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect); override;
-    procedure DoTextDrawing(var PaintInfo: TVTPaintInfo; const Text: string; CellRect: TRect; DrawFormat: Cardinal); override;
+    procedure DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex;
+      TextType: TVSTTextType); override;
+    procedure DoBeforeCellPaint(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect); override;
+    procedure DoTextDrawing(var PaintInfo: TVTPaintInfo; const Text: string; CellRect: TRect;
+      DrawFormat: Cardinal); override;
     procedure DoNodeClick(const HitInfo: THitInfo); override;
     procedure DoGetText(var pEventArgs: TVSTGetCellTextEventArgs); override;
-    function DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex): TCustomImageList; override;
+    function DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean;
+      var ImageIndex: System.UITypes.TImageIndex): TCustomImageList; override;
   public
     {@M}
-    function AddItem(const ACaption : String; const AIndex : Cardinal; AParent : PVirtualNode = nil; const AImageIndex : Integer = -1) : PVirtualNode; overload;
-    function AddItem(const ACaption : String; const AIndex : Cardinal; const AImageIndex : Integer = -1) : PVirtualNode; overload;
+    function AddItem(const ACaption : String; const AIndex : Cardinal; AParent : PVirtualNode = nil;
+      const AImageIndex : Integer = -1) : PVirtualNode; overload;
+    function AddItem(const ACaption : String; const AIndex : Cardinal;
+      const AImageIndex : Integer = -1) : PVirtualNode; overload;
 
     {@C}
     constructor Create(AOwner: TComponent); override;
@@ -88,51 +102,56 @@ type
 
 implementation
 
-uses NeoFlat.Theme, math, VCL.Forms;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Math,
 
-{ TFlatVirtualStringTree.Create }
+  VCL.Forms,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
+
 constructor TFlatVirtualStringTree.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
   ///
 
-  self.Color := clWhite;
-  self.Colors.TreeLineColor := MAIN_ACCENT;
+  Color := clWhite;
+  Colors.TreeLineColor := MAIN_ACCENT;
 
-  self.Header.Options := self.Header.Options + [hoAutoResize];
+  Header.Options := Header.Options + [hoAutoResize];
 
-  self.TreeOptions.SelectionOptions := self.TreeOptions.SelectionOptions + [toFullRowSelect];
+  TreeOptions.SelectionOptions := TreeOptions.SelectionOptions + [toFullRowSelect];
 
-  self.TreeOptions.PaintOptions := self.TreeOptions.PaintOptions - [
-                                                                      toShowRoot,
-                                                                      toShowButtons,
-                                                                      toUseBlendedSelection,
-                                                                      toThemeAware
+  TreeOptions.PaintOptions := TreeOptions.PaintOptions - [
+    toShowRoot,
+    toShowButtons,
+    toUseBlendedSelection,
+    toThemeAware
   ] + [
-          toAlwaysHideSelection,
-          toHideSelection,
-          toHideFocusRect
+    toAlwaysHideSelection,
+    toHideSelection,
+    toHideFocusRect
   ];
 
-  self.Font.Name   := FONT_1;
-  self.Font.Color  := MAIN_ACCENT;
-  self.Font.Height := -11;
+  Font.Name   := FONT_1;
+  Font.Color  := MAIN_ACCENT;
+  Font.Height := -11;
 
-  self.Header.Font.Name   := FONT_1;
-  self.Header.Font.Height := -11;
+  Header.Font.Name   := FONT_1;
+  Header.Font.Height := -11;
 
-  self.BorderStyle := bsNone;
+  BorderStyle := bsNone;
 
-  self.Header.Columns.Add();
+  Header.Columns.Add();
 
-  self.NodeDataSize := SizeOf(TTreeData);
+  NodeDataSize := SizeOf(TTreeData);
 
-  self.Font.name := FONT_1;
+  Font.name := FONT_1;
 
   FOnItemClick := nil;
 end;
 
-{ TFlatVirtualStringTree.Destroy }
 destructor TFlatVirtualStringTree.Destroy();
 begin
 
@@ -140,8 +159,8 @@ begin
   inherited Destroy();
 end;
 
-{ TFlatVirtualStringTree.AddItem }
-function TFlatVirtualStringTree.AddItem(const ACaption : String; const AIndex : Cardinal; AParent : PVirtualNode = nil; const AImageIndex : Integer = -1) : PVirtualNode;
+function TFlatVirtualStringTree.AddItem(const ACaption : String; const AIndex : Cardinal; AParent : PVirtualNode = nil;
+  const AImageIndex : Integer = -1) : PVirtualNode;
 var AData : PTreeData;
     ANode : PVirtualNode;
 begin
@@ -156,13 +175,14 @@ begin
   result := ANode;
 end;
 
-function TFlatVirtualStringTree.AddItem(const ACaption : String; const AIndex : Cardinal; const AImageIndex : Integer = -1) : PVirtualNode;
+function TFlatVirtualStringTree.AddItem(const ACaption : String; const AIndex : Cardinal;
+  const AImageIndex : Integer = -1) : PVirtualNode;
 begin
   result := AddItem(ACaption, AIndex, nil, AImageIndex);
 end;
 
-{ TFlatVirtualStringTree.DoGetImageIndex }
-function TFlatVirtualStringTree.DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: TImageIndex): TCustomImageList;
+function TFlatVirtualStringTree.DoGetImageIndex(Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+  var Ghosted: Boolean; var ImageIndex: System.UITypes.TImageIndex): TCustomImageList;
 var pData : PTreeData;
 begin
   result := inherited DoGetImageIndex(Node, Kind, Column, Ghosted, ImageIndex);
@@ -170,10 +190,10 @@ begin
 
   pData := Node.GetData();
   if not Assigned(pData) then
-    Exit();
+    Exit;
 
   if Column <> 0 then
-    Exit();
+    Exit;
 
   case Kind of
     ikNormal, ikSelected: begin
@@ -183,8 +203,8 @@ begin
 
 end;
 
-{ TFlatVirtualStringTree.DoPaintText }
-procedure TFlatVirtualStringTree.DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex; TextType: TVSTTextType);
+procedure TFlatVirtualStringTree.DoPaintText(Node: PVirtualNode; const Canvas: TCanvas; Column: TColumnIndex;
+  TextType: TVSTTextType);
 begin
   inherited DoPaintText(Node, Canvas, Column, TextType);
   ///
@@ -195,17 +215,13 @@ begin
     Canvas.Font.Color := MAIN_ACCENT;
 end;
 
-
-{ TFlatVirtualStringTree.DoBeforeCellPaint }
-procedure TFlatVirtualStringTree.DoBeforeCellPaint(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+procedure TFlatVirtualStringTree.DoBeforeCellPaint(Canvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 var ASelected : Boolean;
 begin
   inherited DoBeforeCellPaint(Canvas, Node, Column, CellPaintMode, CellRect, ContentRect);
   ///
 
-  {
-    Draw Selected Background
-  }
   ASelected := (vsSelected in Node.States);
   if ASelected then begin
     Canvas.Brush.Color := MAIN_GRAY;
@@ -214,36 +230,34 @@ begin
   end;
 end;
 
-{ TFlatVirtualStringTree.DoTextDrawing }
-procedure TFlatVirtualStringTree.DoTextDrawing(var PaintInfo: TVTPaintInfo; const Text: string; CellRect: TRect; DrawFormat: Cardinal);
+procedure TFlatVirtualStringTree.DoTextDrawing(var PaintInfo: TVTPaintInfo; const Text: string; CellRect: TRect;
+  DrawFormat: Cardinal);
 begin
   inherited;
 end;
 
-{ TFlatVirtualStringTree.DoNodeClick }
 procedure TFlatVirtualStringTree.DoNodeClick(const HitInfo: THitInfo);
 var AData : PTreeData;
 begin
   inherited;
 
   if HitInfo.HitNode.ChildCount > 0 then
-    self.Expanded[HitInfo.HitNode] := not (vsExpanded in HitInfo.HitNode.States)
+    Expanded[HitInfo.HitNode] := not (vsExpanded in HitInfo.HitNode.States)
   else if Assigned(FOnItemClick) then begin
-    AData := self.GetNodeData(HitInfo.HitNode);
+    AData := GetNodeData(HitInfo.HitNode);
 
     if Assigned(AData) then
       FOnItemClick(self, AData^.Index, AData^.ItemName);
   end;
 end;
 
-{ TFlatVirtualStringTree.DoGetText }
 procedure TFlatVirtualStringTree.DoGetText(var pEventArgs: TVSTGetCellTextEventArgs);
 var AData : PTreeData;
 begin
   inherited;
   ///
 
-  AData := self.GetNodeData(pEventArgs.Node);
+  AData := GetNodeData(pEventArgs.Node);
   if Assigned(AData) then begin
     if pEventArgs.Column = 0 then
       pEventArgs.CellText := AData^.ItemName;

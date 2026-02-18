@@ -43,17 +43,16 @@ unit NeoFlat.Classes;
 
 interface
 
-uses System.Classes, VCL.Graphics, VCL.Controls;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  VCL.Graphics, VCL.Controls,
+
+  NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TFlatControlState = (
-                      csNormal,
-                      csHover,
-                      csActive,
-                      csFocus,
-                      csDisabled
-  );
-
   TFlatStateColors = class(TPersistent)
   private
     FOwner    : TControl;
@@ -68,15 +67,12 @@ type
     procedure SetColor(const AIndex : Integer; const AColor : TColor);
   public
     {@C}
-    constructor Create(AOwner : TControl);
-    destructor Destroy(); override;
+    constructor Create(AOwner : TControl); overload;
 
     {@M}
     procedure Assign(ASource : TPersistent); override;
+    function GetStateColor(const AState : TFlatControlStateEx) : TColor;
   published
-    {@M}
-    function GetStateColor(AState : TFlatControlState) : TColor;
-
     {@G/S}
     property Normal   : TColor index 0 read FNormal   write SetColor;
     property Hover    : TColor index 1 read FHover    write SetColor;
@@ -87,19 +83,17 @@ type
 
 implementation
 
-uses NeoFlat.Theme, System.SysUtils, WinAPI.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils,
 
-{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  WinAPI.Windows,
 
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
-    TFlatStateColors
+(* TFlatStateColors *)
 
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-
-{-------------------------------------------------------------------------------
-  ___constructor
--------------------------------------------------------------------------------}
 constructor TFlatStateColors.Create(AOwner : TControl);
 begin
   inherited Create();
@@ -114,36 +108,20 @@ begin
   FDisabled := clNone;
 end;
 
-{-------------------------------------------------------------------------------
-  ___destructor
--------------------------------------------------------------------------------}
-destructor TFlatStateColors.Destroy();
-begin
-
-  ///
-  inherited Destroy();
-end;
-
-{-------------------------------------------------------------------------------
-  Get State Color
--------------------------------------------------------------------------------}
-function TFlatStateColors.GetStateColor(AState : TFlatControlState) : TColor;
+function TFlatStateColors.GetStateColor(const AState : TFlatControlStateEx) : TColor;
 begin
   case AState of
-    csNormal   : result := FNormal;
-    csHover    : result := FHover;
-    csActive   : result := FActive;
-    csFocus    : result := FFocus;
-    csDisabled : result := FDisabled;
+    csExNormal   : result := FNormal;
+    csExHover    : result := FHover;
+    csExActive   : result := FActive;
+    csExFocus    : result := FFocus;
+    csExDisabled : result := FDisabled;
 
     else
       result := clNone;
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  ___assign
--------------------------------------------------------------------------------}
 procedure TFlatStateColors.Assign(ASource : TPersistent);
 begin
   if ASource is TFlatStateColors then begin
@@ -155,10 +133,6 @@ begin
   end else
     inherited;
 end;
-
-{-------------------------------------------------------------------------------
-  Getters / Setters
--------------------------------------------------------------------------------}
 
 procedure TFlatStateColors.SetColor(const AIndex : Integer; const AColor : TColor);
 begin
@@ -190,7 +164,7 @@ begin
   end;
 
   ///
-  FOwner.Invalidate();
+  FOwner.Invalidate;
 end;
 
 end.

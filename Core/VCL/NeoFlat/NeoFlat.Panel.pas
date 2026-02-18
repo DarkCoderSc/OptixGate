@@ -43,7 +43,16 @@ unit NeoFlat.Panel;
 
 interface
 
-uses Winapi.Windows, System.Classes, VCL.Controls, VCL.Graphics, NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows,
+
+  VCL.Controls, VCL.Graphics,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatPanel = class(TCustomControl)
@@ -61,21 +70,12 @@ type
     procedure SetColor(AIndex : Integer; AValue : TColor);
   protected
     {@M}
-    procedure Paint(); override;
+    procedure Paint; override;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
     destructor Destroy(); override;
   published
-    {@G/S}
-    property BorderTop    : Integer index 0 read FBorderTop    write SetBorder;
-    property BorderLeft   : Integer index 1 read FBorderLeft   write SetBorder;
-    property BorderRight  : Integer index 2 read FBorderRight  write SetBorder;
-    property BorderBottom : Integer index 3 read FBorderBottom write SetBorder;
-
-    property Color        : TColor  index 0 read FColor        write SetColor;
-    property BorderColor  : TColor  index 1 read FBorderColor  write SetColor;
-
     property Align;
     property Cursor;
     property Caption;
@@ -116,15 +116,26 @@ type
     property OnMouseUp;
     property OnStartDrag;
     property Padding;
+
+    {@G/S}
+    property BorderTop    : Integer index 0 read FBorderTop    write SetBorder;
+    property BorderLeft   : Integer index 1 read FBorderLeft   write SetBorder;
+    property BorderRight  : Integer index 2 read FBorderRight  write SetBorder;
+    property BorderBottom : Integer index 3 read FBorderBottom write SetBorder;
+
+    property Color        : TColor  index 0 read FColor        write SetColor;
+    property BorderColor  : TColor  index 1 read FBorderColor  write SetColor;
   end;
 
 implementation
 
-uses NeoFlat.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Types,
 
-{-------------------------------------------------------------------------------
-  ___constructor
--------------------------------------------------------------------------------}
+  NeoFlat.Classes;
+// ---------------------------------------------------------------------------------------------------------------------
+
 constructor TFlatPanel.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -147,9 +158,6 @@ begin
   FBorderColor := clBlack;
 end;
 
-{-------------------------------------------------------------------------------
-  ___destructor
--------------------------------------------------------------------------------}
 destructor TFlatPanel.Destroy();
 begin
 
@@ -157,41 +165,28 @@ begin
   inherited Destroy();
 end;
 
-{-------------------------------------------------------------------------------
-  ___paint
--------------------------------------------------------------------------------}
-procedure TFlatPanel.Paint();
-var ARect         : TRect;
-
-    ABorderTop    : Integer;
-    ABorderLeft   : Integer;
-    ABorderRight  : Integer;
-    ABorderBottom : Integer;
+procedure TFlatPanel.Paint;
 begin
-  ABorderTop    := self.ScaleValue(FBorderTop);
-  ABorderLeft   := self.ScaleValue(FBorderLeft);
-  ABorderRight  := self.ScaleValue(FBorderRight);
-  ABorderBottom := self.ScaleValue(FBorderBottom);
+  var ABorderTop    := ScaleValue(FBorderTop);
+  var ABorderLeft   := ScaleValue(FBorderLeft);
+  var ABorderRight  := ScaleValue(FBorderRight);
+  var ABorderBottom := ScaleValue(FBorderBottom);
 
   Canvas.Lock();
   try
     Canvas.Brush.Style := bsSolid;
 
-    {
-      Draw Background
-    }
+    // Draw Background
     Canvas.Brush.Color := FColor;
-    Canvas.FillRect(self.ClientRect);
+    Canvas.FillRect(ClientRect);
 
-    {
-      Draw Borders
-    }
+    // Draw BOrders
     Canvas.Brush.Color := FBorderColor;
     ///
 
+    var ARect := TRect.Empty;
+
     if (ABorderTop > 0) then begin
-      ARect.Left   := 0;
-      ARect.Top    := 0;
       ARect.Width  := ClientWidth;
       ARect.Height := ABorderTop;
 
@@ -199,8 +194,8 @@ begin
     end;
 
     if (ABorderRight > 0) then begin
+      ARect        := TRect.Empty;
       ARect.Left   := (ClientWidth - ABorderRight);
-      ARect.Top    := 0;
       ARect.Width  := ABorderRight;
       ARect.Height := ClientHeight;
 
@@ -208,7 +203,7 @@ begin
     end;
 
     if (ABorderBottom > 0) then begin
-      ARect.Left   := 0;
+      ARect        := TRect.Empty;
       ARect.Top    := (ClientHeight - ABorderBottom);
       ARect.Width  := ClientWidth;
       ARect.Height := ABorderBottom;
@@ -217,8 +212,7 @@ begin
     end;
 
     if (ABorderLeft > 0) then begin
-      ARect.Left   := 0;
-      ARect.Top    := 0;
+      ARect        := TRect.Empty;
       ARect.Width  := ABorderLeft;
       ARect.Height := ClientHeight;
 
@@ -228,10 +222,6 @@ begin
     Canvas.UnLock();
   end;
 end;
-
-{-------------------------------------------------------------------------------
-  Getters / Setters
--------------------------------------------------------------------------------}
 
 procedure TFlatPanel.SetBorder(AIndex : Integer; AValue : Integer);
 begin
@@ -243,7 +233,7 @@ begin
   end;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatPanel.SetColor(AIndex : Integer; AValue : TColor);
@@ -254,7 +244,7 @@ begin
   end;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
 end.

@@ -42,7 +42,14 @@ unit NeoFlat.Form;
 
 interface
 
-uses Winapi.Windows, System.Classes, VCL.Controls, VCL.Forms, Winapi.Messages, VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VCL.Controls, VCL.Forms, VCL.Graphics;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatForm = class(TComponent)
@@ -55,7 +62,6 @@ type
 
     {@M}
     procedure OnCustomWindowProc(var AMessage : TMessage);
-    procedure SetResizable(AValue : Boolean);
     procedure SetShowBorder(const AValue : Boolean);
     procedure SetColor(const AValue : TColor);
   public
@@ -64,25 +70,24 @@ type
     destructor Destroy(); override;
   published
     {@G/S}
-    property Resizable  : Boolean read FResizable  write SetResizable;
+    property Resizable  : Boolean read FResizable  write FResizable;
     property ShowBorder : Boolean read FShowBorder write SetShowBorder;
     property Color      : TColor  read FColor      write SetColor;
   end;
 
 implementation
 
-uses NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
-{ TFlatForm.OnCustomWindowProc }
 procedure TFlatForm.OnCustomWindowProc(var AMessage : TMessage);
-var ADoCallBase : Boolean;
-    ARect       : TRect;
-    AFrameEdges : TRect;
 begin
-  ADoCallBase := True;
+  var ADoCallBase := True;
   try
     if (csDesigning in ComponentState) then
-      Exit();
+      Exit;
     ///
 
     case AMessage.Msg of
@@ -92,45 +97,43 @@ begin
           // Fix scaling issue when using HDPI. The Scale Factor is not available
           // Before owner form is shown, so we refresh this property to apply correct
           // border size (scaled)
-          self.SetShowBorder(FShowBorder);
+          SetShowBorder(FShowBorder);
       end;
 
       // Form Border Resize
       WM_NCHITTEST : begin
         if NOT FResizable then
-          Exit();
+          Exit;
         ///
 
-        AFrameEdges.Left   := 8;
-        AFrameEdges.Right  := 8;
-        AFrameEdges.Bottom := 8;
-        AFrameEdges.Top    := 8;
+        var AFrameEdges := Rect(8, 8, 8, 8);
 
         // Define corners
-        ARect.Left   := TWMNCHitTest(AMessage).XPos  - FOwnerForm.BoundsRect.Left;
+        var ARect : TRect;
+
+        ARect.Left    := TWMNCHitTest(AMessage).XPos  - FOwnerForm.BoundsRect.Left;
         ARect.Top    := TWMNCHitTest(AMessage).YPos  - FOwnerForm.BoundsRect.Top;
         ARect.Bottom := FOwnerForm.BoundsRect.Bottom - TWMNCHitTest(AMessage).YPos;
         ARect.Right  := FOwnerForm.BoundsRect.Right  - TWMNCHitTest(AMessage).XPos;
 
-        if (ARect.Top < AFrameEdges.Top) and (ARect.Left < AFrameEdges.Left) then begin
-          TWMNCHitTest(AMessage).Result := HTTOPLEFT;
-        end else if (ARect.Top < AFrameEdges.Top) and (ARect.Right < AFrameEdges.Right) then begin
-          TWMNCHitTest(AMessage).Result := HTTOPRIGHT;
-        end else if (ARect.Bottom < AFrameEdges.Bottom) and (ARect.Left < AFrameEdges.Left) then begin
-          TWMNCHitTest(AMessage).Result := HTBOTTOMLEFT;
-        end else if (ARect.Bottom < AFrameEdges.Bottom) and (ARect.Right < AFrameEdges.Right) then begin
-          TWMNCHitTest(AMessage).Result := HTBOTTOMRIGHT;
-        end else if (ARect.Top < AFrameEdges.Top) then begin
-          TWMNCHitTest(AMessage).Result := HTTOP;
-        end else if (ARect.Left < AFrameEdges.Left) then begin
-          TWMNCHitTest(AMessage).Result := HTLEFT;
-        end else if (ARect.Bottom < AFrameEdges.Bottom) then begin
-          TWMNCHitTest(AMessage).Result := HTBOTTOM;
-        end else if (ARect.Right < AFrameEdges.Right) then begin
-          TWMNCHitTest(AMessage).Result := HTRIGHT;
-        end else begin
+        if (ARect.Top < AFrameEdges.Top) and (ARect.Left < AFrameEdges.Left) then
+          TWMNCHitTest(AMessage).Result := HTTOPLEFT
+        else if (ARect.Top < AFrameEdges.Top) and (ARect.Right < AFrameEdges.Right) then
+          TWMNCHitTest(AMessage).Result := HTTOPRIGHT
+        else if (ARect.Bottom < AFrameEdges.Bottom) and (ARect.Left < AFrameEdges.Left) then
+          TWMNCHitTest(AMessage).Result := HTBOTTOMLEFT
+        else if (ARect.Bottom < AFrameEdges.Bottom) and (ARect.Right < AFrameEdges.Right) then
+          TWMNCHitTest(AMessage).Result := HTBOTTOMRIGHT
+        else if (ARect.Top < AFrameEdges.Top) then
+          TWMNCHitTest(AMessage).Result := HTTOP
+        else if (ARect.Left < AFrameEdges.Left) then
+          TWMNCHitTest(AMessage).Result := HTLEFT
+        else if (ARect.Bottom < AFrameEdges.Bottom) then
+          TWMNCHitTest(AMessage).Result := HTBOTTOM
+        else if (ARect.Right < AFrameEdges.Right) then
+          TWMNCHitTest(AMessage).Result := HTRIGHT
+        else
           TWMNCHitTest(AMessage).Result := HTCLIENT;
-        end;
 
         ///
         ADoCallBase := False;
@@ -142,7 +145,6 @@ begin
   end;
 end;
 
-{ TFlatForm.Create }
 constructor TFlatForm.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
@@ -151,10 +153,10 @@ begin
   FOwnerForm := nil;
 
   if NOT Assigned(AOwner) then
-    Exit();
+    Exit;
 
   if NOT (AOwner is TForm) then
-    Exit();
+    Exit;
   ///
 
   FOwnerForm := TForm(AOwner);
@@ -173,7 +175,6 @@ begin
   FResizable := True;
 end;
 
-{ TFlatForm.Destroy }
 destructor TFlatForm.Destroy();
 begin
   if Assigned(FOldWindowProc) then
@@ -183,21 +184,10 @@ begin
   inherited Destroy();
 end;
 
-{ TFlatForm.SetResizable }
-procedure TFlatForm.SetResizable(AValue : Boolean);
-begin
-  if (FResizable = AValue) then
-    Exit();
-  ///
-
-  FResizable := AValue;
-end;
-
-{ TFlatForm.SetShowBorder }
 procedure TFlatForm.SetShowBorder(const AValue : Boolean);
 begin
   if not Assigned(FOwnerForm) then
-    Exit();
+    Exit;
   ///
 
   if AValue then
@@ -208,11 +198,10 @@ begin
   FShowBorder := AValue;
 end;
 
-{ TFlatForm.SetColor }
 procedure TFlatForm.SetColor(const AValue : TColor);
 begin
   if not Assigned(FOwnerForm) then
-    Exit();
+    Exit;
   ///
 
   FColor           := AValue;

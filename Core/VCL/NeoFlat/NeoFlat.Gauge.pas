@@ -43,7 +43,14 @@ unit NeoFlat.Gauge;
 
 interface
 
-uses System.Classes, VCL.Graphics, VCL.Controls, Winapi.Windows, VCL.ExtCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VCL.Graphics, VCL.Controls, VCL.ExtCtrls;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFlatGaugeMode = (
@@ -78,7 +85,6 @@ type
     FProgress         : Integer;
 
     FTextMode         : TFlatGaugeTextMode;
-    FText             : String;
 
     FMode             : TFlatGaugeMode;
 
@@ -94,10 +100,9 @@ type
 
     procedure DrawMarquee(const AClientRect : TRect);
     procedure DrawProgress(const AClientRect : TRect);
-    procedure DrawText(const AClientRect : TRect);
+    procedure DrawText(AClientRect : TRect);
 
     procedure SetMode(const AValue : TFlatGaugeMode);
-    procedure SetText(const AValue : String);
     procedure SetTextMode(const AValue : TFlatGaugeTextMode);
     procedure SetState(const AValue : TFlatGaugeState);
 
@@ -105,40 +110,45 @@ type
   protected
     {@M}
     procedure Paint; override;
+
+    procedure CMTextChanged(var AMessage: TMessage); message CM_TEXTCHANGED;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
     destructor Destroy(); override;
   published
-    {@G/S}
-    property Background  : TColor index 0  read FBackground  write SetColor;
-    property Border      : TColor index 1  read FBorder      write SetColor;
-    property Foreground  : TColor index 2  read FForeground  write SetColor;
+    property Align;
+    property AlignWithMargins;
+    property Caption;
+    property Margins;
+    property Visible;
+    property Enabled;
+    property Font;
 
+    {@G/S}
+    property Background  : TColor  index 0 read FBackground  write SetColor;
+    property Border      : TColor  index 1 read FBorder      write SetColor;
+    property Foreground  : TColor  index 2 read FForeground  write SetColor;
     property BorderWidth : Integer index 0 read FBorderWidth write SetInteger;
     property Max         : Integer index 1 read FMax         write SetInteger;
     property Progress    : Integer index 2 read FProgress    write SetInteger;
 
     property State    : TFlatGaugeState    read FState    write SetState;
     property Mode     : TFlatGaugeMode     read FMode     write SetMode;
-    property Text     : String           read FText     write SetText;
     property TextMode : TFlatGaugeTextMode read FTextMode write SetTextMode;
-
-    property Align;
-    property AlignWithMargins;
-    property Margins;
-    property Visible;
-    property Enabled;
-    property Font;
   end;
 
 implementation
 
-uses NeoFlat.Theme, Winapi.GDIPAPI, Winapi.GDIPOBJ, System.SysUtils, System.Math;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Math, System.Types,
 
-{-------------------------------------------------------------------------------
-  When Marquee Timer get triggered
--------------------------------------------------------------------------------}
+  WinApi.GDIPAPI, WinApi.GDIPOBJ,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
+
 procedure TFlatGauge.OnTimerMarquee(Sender : TObject);
 begin
   Inc(FMarqueeProgress);
@@ -153,12 +163,9 @@ begin
   end;
 
   ///
-  self.Invalidate();
+  Invalidate;
 end;
 
-{-------------------------------------------------------------------------------
-  ___constructor
--------------------------------------------------------------------------------}
 constructor TFlatGauge.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
@@ -171,14 +178,14 @@ begin
   FMax              := 100;
   FProgress         := 50;
 
-  self.Width        := 300;
-  self.Height       := 21;
+  Width             := ScaleValue(300);
+  Height            := ScaleValue(21);
 
   Font.Name         := FONT_1;
-  Font.Size         := 8;
+  Font.Height       := -11;
   Font.Color        := clWhite;
 
-  FText             := '';
+  Caption           := '';
 
   FMode             := gmProgressBar;
   FTextMode         := gtmProgress;
@@ -187,7 +194,7 @@ begin
   FMarqueeProgress  := 0;
   FMarqueeDirection := mdLeftToRight;
 
-  self.ShowHint     := True;
+  ShowHint := True;
 
   FMarqueeTimer          := TTimer.Create(self);
   FMarqueeTimer.Interval := 10;
@@ -195,9 +202,6 @@ begin
   FMarqueeTimer.OnTimer  := OnTimerMarquee;
 end;
 
-{-------------------------------------------------------------------------------
-  ___destructor
--------------------------------------------------------------------------------}
 destructor TFlatGauge.Destroy();
 begin
   if Assigned(FMarqueeTimer) then
@@ -207,36 +211,26 @@ begin
   inherited Destroy();
 end;
 
-{-------------------------------------------------------------------------------
-  Draw Marquee Animation
--------------------------------------------------------------------------------}
 procedure TFlatGauge.DrawMarquee(const AClientRect : TRect);
-var AGraphics      : TGPGraphics;
-    ABrush         : TGPLinearGradientBrush;
-    AGPRect        : TGPRect;
-    AProgressWidth : Integer;
-    AColor1        : LongInt;
-    AColor2        : LongInt;
 
-    function GetColor(AColor : TColor) : Longint;
-    begin
-      result := MakeColor(
-                            GetRValue(AColor),
-                            GetGValue(AColor),
-                            GetBValue(AColor)
-      );
-    end;
+  function GetColor(const AColor : TColor) : Longint;
+  begin
+    result := MakeColor(GetRValue(AColor), GetGValue(AColor), GetBValue(AColor));
+  end;
 
 begin
-  AGraphics := TGPGraphics.Create(Canvas.Handle);
+  var AGraphics := TGPGraphics.Create(Canvas.Handle);
   try
+    var AGPRect : TGPRect;
+
     AGPRect.X      := AClientRect.Left;
     AGPRect.Y      := AClientRect.Top;
     AGPRect.Width  := AClientRect.Width;
     AGPRect.Height := AClientRect.Height;
 
-    AProgressWidth := ceil((FMarqueeProgress * AClientRect.Width) div 100);
+    var AProgressWidth := ceil((FMarqueeProgress * AClientRect.Width) div 100);
 
+    var AColor1, AColor2 : LongInt;
     if FMarqueeDirection = mdLeftToRight then begin
       AColor1 := GetColor(FBackground);
       AColor2 := GetColor(FForeground);
@@ -255,17 +249,9 @@ begin
 
     AGPRect.Width := AProgressWidth;
 
-    ABrush := TGPLinearGradientBrush.Create(
-                                              AGPRect,
-                                              AColor1,
-                                              AColor2,
-                                              LinearGradientModeHorizontal
-    );
+    var ABrush := TGPLinearGradientBrush.Create(AGPRect, AColor1, AColor2, LinearGradientModeHorizontal);
     try
-      AGraphics.FillRectangle(
-                                ABrush,
-                                AGPRect
-      );
+      AGraphics.FillRectangle(ABrush, AGPRect);
     finally
       if Assigned(ABrush) then
         FreeAndNil(ABrush);
@@ -276,80 +262,55 @@ begin
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  Draw Progress Bar
--------------------------------------------------------------------------------}
 procedure TFlatGauge.DrawProgress(const AClientRect : TRect);
-var ARect  : TRect;
-    AWidth : Integer;
 begin
   Canvas.Brush.Color := FForeground;
 
-  ARect.Left  := AClientRect.Left;
-  ARect.Top   := AClientRect.Top;
-
-  AWidth := ceil((FProgress * AClientRect.Width) div 100);
+  var AWidth := ceil((FProgress * AClientRect.Width) div 100);
 
   if AWidth > AClientRect.Width then
     AWidth := AClientRect.Width;
 
+  var ARect  := TRect.Empty;
+
+  ARect.Left   := AClientRect.Left;
+  ARect.Top    := AClientRect.Top;
   ARect.Height := AClientRect.Height;
   ARect.Width  := AWidth;
 
   Canvas.FillRect(ARect);
 end;
 
-{-------------------------------------------------------------------------------
-  Draw Text
--------------------------------------------------------------------------------}
-procedure TFlatGauge.DrawText(const AClientRect : TRect);
-var AText       : String;
-    ATextFormat : TTextFormat;
-    ATextRect   : TRect;
+procedure TFlatGauge.DrawText(AClientRect : TRect);
 begin
   if (FTextMode = gtmNone) then
-    Exit();
+    Exit;
   ///
 
+  var AText := '';
   case FTextMode of
     gtmProgress : AText := Format('%d%%', [FProgress]);
-    gtmCustom   : AText := FText;
+    gtmCustom   : AText := Caption;
   end;
-
-  ATextRect := AClientRect;
 
   Canvas.Brush.Style := bsClear;
 
-  ATextFormat := [
-                    tfCenter,
-                    tfEndEllipsis,
-                    tfSingleLine,
-                    tfVerticalCenter
-  ];
-
-  Canvas.TextRect(ATextRect, AText, ATextFormat);
+  Canvas.TextRect(AClientRect, AText, [tfCenter, tfEndEllipsis, tfSingleLine, tfVerticalCenter]);
 end;
 
-{-------------------------------------------------------------------------------
-  ___paint
--------------------------------------------------------------------------------}
 procedure TFlatGauge.Paint;
-var ARect       : TRect;
-    AClientRect : TRect;
-    AFont       : TFont;
 begin
   inherited;
   ///
 
   Canvas.Lock();
   try
-    AFont := TFont.Create();
+    var AFont := TFont.Create();
     try
       AFont.Assign(Font);
       ///
 
-      AClientRect.Left   := 0;
-      AClientRect.Top    := 0;
+      var AClientRect    := TRect.Empty;
       AClientRect.Width  := ClientWidth;
       AClientRect.Height := ClientHeight;
 
@@ -370,45 +331,39 @@ begin
 
       Canvas.Font.Assign(AFont);
 
-      {
-        Draw Bg
-      }
+      // Background
       if FBackground <> clNone then begin
         Canvas.Brush.Color := FBackground;
 
         Canvas.FillRect(AClientRect);
       end;
 
-      {
-        Draw Border
-      }
+      // Border
       if (FBorderWidth > 0) and (ABorder <> clNone) then begin
         Canvas.Brush.Color := ABorder;
         ///
 
-        ARect.Left   := 0;
-        ARect.Top    := 0;
+        var ARect    := TRect.Empty;
         ARect.Width  := ClientWidth;
         ARect.Height := FBorderWidth;
 
         Canvas.FillRect(ARect);
 
+        ARect        := TRect.Empty;
         ARect.Left   := (ClientWidth - FBorderWidth);
-        ARect.Top    := 0;
         ARect.Width  := FBorderWidth;
         ARect.Height := ClientHeight;
 
         Canvas.FillRect(ARect);
 
-        ARect.Left   := 0;
+        ARect        := TRect.Empty;
         ARect.Top    := (ClientHeight - FBorderWidth);
         ARect.Width  := ClientWidth;
         ARect.Height := FBorderWidth;
 
         Canvas.FillRect(ARect);
 
-        ARect.Left   := 0;
-        ARect.Top    := 0;
+        ARect        := TRect.Empty;
         ARect.Width  := FBorderWidth;
         ARect.Height := ClientHeight;
 
@@ -418,20 +373,15 @@ begin
         InflateRect(AClientRect, -FBorderWidth, -FBorderWidth);
       end;
 
-
-      {
-        Draw Marquee or Progress
-      }
+      // Draw Progress / Marquee
       case FMode of
-        gmProgressBar : self.DrawProgress(AClientRect);
-        gmMarquee     : self.DrawMarquee(AClientRect);
+        gmProgressBar : DrawProgress(AClientRect);
+        gmMarquee     : DrawMarquee(AClientRect);
       end;
 
-      {
-        Draw Text
-      }
+      // Draw Caption
       if not ((FMode = gmMarquee) and (FTextMode = gtmProgress)) then
-        self.DrawText(AClientRect);
+        DrawText(AClientRect);
     finally
       if Assigned(AFont) then
         FreeAndNil(AFont);
@@ -441,9 +391,13 @@ begin
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  Getters / Setters
--------------------------------------------------------------------------------}
+procedure TFlatGauge.CMTextChanged(var AMessage: TMessage);
+begin
+  inherited;
+
+  ///
+  Invalidate;
+end;
 
 procedure TFlatGauge.SetColor(const AIndex : Integer; const AColor : TColor);
 begin
@@ -454,7 +408,7 @@ begin
   end;
 
   ///
-  self.Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatGauge.SetInteger(const AIndex, AValue : Integer);
@@ -466,13 +420,14 @@ begin
   end;
 
   ///
-  self.Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatGauge.SetMode(const AValue : TFlatGaugeMode);
 begin
   if FMode = AValue then
-    Exit();
+    Exit;
+  ///
 
   FMode := AValue;
 
@@ -484,40 +439,31 @@ begin
   end;
 
   ///
-  self.Invalidate();
-end;
-
-procedure TFlatGauge.SetText(const AValue : String);
-begin
-  if AValue = FText then
-    Exit();
-
-  FText := AValue;
-
-  ///
-  self.Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatGauge.SetTextMode(const AValue : TFlatGaugeTextMode);
 begin
   if AValue = FTextMode then
-    Exit();
+    Exit;
+  ///
 
   FTextMode := AValue;
 
   ///
-  self.Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatGauge.SetState(const AValue : TFlatGaugeState);
 begin
   if AValue = FState then
-    Exit();
+    Exit;
+  ///
 
   FState := AValue;
 
   ///
-  self.Invalidate();
+  Invalidate;
 end;
 
 end.

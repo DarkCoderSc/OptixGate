@@ -43,10 +43,24 @@ unit NeoFlat.Hint;
 
 interface
 
-uses System.Classes, VCL.Controls, Winapi.Windows, VCl.Graphics, NeoFlat.Helper, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows,
+
+  VCL.Controls, VCl.Graphics,
+
+  NeoFlat.Helper, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TArrowPos = (apBottomRight, apBottomLeft, apTopRight, apTopLeft);
+  TArrowPos = (
+    apBottomRight,
+    apBottomLeft,
+    apTopRight,
+    apTopLeft
+  );
 
   THintInfo = record
     HintShow       : Boolean;
@@ -80,7 +94,7 @@ type
     {@M}
     procedure CreateParams(var AParams: TCreateParams); override;
 
-    procedure Paint(); override;
+    procedure Paint; override;
   public
     {@M}
     procedure ActivateHint(AHintRect: TRect; const AHint: String); override;
@@ -104,7 +118,14 @@ type
 
 implementation
 
-uses VCL.Forms, NeoFlat.Theme, System.Types, System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Types, System.SysUtils,
+
+  VCL.Forms,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
 (* TFlatHint *)
 
@@ -123,12 +144,15 @@ end;
 procedure TFlatHint.SetActive(const AValue : Boolean);
 begin
   if FActive = AValue then
-    Exit();
+    Exit;
+  ///
 
   FActive := AValue;
 
+  ///
   if (csDesigning in ComponentState) then
-    Exit();
+    Exit;
+  ///
 
   if FActive then begin
     FOldHintWindowClass := HintWindowClass;
@@ -164,7 +188,7 @@ begin
   GetCursorPos(ACursorPos);
   var AWinControl := FindVCLWindow(ACursorPos);
   if not Assigned(AWinControl) then
-    Exit();
+    Exit;
   ///
 
   FMetrics := TFlatMetrics.Create(AWinControl);
@@ -191,14 +215,6 @@ begin
 end;
 
 procedure TFlatHintWindow.ActivateHint(AHintRect: TRect; const AHint: String);
-var ACurWidth       : Integer;
-    APoint          : TPoint;
-    AHintHeight     : Integer;
-    AHintWidth      : Integer;
-
-    ATopLeftRect    : TRect;
-    ATopRightRect   : TRect;
-    ABottomLeftRect : TRect;
 begin
   const HINT_WIDTH = FMetrics.ScaleValue(400);
   ///
@@ -216,28 +232,30 @@ begin
   Inc(AHintRect.Right, FMetrics.ScaleValue(22));
   Inc(AHintRect.Bottom, FMetrics._6);
 
-  ATopLeftRect    := Rect(0, 0, Screen.Width div 2, Screen.Height div 2);
-  ATopRightRect   := Rect(Screen.Width div 2, 0, Screen.Width, Screen.Height div 2);
-  ABottomLeftRect := Rect(0, Screen.Height div 2, Screen.Width div 2, Screen.Height);
+  var ATopLeftRect    := Rect(0, 0, Screen.Width div 2, Screen.Height div 2);
+  var ATopRightRect   := Rect(Screen.Width div 2, 0, Screen.Width, Screen.Height div 2);
+  var ABottomLeftRect := Rect(0, Screen.Height div 2, Screen.Width div 2, Screen.Height);
 
+  var APoint : TPoint;
   GetCursorPos(APoint);
 
-  if PtInRect(ATopLeftRect, APoint) then
+  if ptinrect(ATopLeftRect, APoint) then
     FArrowPos := apTopLeft
-  else if PtInRect(ATopRightRect, APoint) then
+  else if ptinrect(ATopRightRect, APoint) then
     FArrowPos := apTopRight
-  else if PtInRect(ABottomLeftRect, APoint) then
+  else if ptinrect(ABottomLeftRect, APoint) then
     FArrowPos := apBottomLeft
   else
     FArrowPos := apBottomRight;
 
+  var ACurWidth : Integer;
   if FArrowPos = apTopLeft then
     ACurWidth := FMetrics._12
   else
     ACurWidth := FMetrics._5;
 
-  AHintHeight := AHintRect.Bottom - AHintRect.Top;
-  AHintWidth  := AHintRect.Right - AHintRect.Left;
+  var AHintHeight := AHintRect.Bottom - AHintRect.Top;
+  var AHintWidth  := AHintRect.Right - AHintRect.Left;
 
   case FArrowPos of
     apTopLeft : AHintRect := Rect(
@@ -277,7 +295,7 @@ begin
   SetWindowPos(Handle, HWND_TOPMOST, APoint.X, APoint.Y, 0, 0, (SWP_SHOWWINDOW or SWP_NOACTIVATE or SWP_NOSIZE));
 end;
 
-procedure TFlatHintWindow.Paint();
+procedure TFlatHintWindow.Paint;
 begin
   var AArrowAreaRect := TRect.Empty;
   var ATextRect      := TRect.Empty;
@@ -336,7 +354,7 @@ begin
     var AGlyph : TMatrixGlyph;
     ScaleMatrixGlyph(ARROW_TOP_RIGHT_GLYPH, AGlyph, round(FMetrics.ScaleFactor));
     if not IsValidMatrixGlyph(AGlyph) then
-      Exit();
+      Exit;
 
     var AArrowPos : TPoint;
 

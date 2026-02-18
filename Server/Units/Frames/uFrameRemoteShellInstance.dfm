@@ -85,7 +85,7 @@ object FrameRemoteShellInstance: TFrameRemoteShellInstance
       ShowHint = True
       TabOrder = 0
       OnKeyUp = EditCommandKeyUp
-      Status = csNormal
+      Status = cStatusNormal
       Validators = []
       ShowBorder = True
     end

@@ -44,9 +44,23 @@ unit NeoFlat.Types;
 interface
 
 type
+  TFlatControlState = (
+                      csNormal,
+                      csHover,
+                      csActive
+  );
+
+  TFlatControlStateEx = (
+                      csExNormal,
+                      csExHover,
+                      csExActive,
+                      csExFocus,
+                      csExDisabled
+  );
+
   TControlStatus = (
-    csNormal,
-    csError
+    cStatusNormal,
+    cStatusError
   );
 
   TValidator = (

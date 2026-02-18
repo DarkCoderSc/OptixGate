@@ -94,7 +94,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         ShowHint = True
         TabOrder = 0
         OnKeyUp = EditNameKeyUp
-        Status = csNormal
+        Status = cStatusNormal
         Validators = []
         ShowBorder = True
         ExplicitWidth = 439
@@ -113,6 +113,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Left = 0
         Top = 0
         Caption = 'SZ'
+        ExplicitWidth = 447
+        ExplicitHeight = 398
         object PanelSZ: TPanel
           Left = 0
           Top = 0
@@ -125,6 +127,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           Padding.Right = 4
           Padding.Bottom = 4
           TabOrder = 0
+          ExplicitWidth = 447
+          ExplicitHeight = 398
           object Label1: TLabel
             AlignWithMargins = True
             Left = 4
@@ -157,9 +161,10 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             ShowHint = True
             TabOrder = 0
             OnKeyUp = EditNameKeyUp
-            Status = csNormal
+            Status = cStatusNormal
             Validators = []
             ShowBorder = True
+            ExplicitWidth = 439
           end
         end
       end
@@ -167,6 +172,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Left = 0
         Top = 0
         Caption = 'MSZ'
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object PanelMSZ: TPanel
           Left = 0
           Top = 0
@@ -182,7 +189,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             AlignWithMargins = True
             Left = 4
             Top = 4
-            Width = 449
+            Width = 30
             Height = 13
             Margins.Left = 0
             Margins.Top = 0
@@ -190,7 +197,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Bottom = 4
             Align = alTop
             Caption = 'Value:'
-            ExplicitWidth = 30
           end
           object PanelRichMSZ: TFlatPanel
             AlignWithMargins = True
@@ -265,7 +271,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             AlignWithMargins = True
             Left = 4
             Top = 4
-            Width = 449
+            Width = 30
             Height = 13
             Margins.Left = 0
             Margins.Top = 0
@@ -273,9 +279,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Bottom = 4
             Align = alTop
             Caption = 'Value:'
-            ExplicitLeft = 8
-            ExplicitTop = 8
-            ExplicitWidth = 30
           end
           object EditQDword: TFlatEdit
             Left = 4
@@ -296,7 +299,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             TabOrder = 0
             Text = '0'
             OnKeyPress = EditQDwordKeyPress
-            Status = csNormal
+            Status = cStatusNormal
             Validators = []
             ShowBorder = True
             ExplicitLeft = 8
@@ -328,7 +331,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Padding.Bottom = 8
             ParentColor = False
             TabOrder = 1
-            ColorBorder = clBlack
             ExplicitLeft = 8
             ExplicitTop = 52
             ExplicitWidth = 441
@@ -337,16 +339,16 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
               Top = 16
               Width = 433
               Height = 25
-              Caption = 'Decimal'
-              Mode = cbmRadioBox
-              Checked = True
-              OnStateChanged = RadioBaseDecimalStateChanged
               Align = alTop
+              Caption = 'Decimal'
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              Mode = cbmRadioBox
+              Checked = True
+              OnStateChanged = RadioBaseDecimalStateChanged
               ExplicitLeft = 0
               ExplicitTop = 0
               ExplicitWidth = 302
@@ -356,16 +358,16 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
               Top = 41
               Width = 433
               Height = 25
-              Caption = 'Hexadecimal'
-              Mode = cbmRadioBox
-              Checked = False
-              OnStateChanged = RadioBaseHexadecimalStateChanged
               Align = alTop
+              Caption = 'Hexadecimal'
               Font.Charset = DEFAULT_CHARSET
               Font.Color = clBlack
               Font.Height = -11
               Font.Name = 'Tahoma'
               Font.Style = []
+              Mode = cbmRadioBox
+              Checked = False
+              OnStateChanged = RadioBaseHexadecimalStateChanged
               ExplicitLeft = 13
               ExplicitTop = 72
               ExplicitWidth = 270
@@ -377,6 +379,8 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Left = 0
         Top = 0
         Caption = 'Binary'
+        ExplicitWidth = 0
+        ExplicitHeight = 0
         object PanelBinary: TPanel
           Left = 0
           Top = 0
@@ -418,6 +422,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Margins.Top = 8
         Margins.Right = 4
         Margins.Bottom = 6
+        Caption = 'XXX'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -426,7 +431,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Align = alRight
         ShowHint = True
         ImageIndex = -1
-        Caption = 'XXX'
         Value = 0
         OnClick = ButtonActionClick
         Busy = False
@@ -443,6 +447,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Margins.Top = 8
         Margins.Right = 4
         Margins.Bottom = 6
+        Caption = 'Cancel'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -451,7 +456,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Align = alRight
         ShowHint = True
         ImageIndex = -1
-        Caption = 'Cancel'
         Value = 0
         OnClick = ButtonCancelClick
         Busy = False

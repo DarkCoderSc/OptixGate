@@ -43,7 +43,14 @@ unit NeoFlat.Validators;
 
 interface
 
-uses NeoFlat.Types, VCL.Controls, System.Classes, NeoFlat.Panel;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  VCL.Controls,
+
+  NeoFlat.Types, NeoFlat.Panel;
+// ---------------------------------------------------------------------------------------------------------------------
 
 function IsValidIpAddress(const AIP : String) : Boolean;
 function IsValidHost(const AHost : String) : Boolean;
@@ -56,11 +63,15 @@ function Validate(const AInput : String; const AValidators : TValidators) : Bool
 
 implementation
 
-uses System.RegularExpressions, System.SysUtils, NeoFlat.Edit, NeoFlat.ComboBox, Winapi.Windows;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.RegularExpressions, System.SysUtils,
 
-{-------------------------------------------------------------------------------
+  Winapi.Windows,
 
--------------------------------------------------------------------------------}
+  NeoFlat.Edit, NeoFlat.ComboBox;
+// ---------------------------------------------------------------------------------------------------------------------
+
 function Validate(const AInput : String; const AValidators : TValidators) : Boolean;
 begin
   result := False;
@@ -69,69 +80,58 @@ begin
   { Filled }
   if reqFilled in AValidators then
     if Length(Trim(AInput)) = 0 then
-      Exit();
+      Exit;
 
   { Ip Address }
   if reqIpAddress in AValidators then
     if not IsValidIpAddress(AInput) then
-      Exit();
+      Exit;
 
   { Host }
   if reqHost in AValidators then
     if not IsValidHost(AInput) then
-      Exit();
+      Exit;
 
   { TCP / UDP Port }
   if reqNetPort in AValidators then
     if not IsValidPort(AInput) then
-      Exit();
+      Exit;
 
   ///
   result := True;
 end;
 
-{-------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------}
 function IsValidIpAddress(const AIP : String) : Boolean;
 begin
-  result := TRegEx.IsMatch(AIP, '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$');
+  result := TRegEx.IsMatch(AIP,
+    '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$'
+  );
 end;
 
-{-------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------}
 function IsValidHost(const AHost : String) : Boolean;
 begin
-  result := TRegEx.IsMatch(AHost, '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$');
+  result := TRegEx.IsMatch(AHost,
+    '^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$'
+  );
 end;
 
-{-------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------}
 function IsValidNetworkAddress(const AValue : String) : Boolean;
 begin
   result := IsValidIpAddress(AValue) or
             IsValidHost(AValue);
 end;
 
-{-------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------}
 function IsValidPort(const APort : Integer) : Boolean;
 begin
   result := (APort >= Low(word)) and (APort <= High(word));
 end;
 
-{-------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------}
 function IsValidPort(const APort : String) : Boolean;
 var AValue : Integer;
 begin
   result := False;
   if not TryStrToInt(APort, AValue) then
-    Exit();
+    Exit;
   ///
 
   result := IsValidPort(AValue);

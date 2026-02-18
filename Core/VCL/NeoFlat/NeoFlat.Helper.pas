@@ -125,7 +125,7 @@ procedure DrawMatrixGlyph(const ACanvas : TCanvas; const AGlyphMatrix : TMatrixG
   const AGlyphColor : TColor);
 begin
   if not Assigned(ACanvas) or not IsValidMatrixGlyph(AGlyphMatrix) then
-    Exit();
+    Exit;
   ///
 
   for var I := 0 to Length(AGlyphMatrix[0]) -1 do
@@ -144,7 +144,7 @@ procedure ScaleMatrixGlyph(const AGlyph: TMatrixGlyph; var AScaledGlyph : TMatri
 begin
   if not IsValidMatrixGlyph(AGlyph) then begin
     SetLength(AScaledGlyph, 0);
-    Exit();
+    Exit;
   end;
   ///
 
@@ -170,7 +170,7 @@ begin
 
   var ARowLength := Length(AGlyph);
   if ARowLength = 0 then
-    Exit();
+    Exit;
 
   var AColumnLength := Length(AGlyph[0]);
 
@@ -190,7 +190,7 @@ procedure DrawGlyph(const ACanvas : TCanvas; const AImageList : TCustomImageList
   const X, Y : Integer; const AEnabled : Boolean);
 begin
   if not Assigned(AImageList) or (AImageIndex <= -1) then
-    Exit();
+    Exit;
 
   var AGlyph := TBitmap.Create();
   try
@@ -215,7 +215,7 @@ begin
   ///
 
   if not Assigned(ABase) then
-    Exit();
+    Exit;
 
   var AList := TStringList.Create();
   try
@@ -246,7 +246,7 @@ end;
 procedure InitializeBitmap32(var ABmp : TBitmap; AWidth, AHeight : Integer);
 begin
   if NOT Assigned(ABmp) then
-    Exit();
+    Exit;
   ///
 
   ABmp.PixelFormat   := pf32Bit;

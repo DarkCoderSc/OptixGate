@@ -3,8 +3,8 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
   Top = 0
   BorderStyle = bsDialog
   Caption = 'New Content Reader'
-  ClientHeight = 120
-  ClientWidth = 346
+  ClientHeight = 88
+  ClientWidth = 336
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,8 +22,8 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
   object PanelMain: TFlatPanel
     Left = 0
     Top = 0
-    Width = 346
-    Height = 120
+    Width = 336
+    Height = 88
     BorderTop = 0
     BorderLeft = 0
     BorderRight = 0
@@ -42,10 +42,6 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
     Padding.Left = 8
     Padding.Top = 8
     Padding.Right = 8
-    ExplicitLeft = 48
-    ExplicitTop = 16
-    ExplicitWidth = 100
-    ExplicitHeight = 41
     object PanelBottom: TFlatPanel
       Left = 8
       Top = 85
@@ -66,20 +62,21 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Font.Style = []
       ParentFont = False
       TabOrder = 0
-      ExplicitTop = 88
+      ExplicitTop = 53
+      ExplicitWidth = 320
       object ButtonCancel: TFlatButton
         Left = 136
         Top = 6
         Width = 65
         Height = 20
+        Caption = 'Cancel'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
+        ShowHint = True
         ImageIndex = -1
-        Enabled = True
-        Caption = 'Cancel'
         Value = 0
         OnClick = ButtonCancelClick
         Busy = False
@@ -89,14 +86,14 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         Top = 12
         Width = 65
         Height = 20
+        Caption = 'Start'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
+        ShowHint = True
         ImageIndex = -1
-        Enabled = True
-        Caption = 'Start'
         Value = 0
         OnClick = ButtonStartClick
         Busy = False
@@ -122,10 +119,8 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       ParentFont = False
       TabOrder = 1
       Padding.Left = 16
-      ExplicitLeft = 65
-      ExplicitTop = 0
-      ExplicitWidth = 331
-      ExplicitHeight = 137
+      ExplicitWidth = 271
+      ExplicitHeight = 45
       object LabelPageSize: TLabel
         AlignWithMargins = True
         Left = 16
@@ -138,9 +133,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         Margins.Bottom = 0
         Align = alTop
         Caption = 'File Path:'
-        ExplicitLeft = 19
-        ExplicitTop = 61
-        ExplicitWidth = 299
+        ExplicitWidth = 45
       end
       object Label2: TLabel
         Left = 16
@@ -159,7 +152,6 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         Align = alTop
         AutoSize = False
         Color = clWhite
-        Enabled = True
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -170,12 +162,10 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         ShowHint = True
         TabOrder = 0
         Text = 'C:\Temp\test.png'
-        Status = csNormal
+        Status = cStatusNormal
         Validators = []
         ShowBorder = True
-        ExplicitLeft = 32
-        ExplicitTop = 24
-        ExplicitWidth = 121
+        ExplicitWidth = 255
       end
       object EditPageSize: TFlatEdit
         Left = 16
@@ -185,7 +175,6 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         Align = alTop
         AutoSize = False
         Color = clWhite
-        Enabled = True
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -197,12 +186,10 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         ShowHint = True
         TabOrder = 1
         Text = '1024'
-        Status = csNormal
+        Status = cStatusNormal
         Validators = []
         ShowBorder = True
-        ExplicitLeft = 6
-        ExplicitTop = 75
-        ExplicitWidth = 299
+        ExplicitWidth = 255
       end
     end
     object PanelLeft: TFlatPanel
@@ -225,7 +212,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Font.Style = []
       ParentFont = False
       TabOrder = 2
-      ExplicitHeight = 80
+      ExplicitHeight = 45
       object SkSvg1: TSkSvg
         Left = 0
         Top = 0

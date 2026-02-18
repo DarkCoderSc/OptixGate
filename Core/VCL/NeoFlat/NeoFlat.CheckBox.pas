@@ -43,18 +43,24 @@ unit NeoFlat.CheckBox;
 
 interface
 
-uses Winapi.Windows, VCL.Controls, System.Classes, VCL.Graphics, Winapi.Messages,
-     NeoFlat.Theme, NeoFlat.Helper, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows, Winapi.Messages,
+
+  VCL.Controls,  VCL.Graphics,
+
+  NeoFlat.Theme, NeoFlat.Helper, NeoFlat.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TCheckBoxMode = (cbmCheckBox, cbmRadioBox);
 
-  TControlState = (csNormal, csHover, csActive);
-
   TFlatCheckBox = class(TCustomControl)
   private
     FMode           : TCheckBoxMode;
-    FControlState   : TControlState;
+    FControlState   : TFlatControlState;
 
     FMouseHover     : Boolean;
 
@@ -73,26 +79,23 @@ type
     FOnStateChanged : TNotifyEvent;
 
     {@M}
-    procedure SetCaption(AValue : String);
-    function GetCaption() : String;
-
-    procedure SetMode(AValue : TCheckBoxMode);
+    procedure SetMode(const AValue : TCheckBoxMode);
 
     procedure AdjustBound();
 
     function IsDesigning() : Boolean;
 
-    procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
+    procedure CMFontChanged(var AMessage: TMessage); message CM_FONTCHANGED;
 
     procedure OnCustomWindowProc(var AMessage : TMessage);
 
-    procedure SetControlState(AValue : TControlState);
+    procedure SetControlState(const AValue : TFlatControlState);
     procedure SetChecked(AValue : Boolean);
 
     function GetButtonRect() : TRect;
   protected
     {@M}
-    procedure Paint(); override;
+    procedure Paint; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
 
@@ -105,18 +108,18 @@ type
     constructor Create(AOwner : TComponent); override;
     destructor Destroy(); override;
   published
-    {@G/S}
-    property Caption        : String        read GetCaption      write SetCaption;
-    property Mode           : TCheckBoxMode read FMode           write SetMode;
-    property Checked        : Boolean       read FChecked        write SetChecked;
-    property OnStateChanged : TNotifyEvent  read FOnStateChanged write FOnStateChanged;
-
     property Align;
     property AlignWithMargins;
+    property Caption;
     property Margins;
     property Visible;
     property Enabled;
     property Font;
+
+    {@G/S}
+    property Mode           : TCheckBoxMode read FMode           write SetMode;
+    property Checked        : Boolean       read FChecked        write SetChecked;
+    property OnStateChanged : TNotifyEvent  read FOnStateChanged write FOnStateChanged;
   end;
 
   const CHECKBOX_GLYPH_TEMPLATE : TMatrixGlyph = [
@@ -140,7 +143,10 @@ type
 
 implementation
 
-uses System.SysUtils, System.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
 function TFlatCheckBox.GetButtonRect() : TRect;
 begin
@@ -184,8 +190,15 @@ begin
   FOldWindowProc(AMessage);
   ///
 
+  case AMessage.Msg of
+    CM_TEXTCHANGED :
+      Invalidate;
+  end;
+
+  ///
   if (csDesigning in ComponentState) then
-    Exit();
+    Exit;
+  ///
 
   case AMessage.Msg of
     WM_LBUTTONDOWN : begin
@@ -208,7 +221,7 @@ begin
       ///
 
       if (FControlState = csActive) then
-        Exit();
+        Exit;
 
       SetControlState(csHover);
     end;
@@ -296,7 +309,7 @@ begin
   Height := (AMetrics.tmHeight + FMetrics._6);
 end;
 
-procedure TFlatCheckBox.Paint();
+procedure TFlatCheckBox.Paint;
 begin
   Canvas.Lock();
   try
@@ -472,54 +485,37 @@ begin
   end;
 end;
 
-procedure TFlatCheckBox.CMFontChanged(var Message: TMessage);
+procedure TFlatCheckBox.CMFontChanged(var AMessage: TMessage);
 begin
   inherited;
   ///
 
-  if NOT IsDesigning() and (csLoading in ComponentState) then
+  if not IsDesigning() and (csLoading in ComponentState) then
     AdjustBound();
 end;
 
-procedure TFlatCheckBox.SetCaption(AValue : String);
-begin
-  if (AValue = inherited Caption) then
-    Exit();
-  ///
-
-  inherited Caption := AValue;
-
-  ///
-  Invalidate();
-end;
-
-function TFlatCheckBox.GetCaption() : String;
-begin
-  result := inherited Caption;
-end;
-
-procedure TFlatCheckBox.SetMode(AValue : TCheckBoxMode);
+procedure TFlatCheckBox.SetMode(const AValue : TCheckBoxMode);
 begin
   if (AValue = FMode) then
-    Exit();
+    Exit;
   ///
 
   FMode := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-procedure TFlatCheckBox.SetControlState(AValue : TControlState);
+procedure TFlatCheckBox.SetControlState(const AValue : TFlatControlState);
 begin
   if (AValue = FControlState) then
-    Exit();
+    Exit;
   ///
 
   FControlState := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
 procedure TFlatCheckBox.SetChecked(AValue : Boolean);
@@ -544,7 +540,7 @@ procedure TFlatCheckBox.SetChecked(AValue : Boolean);
 
 begin
   if AValue = FChecked then
-    Exit();
+    Exit;
 
   if (Mode = cbmRadioBox) then begin
     UncheckGroupRadio();
@@ -563,7 +559,7 @@ begin
     FOnStateChanged(self);
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
 end.

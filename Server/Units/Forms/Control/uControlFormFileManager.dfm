@@ -282,7 +282,7 @@ object ControlFormFileManager: TControlFormFileManager
         ReadOnly = True
         ShowHint = True
         TabOrder = 0
-        Status = csNormal
+        Status = cStatusNormal
         Validators = []
         ShowBorder = True
       end
@@ -324,6 +324,7 @@ object ControlFormFileManager: TControlFormFileManager
         Margins.Top = 0
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Home'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -332,7 +333,6 @@ object ControlFormFileManager: TControlFormFileManager
         Align = alTop
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Home'
         Value = 0
         OnClick = ButtonHomeClick
         Busy = False
@@ -385,6 +385,7 @@ object ControlFormFileManager: TControlFormFileManager
         Margins.Top = 4
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Refresh'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -393,7 +394,6 @@ object ControlFormFileManager: TControlFormFileManager
         Align = alTop
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Refresh'
         Value = 0
         OnClick = ButtonRefreshClick
         Busy = False
@@ -409,6 +409,7 @@ object ControlFormFileManager: TControlFormFileManager
         Margins.Top = 4
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Go To...'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -417,7 +418,6 @@ object ControlFormFileManager: TControlFormFileManager
         Align = alTop
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Go To...'
         Value = 0
         OnClick = ButtonGoToClick
         Busy = False
@@ -433,6 +433,7 @@ object ControlFormFileManager: TControlFormFileManager
         Margins.Top = 4
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Upload'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -441,7 +442,6 @@ object ControlFormFileManager: TControlFormFileManager
         Align = alTop
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Upload'
         Value = 0
         OnClick = ButtonUploadClick
         Busy = False
@@ -458,6 +458,7 @@ object ControlFormFileManager: TControlFormFileManager
         Margins.Top = 4
         Margins.Right = 0
         Margins.Bottom = 0
+        Caption = 'Options'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -466,7 +467,6 @@ object ControlFormFileManager: TControlFormFileManager
         Align = alTop
         ShowHint = True
         ImageIndex = 17
-        Caption = 'Options'
         Value = 0
         OnClick = ButtonOptionsClick
         Busy = False
@@ -505,6 +505,7 @@ object ControlFormFileManager: TControlFormFileManager
           Margins.Top = 0
           Margins.Right = 5
           Margins.Bottom = 0
+          Caption = '<-'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
@@ -513,7 +514,6 @@ object ControlFormFileManager: TControlFormFileManager
           Align = alLeft
           ShowHint = True
           ImageIndex = 16
-          Caption = '<-'
           Value = 0
           OnClick = ButtonBackClick
           Busy = False
@@ -527,6 +527,7 @@ object ControlFormFileManager: TControlFormFileManager
           Margins.Top = 0
           Margins.Right = 5
           Margins.Bottom = 0
+          Caption = '->'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
@@ -535,7 +536,6 @@ object ControlFormFileManager: TControlFormFileManager
           Align = alRight
           ShowHint = True
           ImageIndex = 16
-          Caption = '->'
           Value = 0
           OnClick = ButtonForwardClick
           Busy = False

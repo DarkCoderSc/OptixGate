@@ -43,7 +43,16 @@ unit NeoFlat.StatusBar;
 
 interface
 
-uses Winapi.Windows, System.Classes, VCL.Controls, VCL.Forms, VCL.Graphics, NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.Classes,
+
+  Winapi.Windows,
+
+  VCL.Controls, VCL.Forms, VCL.Graphics,
+
+  NeoFlat.Theme;
+// ---------------------------------------------------------------------------------------------------------------------
 
 type
   TStatusPanel = class(TCollectionItem)
@@ -52,15 +61,14 @@ type
     FWidth     : Integer;
     FHint      : String;
     FAlignment : TAlignment;
-
     FRect      : TRect;
 
     {@M}
-    procedure Invalidate();
+    procedure Invalidate;
 
-    procedure SetText(AValue : String);
-    procedure SetWidth(AValue : Integer);
-    procedure SetAlignment(AValue : TAlignment);
+    procedure SetText(const AValue : String);
+    procedure SetWidth(const AValue : Integer);
+    procedure SetAlignment(const AValue : TAlignment);
   public
     {@C}
     constructor Create(ACollection : TCollection); override;
@@ -79,7 +87,7 @@ type
   TStatusPanels = class(TOwnedCollection)
   private
     {@M}
-    procedure Invalidate();
+    procedure Invalidate;
   protected
     {@M}
     function GetItem(Index: Integer): TStatusPanel;
@@ -101,89 +109,68 @@ type
 
     {@M}
     procedure CMHintShow(var AMessage: TCMHintShow); message CM_HINTSHOW;
+
     procedure RefreshPanelsRect();
     function GetPanelByPoint(APoint : TPoint) : TStatusPanel;
   protected
     {@M}
-    procedure Paint(); override;
+    procedure Paint; override;
   public
     {@C}
     constructor Create(AOwner : TComponent); override;
     destructor Destroy(); override;
   published
-    {@G/S}
     property Font;
-    ///
 
+    {@G/S}
     property Panels : TStatusPanels read FPanels write FPanels;
   end;
 
 implementation
 
-uses SysUtils, SYstem.Types;
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils, System.Types;
+// ---------------------------------------------------------------------------------------------------------------------
 
-{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+(* TFlatStatusBar *)
 
-
-  TFlatStatusBar
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
-
-{-------------------------------------------------------------------------------
-  Get panel by cursor pos
--------------------------------------------------------------------------------}
 function TFlatStatusBar.GetPanelByPoint(APoint : TPoint) : TStatusPanel;
-var I : Integer;
-    P : TStatusPanel;
 begin
   result := nil;
   ///
 
-  for I := 0 to self.Panels.Count -1 do begin
-    P := self.Panels.Items[i];
+  for var I := 0 to Panels.Count -1 do begin
+    var APanelItem := Panels.Items[i];
     ///
 
-    if ptinrect(P.Rect, APoint) then begin
-      result := P;
-
-      break;
-    end;
+    if ptinrect(APanelItem.Rect, APoint) then
+      Exit(APanelItem);
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  Refresh panel rects
--------------------------------------------------------------------------------}
 procedure TFlatStatusBar.RefreshPanelsRect();
-var I     : Integer;
-    P     : TStatusPanel;
-    ARect : TRect;
 begin
-  ARect        := TRect.Empty;
-
+  var ARect    := TRect.Empty;
   ARect.Top    := 1;
   ARect.Height := (ClientHeight - 2);
 
-  for I := 0 to self.Panels.Count -1 do begin
-    P := self.Panels.Items[i];
+  for var I := 0 to Panels.Count -1 do begin
+    var APanelItem := Panels.Items[i];
     ///
 
     ARect.Left  := (ARect.Left + ARect.Width + 1);
 
-    if I = (self.Panels.Count -1) then
+    if I = (Panels.Count -1) then
       ARect.Width := (ClientWidth - ARect.Left - 1)
     else
-      ARect.Width := self.Panels[i].Width;
+      ARect.Width := Panels[i].Width;
 
     ///
-    P.Rect := ARect;
+    APanelItem.Rect := ARect;
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  ___constructor
--------------------------------------------------------------------------------}
 constructor TFlatStatusBar.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -202,9 +189,6 @@ begin
   Height := 19;
 end;
 
-{-------------------------------------------------------------------------------
-  ___destructor
--------------------------------------------------------------------------------}
 destructor TFlatStatusBar.Destroy();
 begin
   if Assigned(FPanels) then
@@ -214,27 +198,16 @@ begin
   inherited Destroy();
 end;
 
-{-------------------------------------------------------------------------------
-  ___paint
--------------------------------------------------------------------------------}
-procedure TFlatStatusBar.Paint();
-var I           : integer;
-    ARect       : TRect;
-    ACaption    : String;
-    ATextRect   : TRect;
-    ATextFormat : TTextFormat;
+procedure TFlatStatusBar.Paint;
 begin
   Canvas.Lock();
   try
     Canvas.Brush.Style := bsSolid;
-    Canvas.Font.Assign(self.Font);
+    Canvas.Font.Assign(Font);
     ///
 
-    {
-      Draw Background
-    }
-    ARect.Left   := 0;
-    ARect.Top    := 0;
+    // Draw Background
+    var ARect    := TRect.Empty;
     ARect.Width  := ClientWidth;
     ARect.Height := ClientHeight;
 
@@ -242,40 +215,36 @@ begin
 
     Canvas.FillRect(ARect);
 
-    {
-      Draw Panels
-    }
+    // Draw Panels
     Canvas.Brush.Color := MAIN_GRAY;
 
-    self.RefreshPanelsRect();
+    RefreshPanelsRect();
 
-    for I := 0 to (self.Panels.Count -1) do begin
-      ARect := self.Panels.Items[i].Rect;
+    for var I := 0 to (Panels.Count -1) do begin
+      ARect := Panels.Items[i].Rect;
       ///
 
-      {
-        Draw Panel Background
-      }
+      // Draw Panel Backgrouind
       Canvas.FillRect(ARect);
 
-      {
-        Draw Panel Text
-      }
-      ACaption := self.Panels[I].Text;
+      // Draw Panel Caption
+      var ACaption := Panels[I].Text;
 
+      var ATextRect    := TRect.Empty;
       ATextRect.Top    := ARect.Top;
       ATextRect.Height := ARect.Height;
       ATextRect.Left   := (ARect.Left + 2);
       ATextRect.Width  := (ARect.Width - 4);
 
-      ATextFormat := [tfEndEllipsis, tfSingleLine, tfVerticalCenter];
+      var ATextFormat : TTextFormat := [tfEndEllipsis, tfSingleLine, tfVerticalCenter];
 
-      case self.Panels[I].Alignment of
+      case Panels[I].Alignment of
         taLeftJustify  : ATextFormat := ATextFormat + [tfLeft];
         taRightJustify : ATextFormat := ATextFormat + [tfRight];
         taCenter       : ATextFormat := ATextFormat + [tfCenter];
       end;
 
+      ///
       Canvas.TextRect(ATextRect, ACaption, ATextFormat);
     end;
   finally
@@ -283,35 +252,20 @@ begin
   end;
 end;
 
-{-------------------------------------------------------------------------------
-  Detect when hint is being shown
--------------------------------------------------------------------------------}
 procedure TFlatStatusBar.CMHintShow(var AMessage: TCMHintShow);
-var P : TStatusPanel;
 begin
-  P := self.GetPanelByPoint(AMessage.HintInfo.CursorPos);
+  var APanelItem := GetPanelByPoint(AMessage.HintInfo.CursorPos);
 
-  if Assigned(P) then begin
-    AMessage.HintInfo.HintStr := P.Hint;
-    AMessage.HintInfo.CursorRect := P.Rect;
+  if Assigned(APanelItem) then begin
+    AMessage.HintInfo.HintStr := APanelItem.Hint;
+    AMessage.HintInfo.CursorRect := APanelItem.Rect;
   end;
 
   ///
   inherited;
 end;
 
-{-------------------------------------------------------------------------------
-  Getters / Setters
--------------------------------------------------------------------------------}
-
-
-{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-  TStatusPanel
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+(* TStatusPanel *)
 
 constructor TStatusPanel.Create(ACollection : TCollection);
 begin
@@ -325,7 +279,7 @@ begin
   FRect      := TRect.Empty;
 
   ///
-  self.Invalidate();
+  Invalidate;
 end;
 
 destructor TStatusPanel.Destroy();
@@ -333,61 +287,56 @@ begin
   inherited Destroy();
   ///
 
-  self.Invalidate();
+  Invalidate;
 end;
 
-procedure TStatusPanel.Invalidate();
+procedure TStatusPanel.Invalidate;
 begin
-  if Assigned(GetOwner()) then begin
-    if Assigned(TStatusPanels(GetOwner())) then begin
-      TFlatStatusBar(TStatusPanels(GetOwner()).GetOwner).Invalidate();
-    end;
-  end;
+  if not Assigned(GetOwner()) then
+    Exit();
+  ///
+
+  if Assigned(TStatusPanels(GetOwner())) then
+    TFlatStatusBar(TStatusPanels(GetOwner()).GetOwner).Invalidate;
 end;
 
-procedure TStatusPanel.SetText(AValue : String);
+procedure TStatusPanel.SetText(const AValue : String);
 begin
   if (FText = AValue) then
-    Exit();
+    Exit;
   ///
 
   FText := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-procedure TStatusPanel.SetWidth(AValue : Integer);
+procedure TStatusPanel.SetWidth(const AValue : Integer);
 begin
   if (FWidth = AValue) then
-    Exit();
+    Exit;
   ///
 
   FWidth := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-procedure TStatusPanel.SetAlignment(AValue : TAlignment);
+procedure TStatusPanel.SetAlignment(const AValue : TAlignment);
 begin
   if (AValue = FAlignment) then
-    Exit();
+    Exit;
   ///
 
   FAlignment := AValue;
 
   ///
-  Invalidate();
+  Invalidate;
 end;
 
-{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-  TStatusPanels
-
-
-+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+(* TStatusPanels *)
 
 function TStatusPanels.Add: TStatusPanel;
 begin
@@ -411,13 +360,13 @@ begin
   inherited SetItem(Index, Value);
   ///
 
-  Invalidate();
+  Invalidate;
 end;
 
-procedure TStatusPanels.Invalidate();
+procedure TStatusPanels.Invalidate;
 begin
-  if Assigned(self.GetOwner()) then
-    TFlatStatusBar(self.GetOwner()).Invalidate();
+  if Assigned(GetOwner()) then
+    TFlatStatusBar(GetOwner()).Invalidate;
 end;
 
 end.
