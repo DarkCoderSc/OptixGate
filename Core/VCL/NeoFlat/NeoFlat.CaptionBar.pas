@@ -108,13 +108,6 @@ type
     FButtonDown      : TCaptionButton;
     FButtonHover     : TCaptionButton;
 
-    FCollapsed       : Boolean;
-    FOwnerOldClientH : Integer;
-    FOldConstraintH  : Integer;
-    FOldConstraintW  : Integer;
-
-    FCollapsible     : Boolean;
-
     FMaximized       : Boolean;
 
     FBorderIcons     : TBorderIcons;
@@ -145,7 +138,6 @@ type
     procedure doMaximize();
     procedure doMinimize();
     procedure doMaximizeRestore();
-    procedure doCollapseRestore();
     procedure doClose();
     procedure DisplayMenuDropDown();
 
@@ -185,7 +177,6 @@ type
     property Form         : TFlatForm    read FForm         write FForm;
     property SubCaption   : String       read FSubCaption   write SetSubCaption;
     property Transparent  : Boolean      read FTransparent  write SetTransparent;
-    property Collapsible  : Boolean      read FCollapsible  write FCollapsible;
     property TextCenter   : Boolean      read FTextCenter   write SetTextCenter;
     property MenuDropDown : TPopupMenu   read FMenuDropDown write SetMenuDropDown;
 
@@ -400,14 +391,8 @@ begin
 
   FTransparent := False;
 
-  FCollapsed   := False;
-  FCollapsible := True;
-
   FMaximized := False;
   FTextCenter := False;
-
-  FOldConstraintH := 0;
-  FOldConstraintW := 0;
 
   Font.Name   := FONT_1;
   Font.Color  := clWhite;
@@ -659,38 +644,9 @@ begin
     result := FHamburgerButton;
 end;
 
-procedure TFlatCaptionBar.doCollapseRestore();
-begin
-  if FMaximized or not FCollapsible then
-    Exit;
-  ///
-
-  FCollapsed := not FCollapsed;
-
-  if Assigned(FForm) then
-    FForm.Resizable := not FCollapsed;
-  ///
-
-  if FCollapsed then begin
-    FOwnerOldClientH := FOwnerForm.ClientHeight;
-    FOldConstraintH  := FOwnerForm.Constraints.MinHeight;
-    FOldConstraintW  := FOwnerForm.Constraints.MinWidth;
-
-    FOwnerForm.Constraints.MinHeight := 0;
-    FOwnerForm.Constraints.MinWidth  := 0;
-
-    FOwnerForm.ClientHeight := ClientHeight;
-  end else begin
-    FOwnerForm.ClientHeight := FOwnerOldClientH;
-
-    FOwnerForm.Constraints.MinHeight := FOldConstraintH;
-    FOwnerForm.Constraints.MinWidth  := FOldConstraintW;
-  end;
-end;
-
 procedure TFlatCaptionBar.doMaximizeRestore();
 begin
-  if (not (biMaximize in FBorderIcons)) or (FCollapsed) then
+  if not (biMaximize in FBorderIcons) then
     Exit;
   ///
 
@@ -820,10 +776,6 @@ begin
         if (FButtonHover.State <> cbsActive) then
           FButtonHover.State := cbsNormal;
       end;
-    end;
-
-    WM_RBUTTONDOWN : begin
-      doCollapseRestore();
     end;
   end;
 end;

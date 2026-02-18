@@ -309,17 +309,15 @@ begin
 
   var pData := PTreeData(VST.FocusedNode.GetData);
 
-  //SendCommand(TOptixCommandDumpProcess.Create(0, 'c:\temp\process_dump.dmp'));
+  var AForm := TControlFormDumpProcess(FormMain.CreateNewControlForm(self, TControlFormDumpProcess, False));
+  if not Assigned(AForm) then
+    Exit();
 
-  var ADialog := TControlFormDumpProcess.Create(
-    self,
-    pData^.ProcessInformation.Name,
-    pData^.ProcessInformation.Id,
-    FFormInformation.UserIdentifier,
-    GetImageIndex(pData)
-  );
+  AForm.ProcessId   := pData^.ProcessInformation.Id;
+  AForm.ProcessName := pData^.ProcessInformation.Name;
 
-  RegisterNewDialogAndShow(ADialog);
+  ///
+  TOptixHelper.ShowForm(AForm);
 end;
 
 procedure TControlFormProcessManager.FormDestroy(Sender: TObject);

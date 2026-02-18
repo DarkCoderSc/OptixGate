@@ -53,75 +53,78 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.SysUtils, System.Variants, System.Classes,
+  System.SysUtils, System.Variants, System.Classes, System.Skia,
 
   Winapi.Windows, Winapi.Messages,
 
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.VirtualImage, Vcl.Mask,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.VirtualImage, Vcl.Mask, Vcl.Skia,
 
-  __uBaseFormControl__;
+  __uBaseFormControl__,
+
+  NeoFlat.Panel, NeoFlat.GroupBox, NeoFlat.CheckBox, NeoFlat.Edit, NeoFlat.Button;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TControlFormDumpProcess = class(TForm)
-    GroupDumpTypes: TGroupBox;
-    PanelRightTypes: TPanel;
-    PanelLeftTypes: TPanel;
-    CheckBoxMiniDumpNormal: TCheckBox;
-    CheckBoxMiniDumpWithDataSegs: TCheckBox;
-    CheckBoxMiniDumpWithFullMemory: TCheckBox;
-    CheckBoxMiniDumpWithHandleData: TCheckBox;
-    CheckBoxMiniDumpScanMemory: TCheckBox;
-    CheckBoxMiniDumpFilterMemory: TCheckBox;
-    CheckBoxMiniDumpWithUnloadedModules: TCheckBox;
-    CheckBoxMiniDumpWithIndirectlyReferencedMemory: TCheckBox;
-    CheckBoxMiniDumpFilterModulePaths: TCheckBox;
-    CheckBoxMiniDumpWithThreadInfo: TCheckBox;
-    CheckBoxMiniDumpWithCodeSegs: TCheckBox;
-    CheckBoxMiniDumpWithoutAuxiliaryState: TCheckBox;
-    CheckBoxMiniDumpWithFullAuxiliaryState: TCheckBox;
-    CheckBoxMiniDumpWithProcessThreadData: TCheckBox;
-    CheckBoxMiniDumpWithPrivateReadWriteMemory: TCheckBox;
-    CheckBoxMiniDumpWithoutOptionalData: TCheckBox;
-    CheckBoxMiniDumpWithPrivateWriteCopyMemory: TCheckBox;
-    CheckBoxMiniDumpIgnoreInaccessibleMemory: TCheckBox;
-    CheckBoxMiniDumpWithTokenInformation: TCheckBox;
-    CheckBoxMiniDumpWithModuleHeaders: TCheckBox;
-    CheckBoxMiniDumpFilterTriage: TCheckBox;
-    CheckBoxMiniDumpWithAvxXStateContext: TCheckBox;
-    CheckBoxMiniDumpWithIptTrace: TCheckBox;
-    CheckBoxMiniDumpWithFullMemoryInfo: TCheckBox;
-    CheckBoxMiniDumpScanInaccessiblePartialPages: TCheckBox;
-    CheckBoxMiniDumpValidTypeFlags: TCheckBox;
-    PanelHeaderInfo: TPanel;
-    Image: TVirtualImage;
+  TControlFormDumpProcess = class(TBaseFormControl)
+    PanelMain: TFlatPanel;
+    ButtonCancel: TFlatButton;
+    ButtonValidate: TFlatButton;
+    GroupBoxOutputPath: TFlatGroupBox;
+    RadioTempFile: TFlatCheckBox;
+    RadioCutomFileName: TFlatCheckBox;
+    EditCustomFilePath: TFlatEdit;
+    GroupDumpTypes: TFlatGroupBox;
+    PanelRightTypes: TFlatPanel;
+    CheckBoxMiniDumpWithThreadInfo: TFlatCheckBox;
+    CheckBoxMiniDumpWithCodeSegs: TFlatCheckBox;
+    CheckBoxMiniDumpWithoutAuxiliaryState: TFlatCheckBox;
+    CheckBoxMiniDumpWithFullAuxiliaryState: TFlatCheckBox;
+    CheckBoxMiniDumpWithPrivateWriteCopyMemory: TFlatCheckBox;
+    CheckBoxMiniDumpIgnoreInaccessibleMemory: TFlatCheckBox;
+    CheckBoxMiniDumpWithTokenInformation: TFlatCheckBox;
+    CheckBoxMiniDumpWithModuleHeaders: TFlatCheckBox;
+    CheckBoxMiniDumpFilterTriage: TFlatCheckBox;
+    CheckBoxMiniDumpWithAvxXStateContext: TFlatCheckBox;
+    CheckBoxMiniDumpWithIptTrace: TFlatCheckBox;
+    CheckBoxMiniDumpScanInaccessiblePartialPages: TFlatCheckBox;
+    CheckBoxMiniDumpValidTypeFlags: TFlatCheckBox;
+    PanelLeftTypes: TFlatPanel;
+    CheckBoxMiniDumpNormal: TFlatCheckBox;
+    CheckBoxMiniDumpWithDataSegs: TFlatCheckBox;
+    CheckBoxMiniDumpWithFullMemory: TFlatCheckBox;
+    CheckBoxMiniDumpWithHandleData: TFlatCheckBox;
+    CheckBoxMiniDumpScanMemory: TFlatCheckBox;
+    CheckBoxMiniDumpFilterMemory: TFlatCheckBox;
+    CheckBoxMiniDumpWithUnloadedModules: TFlatCheckBox;
+    CheckBoxMiniDumpWithIndirectlyReferencedMemory: TFlatCheckBox;
+    CheckBoxMiniDumpFilterModulePaths: TFlatCheckBox;
+    CheckBoxMiniDumpWithProcessThreadData: TFlatCheckBox;
+    CheckBoxMiniDumpWithPrivateReadWriteMemory: TFlatCheckBox;
+    CheckBoxMiniDumpWithoutOptionalData: TFlatCheckBox;
+    CheckBoxMiniDumpWithFullMemoryInfo: TFlatCheckBox;
+    PanelHeaderInfo: TFlatPanel;
+    Image: TSkSvg;
     LabelProcessName: TLabel;
     LabelProcessId: TLabel;
-    GroupBoxOutputPath: TGroupBox;
-    RadioTempFile: TRadioButton;
-    RadioCutomFileName: TRadioButton;
-    EditCustomFilePath: TEdit;
-    ButtonCancel: TButton;
-    ButtonValidate: TButton;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure RadioCutomFileNameClick(Sender: TObject);
-    procedure RadioTempFileClick(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonValidateClick(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure RadioTempFileStateChanged(Sender: TObject);
+    procedure RadioCutomFileNameStateChanged(Sender: TObject);
   private
     FProcessId : Cardinal;
 
     {@M}
     procedure DoResize();
     function GetMiniDumpTypesValue() : DWORD;
-  protected
-    {@M}
-    procedure CreateParams(var Params: TCreateParams); override;
+    procedure SetProcessId(const AValue : Cardinal);
+    procedure SetProcessName(const AValue : String);
   public
-    {@C}
-    constructor Create(AOwner : TBaseFormControl; const AName : String; AProcessId : Cardinal; const AUserIdentifier : String; const AImageIndex : Integer); reintroduce;
+    {@S}
+    property ProcessId  : Cardinal write SetProcessId;
+    property ProcessName : String  write SetProcessName;
   end;
 
 var
@@ -137,6 +140,18 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+procedure TControlFormDumpProcess.SetProcessId(const AValue : Cardinal);
+begin
+  FProcessId := AValue;
+
+  labelProcessId.Caption := Format('%d (0x%x)', [FProcessId, FProcessId]);
+end;
+
+procedure TControlFormDumpProcess.SetProcessName(const AValue : String);
+begin
+  LabelProcessName.Caption := AValue;
+end;
 
 function TControlFormDumpProcess.GetMiniDumpTypesValue() : DWORD;
 begin
@@ -222,14 +237,14 @@ begin
     result := result or MiniDumpValidTypeFlags;
 end;
 
-procedure TControlFormDumpProcess.RadioCutomFileNameClick(Sender: TObject);
+procedure TControlFormDumpProcess.RadioCutomFileNameStateChanged(Sender: TObject);
 begin
   EditCustomFilePath.Enabled := RadioCutomFileName.Checked;
 end;
 
-procedure TControlFormDumpProcess.RadioTempFileClick(Sender: TObject);
+procedure TControlFormDumpProcess.RadioTempFileStateChanged(Sender: TObject);
 begin
-  RadioCutomFileNameClick(Sender);
+  RadioCutomFileNameStateChanged(Sender);
 end;
 
 procedure TControlFormDumpProcess.ButtonCancelClick(Sender: TObject);
@@ -252,53 +267,27 @@ begin
   if RadioCutomFileName.Checked then
     ADestFilePath := EditCustomFilePath.Text;
 
-  TBaseFormControl(Owner).SendCommand(TOptixCommandDumpProcess.Create(FProcessId, ADestFilePath, ATypesValue));
+  SendCommand(TOptixCommandDumpProcess.Create(FProcessId, ADestFilePath, ATypesValue));
 
   Close();
 end;
 
-constructor TControlFormDumpProcess.Create(AOwner : TBaseFormControl; const AName : String; AProcessId : Cardinal; const AUserIdentifier : String; const AImageIndex : Integer);
-begin
-  inherited Create(AOwner);
-  ///
-
-  Caption := Format('%s (%s)', [
-    Caption,
-    AUserIdentifier
-  ]);
-
-  FProcessId := AProcessId;
-
-  LabelProcessName.Caption := AName;
-  labelProcessId.Caption   := Format('%d (0x%x)', [FProcessId, FProcessId]);
-
-  Image.ImageIndex := AImageIndex;
-end;
-
 procedure TControlFormDumpProcess.DoResize();
 begin
-  Image.Left := 8;
-  Image.Top  := (PanelHeaderInfo.Height div 2) - (Image.Height div 2);
-
-  LabelProcessName.Left := Image.left + Image.Width + 16;
+  LabelProcessName.Left := Image.left + Image.Width + ScaleValue(16);
   LabelProcessId.Left   := LabelProcessName.Left;
 
-  LabelProcessName.Top := (PanelHeaderInfo.Height div 2) - (LabelProcessName.Height + 4);
-  LabelProcessId.Top   := LabelProcessName.Top + LabelProcessName.Height + 4;
+  LabelProcessName.Top := (PanelHeaderInfo.Height div 2) - (LabelProcessName.Height + ScaleValue(4));
+  LabelProcessId.Top   := LabelProcessName.Top + LabelProcessName.Height + ScaleValue(4);
 
-  ButtonCancel.Left := (ClientWidth div 2) - ButtonCancel.Width - 4;
-  ButtonValidate.Left := (ClientWidth div 2) + 4;
+  ButtonCancel.Top := GroupBoxOutputPath.Top + GroupBoxOutputPath.Height + ScaleValue(8);
+  ButtonValidate.Top := ButtonCancel.Top;
+  ButtonCancel.Left := (ClientWidth div 2) - ButtonCancel.Width - ScaleValue(4);
+  ButtonValidate.Left := (ClientWidth div 2) + ScaleValue(4);
+
+  ClientHeight := ButtonCancel.Top + ButtonCancel.Height + PanelMain.Top + ScaleValue(8);
 end;
 
-procedure TControlFormDumpProcess.CreateParams(var Params: TCreateParams);
-begin
-  inherited;
-  ///
-
-  Params.ExStyle := Params.ExStyle and NOT WS_EX_APPWINDOW;
-
-  Params.WndParent := 0;
-end;
 
 procedure TControlFormDumpProcess.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin

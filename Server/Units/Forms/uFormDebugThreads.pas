@@ -61,7 +61,8 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ExtCtrls,
 
-  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+  NeoFlat.PopupMenu, NeoFlat.Form, NeoFlat.CaptionBar;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -82,8 +83,10 @@ type
   TFormDebugThreads = class(TForm)
     VST: TVirtualStringTree;
     TimerRefresh: TTimer;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Terminate1: TMenuItem;
+    FlatCaptionBar1: TFlatCaptionBar;
+    FlatForm: TFlatForm;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -304,21 +307,21 @@ begin
   case Column of
     0 : begin
       if pData^.TerminateReq then
-        ImageIndex := IMAGE_THREAD_STOP_WAIT
+        ImageIndex := IMAGE_BRICK_WARNING
       else if pData^.Running then
-        ImageIndex := IMAGE_THREAD_RUNNING
+        ImageIndex := IMAGE_BRICK
       else
-        ImageIndex := IMAGE_THREAD_STOPPED;
+        ImageIndex := IMAGE_BRICK_ERROR;
     end;
 
     1 : begin
       {$IFDEF SERVER}
       if pData^.ClassName = TOptixServerThread.ClassName then
-        ImageIndex := IMAGE_THREAD_SERVER
+        ImageIndex := IMAGE_SERVER
       else
       {$ENDIF}
       if pData^.ClassName = TOptixSessionHandlerThread.ClassName then
-        ImageIndex := IMAGE_THREAD_HANDLER
+        ImageIndex := IMAGE_TRANSMIT
       else if
       {$IFDEF SERVER}
         pData^.ClassName = TOptixFileTransferWorker.ClassName
@@ -326,9 +329,9 @@ begin
         pData^.ClassName = TOptixFileTransferOrchestratorThread.ClassName
       {$ENDIF}
         then
-        ImageIndex := IMAGE_THREAD_TRANSFER
+        ImageIndex := IMAGE_FOLDER_WRENCH
       else
-        ImageIndex := IMAGE_THREAD_GENERIC;
+        ImageIndex := IMAGE_COFEE;
     end;
   end;
 

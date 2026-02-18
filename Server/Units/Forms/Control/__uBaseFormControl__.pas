@@ -112,10 +112,9 @@ type
 
   TBaseFormControl = class(TForm)
   private
-    FOriginalCaption  : String;
-    FFlatForm         : TFlatForm;
-    FDialogs          : TObjectList<TForm>;
-    FFirstShow        : Boolean;
+    FOriginalCaption : String;
+    FFlatForm        : TFlatForm;
+    FFirstShow       : Boolean;
 
     {@M}
     function GetGUID() : TGUID;
@@ -127,8 +126,6 @@ type
     {@M}
     function GetContextDescription() : String; virtual;
     procedure RefreshCaption(); virtual;
-
-    procedure RegisterNewDialogAndShow(const ADialog : TForm);
 
     function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = '';
       const AContext : String = '') : TGUID; virtual;
@@ -264,16 +261,6 @@ end;
 
 (* TBaseFormControl *)
 
-procedure TBaseFormControl.RegisterNewDialogAndShow(const ADialog : TForm);
-begin
-  if Assigned(ADialog) and Assigned(FDialogs) then begin
-    FDialogs.Add(ADialog);
-
-    ///
-    ADialog.Show();
-  end;
-end;
-
 function TBaseFormControl.GetContextDescription() : String;
 begin
   result := '';
@@ -345,6 +332,7 @@ begin
   FCaptionBar := TFlatCaptionBar.Create(self);
   FCaptionBar.Form := FFlatForm;
   FCaptionBar.Parent := self;
+  FCaptionBar.BorderIcons := BorderIcons;
 
   FOriginalCaption := Caption; // Default
   FSpecialForm     := ASpecialForm;
@@ -353,17 +341,12 @@ begin
 
   FFormInformation.UserIdentifier := AUserIdentifier;
   FFormInformation.State := fcsClosed;
-
-  FDialogs := TObjectList<TForm>.Create(True);
 end;
 
 destructor TBaseFormControl.Destroy();
 begin
   if Assigned(FFormInformation) then
     FreeAndNil(FFormInformation);
-
-  if Assigned(FDialogs) then
-    FreeAndNil(FDialogs);
 
   if Assigned(FCaptionBar) then
     FreeAndNil(FCaptionBar);

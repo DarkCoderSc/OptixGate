@@ -1,7 +1,7 @@
 object FormListen: TFormListen
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
+  BorderIcons = [biSystemMenu]
   Caption = 'Listen'
   ClientHeight = 326
   ClientWidth = 398
@@ -125,6 +125,7 @@ object FormListen: TFormListen
       Align = alTop
       Style = csDropDownList
       TabOrder = 1
+      ExplicitWidth = 322
     end
     object CheckBoxAutoStart: TCheckBox
       AlignWithMargins = True
@@ -156,6 +157,7 @@ object FormListen: TFormListen
       Items.Strings = (
         'IPv4'
         'IPv6')
+      ExplicitWidth = 322
     end
     object GroupBox1: TGroupBox
       Left = 8
@@ -242,7 +244,6 @@ object FormListen: TFormListen
       Height = 269
       Align = alClient
       Center = True
-      ImageCollection = FormMain.ImageCollectionDark
       ImageWidth = 0
       ImageHeight = 0
       ImageIndex = 40

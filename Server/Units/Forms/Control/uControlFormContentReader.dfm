@@ -2,8 +2,8 @@ object ControlFormContentReader: TControlFormContentReader
   Left = 0
   Top = 0
   Caption = 'Content Reader'
-  ClientHeight = 619
-  ClientWidth = 824
+  ClientHeight = 492
+  ClientWidth = 668
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,14 +19,8 @@ object ControlFormContentReader: TControlFormContentReader
   object PanelMain: TFlatPanel
     Left = 0
     Top = 0
-    Width = 824
-    Height = 600
-    BorderTop = 0
-    BorderLeft = 0
-    BorderRight = 0
-    BorderBottom = 0
-    Color = 13554645
-    BorderColor = clBlack
+    Width = 668
+    Height = 473
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlack
@@ -35,13 +29,19 @@ object ControlFormContentReader: TControlFormContentReader
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     ExplicitWidth = 814
     ExplicitHeight = 568
     object MultiPanel: TOMultiPanel
       Left = 0
       Top = 30
-      Width = 824
-      Height = 570
+      Width = 668
+      Height = 443
       PanelType = ptVertical
       PanelCollection = <
         item
@@ -57,27 +57,30 @@ object ControlFormContentReader: TControlFormContentReader
           Index = 1
         end>
       MinPosition = 0.020000000000000000
+      SplitterHoverColor = clHighlight
       Align = alClient
       TabOrder = 0
       ExplicitWidth = 814
       ExplicitHeight = 538
       DesignSize = (
-        824
-        570)
+        668
+        443)
       object PanelHex: TPanel
         Left = 0
         Top = 0
-        Width = 824
-        Height = 285
+        Width = 668
+        Height = 222
         Anchors = []
         BevelOuter = bvNone
+        Color = 13554645
+        ParentBackground = False
         TabOrder = 0
       end
       object PanelStrings: TPanel
         Left = 0
-        Top = 288
-        Width = 824
-        Height = 282
+        Top = 225
+        Width = 668
+        Height = 218
         Anchors = []
         BevelOuter = bvNone
         TabOrder = 1
@@ -85,8 +88,8 @@ object ControlFormContentReader: TControlFormContentReader
         object RichStrings: TRichEdit
           Left = 0
           Top = 0
-          Width = 824
-          Height = 282
+          Width = 668
+          Height = 218
           Align = alClient
           Color = clWhite
           Font.Charset = ANSI_CHARSET
@@ -100,26 +103,20 @@ object ControlFormContentReader: TControlFormContentReader
           ReadOnly = True
           ScrollBars = ssBoth
           TabOrder = 0
-          ExplicitWidth = 814
-          ExplicitHeight = 266
+          ExplicitWidth = 824
+          ExplicitHeight = 16
         end
       end
     end
     object PanelActions: TFlatPanel
       Left = 0
       Top = 0
-      Width = 824
+      Width = 668
       Height = 30
       Margins.Left = 4
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 4
-      BorderTop = 0
-      BorderLeft = 0
-      BorderRight = 0
-      BorderBottom = 2
-      Color = 13554645
-      BorderColor = clBlack
       Align = alTop
       Caption = 'PanelActions'
       Font.Charset = DEFAULT_CHARSET
@@ -133,7 +130,13 @@ object ControlFormContentReader: TControlFormContentReader
       Padding.Top = 4
       Padding.Right = 4
       Padding.Bottom = 6
-      ExplicitTop = -7
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
+      ExplicitWidth = 814
       object ButtonBack: TFlatButton
         Left = 4
         Top = 4
@@ -324,8 +327,8 @@ object ControlFormContentReader: TControlFormContentReader
   end
   object StatusBar: TFlatStatusBar
     Left = 0
-    Top = 600
-    Width = 824
+    Top = 473
+    Width = 668
     Height = 19
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlack

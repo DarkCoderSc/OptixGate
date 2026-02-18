@@ -2,7 +2,6 @@ object FormSelectCertificate: TFormSelectCertificate
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsSingle
   Caption = 'Select Certificate'
   ClientHeight = 110
   ClientWidth = 398

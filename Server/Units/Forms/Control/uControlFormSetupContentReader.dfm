@@ -1,9 +1,9 @@
 object ControlFormSetupContentReader: TControlFormSetupContentReader
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
+  BorderIcons = [biSystemMenu]
   Caption = 'New Content Reader'
-  ClientHeight = 88
+  ClientHeight = 144
   ClientWidth = 336
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -23,13 +23,7 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
     Left = 0
     Top = 0
     Width = 336
-    Height = 88
-    BorderTop = 0
-    BorderLeft = 0
-    BorderRight = 0
-    BorderBottom = 0
-    Color = 13554645
-    BorderColor = clBlack
+    Height = 109
     Align = alClient
     Caption = 'PanelMain'
     Font.Charset = DEFAULT_CHARSET
@@ -42,74 +36,19 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
     Padding.Left = 8
     Padding.Top = 8
     Padding.Right = 8
-    object PanelBottom: TFlatPanel
-      Left = 8
-      Top = 85
-      Width = 330
-      Height = 35
-      BorderTop = 0
-      BorderLeft = 0
-      BorderRight = 0
-      BorderBottom = 0
-      Color = 13554645
-      BorderColor = clBlack
-      Align = alBottom
-      Caption = 'PanelBottom'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clBlack
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      TabOrder = 0
-      ExplicitTop = 53
-      ExplicitWidth = 320
-      object ButtonCancel: TFlatButton
-        Left = 136
-        Top = 6
-        Width = 65
-        Height = 20
-        Caption = 'Cancel'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ShowHint = True
-        ImageIndex = -1
-        Value = 0
-        OnClick = ButtonCancelClick
-        Busy = False
-      end
-      object ButtonStart: TFlatButton
-        Left = 207
-        Top = 12
-        Width = 65
-        Height = 20
-        Caption = 'Start'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ShowHint = True
-        ImageIndex = -1
-        Value = 0
-        OnClick = ButtonStartClick
-        Busy = False
-      end
-    end
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    ExplicitWidth = 326
+    ExplicitHeight = 56
     object PanelForm: TFlatPanel
       Left = 57
       Top = 8
-      Width = 281
-      Height = 77
-      BorderTop = 0
-      BorderLeft = 0
-      BorderRight = 0
-      BorderBottom = 0
-      Color = 13554645
-      BorderColor = clBlack
+      Width = 271
+      Height = 101
       Align = alClient
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -117,37 +56,42 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 1
+      TabOrder = 0
       Padding.Left = 16
-      ExplicitWidth = 271
-      ExplicitHeight = 45
-      object LabelPageSize: TLabel
-        AlignWithMargins = True
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 0
+      Color = 13554645
+      BorderColor = clBlack
+      ExplicitLeft = 54
+      object Label2: TLabel
         Left = 16
-        Top = 40
-        Width = 265
+        Top = 0
+        Width = 255
         Height = 13
-        Margins.Left = 0
-        Margins.Top = 8
-        Margins.Right = 0
-        Margins.Bottom = 0
         Align = alTop
         Caption = 'File Path:'
         ExplicitWidth = 45
       end
-      object Label2: TLabel
+      object LabelPageSize: TLabel
+        AlignWithMargins = True
         Left = 16
-        Top = 0
-        Width = 265
+        Top = 36
+        Width = 255
         Height = 13
+        Margins.Left = 0
+        Margins.Top = 4
+        Margins.Right = 0
+        Margins.Bottom = 0
         Align = alTop
-        Caption = 'File Path:'
-        ExplicitWidth = 45
+        Caption = 'Page Size'
+        ExplicitWidth = 46
       end
       object EditPath: TFlatEdit
         Left = 16
         Top = 13
-        Width = 265
+        Width = 255
         Height = 19
         Align = alTop
         AutoSize = False
@@ -165,12 +109,12 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         Status = cStatusNormal
         Validators = []
         ShowBorder = True
-        ExplicitWidth = 255
+        ExplicitWidth = 245
       end
       object EditPageSize: TFlatEdit
         Left = 16
-        Top = 53
-        Width = 265
+        Top = 49
+        Width = 255
         Height = 19
         Align = alTop
         AutoSize = False
@@ -189,20 +133,14 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         Status = cStatusNormal
         Validators = []
         ShowBorder = True
-        ExplicitWidth = 255
+        ExplicitLeft = 19
       end
     end
     object PanelLeft: TFlatPanel
       Left = 8
       Top = 8
       Width = 49
-      Height = 77
-      BorderTop = 0
-      BorderLeft = 0
-      BorderRight = 0
-      BorderBottom = 0
-      Color = 13554645
-      BorderColor = clBlack
+      Height = 101
       Align = alLeft
       Caption = 'PanelLeft'
       Font.Charset = DEFAULT_CHARSET
@@ -211,13 +149,19 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      TabOrder = 2
-      ExplicitHeight = 45
+      TabOrder = 1
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 0
+      Color = 13554645
+      BorderColor = clBlack
+      ExplicitHeight = 13
       object SkSvg1: TSkSvg
         Left = 0
         Top = 0
         Width = 49
-        Height = 77
+        Height = 101
         Align = alClient
         Svg.Source = 
           '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmln' +
@@ -292,6 +236,64 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
         ExplicitTop = 8
         ExplicitHeight = 80
       end
+    end
+  end
+  object PanelBottom: TFlatPanel
+    Left = 0
+    Top = 109
+    Width = 336
+    Height = 35
+    Align = alBottom
+    Caption = 'PanelBottom'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    BorderTop = 1
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    ExplicitLeft = 8
+    ExplicitTop = 21
+    ExplicitWidth = 310
+    object ButtonCancel: TFlatButton
+      Left = 136
+      Top = 6
+      Width = 65
+      Height = 20
+      Caption = 'Cancel'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
+      OnClick = ButtonCancelClick
+      Busy = False
+    end
+    object ButtonStart: TFlatButton
+      Left = 207
+      Top = 12
+      Width = 65
+      Height = 20
+      Caption = 'Start'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
+      OnClick = ButtonStartClick
+      Busy = False
     end
   end
 end

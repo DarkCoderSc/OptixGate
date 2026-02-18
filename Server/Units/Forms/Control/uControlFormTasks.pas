@@ -65,7 +65,7 @@ uses
 
   __uBaseFormControl__,
 
-  OptixCore.Commands.Base, OptixCore.Protocol.Packet;
+  OptixCore.Commands.Base, OptixCore.Protocol.Packet, NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -79,7 +79,7 @@ type
 
   TControlFormTasks = class(TBaseFormControl)
     VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Action1: TMenuItem;
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -93,6 +93,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure Action1Click(Sender: TObject);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     { Private declarations }
   private
     {@M}
@@ -256,6 +258,29 @@ begin
   end;
 end;
 
+procedure TControlFormTasks.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
+
+  var AColor := clNone;
+
+  case pData^.TaskCallBack.State of
+    otsRunning : AColor := COLOR_LIST_BLUE;
+    otsFailed  : AColor := COLOR_LIST_RED;
+    otsSuccess : AColor := COLOR_LIST_GREEN;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
+  end;
+end;
+
 procedure TControlFormTasks.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
   var Result: Integer);
 
@@ -323,14 +348,15 @@ begin
 
   case Kind of
     ikNormal, ikSelected : begin
-      case pData^.TaskCallBack.State of
-        otsRunning : ImageIndex := IMAGE_TASK_RUNNING;
-        otsFailed  : ImageIndex := IMAGE_TASK_FAILED;
-        otsSuccess : ImageIndex := IMAGE_TASK_SUCCESS;
-
-        else
-          ImageIndex := IMAGE_TASK_PENDING;
-      end;
+//      case pData^.TaskCallBack.State of
+//        otsRunning : ImageIndex := IMAGE_TASK_RUNNING;
+//        otsFailed  : ImageIndex := IMAGE_TASK_FAILED;
+//        otsSuccess : ImageIndex := IMAGE_TASK_SUCCESS;
+//
+//        else
+//          ImageIndex := IMAGE_TASK_PENDING;
+//      end;
+      ImageIndex := IMAGE_TASK;
     end;
 
     ikState: ;

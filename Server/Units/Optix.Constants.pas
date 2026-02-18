@@ -88,8 +88,16 @@ const
  IMAGE_FOLDER_DENIED                = 30;
  IMAGE_PAGE                         = 31;
  IMAGE_PAGE_SYS                     = 32;
-
-
+ IMAGE_TASK                         = 33;
+ IMAGE_BLUE_ARROW_LEFT              = 34;
+ IMAGE_BLUE_ARROW_RIGHT             = 35;
+ IMAGE_TRANSMIT                     = 36;
+ IMAGE_SERVER                       = 37;
+ IMAGE_COFEE                        = 38;
+ IMAGE_FOLDER_WRENCH                = 39;
+ IMAGE_BRICK                        = 40;
+ IMAGE_BRICK_WARNING                = 41;
+ IMAGE_BRICK_ERROR                  = 42;
 
  IMAGE_USER_ADMIN                   = 1;
  IMAGE_USER_ELEVATED                = 2;

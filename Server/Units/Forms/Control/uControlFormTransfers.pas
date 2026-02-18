@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uControlFormTransfers;
 
 interface
@@ -66,7 +64,9 @@ uses
 
   __uBaseFormControl__,
 
-  OptixCore.Protocol.FileTransfer, OptixCore.LogNotifier, OptixCore.Protocol.Packet;
+  OptixCore.Protocol.FileTransfer, OptixCore.LogNotifier, OptixCore.Protocol.Packet,
+
+  NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -95,7 +95,7 @@ type
 
   TControlFormTransfers = class(TBaseFormControl)
     VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     DownloadaFile1: TMenuItem;
     UploadaFile1: TMenuItem;
     OpenDialog: TOpenDialog;
@@ -114,6 +114,8 @@ type
     procedure CancelTransfer1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
     {@M}
     function RegisterNewTransfer(const ASourceFilePath, ADestinationFilePath : String; const ADirection : TOptixTransferDirection; const AContext : String = '') : TGUID;
@@ -434,6 +436,35 @@ begin
   RequestFileUpload('');
 end;
 
+procedure TControlFormTransfers.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  if Column <> 4 then
+    Exit;
+
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit;
+  ///
+
+  var AColor := clNone;
+
+  case pData^.State of
+    tsQueued        : AColor := COLOR_LIST_GRAY;
+    tsProgress      : AColor := COLOR_LIST_BLUE;
+    tsEnded         : AColor := COLOR_LIST_GREEN;
+    tsError         : AColor := COLOR_LIST_RED;
+    tsCancelRequest : AColor := COLOR_LIST_YELLOW;
+    tsCanceled      : AColor := COLOR_LIST_ORANGE;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
+  end;
+end;
+
 procedure TControlFormTransfers.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
   var Result: Integer);
 
@@ -492,19 +523,8 @@ begin
     case Column of
       2 : begin
         case pData^.Direction of
-          otdClientIsUploading   : ImageIndex := IMAGE_FILE_DOWNLOAD;
-          otdClientIsDownloading : ImageIndex := IMAGE_FILE_UPLOAD;
-        end;
-      end;
-
-      4 : begin
-        case pData^.State of
-          tsQueued        : ImageIndex := IMAGE_FILE_QUEUE;
-          tsProgress      : ImageIndex := IMAGE_FILE_TRANSFERING;
-          tsEnded         : ImageIndex := IMAGE_FILE_TRANSFERED;
-          tsError         : ImageIndex := IMAGE_FILE_TRANSFER_ERROR;
-          tsCancelRequest : ImageIndex := IMAGE_FILE_TRANSFER_CANCEL_REQUEST;
-          tsCanceled      : ImageIndex := IMAGE_FILE_TRANSFER_CANCELED;
+          otdClientIsUploading   : ImageIndex := IMAGE_BLUE_ARROW_LEFT;
+          otdClientIsDownloading : ImageIndex := IMAGE_BLUE_ARROW_RIGHT;
         end;
       end;
     end;

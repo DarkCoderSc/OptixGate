@@ -70,14 +70,14 @@ type
     PanelForm: TFlatPanel;
     PanelLeft: TFlatPanel;
     SkSvg1: TSkSvg;
-    PanelBottom: TFlatPanel;
-    ButtonCancel: TFlatButton;
-    ButtonStart: TFlatButton;
-    LabelPageSize: TLabel;
     PanelMain: TFlatPanel;
     EditPath: TFlatEdit;
     Label2: TLabel;
     EditPageSize: TFlatEdit;
+    LabelPageSize: TLabel;
+    PanelBottom: TFlatPanel;
+    ButtonCancel: TFlatButton;
+    ButtonStart: TFlatButton;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -135,8 +135,10 @@ begin
   ButtonStart.Top := (PanelBottom.Height div 2) - (ButtonStart.Height div 2);
   ButtonCancel.Top  := ButtonStart.Top;
 
-  ButtonStart.Left := PanelBottom.Width - ButtonStart.Width;
+  ButtonStart.Left := PanelBottom.Width - ButtonStart.Width - ScaleValue(8);
   ButtonCancel.Left  := ButtonStart.Left - ButtonStart.Width - ScaleValue(4);
+
+  ClientHeight := PanelMain.Top + EditPageSize.Top + EditPageSize.Height + ScaleValue(16) + PanelBottom.Height;
 end;
 
 procedure TControlFormSetupContentReader.FormClose(Sender: TObject; var Action: TCloseAction);

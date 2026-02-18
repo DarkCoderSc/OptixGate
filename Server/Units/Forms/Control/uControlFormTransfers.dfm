@@ -2,8 +2,8 @@ object ControlFormTransfers: TControlFormTransfers
   Left = 0
   Top = 0
   Caption = 'Transfers'
-  ClientHeight = 269
-  ClientWidth = 694
+  ClientHeight = 202
+  ClientWidth = 580
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,8 +17,8 @@ object ControlFormTransfers: TControlFormTransfers
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 694
-    Height = 269
+    Width = 580
+    Height = 202
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -38,14 +38,17 @@ object ControlFormTransfers: TControlFormTransfers
     PopupMenu = PopupMenu
     StateImages = FormMain.VirtualImageList
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
+    OnBeforeCellPaint = VSTBeforeCellPaint
     OnCompareNodes = VSTCompareNodes
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitWidth = 694
+    ExplicitHeight = 269
     Columns = <
       item
         Position = 0
@@ -88,7 +91,8 @@ object ControlFormTransfers: TControlFormTransfers
         Width = 250
       end>
   end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupMenuPopup
     Left = 232
     Top = 96

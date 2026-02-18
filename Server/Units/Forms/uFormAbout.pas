@@ -59,7 +59,8 @@ uses
 
   Winapi.Windows, Winapi.Messages,
 
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls,
+  Vcl.BaseImageCollection, Vcl.ImageCollection;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -69,6 +70,7 @@ type
     LabelDarkCoderSc: TLabel;
     ButtonClose: TButton;
     Disclaimer: TRichEdit;
+    ImageCollection: TImageCollection;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -125,8 +127,6 @@ end;
 procedure TFormAbout.FormCreate(Sender: TObject);
 begin
   FFirstShow := True;
-
-  ImageLogo.ImageIndex := IMAGE_OPTIX_FACE;
 end;
 
 procedure TFormAbout.FormResize(Sender: TObject);

@@ -46,8 +46,6 @@ object ControlFormProcessManager: TControlFormProcessManager
     OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 464
-    ExplicitHeight = 356
     Columns = <
       item
         Position = 0

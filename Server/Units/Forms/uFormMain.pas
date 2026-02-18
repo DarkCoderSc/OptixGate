@@ -59,6 +59,8 @@
       - New design implemented: "Neo Flat" (retro flat design)
 *)
 
+// TODO: Red color (THEME) for caption bars in Client_GUI
+
 unit uFormMain;
 
 interface
