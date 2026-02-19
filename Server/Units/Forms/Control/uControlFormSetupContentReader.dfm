@@ -1,10 +1,10 @@
 object ControlFormSetupContentReader: TControlFormSetupContentReader
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
+  BorderIcons = [biSystemMenu]
   Caption = 'New Content Reader'
-  ClientHeight = 218
-  ClientWidth = 396
+  ClientHeight = 126
+  ClientWidth = 336
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,126 +19,184 @@ object ControlFormSetupContentReader: TControlFormSetupContentReader
   OnResize = FormResize
   OnShow = FormShow
   TextHeight = 15
-  object PanelClient: TPanel
-    Left = 50
+  object PanelMain: TFlatPanel
+    Left = 0
     Top = 0
-    Width = 346
-    Height = 177
+    Width = 336
+    Height = 91
     Align = alClient
-    BevelOuter = bvNone
-    Padding.Left = 8
-    Padding.Top = 8
-    Padding.Right = 8
-    Padding.Bottom = 8
+    Caption = 'PanelMain'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 336
-    ExplicitHeight = 145
-    object Label1: TLabel
-      AlignWithMargins = True
-      Left = 8
-      Top = 8
-      Width = 330
-      Height = 15
-      Margins.Left = 0
-      Margins.Top = 0
-      Margins.Right = 0
-      Margins.Bottom = 0
-      Align = alTop
-      Caption = 'File Path:'
-      ExplicitWidth = 48
-    end
-    object LabelPageSize: TLabel
-      AlignWithMargins = True
-      Left = 8
-      Top = 54
-      Width = 330
-      Height = 15
-      Margins.Left = 0
-      Margins.Top = 8
-      Margins.Right = 0
-      Margins.Bottom = 0
-      Align = alTop
-      Caption = 'Page Size (%d - %d):'
-      ExplicitWidth = 108
-    end
-    object EditPath: TEdit
-      Left = 8
-      Top = 23
-      Width = 330
-      Height = 23
-      Align = alTop
-      TabOrder = 0
-      ExplicitWidth = 320
-    end
-    object SpinPageSize: TSpinEdit
-      Left = 8
-      Top = 69
-      Width = 330
-      Height = 24
-      Align = alTop
-      MaxValue = 409600
-      MinValue = 128
-      TabOrder = 1
-      Value = 1024
-      ExplicitWidth = 320
-    end
-  end
-  object PanelLeft: TPanel
-    Left = 0
-    Top = 0
-    Width = 50
-    Height = 177
-    Align = alLeft
-    BevelOuter = bvNone
     Padding.Left = 8
-    Padding.Top = 8
+    Padding.Top = 4
     Padding.Right = 8
-    Padding.Bottom = 8
-    TabOrder = 1
-    ExplicitHeight = 145
-    object Image: TVirtualImage
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    ExplicitWidth = 326
+    ExplicitHeight = 77
+    object PanelForm: TFlatPanel
       Left = 8
-      Top = 8
-      Width = 34
-      Height = 161
+      Top = 4
+      Width = 320
+      Height = 87
       Align = alClient
-      Center = True
-      ImageCollection = FormMain.ImageCollectionDark
-      ImageWidth = 0
-      ImageHeight = 0
-      ImageIndex = 70
-      ImageName = 'check-source-code'
-      ExplicitWidth = 32
-      ExplicitHeight = 32
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 0
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 0
+      Color = 13554645
+      BorderColor = clBlack
+      ExplicitLeft = 57
+      ExplicitTop = 8
+      ExplicitWidth = 261
+      ExplicitHeight = 69
+      object Label2: TLabel
+        Left = 0
+        Top = 0
+        Width = 320
+        Height = 13
+        Align = alTop
+        Caption = 'File Path:'
+        ExplicitLeft = 16
+        ExplicitWidth = 45
+      end
+      object LabelPageSize: TLabel
+        AlignWithMargins = True
+        Left = 0
+        Top = 36
+        Width = 320
+        Height = 13
+        Margins.Left = 0
+        Margins.Top = 4
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Align = alTop
+        Caption = 'Page Size'
+        ExplicitLeft = 16
+        ExplicitWidth = 46
+      end
+      object EditPath: TFlatEdit
+        Left = 0
+        Top = 13
+        Width = 320
+        Height = 19
+        Align = alTop
+        AutoSize = False
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        Status = cStatusNormal
+        Validators = []
+        ShowBorder = True
+        ExplicitLeft = 16
+        ExplicitWidth = 245
+      end
+      object EditPageSize: TFlatEdit
+        Left = 0
+        Top = 49
+        Width = 320
+        Height = 19
+        Align = alTop
+        AutoSize = False
+        Color = clWhite
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        NumbersOnly = True
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 1
+        Text = '1024'
+        Status = cStatusNormal
+        Validators = []
+        ShowBorder = True
+        ExplicitLeft = 16
+        ExplicitWidth = 245
+      end
     end
   end
-  object PanelBottom: TPanel
+  object PanelBottom: TFlatPanel
     Left = 0
-    Top = 177
-    Width = 396
-    Height = 41
+    Top = 91
+    Width = 336
+    Height = 35
     Align = alBottom
-    BevelOuter = bvNone
-    TabOrder = 2
-    ExplicitTop = 145
-    ExplicitWidth = 386
-    object ButtonStart: TButton
-      Left = 152
+    Caption = 'PanelBottom'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    BorderTop = 1
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    ExplicitTop = 77
+    ExplicitWidth = 326
+    object ButtonCancel: TFlatButton
+      Left = 136
       Top = 6
-      Width = 83
-      Height = 25
-      Caption = 'Start'
-      TabOrder = 0
-      OnClick = ButtonStartClick
-    end
-    object ButtonCancel: TButton
-      Left = 63
-      Top = 6
-      Width = 83
-      Height = 25
+      Width = 65
+      Height = 20
       Caption = 'Cancel'
-      TabOrder = 1
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
       OnClick = ButtonCancelClick
+      Busy = False
+    end
+    object ButtonStart: TFlatButton
+      Left = 207
+      Top = 12
+      Width = 65
+      Height = 20
+      Caption = 'Start'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
+      OnClick = ButtonStartClick
+      Busy = False
     end
   end
 end

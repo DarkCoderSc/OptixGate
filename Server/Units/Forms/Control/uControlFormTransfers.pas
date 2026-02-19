@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uControlFormTransfers;
 
 interface
@@ -66,7 +64,9 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier, Optix.Protocol.Packet;
+  OptixCore.Protocol.FileTransfer, OptixCore.LogNotifier, OptixCore.Protocol.Packet,
+
+  NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -95,7 +95,7 @@ type
 
   TControlFormTransfers = class(TBaseFormControl)
     VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     DownloadaFile1: TMenuItem;
     UploadaFile1: TMenuItem;
     OpenDialog: TOpenDialog;
@@ -114,6 +114,8 @@ type
     procedure CancelTransfer1Click(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
   private
     {@M}
     function RegisterNewTransfer(const ASourceFilePath, ADestinationFilePath : String; const ADirection : TOptixTransferDirection; const AContext : String = '') : TGUID;
@@ -147,8 +149,8 @@ uses
 
   uFormMain, uControlFormFileManager,
 
-  Optix.Func.Commands, Optix.Helper, VCL.FileCtrl, Optix.FileSystem.Helper, Optix.Exceptions, Optix.Constants,
-  Optix.VCL.Helper, Optix.Func.Commands.FileSystem;
+  OptixCore.Commands, VCL.FileCtrl, OptixCore.System.FileSystem, OptixCore.Exceptions, Optix.Constants,
+  Optix.Helper, OptixCore.Commands.FileSystem;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -219,7 +221,7 @@ end;
 
 procedure TControlFormTransfers.PopupMenuPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
   ///
 
   UploadaFile1.Visible   := True;
@@ -368,7 +370,7 @@ begin
     pData^.DestinationFilePath := TFileSystemHelper.UniqueFileName(ADestinationFilePath.Trim());
     pData^.Direction           := ADirection;
     pData^.Context             := AContext;
-    pData^.ImageIndex          := SystemFileIcon(pData^.SourceFilePath, (ADirection = otdClientIsUploading));
+    pData^.ImageIndex          := TOptixHelper.SystemFileIcon(pData^.SourceFilePath, (ADirection = otdClientIsUploading));
 
     ///
     result := pData^.Id;
@@ -385,7 +387,7 @@ begin
     end;
 
   ///
-  TOptixVCLHelper.ShowForm(self);
+  TOptixHelper.ShowForm(self);
 end;
 
 function TControlFormTransfers.RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = ''; const AContext : String = '') : TGUID;
@@ -432,6 +434,35 @@ end;
 procedure TControlFormTransfers.UploadaFile1Click(Sender: TObject);
 begin
   RequestFileUpload('');
+end;
+
+procedure TControlFormTransfers.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  if Column <> 4 then
+    Exit;
+
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit;
+  ///
+
+  var AColor := clNone;
+
+  case pData^.State of
+    tsQueued        : AColor := COLOR_LIST_GRAY;
+    tsProgress      : AColor := COLOR_LIST_BLUE;
+    tsEnded         : AColor := COLOR_LIST_GREEN;
+    tsError         : AColor := COLOR_LIST_RED;
+    tsCancelRequest : AColor := COLOR_LIST_YELLOW;
+    tsCanceled      : AColor := COLOR_LIST_ORANGE;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
+  end;
 end;
 
 procedure TControlFormTransfers.VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
@@ -492,19 +523,8 @@ begin
     case Column of
       2 : begin
         case pData^.Direction of
-          otdClientIsUploading   : ImageIndex := IMAGE_FILE_DOWNLOAD;
-          otdClientIsDownloading : ImageIndex := IMAGE_FILE_UPLOAD;
-        end;
-      end;
-
-      4 : begin
-        case pData^.State of
-          tsQueued        : ImageIndex := IMAGE_FILE_QUEUE;
-          tsProgress      : ImageIndex := IMAGE_FILE_TRANSFERING;
-          tsEnded         : ImageIndex := IMAGE_FILE_TRANSFERED;
-          tsError         : ImageIndex := IMAGE_FILE_TRANSFER_ERROR;
-          tsCancelRequest : ImageIndex := IMAGE_FILE_TRANSFER_CANCEL_REQUEST;
-          tsCanceled      : ImageIndex := IMAGE_FILE_TRANSFER_CANCELED;
+          otdClientIsUploading   : ImageIndex := IMAGE_BLUE_ARROW_LEFT;
+          otdClientIsDownloading : ImageIndex := IMAGE_BLUE_ARROW_RIGHT;
         end;
       end;
     end;
@@ -542,7 +562,7 @@ begin
       end;
       3 : begin
         if pData^.FileSize > 0 then
-          CellText := FormatFileSize(pData^.FileSize);
+          CellText := TOptixHelper.FormatFileSize(pData^.FileSize);
       end;
       4 : begin
         case pData^.State of
@@ -551,8 +571,8 @@ begin
             if pData^.FileSize > 0 then
               CellText := Format('%d%% (%s/%s)', [
                 (pData^.WorkCount * 100) div pData^.FileSize,
-                FormatFileSize(pData^.WorkCount),
-                FormatFileSize(pData^.FileSize)
+                TOptixHelper.FormatFileSize(pData^.WorkCount),
+                TOptixHelper.FormatFileSize(pData^.FileSize)
               ]);
           end;
           tsEnded         : CellText := 'Ended';
@@ -568,7 +588,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormTransfers.CancelTransfer1Click(Sender: TObject);
@@ -605,11 +625,7 @@ end;
 
 procedure TControlFormTransfers.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
 
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 end.

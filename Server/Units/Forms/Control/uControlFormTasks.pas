@@ -65,7 +65,7 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Func.Commands.Base, Optix.Protocol.Packet;
+  OptixCore.Commands.Base, OptixCore.Protocol.Packet, NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -79,7 +79,7 @@ type
 
   TControlFormTasks = class(TBaseFormControl)
     VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Action1: TMenuItem;
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -93,6 +93,8 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure Action1Click(Sender: TObject);
+    procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+      Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     { Private declarations }
   private
     {@M}
@@ -117,7 +119,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Task.ProcessDump;
+  Optix.Constants, Optix.Helper, OptixCore.Task.ProcessDump;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -236,7 +238,7 @@ begin
       pData^.HasEnded := False;
 
       ///
-      TOptixVCLHelper.ShowForm(self);
+      TOptixHelper.ShowForm(self);
     end else
       pData := pNode.GetData;
 
@@ -253,6 +255,29 @@ begin
     end;
   finally
     VST.EndUpdate();
+  end;
+end;
+
+procedure TControlFormTasks.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  var pData := PTreeData(Node.GetData);
+  if not Assigned(pData) then
+    Exit();
+  ///
+
+  var AColor := clNone;
+
+  case pData^.TaskCallBack.State of
+    otsRunning : AColor := COLOR_LIST_BLUE;
+    otsFailed  : AColor := COLOR_LIST_RED;
+    otsSuccess : AColor := COLOR_LIST_GREEN;
+  end;
+
+  if AColor <> clNone then begin
+    TargetCanvas.Brush.Color := AColor;
+
+    TargetCanvas.FillRect(CellRect);
   end;
 end;
 
@@ -294,11 +319,11 @@ begin
       end;
 
       3 : Result := CompareDateTime(pData1^.Created, pData2^.Created);
-      4 : Result := CompareDateTimeEx(pData1^.Ended, pData1^.HasEnded, pData2^.Ended, pData2^.HasEnded);
+      4 : Result := TOptixHelper.CompareDateTimeEx(pData1^.Ended, pData1^.HasEnded, pData2^.Ended, pData2^.HasEnded);
 
       5 : begin
         if not Assigned(pData1^.TaskCallBack.Result) or not Assigned(pData2^.TaskCallBack.Result) then
-          Result := CompareObjectAssignement(pData1^.TaskCallBack.Result, pData2^.TaskCallBack.Result)
+          Result := TOptixHelper.CompareObjectAssignement(pData1^.TaskCallBack.Result, pData2^.TaskCallBack.Result)
         else
           Result := CompareText(pData1^.TaskCallBack.Result.Description, pData2^.TaskCallBack.Result.Description);
       end;
@@ -323,14 +348,15 @@ begin
 
   case Kind of
     ikNormal, ikSelected : begin
-      case pData^.TaskCallBack.State of
-        otsRunning : ImageIndex := IMAGE_TASK_RUNNING;
-        otsFailed  : ImageIndex := IMAGE_TASK_FAILED;
-        otsSuccess : ImageIndex := IMAGE_TASK_SUCCESS;
-
-        else
-          ImageIndex := IMAGE_TASK_PENDING;
-      end;
+//      case pData^.TaskCallBack.State of
+//        otsRunning : ImageIndex := IMAGE_TASK_RUNNING;
+//        otsFailed  : ImageIndex := IMAGE_TASK_FAILED;
+//        otsSuccess : ImageIndex := IMAGE_TASK_SUCCESS;
+//
+//        else
+//          ImageIndex := IMAGE_TASK_PENDING;
+//      end;
+      ImageIndex := IMAGE_TASK;
     end;
 
     ikState: ;
@@ -375,16 +401,12 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormTasks.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
 
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 end.

@@ -62,7 +62,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask,
   Vcl.Samples.Spin,
 
-  Optix.Sockets.Helper;
+  OptixCore.Sockets.Helper, NeoFlat.Button, NeoFlat.ComboBox, NeoFlat.Edit, NeoFlat.Panel, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -77,31 +77,28 @@ type
   end;
 
   TFormConnectToServer = class(TForm)
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
-    PanelClient: TPanel;
+    PanelClient: TFlatPanel;
     Label1: TLabel;
-    EditServerAddress: TEdit;
+    EditServerAddress: TFlatEdit;
     Label2: TLabel;
-    SpinPort: TSpinEdit;
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
+    EditPort: TFlatEdit;
+    PanelBottom: TFlatPanel;
+    ButtonConnect: TFlatButton;
+    ButtonCancel: TFlatButton;
     LabelCertificate: TLabel;
-    ComboCertificate: TComboBox;
-    ComboIpVersion: TComboBox;
+    ComboCertificate: TFlatComboBox;
+    ComboIpVersion: TFlatComboBox;
     Label3: TLabel;
+    FlatWindow1: TFlatWindow;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ButtonCancelClick(Sender: TObject);
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure SpinPortChange(Sender: TObject);
+    procedure EditPortChange(Sender: TObject);
     procedure ComboIpVersionChange(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
   private
-    FCanceled : Boolean;
-
     {@M}
     procedure DoResize();
   public
@@ -112,9 +109,6 @@ type
 
     {@M}
     function GetClientConfiguration() : TClientConfiguration;
-
-    {@G}
-    property Canceled : Boolean read FCanceled;
   end;
 
 var
@@ -124,6 +118,8 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  Optix.Helper,
+
   uFormMain, uFormWarning;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -131,8 +127,15 @@ uses
 
 function TFormConnectToServer.GetClientConfiguration() : TClientConfiguration;
 begin
+  var APort := StrToInt(EditPort.Text);
+  if APort < 0 then
+    APort := 0
+  else if APort > High(Word) then
+    APort := High(Word);
+  ///
+
   result.Address := EditServerAddress.Text;
-  result.Port    := SpinPort.Value;
+  result.Port    := APort;
   result.Version := TIpVersion(ComboIpVersion.ItemIndex);
 
   {$IFDEF USETLS}
@@ -142,28 +145,36 @@ end;
 
 procedure TFormConnectToServer.ButtonCancelClick(Sender: TObject);
 begin
-  Close();
+  ModalResult := mrCancel;
 end;
 
 procedure TFormConnectToServer.ButtonConnectClick(Sender: TObject);
 begin
-  if String.IsNullOrWhiteSpace(EditServerAddress.Text) or
-     not TOptixSocketHelper.IsValidHost(EditServerAddress.Text, TIPVersion(ComboIpVersion.ItemIndex))
-  then begin
-    EditServerAddress.SetFocus();
+  var AErrorDialog := TOptixErrorDialog.Create(self);
+  try
+    if String.IsNullOrWhiteSpace(EditServerAddress.Text) or
+       not TOptixSocketHelper.IsValidHost(EditServerAddress.Text, TIPVersion(ComboIpVersion.ItemIndex))
+    then begin
+      EditServerAddress.SetFocus();
 
-    raise Exception.Create(
-      'You must specify a valid server address. For IPv4, use an address such as "127.0.0.1" for localhost or any ' +
-      'valid LAN or WAN IPv4 address. For IPv6, use "::1" for localhost or a full IPv6 address such as ' +
-      '"fd00:abcd:1234::100". You can also use a hostname that resolves to the appropriate IP version depending on ' +
-      'the selected IP version mode.'
-    );
+      AErrorDialog.Add(
+        'You must specify a valid server address. For IPv4, use an address such as "127.0.0.1" for localhost or any ' +
+        'valid LAN or WAN IPv4 address. For IPv6, use "::1" for localhost or a full IPv6 address such as ' +
+        '"fd00:abcd:1234::100". You can also use a hostname that resolves to the appropriate IP version depending on ' +
+        'the selected IP version mode.'
+      );
+    end;
+
+    if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
+      AErrorDialog.Add(
+        'You must select an existing certificate (via its fingerprint) for the server to start listening.'
+      );
+
+    if AErrorDialog.ShowErrors() then
+      Exit();
+  finally
+    FreeAndNil(AErrorDialog);
   end;
-
-  if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
-    raise Exception.Create(
-      'You must select an existing certificate (via its fingerprint) for the server to start listening.'
-    );
 
   {$IFNDEF DEBUG}
   var AForm := TFormWarning.Create(self);
@@ -177,9 +188,7 @@ begin
   end;
   {$ENDIF}
 
-  FCanceled := False;
-
-  Close();
+  ModalResult := mrOk;
 end;
 
 procedure TFormConnectToServer.DoResize();
@@ -187,23 +196,21 @@ begin
   ButtonConnect.Top := (PanelBottom.Height div 2) - (ButtonConnect.Height div 2);
   ButtonCancel.Top  := ButtonConnect.Top;
 
-  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
-  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
+  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - ScaleValue(8);
+  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - ScaleValue(8);
 
   var ANewHeight := PanelBottom.Height;
 
   if not LabelCertificate.Visible then
-    Inc(ANewHeight, SpinPort.Top + SpinPort.Height + 8)
+    Inc(ANewHeight, EditPort.Top + EditPort.Height + ScaleValue(8))
   else
-    Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + 8);
+    Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + ScaleValue(8));
 
   ClientHeight := ANewHeight;
 end;
 
 procedure TFormConnectToServer.FormCreate(Sender: TObject);
 begin
-  FCanceled := True;
-
   {$IFNDEF USETLS}
   LabelCertificate.Visible := False;
   ComboCertificate.Visible := False;
@@ -214,7 +221,7 @@ procedure TFormConnectToServer.FormKeyUp(Sender: TObject; var Key: Word; Shift: 
 begin
   case Key of
     13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+    27 : ModalResult := mrCancel;
   end;
 end;
 
@@ -232,7 +239,7 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormConnectToServer.SpinPortChange(Sender: TObject);
+procedure TFormConnectToServer.EditPortChange(Sender: TObject);
 begin
   if TSpinEdit(Sender).Value < 0 then
     TSpinEdit(Sender).Value := 0

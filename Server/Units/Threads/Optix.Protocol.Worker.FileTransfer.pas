@@ -59,7 +59,7 @@ uses
 
   Generics.Collections,
 
-  Optix.Protocol.Client, Optix.Shared.Protocol.FileTransfer;
+  Optix.Protocol.Client, OptixCore.Protocol.FileTransfer;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -100,7 +100,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Exceptions, Optix.Sockets.Exceptions{$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+  OptixCore.Exceptions, OptixCore.Sockets.Exceptions{$IFDEF USETLS}, OptixCore.OpenSSL.Exceptions{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure TOptixFileTransferWorker.Initialize();

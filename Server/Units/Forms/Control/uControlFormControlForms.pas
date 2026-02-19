@@ -63,7 +63,9 @@ uses
 
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees,  VirtualTrees.Types,
 
-   __uBaseFormControl__;
+   __uBaseFormControl__,
+
+   NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -79,7 +81,7 @@ type
 
   TControlFormControlForms = class(TBaseFormControl)
     VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Refresh1: TMenuItem;
     TimerRefresh: TTimer;
     N1: TMenuItem;
@@ -136,7 +138,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Generics.Collections, Optix.Constants, Optix.VCL.Helper;
+  Generics.Collections, Optix.Constants, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -371,7 +373,7 @@ begin
 
   var AForm := GetFormByGUID(ATargetGUID);
   if Assigned(AForm) then
-    TOptixVCLHelper.ShowForm(AForm);
+    TOptixHelper.ShowForm(AForm);
 end;
 
 procedure TControlFormControlForms.TimerRefreshTimer(Sender: TObject);
@@ -398,7 +400,7 @@ begin
   if pData^.FormInformation.HasUnseenData then
     AColor := COLOR_LIST_BLUE
   else if pData^.FormInformation.HasFocus then
-    AColor := COLOR_LIST_LIMY
+    AColor := COLOR_LIST_GREEN
   else if pData^.FormInformation.State = fcsClosed then
     AColor := COLOR_LIST_GRAY
   else if pData^.FormInformation.State = fcsWaitFree then
@@ -421,7 +423,7 @@ begin
     Result := 0
   else begin
     if (Column in [2..4, 6]) and (not Assigned(pData1^.FormInformation) or not Assigned(pData2^.FormInformation)) then
-      Result := CompareObjectAssignement(pData1^.FormInformation, pData2^.FormInformation)
+      Result := TOptixHelper.CompareObjectAssignement(pData1^.FormInformation, pData2^.FormInformation)
     else begin
       case Column of
         0 : Result := CompareText(pData1^.Title, pData2^.Title);
@@ -468,22 +470,23 @@ begin
   ///
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
-      if pData^.FormInformation.HasUnseenData then
-        ImageIndex := IMAGE_FORM_CONTROL_DATA
-      else if pData^.FormInformation.HasFocus then
-        ImageIndex := IMAGE_FORM_CONTROL_ACTIVE
-      else if pData^.FormInformation.State = fcsClosed then
-        ImageIndex := IMAGE_FORM_CONTROL_CLOSED
-      else
-        ImageIndex := IMAGE_FORM_CONTROL;
-    end;
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected : // begin
+//      if pData^.FormInformation.HasUnseenData then
+//        ImageIndex := IMAGE_FORM_CONTROL_DATA
+//      else if pData^.FormInformation.HasFocus then
+//        ImageIndex := IMAGE_FORM_CONTROL_ACTIVE
+//      else if pData^.FormInformation.State = fcsClosed then
+//        ImageIndex := IMAGE_FORM_CONTROL_CLOSED
+//      else
+//        ImageIndex := IMAGE_FORM_CONTROL;
+      ImageIndex := IMAGE_CONTROL_APP;
+//    end;
 
     TVTImageKind.ikState : begin
       if pData^.Special then
-        ImageIndex := IMAGE_STAR_FILLED
+        ImageIndex := IMAGE_ANCHOR
       else
-        ImageIndex := IMAGE_STAR_EMPTY;
+        ImageIndex := 1000;
     end;
   end;
 end;
@@ -510,7 +513,7 @@ begin
       3 : CellText := DateTimeToStr(pData^.FormInformation.CreatedTime);
       4 :begin
         if pData^.FormInformation.HasReceivedData then
-          CellText := ElapsedDateTime(
+          CellText := TOptixHelper.ElapsedDateTime(
             pData^.FormInformation.LastReceivedDataTime,
             Now
           );
@@ -521,17 +524,13 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormControlForms.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
+ 
 end;
 
 end.

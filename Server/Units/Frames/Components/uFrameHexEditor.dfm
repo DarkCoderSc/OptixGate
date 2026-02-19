@@ -18,7 +18,6 @@ object FrameHexEditor: TFrameHexEditor
     BackGroundImageTransparent = True
     BorderStyle = bsNone
     Color = clWhite
-    Colors.FocusedSelectionColor = clHotLight
     Colors.UnfocusedColor = clWindowText
     DefaultNodeHeight = 19
     Font.Charset = DEFAULT_CHARSET
@@ -36,7 +35,7 @@ object FrameHexEditor: TFrameHexEditor
     ParentFont = False
     TabOrder = 0
     TreeOptions.MiscOptions = [toAcceptOLEDrop, toFullRepaintOnResize, toInitOnSave, toWheelPanning]
-    TreeOptions.PaintOptions = [toHideFocusRect, toHideSelection, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toAlwaysHideSelection]
+    TreeOptions.PaintOptions = [toHideFocusRect, toHideSelection, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines, toAlwaysHideSelection]
     TreeOptions.SelectionOptions = [toDisableDrawSelection]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnGetText = VSTGetText

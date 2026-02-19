@@ -59,37 +59,34 @@ uses
 
   Winapi.Windows, Winapi.Messages,
 
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  System.Skia, Vcl.Skia, NeoFlat.Edit, NeoFlat.Panel, NeoFlat.Button, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormGenerateNewCertificate = class(TForm)
-    PanelBottom: TPanel;
-    ButtonGenerate: TButton;
-    ButtonCancel: TButton;
-    PanelClient: TPanel;
+    PanelClient: TFlatPanel;
     Label2: TLabel;
-    EditCN: TEdit;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
-    EditC: TEdit;
+    EditCN: TFlatEdit;
+    PanelLeft: TFlatPanel;
+    EditC: TFlatEdit;
     Label1: TLabel;
     Label3: TLabel;
-    EditO: TEdit;
+    EditO: TFlatEdit;
+    SkSvg1: TSkSvg;
+    FlatWindow1: TFlatWindow;
+    PanelBottom: TFlatPanel;
+    ButtonGenerate: TFlatButton;
+    ButtonCancel: TFlatButton;
     procedure ButtonGenerateClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
-    FCanceled : Boolean;
-
     {@M}
     procedure DoResize();
-  public
-    {@G}
-    property Canceled : Boolean read FCanceled;
   end;
 
 var
@@ -101,62 +98,64 @@ implementation
 uses
   uFormMain,
 
-  Optix.Constants;
+  Optix.Constants, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
 procedure TFormGenerateNewCertificate.ButtonCancelClick(Sender: TObject);
 begin
-  Close();
+  ModalResult := mrCancel;
 end;
 
 procedure TFormGenerateNewCertificate.ButtonGenerateClick(Sender: TObject);
 begin
-  if String.IsNullOrWhiteSpace(EditC.Text) then begin
-    EditC.SetFocus();
+  var AErrorDialog := TOptixErrorDialog.Create(self);
+  try
+    if String.IsNullOrWhiteSpace(EditC.Text) then
+      AErrorDialog.Add('You must specify a country.');
 
-    raise Exception.Create('You must specify a country.');
+    if String.IsNullOrWhiteSpace(EditO.Text) then
+      AErrorDialog.Add('You must specify an organization name.');
+
+    if String.IsNullOrWhiteSpace(EditCN.Text) then
+      AErrorDialog.Add('You must specify a common name.');
+
+    if AErrorDialog.ShowErrors() then
+      Exit();
+  finally
+    FreeAndNil(AErrorDialog);
   end;
 
-  if String.IsNullOrWhiteSpace(EditO.Text) then begin
-    EditO.SetFocus();
-
-    raise Exception.Create('You must specify an organization name.');
-  end;
-
-  if String.IsNullOrWhiteSpace(EditCN.Text) then begin
-    EditCN.SetFocus();
-
-    raise Exception.Create('You must specify a common name.');
-  end;
-
-  FCanceled := False;
-
-  Close();
+  ///
+  ModalResult := mrOk;
 end;
 
 procedure TFormGenerateNewCertificate.DoResize();
 begin
-  ButtonGenerate.Top := (PanelBottom.Height div 2) - (ButtonGenerate.Height div 2);
-  ButtonCancel.Top  := ButtonGenerate.Top;
+  ButtonGenerate.Top  := (PanelBottom.Height div 2) - (ButtonGenerate.Height div 2);
+  ButtonCancel.Top    := ButtonGenerate.Top;
 
-  ButtonGenerate.Left := PanelBottom.Width - ButtonGenerate.Width - 8;
-  ButtonCancel.Left  := ButtonGenerate.Left - ButtonGenerate.Width - 8;
+  ButtonGenerate.Left := PanelBottom.Width - ButtonGenerate.Width - ScaleValue(8);
+  ButtonCancel.Left   := ButtonGenerate.Left - ButtonGenerate.Width - ScaleValue(8);
 end;
 
 procedure TFormGenerateNewCertificate.FormCreate(Sender: TObject);
 begin
-  FCanceled := True;
-
-  Image.ImageIndex := IMAGE_CERTIFICATE;
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  PanelClient.Color      := FlatWindow1.Background;
+  PanelLeft.Color        := FlatWindow1.Background;
+  PanelBottom.Color      := FlatWindow1.Background;
+  {$ENDIF}
 end;
 
 procedure TFormGenerateNewCertificate.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case Key of
     13 : ButtonGenerateClick(ButtonGenerate);
-    27 : ButtonCancelClick(ButtonCancel);
+    27 : ModalResult := mrCancel;
   end;
 end;
 

@@ -65,7 +65,7 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Func.LogNotifier, Optix.Protocol.Packet;
+  OptixCore.LogNotifier, OptixCore.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -112,7 +112,7 @@ uses
 
   uFormMain, uControlFormTransfers,
 
-  Optix.Helper, Optix.Constants, Optix.VCL.Helper;
+  Optix.Constants, Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -161,7 +161,7 @@ begin
   end;
 
   ///
-  TOptixVCLHelper.ShowForm(self);
+  TOptixHelper.ShowForm(self);
 end;
 
 procedure TControlFormLogs.VSTBeforeCellPaint(Sender: TBaseVirtualTree;
@@ -217,7 +217,7 @@ begin
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected : begin
       case pData^.LogKind of
-        lkException : ImageIndex := IMAGE_EXCEPTION;
+        lkException : ImageIndex := IMAGE_APP_ERROR;
         // ... //
       end;
     end;
@@ -247,16 +247,12 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormLogs.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
 
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 end.

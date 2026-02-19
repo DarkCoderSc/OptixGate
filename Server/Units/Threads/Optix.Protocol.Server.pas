@@ -61,8 +61,8 @@ uses
 
   Winapi.Winsock2,
 
-  Optix.Sockets.Helper, Optix.Thread, Optix.Protocol.SessionHandler, Optix.Protocol.Preflight
-  {$IFDEF USETLS}, Optix.OpenSSL.Context, Optix.OpenSSL.Helper{$ENDIF};
+  OptixCore.Sockets.Helper, OptixCore.Thread, Optix.Protocol.SessionHandler, OptixCore.Protocol.Preflight
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Context, OptixCore.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -144,8 +144,8 @@ uses
 
   Winapi.Windows,
 
-  Optix.Protocol.Exceptions, Optix.Protocol.Worker.FileTransfer, Optix.Protocol.Client
-  {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+  OptixCore.Protocol.Exceptions, Optix.Protocol.Worker.FileTransfer, Optix.Protocol.Client
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Exceptions{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 (* TOptixServerThread *)

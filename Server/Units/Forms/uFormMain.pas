@@ -71,8 +71,11 @@ uses
 
   __uBaseFormControl__,
 
-  Optix.Thread, Optix.Protocol.Preflight, Optix.Protocol.Server, Optix.Sockets.Helper, Optix.Func.SessionInformation,
-  Optix.Protocol.SessionHandler, Optix.Func.Commands.Base, Optix.Func.Commands;
+  OptixCore.Thread, OptixCore.Protocol.Preflight, Optix.Protocol.Server, OptixCore.Sockets.Helper,
+  OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base,
+  OptixCore.Commands,
+
+  NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button, NeoFlat.Hint, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -90,13 +93,7 @@ type
   PTreeData = ^TTreeData;
 
   TFormMain = class(TForm)
-    MainMenu: TMainMenu;
-    Server1: TMenuItem;
-    About1: TMenuItem;
-    File1: TMenuItem;
-    Close1: TMenuItem;
-    VST: TVirtualStringTree;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     ProcessManager1: TMenuItem;
     N1: TMenuItem;
     FileManager1: TMenuItem;
@@ -112,19 +109,29 @@ type
     Logs1: TMenuItem;
     ControlForms1: TMenuItem;
     ImageSystem: TImageList;
-    Debug1: TMenuItem;
-    hreads1: TMenuItem;
     asks1: TMenuItem;
-    ImageCollectionDark: TImageCollection;
-    Stores1: TMenuItem;
-    Certificates1: TMenuItem;
-    rustedCertificates1: TMenuItem;
     FileSystem1: TMenuItem;
     System1: TMenuItem;
     N6: TMenuItem;
     N7: TMenuItem;
     N2: TMenuItem;
     ContentReader1: TMenuItem;
+    FamFamFamSilkCollection: TImageCollection;
+    FlatMainMenu: TFlatPopupMenu;
+    Server1: TMenuItem;
+    Stores1: TMenuItem;
+    Certificates1: TMenuItem;
+    rustedCertificates1: TMenuItem;
+    Debug2: TMenuItem;
+    hreads1: TMenuItem;
+    N8: TMenuItem;
+    About1: TMenuItem;
+    N9: TMenuItem;
+    Close1: TMenuItem;
+    N11: TMenuItem;
+    VST: TVirtualStringTree;
+    FlatHint: TFlatHint;
+    FlatWindow: TFlatWindow;
     procedure Close1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -158,7 +165,6 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure Server1Click(Sender: TObject);
-    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
     procedure RegistryManager1Click(Sender: TObject);
     procedure ContentReader1Click(Sender: TObject);
@@ -208,8 +214,9 @@ uses
   uControlFormRegistryManager, uControlFormSetupContentReader, uControlFormContentReader
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
-  Optix.Protocol.Packet, Optix.Helper, Optix.VCL.Helper, Optix.Constants, Optix.Process.Helper,
-  Optix.Func.LogNotifier, Optix.Protocol.Worker.FileTransfer, Optix.ClassesRegistry, Optix.Func.Commands.ContentReader
+  OptixCore.Protocol.Packet, Optix.Helper, Optix.Constants, OptixCore.System.Process,
+  OptixCore.LogNotifier, Optix.Protocol.Worker.FileTransfer, OptixCore.ClassesRegistry,
+  OptixCore.Commands.ContentReader
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -441,7 +448,7 @@ begin
   end;
 
   if Assigned(AForm) then
-    TOptixVCLHelper.ShowForm(AForm);
+    TOptixHelper.ShowForm(AForm);
 end;
 
 function TFormMain.CreateNewControlForm(const pNode : PVirtualNode; const AFormClass : TBaseFormControlClass;
@@ -463,7 +470,7 @@ begin
   result := AForm;
 
   if ADoShow then
-    TOptixVCLHelper.ShowForm(AForm);
+    TOptixHelper.ShowForm(AForm);
 end;
 
 function TFormMain.CreateNewControlForm(const AControlForm : TBaseFormControl; const AFormClass : TBaseFormControlClass;
@@ -609,20 +616,21 @@ begin
   ///
 
   case Kind of
-    TVTImageKind.ikNormal, TVTImageKind.ikSelected: begin
-      if pData^.SessionInformation.IsSystem then
-        ImageIndex := IMAGE_USER_SYSTEM
-      else begin
-        if pData^.SessionInformation.ElevatedStatus = esElevated then
-          ImageIndex := IMAGE_USER_ELEVATED
-        else begin
-          if pData^.SessionInformation.IsInAdminGroup then
-            ImageIndex := IMAGE_USER_ADMIN
-          else
-            ImageIndex := IMAGE_USER;
-        end;
-      end;
-    end;
+    TVTImageKind.ikNormal, TVTImageKind.ikSelected:
+      ImageIndex := IMAGE_USER;
+//      if pData^.SessionInformation.IsSystem then
+//        ImageIndex := IMAGE_USER_SYSTEM
+//      else begin
+//        if pData^.SessionInformation.ElevatedStatus = esElevated then
+//          ImageIndex := IMAGE_USER_ELEVATED
+//        else begin
+//          if pData^.SessionInformation.IsInAdminGroup then
+//            ImageIndex := IMAGE_USER_ADMIN
+//          else
+//            ImageIndex := IMAGE_USER;
+//        end;
+//      end;
+//    end;
     TVTImageKind.ikState: ;
     TVTImageKind.ikOverlay: ;
   end;
@@ -648,9 +656,9 @@ begin
   end;
 
   if not Assigned(pData1^.SessionInformation) or not Assigned(pData2^.SessionInformation) then
-    Result := CompareObjectAssignement(pData1^.SessionInformation, pData2^.SessionInformation)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.SessionInformation, pData2^.SessionInformation)
   else if not Assigned(pData1^.Handler) or not Assigned(pData2^.Handler) then
-    Result := CompareObjectAssignement(pData1^.Handler, pData2^.Handler)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.Handler, pData2^.Handler)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.Handler.PeerAddress, pData2^.Handler.PeerAddress);
@@ -680,10 +688,10 @@ begin
     case Column of
       0 : CellText := pData^.Handler.PeerAddress;
       1 : CellText := pData^.GetUPN;
-      2 : CellText := DefaultIfEmpty(pData^.SessionInformation.Langroup);
-      3 : CellText := DefaultIfEmpty(pData^.SessionInformation.DomainName);
+      2 : CellText := TOptixHelper.DefaultIfEmpty(pData^.SessionInformation.Langroup);
+      3 : CellText := TOptixHelper.DefaultIfEmpty(pData^.SessionInformation.DomainName);
       4 : CellText := pData^.SessionInformation.WindowsVersion;
-      5 : CellText := ElapsedDateTime(pData^.SpawnDate, Now);
+      5 : CellText := TOptixHelper.ElapsedDateTime(pData^.SpawnDate, Now);
       6 : CellText := pData^.SessionInformation.ProcessDetail;
       7 : CellText := pData^.SessionInformation.ElevatedStatus_STR;
       8 : CellText := BoolToStr(pData^.SessionInformation.IsInAdminGroup, True);
@@ -691,7 +699,7 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TFormMain.VSTInitNode(Sender: TBaseVirtualTree; ParentNode,
@@ -702,15 +710,6 @@ begin
 
   pData^.Forms := TObjectList<TBaseFormControl>.Create(True);
   pData^.Workers := TObjectList<TOptixThread>.Create(False);
-end;
-
-procedure TFormMain.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 procedure TFormMain.OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
@@ -724,7 +723,7 @@ end;
 
 procedure TFormMain.PopupMenuPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+  TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
 
   var AVisible := VST.FocusedNode <> nil;
 
@@ -755,6 +754,9 @@ begin
      not ASerializedPacket.Contains('FWindowGUID') then
       Exit();
   ///
+
+  // allocconsole();
+  // writeln(ASerializedPacket.AsJson(true));
 
   var AClassName := ASerializedPacket.S['PacketClass'];
   var AWindowGUID := TGUID.Create(ASerializedPacket.S['FWindowGUID']);
@@ -922,7 +924,7 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  InitializeSystemIcons(ImageSystem, FFileInfo);
+  TOptixHelper.InitializeSystemIcons(ImageSystem, FFileInfo);
   ///
 
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);

@@ -61,7 +61,8 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ExtCtrls,
 
-  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+  NeoFlat.PopupMenu, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -82,8 +83,9 @@ type
   TFormDebugThreads = class(TForm)
     VST: TVirtualStringTree;
     TimerRefresh: TTimer;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Terminate1: TMenuItem;
+    FlatWindow1: TFlatWindow;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -98,7 +100,7 @@ type
     procedure Terminate1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
-    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FormCreate(Sender: TObject);
   private
     {@M}
     FRefreshTick : UInt64;
@@ -120,7 +122,7 @@ uses
 
   uFormMain,
 
-  Optix.Thread, Optix.Constants, Optix.Helper, Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer
+  OptixCore.Thread, Optix.Constants, Optix.Helper, Optix.Protocol.SessionHandler, Optix.Protocol.Worker.FileTransfer
 
   {$IFDEF SERVER}, Optix.Protocol.Server{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -216,13 +218,12 @@ begin
   VST.Clear();
 end;
 
-procedure TFormDebugThreads.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TFormDebugThreads.FormCreate(Sender: TObject);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  {$ENDIF}
 end;
 
 procedure TFormDebugThreads.FormShow(Sender: TObject);
@@ -304,21 +305,21 @@ begin
   case Column of
     0 : begin
       if pData^.TerminateReq then
-        ImageIndex := IMAGE_THREAD_STOP_WAIT
+        ImageIndex := IMAGE_BRICK_WARNING
       else if pData^.Running then
-        ImageIndex := IMAGE_THREAD_RUNNING
+        ImageIndex := IMAGE_BRICK
       else
-        ImageIndex := IMAGE_THREAD_STOPPED;
+        ImageIndex := IMAGE_BRICK_ERROR;
     end;
 
     1 : begin
       {$IFDEF SERVER}
       if pData^.ClassName = TOptixServerThread.ClassName then
-        ImageIndex := IMAGE_THREAD_SERVER
+        ImageIndex := IMAGE_SERVER
       else
       {$ENDIF}
       if pData^.ClassName = TOptixSessionHandlerThread.ClassName then
-        ImageIndex := IMAGE_THREAD_HANDLER
+        ImageIndex := IMAGE_TRANSMIT
       else if
       {$IFDEF SERVER}
         pData^.ClassName = TOptixFileTransferWorker.ClassName
@@ -326,9 +327,9 @@ begin
         pData^.ClassName = TOptixFileTransferOrchestratorThread.ClassName
       {$ENDIF}
         then
-        ImageIndex := IMAGE_THREAD_TRANSFER
+        ImageIndex := IMAGE_FOLDER_WRENCH
       else
-        ImageIndex := IMAGE_THREAD_GENERIC;
+        ImageIndex := IMAGE_COFEE;
     end;
   end;
 
@@ -351,13 +352,13 @@ begin
       0 : CellText := Format('%d (0x%x)' , [pData^.Id, pData^.id]);
       1 : CellText := pData^.ClassName;
       2 : CellText := IfThen(pData^.Running, 'Yes', 'No');
-      3 : CellText := ElapsedDateTime(pData^.CreatedTime, Now);
+      3 : CellText := TOptixHelper.ElapsedDateTime(pData^.CreatedTime, Now);
       4 : CellText := ThreadPriorityToString(pData^.Priority);
     end;
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 end.

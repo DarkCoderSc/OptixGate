@@ -59,25 +59,26 @@ uses
 
   Winapi.Windows, Winapi.Messages,
 
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls,
+  System.Skia, NeoFlat.Edit, Vcl.Skia, NeoFlat.Button, NeoFlat.Panel, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormWarning = class(TForm)
-    PanelFooter: TPanel;
-    PanelHeader: TPanel;
-    ImageWarning: TVirtualImage;
-    ButtonAcceptTheRisk: TButton;
-    ButtonCancel: TButton;
+    PanelFooter: TFlatPanel;
+    PanelHeader: TFlatPanel;
+    ImageWarning: TSkSvg;
+    ButtonAcceptTheRisk: TFlatButton;
+    ButtonCancel: TFlatButton;
     Label1: TLabel;
-    Panel1: TPanel;
-    Shape1: TShape;
     Timer: TTimer;
-    PanelBody: TPanel;
-    PanelAcceptSentence: TPanel;
+    PanelBody: TFlatPanel;
+    PanelAcceptSentence: TFlatPanel;
     LabelAccept: TLabel;
-    EditAccept: TEdit;
+    EditAccept: TFlatEdit;
+    PanelRichAgreement: TFlatPanel;
     RichAgreement: TRichEdit;
+    FlatWindow1: TFlatWindow;
     procedure FormCreate(Sender: TObject);
     procedure ButtonCancelClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -164,11 +165,11 @@ begin
   DoResize();
   ///
   try
-    RichAgreement.Text := ReadResourceString('CONTROL_AGREEMENT');
+    RichAgreement.Text := TOptixHelper.ReadResourceString('CONTROL_AGREEMENT');
 
     RichAgreement.SelStart := Length(RichAgreement.Text);
 
-    RichAgreement.SelAttributes.Color := $0000D0D0;
+    RichAgreement.SelAttributes.Color := clRed;
 
     RichAgreement.SelText := #13#10 +
       'To continue, you are required to type the complete acknowledgment statement exactly as ' +

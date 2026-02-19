@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uControlFormProcessManager;
 
 interface
@@ -65,7 +63,9 @@ uses
 
   __uBaseFormControl__, uControlFormDumpProcess,
 
-  Optix.Process.Enum, Optix.WinApiEx, Optix.Func.Commands.Process, Optix.Protocol.Packet;
+  OptixCore.System.Process, OptixCore.WinApiEx, OptixCore.Commands.Process, OptixCore.Protocol.Packet,
+
+  NeoFlat.PopupMenu, NeoFlat.Panel;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -81,8 +81,7 @@ type
   TFilterKinds = set of TFilterKind;
 
   TControlFormProcessManager = class(TBaseFormControl)
-    PopupMenu: TPopupMenu;
-    VST: TVirtualStringTree;
+    PopupMenu: TFlatPopupMenu;
     Refresh1: TMenuItem;
     N1: TMenuItem;
     Exclude1: TMenuItem;
@@ -95,6 +94,7 @@ type
     N3: TMenuItem;
     Clear1: TMenuItem;
     DumpProcess1: TMenuItem;
+    VST: TVirtualStringTree;
     procedure Refresh1Click(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
       var NodeDataSize: Integer);
@@ -156,7 +156,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Optix.Shared.Types, Optix.Process.Helper, Optix.Constants, Optix.VCL.Helper, Optix.Func.Commands;
+  OptixCore.Types, Optix.Constants, Optix.Helper, OptixCore.Commands;
  // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -309,17 +309,15 @@ begin
 
   var pData := PTreeData(VST.FocusedNode.GetData);
 
-  //SendCommand(TOptixCommandDumpProcess.Create(0, 'c:\temp\process_dump.dmp'));
+  var AForm := TControlFormDumpProcess(FormMain.CreateNewControlForm(self, TControlFormDumpProcess, False));
+  if not Assigned(AForm) then
+    Exit();
 
-  var ADialog := TControlFormDumpProcess.Create(
-    self,
-    pData^.ProcessInformation.Name,
-    pData^.ProcessInformation.Id,
-    FFormInformation.UserIdentifier,
-    GetImageIndex(pData)
-  );
+  AForm.ProcessId   := pData^.ProcessInformation.Id;
+  AForm.ProcessName := pData^.ProcessInformation.Name;
 
-  RegisterNewDialogAndShow(ADialog);
+  ///
+  TOptixHelper.ShowForm(AForm);
 end;
 
 procedure TControlFormProcessManager.FormDestroy(Sender: TObject);
@@ -394,7 +392,7 @@ begin
   var AColor := clNone;
 
   if pData^.ProcessInformation.IsCurrentProcess then
-    AColor := COLOR_LIST_LIMY
+    AColor := COLOR_LIST_YELLOW
   else begin
     if pData^.ProcessInformation.IsSystem then
       AColor := COLOR_USER_SYSTEM
@@ -469,17 +467,18 @@ begin
     Exit();
 
   if pData^.ProcessInformation.IsCurrentProcess then
-    result := IMAGE_PROCESS_SELF
-  else begin
-    if (FRemoteProcessorArchitecture = pa86_64) and
-       (pData^.ProcessInformation.IsWow64Process <> brError) then begin
-      if pData^.ProcessInformation.IsWow64Process = brTrue then
-        result := IMAGE_PROCESS_X86_32
-      else
-        result := IMAGE_PROCESS_X86_64;
-    end else
-      result := IMAGE_PROCESS;
-  end;
+    result := IMAGE_EMO_TONG
+  else // begin
+    result := IMAGE_APP;
+//    if (FRemoteProcessorArchitecture = pa86_64) and
+//       (pData^.ProcessInformation.IsWow64Process <> brError) then begin
+//      if pData^.ProcessInformation.IsWow64Process = brTrue then
+//        result := IMAGE_PROCESS_X86_32
+//      else
+//        result := IMAGE_PROCESS_X86_64;
+//    end else
+//      result := IMAGE_PROCESS;
+//  end;
 end;
 
 procedure TControlFormProcessManager.VSTGetImageIndex(Sender: TBaseVirtualTree;
@@ -520,8 +519,8 @@ begin
           CellText := pData^.ProcessInformation.Name;
       end;
 
-      1  : CellText := FormatInt(pData^.ProcessInformation.Id);
-      2  : CellText := FormatInt(pData^.ProcessInformation.ParentId);
+      1  : CellText := TOptixHelper.FormatInt(pData^.ProcessInformation.Id);
+      2  : CellText := TOptixHelper.FormatInt(pData^.ProcessInformation.ParentId);
       3  : CellText := IntToStr(pData^.ProcessInformation.ThreadCount);
       4  : CellText := pData^.ProcessInformation.Username;
       5  : CellText := pData^.ProcessInformation.Domain;
@@ -534,17 +533,13 @@ begin
   end;
 
   ///
-  CellText := DefaultIfEmpty(CellText);
+  CellText := TOptixHelper.DefaultIfEmpty(CellText);
 end;
 
 procedure TControlFormProcessManager.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
 
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 procedure TControlFormProcessManager.ReceivePacket(const AOptixPacket : TOptixPacket; var AHandleMemory : Boolean);

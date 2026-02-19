@@ -84,7 +84,7 @@ implementation
 uses
   Winapi.Windows,
 
-  Optix.Helper, Optix.Sockets.Helper;
+  OptixCore.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 function TOptixConfigServers.GetCount() : Integer;

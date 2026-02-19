@@ -1,26 +1,26 @@
 object FormTrustedCertificates: TFormTrustedCertificates
   Left = 0
   Top = 0
+  BorderStyle = bsNone
   Caption = 'Trusted Certificates'
-  ClientHeight = 304
-  ClientWidth = 540
+  ClientHeight = 151
+  ClientWidth = 363
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
-  Menu = MainMenu
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
-  OnMouseDown = FormMouseDown
-  TextHeight = 15
+  TextHeight = 14
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 540
-    Height = 304
+    Width = 363
+    Height = 151
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -30,15 +30,15 @@ object FormTrustedCertificates: TFormTrustedCertificates
     BorderStyle = bsNone
     Color = clWhite
     Colors.UnfocusedColor = clWindowText
-    DefaultNodeHeight = 19
     Header.AutoSizeIndex = 0
     Header.DefaultHeight = 25
+    Header.Height = 18
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
     Header.SortColumn = 0
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnCompareNodes = VSTCompareNodes
     OnGetText = VSTGetText
@@ -46,31 +46,50 @@ object FormTrustedCertificates: TFormTrustedCertificates
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitWidth = 424
+    ExplicitHeight = 218
     Columns = <
       item
         Position = 0
         Text = 'Fingerprint'
-        Width = 550
+        Width = 363
       end>
   end
-  object MainMenu: TMainMenu
-    Left = 232
-    Top = 200
-    object Certificate1: TMenuItem
-      Caption = 'Certificate'
-      object AddTrustedCertificate1: TMenuItem
-        Caption = 'Add Trusted Certificate'
-        OnClick = AddTrustedCertificate1Click
-      end
-    end
-  end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupMenuPopup
-    Left = 312
-    Top = 112
+    Left = 248
+    Top = 48
     object Remove1: TMenuItem
       Caption = 'Remove'
       OnClick = Remove1Click
     end
+  end
+  object MainMenu: TFlatPopupMenu
+    OwnerDraw = True
+    Left = 152
+    Top = 48
+    object AddTrustedCertificate1: TMenuItem
+      Caption = 'Add Trusted Certificate'
+      OnClick = AddTrustedCertificate1Click
+    end
+  end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    MenuDropDown = MainMenu
+    ShowBorder = True
+    BorderStyle = bsSizeable
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 56
+    Top = 48
   end
 end

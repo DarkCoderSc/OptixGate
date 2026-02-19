@@ -1,25 +1,28 @@
 object FormDebugThreads: TFormDebugThreads
   Left = 0
   Top = 0
-  Caption = 'Optix Thread Manager'
-  ClientHeight = 290
-  ClientWidth = 690
-  Color = clBtnFace
+  BorderStyle = bsNone
+  BorderWidth = 2
+  Caption = 'Threads'
+  ClientHeight = 165
+  ClientWidth = 651
+  Color = clBlack
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
   Position = poOwnerFormCenter
   OnClose = FormClose
-  OnMouseDown = FormMouseDown
+  OnCreate = FormCreate
   OnShow = FormShow
-  TextHeight = 15
+  TextHeight = 14
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 690
-    Height = 290
+    Width = 651
+    Height = 165
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -29,15 +32,15 @@ object FormDebugThreads: TFormDebugThreads
     BorderStyle = bsNone
     Color = clWhite
     Colors.UnfocusedColor = clWindowText
-    DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
+    Header.Height = 18
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
     Header.SortColumn = 1
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnCompareNodes = VSTCompareNodes
@@ -46,6 +49,8 @@ object FormDebugThreads: TFormDebugThreads
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
+    ExplicitWidth = 667
+    ExplicitHeight = 268
     Columns = <
       item
         Position = 0
@@ -76,16 +81,34 @@ object FormDebugThreads: TFormDebugThreads
   object TimerRefresh: TTimer
     Enabled = False
     OnTimer = TimerRefreshTimer
-    Left = 120
-    Top = 120
+    Left = 128
+    Top = 80
   end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupMenuPopup
-    Left = 240
-    Top = 120
+    Left = 256
+    Top = 64
     object Terminate1: TMenuItem
       Caption = 'Terminate'
       OnClick = Terminate1Click
     end
+  end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    ShowBorder = True
+    BorderStyle = bsSizeable
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 336
+    Top = 80
   end
 end

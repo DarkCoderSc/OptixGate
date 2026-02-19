@@ -116,7 +116,7 @@ begin
     Exit();
   try
     var AFingerprint := ANode.S['Fingerprint'];
-    CheckCertificateFingerprint(AFingerprint);
+    TOptixHelper.CheckCertificateFingerprint(AFingerprint);
 
     result := AFingerprint;
   except

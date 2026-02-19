@@ -63,83 +63,66 @@ uses
 const
  (* IMAGES *)
  IMAGE_USER                         = 0;
- IMAGE_USER_ADMIN                   = 1;
- IMAGE_USER_ELEVATED                = 2;
- IMAGE_USER_SYSTEM                  = 3;
- IMAGE_OPTIX_FACE                   = 4;
- IMAGE_PROCESS_SELF                 = 7;
- IMAGE_PROCESS                      = 8;
- IMAGE_PROCESS_X86_32               = 9;
- IMAGE_PROCESS_X86_64               = 10;
- IMAGE_EXCEPTION                    = 11;
- IMAGE_FORM_CONTROL                 = 12;
- IMAGE_FORM_CONTROL_ACTIVE          = 13;
- IMAGE_FORM_CONTROL_DATA            = 14;
- IMAGE_FORM_CONTROL_CLOSED          = 15;
- IMAGE_DRIVE                        = 16;
- IMAGE_DRIVE_USB                    = 17;
- IMAGE_DRIVE_HARDWARE               = 18;
- IMAGE_DRIVE_NO_ROOT                = 19;
- IMAGE_DRIVE_NETWORK                = 20;
- IMAGE_DRIVE_UNKNOWN                = 21;
- IMAGE_DRIVE_CD                     = 22;
- IMAGE_FILE_DOWNLOAD                = 23;
- IMAGE_FILE_UPLOAD                  = 24;
- IMAGE_FILE_QUEUE                   = 25;
- IMAGE_FILE_TRANSFERING             = 26;
- IMAGE_FLAG_GREEN                   = 27;
- IMAGE_FILE_TRANSFERED              = IMAGE_FLAG_GREEN;
- IMAGE_FILE_TRANSFER_ERROR          = 28;
- IMAGE_CANCEL                       = 29;
- IMAGE_FILE_TRANSFER_CANCELED       = IMAGE_CANCEL;
- IMAGE_CANCEL_REQUEST               = 30;
- IMAGE_FILE_TRANSFER_CANCEL_REQUEST = IMAGE_CANCEL_REQUEST;
- IMAGE_FOLDER_NORMAL                = 31;
- IMAGE_FOLDER_READONLY              = 32;
- IMAGE_FOLDER_FULLACCESS            = 33;
- IMAGE_FOLDER_WRITEONLY             = 34;
- IMAGE_FOLDER_EXECONLY              = 62;
- IMAGE_FOLDER_DENIED                = 35;
- IMAGE_FOLDER_PREV                  = 36;
- IMAGE_THREAD_RUNNING               = 37;
- IMAGE_THREAD_STOP_WAIT             = 38;
- IMAGE_THREAD_STOPPED               = 39;
- IMAGE_THREAD_SERVER                = 40;
- IMAGE_THREAD_HANDLER               = 41;
- IMAGE_THREAD_TRANSFER              = 42;
- IMAGE_THREAD_GENERIC               = 43;
- IMAGE_STAR_EMPTY                   = 44;
- IMAGE_STAR_FILLED                  = 45;
- IMAGE_TASK_PENDING                 = 46;
- IMAGE_TASK_RUNNING                 = 47;
- IMAGE_TASK_SUCCESS                 = 48;
- IMAGE_TASK_FAILED                  = 49;
- IMAGE_RED_EXCLAMATION              = 55;
- IMAGE_SHELL_CLOSED                 = IMAGE_RED_EXCLAMATION;
- IMAGE_CERTIFICATE                  = 58;
- IMAGE_TRUSTED_CERTIFICATE          = 59;
- IMAGE_SERVER_STOPPED               = 63;
- IMAGE_SERVER_LISTENING             = 64;
- IMAGE_SERVER_ERROR                 = 65;
- IMAGE_BUG                          = 66;
- IMAGE_REG_SZ                       = 68;
- IMAGE_REG_DATA                     = 69;
- IMAGE_SHOW_STRINGS                 = 74;
- IMAGE_HIDE_STRINGS                 = 75;
+ IMAGE_APP                          = 1;
+ IMAGE_EMO_TONG                     = 2;
+ IMAGE_ANCHOR                       = 3;
+ IMAGE_CONTROL_APP                  = 4;
+ IMAGE_TERMINAL                     = 6;
+ IMAGE_RIGHT_ARROW                  = 7;
+ IMAGE_BULLET_GREEN                 = 8;
+ IMAGE_BULLET_YELLOW                = 9;
+ IMAGE_BULLET_ORANGE                = 10;
+ IMAGE_BULLET_BLUE                  = 11;
+ IMAGE_BULLET_PINK                  = 12;
+ IMAGE_BULLET_PURPLE                = 13;
+ IMAGE_BULLET_RED                   = 14;
+ IMAGE_BULLET_WHITE                 = 15;
+ IMAGE_BULLET_BLACK                 = 16;
+ IMAGE_APP_ERROR                    = 24;
+ IMAGE_FOLDER_NORMAL                = 25;
+ IMAGE_FOLDER_PREV                  = IMAGE_FOLDER_NORMAL;
+ IMAGE_FOLDER_FULLACCESS            = 26;
+ IMAGE_FOLDER_READONLY              = 27;
+ IMAGE_FOLDER_WRITEONLY             = 28;
+ IMAGE_FOLDER_EXECONLY              = 29;
+ IMAGE_FOLDER_DENIED                = 30;
+ IMAGE_PAGE                         = 31;
+ IMAGE_PAGE_SYS                     = 32;
+ IMAGE_TASK                         = 33;
+ IMAGE_BLUE_ARROW_LEFT              = 34;
+ IMAGE_BLUE_ARROW_RIGHT             = 35;
+ IMAGE_TRANSMIT                     = 36;
+ IMAGE_SERVER                       = 37;
+ IMAGE_COFEE                        = 38;
+ IMAGE_FOLDER_WRENCH                = 39;
+ IMAGE_BRICK                        = 40;
+ IMAGE_BRICK_WARNING                = 41;
+ IMAGE_BRICK_ERROR                  = 42;
+ IMAGE_CERTIFICATE                  = 43;
+ IMAGE_BUG                          = 44;
+ IMAGE_SERVER_RUNNING               = 45;
+ IMAGE_SERVER_ERROR                 = 46;
+ IMAGE_SERVER_STOPPED               = 47;
+ IMAGE_LOCK                         = 48;
+ IMAGE_COMPUTER                     = 49;
+ IMAGE_COMPUTER_LINKED              = 50;
+ IMAGE_COMPUTER_ERROR               = 51;
 
 var
  (* COLORS *)
- COLOR_LIST_BLUE     : TColor;
- COLOR_LIST_PURPLE   : TColor;
- COLOR_LIST_LIMY     : TColor;
- COLOR_LIST_RED      : TColor;
- COLOR_LIST_GRAY     : TColor;
- COLOR_LIST_ORANGE   : TColor;
+ COLOR_LIST_BLUE         : TColor;
+ COLOR_LIST_DARKER_BLUE  : TColor;
+ COLOR_LIST_PURPLE       : TColor;
+ COLOR_LIST_GREEN        : TColor;
+ COLOR_LIST_YELLOW       : TColor;
+ COLOR_LIST_RED          : TColor;
+ COLOR_LIST_GRAY         : TColor;
+ COLOR_LIST_ORANGE       : TColor;
 
- COLOR_TEXT_WARNING  : TColor;
+ COLOR_TEXT_WARNING      : TColor;
 
- COLOR_USER_ELEVATED : TColor;
- COLOR_USER_SYSTEM   : TColor;
+ COLOR_USER_ELEVATED     : TColor;
+ COLOR_USER_SYSTEM       : TColor;
 
  COLOR_FILE_WRITE_ONLY   : TColor;
  COLOR_FILE_READ_ONLY    : TColor;
@@ -150,26 +133,24 @@ var
 implementation
 
 initialization
-  // Dark
-  COLOR_LIST_BLUE         := RGB(40, 70, 90);
-  COLOR_USER_ELEVATED     := COLOR_LIST_BLUE;
+  COLOR_LIST_GREEN        := RGB(227, 238, 197);
+  COLOR_LIST_YELLOW       := RGB(255, 254, 224);
+  COLOR_LIST_BLUE         := RGB(225, 242, 255);
+  COLOR_LIST_DARKER_BLUE  := RGB(190, 220, 245);
+  COLOR_LIST_PURPLE       := RGB(241, 230, 254);
+  COLOR_LIST_RED          := RGB(255, 230, 230);
+  COLOR_LIST_GRAY         := RGB(244, 244, 244);
+  COLOR_LIST_ORANGE       := RGB(255, 240, 225);
 
-  COLOR_LIST_PURPLE       := RGB(60, 45, 75);
+  COLOR_USER_ELEVATED     := COLOR_LIST_BLUE;
   COLOR_USER_SYSTEM       := COLOR_LIST_PURPLE;
 
-  COLOR_LIST_LIMY         := RGB(40, 70, 40);
-  COLOR_LIST_RED          := RGB(90, 50, 60);
-
-  COLOR_LIST_GRAY         := RGB(40, 40, 40);
-
-  COLOR_TEXT_WARNING      := RGB(243, 156, 18);
-
-  COLOR_LIST_ORANGE       := RGB(90, 55, 40);
+  COLOR_TEXT_WARNING      := RGB(255, 140, 0);
 
   COLOR_FILE_WRITE_ONLY   := COLOR_LIST_PURPLE;
   COLOR_FILE_READ_ONLY    := COLOR_LIST_BLUE;
   COLOR_FILE_EXECUTE_ONLY := COLOR_LIST_ORANGE;
-  COLOR_FILE_ALL_ACCESS   := COLOR_LIST_LIMY;
+  COLOR_FILE_ALL_ACCESS   := COLOR_LIST_GREEN;
   COLOR_FILE_NO_ACCESS    := COLOR_LIST_RED;
 
 

@@ -57,7 +57,7 @@ interface
 uses
   XSuperObject,
 
-  Optix.Config.Helper, Optix.OpenSSL.Helper;
+  Optix.Config.Helper, OptixCore.OpenSSL.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type

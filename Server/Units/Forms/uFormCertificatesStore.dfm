@@ -1,26 +1,26 @@
 object FormCertificatesStore: TFormCertificatesStore
   Left = 0
   Top = 0
+  BorderStyle = bsNone
   Caption = 'Certificates Store'
-  ClientHeight = 316
-  ClientWidth = 626
+  ClientHeight = 169
+  ClientWidth = 501
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
-  Menu = MainMenu
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
-  OnMouseDown = FormMouseDown
-  TextHeight = 15
+  TextHeight = 14
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 626
-    Height = 316
+    Width = 501
+    Height = 169
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -30,15 +30,15 @@ object FormCertificatesStore: TFormCertificatesStore
     BorderStyle = bsNone
     Color = clWhite
     Colors.UnfocusedColor = clWindowText
-    DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
+    Header.Height = 18
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
     Header.SortColumn = 3
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnCompareNodes = VSTCompareNodes
@@ -70,34 +70,20 @@ object FormCertificatesStore: TFormCertificatesStore
         Width = 250
       end>
   end
-  object MainMenu: TMainMenu
-    Left = 280
-    Top = 152
-    object File1: TMenuItem
-      Caption = 'Certificate'
-      object GeneratenewCertificate1: TMenuItem
-        Caption = 'Generate New'
-        OnClick = GeneratenewCertificate1Click
-      end
-      object Import1: TMenuItem
-        Caption = 'Import'
-        OnClick = Import1Click
-      end
-    end
-  end
   object OD: TOpenDialog
-    Left = 400
-    Top = 152
+    Left = 320
+    Top = 80
   end
   object SD: TSaveDialog
     DefaultExt = 'pem'
-    Left = 496
-    Top = 152
+    Left = 392
+    Top = 96
   end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupMenuPopup
-    Left = 160
-    Top = 144
+    Left = 104
+    Top = 96
     object ExportCertificate1: TMenuItem
       Caption = 'Export Certificate'
       OnClick = ExportCertificate1Click
@@ -127,5 +113,38 @@ object FormCertificatesStore: TFormCertificatesStore
       Caption = 'Remove Certificate'
       OnClick = RemoveCertificate1Click
     end
+  end
+  object MainMenu: TFlatPopupMenu
+    OwnerDraw = True
+    Left = 224
+    Top = 80
+    object GenerateNew1: TMenuItem
+      Caption = 'Generate New'
+      ShortCut = 16462
+      OnClick = GenerateNew1Click
+    end
+    object Import1: TMenuItem
+      Caption = 'Import'
+      ShortCut = 16457
+      OnClick = Import1Click
+    end
+  end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    MenuDropDown = MainMenu
+    ShowBorder = True
+    BorderStyle = bsSizeable
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 464
+    Top = 104
   end
 end

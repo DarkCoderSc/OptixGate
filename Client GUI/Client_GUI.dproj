@@ -71,7 +71,6 @@
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>Client_GUI</SanitizedProjectName>
-        <Custom_Styles>Glossy|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glossy.vsf</Custom_Styles>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>vclwinx;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;FireDACCommonDriver;appanalytics;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;OMultiPanel_Design;bindcompvclwinx;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;soapmidas;vclactnband;fmxFireDAC;dbexpress;DBXMySQLDriver;VclSmp;inet;vcltouch;fmxase;dbrtl;Skia.Package.FMX;fmxdae;FireDACMSAccDriver;CustomIPTransport;NeoFlatComponents;vcldsnap;DBXInterBaseDriver;IndySystem;Skia.Package.VCL;vcldb;VirtualTreesR;OMultiPanel_Runtime;vclFireDAC;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;adortl;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;fmxobj;bindcompvclsmp;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -115,12 +114,16 @@
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>..\Server\Assets\optix.ico</Icon_MainIcon>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>..\Server\Assets\optix.ico</Icon_MainIcon>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -134,47 +137,50 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>..\Server\Assets\optix.ico</Icon_MainIcon>
         <AppExecutionLevel>requireAdministrator</AppExecutionLevel>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Icon_MainIcon>..\Server\Assets\optix.ico</Icon_MainIcon>
+        <VerInfo_MajorVer>2</VerInfo_MajorVer>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=2.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=2.0.0.0;Comments=</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\Shared\Optix.Exceptions.pas"/>
-        <DCCReference Include="..\Shared\Optix.Sockets.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Packet.pas"/>
-        <DCCReference Include="..\Shared\Optix.Sockets.Exceptions.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.pas"/>
-        <DCCReference Include="..\Shared\Optix.Interfaces.pas"/>
-        <DCCReference Include="..\Shared\Optix.Thread.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Client.Handler.pas"/>
-        <DCCReference Include="..\Shared\Optix.InformationGathering.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Process.Helper.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.SessionInformation.pas"/>
+        <DCCReference Include="..\ExtLibraries\Delphi Libraries\XSuperObject.pas"/>
+        <DCCReference Include="..\ExtLibraries\Delphi Libraries\XSuperJSON.pas"/>
+        <DCCReference Include="..\Core\OptixCore.Exceptions.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Sockets.Helper.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Protocol.Packet.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Sockets.Exceptions.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.pas"/>
+        <DCCReference Include="..\Core\OptixCore.Interfaces.pas"/>
+        <DCCReference Include="..\Core\OptixCore.Thread.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Protocol.Client.Handler.pas"/>
+        <DCCReference Include="..\Core\System\OptixCore.System.InformationGathering.pas"/>
+        <DCCReference Include="..\Core\System\OptixCore.System.Process.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.SessionInformation.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.SessionHandler.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Client.pas"/>
-        <DCCReference Include="..\Shared\XSuperJSON.pas"/>
-        <DCCReference Include="..\Shared\XSuperObject.pas"/>
-        <DCCReference Include="..\Shared\Optix.WinApiEx.pas"/>
-        <DCCReference Include="..\Shared\Optix.System.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Shared.Types.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.LogNotifier.pas"/>
-        <DCCReference Include="..\Shared\Optix.Shared.Classes.pas"/>
-        <DCCReference Include="..\Shared\Optix.FileSystem.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Preflight.pas"/>
-        <DCCReference Include="..\Shared\Optix.Protocol.Exceptions.pas"/>
+        <DCCReference Include="..\Core\OptixCore.WinApiEx.pas"/>
+        <DCCReference Include="..\Core\System\OptixCore.System.Helper.pas"/>
+        <DCCReference Include="..\Core\OptixCore.Types.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.LogNotifier.pas"/>
+        <DCCReference Include="..\Core\OptixCore.Classes.pas"/>
+        <DCCReference Include="..\Core\System\OptixCore.System.FileSystem.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Protocol.Preflight.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Protocol.Exceptions.pas"/>
         <DCCReference Include="Units\Threads\Optix.Protocol.Worker.FileTransfer.pas"/>
-        <DCCReference Include="..\Shared\Optix.Shared.Protocol.FileTransfer.pas"/>
-        <DCCReference Include="..\Shared\Tasks\Optix.Task.ProcessDump.pas"/>
+        <DCCReference Include="..\Core\Network\OptixCore.Protocol.FileTransfer.pas"/>
+        <DCCReference Include="..\Core\Tasks\OptixCore.Task.ProcessDump.pas"/>
         <DCCReference Include="Units\Actions\Optix.Actions.ProcessHandler.pas"/>
-        <DCCReference Include="..\Server\Units\Optix.VCL.Helper.pas"/>
         <DCCReference Include="..\Server\Units\Optix.Helper.pas"/>
-        <DCCReference Include="Units\Optix.Constants.pas"/>
+        <DCCReference Include="..\Server\Units\Optix.Constants.pas"/>
         <DCCReference Include="..\Server\Units\Configs\Optix.Config.Helper.pas"/>
         <DCCReference Include="Units\Forms\uFormMain.pas">
             <Form>FormMain</Form>
@@ -188,18 +194,15 @@
         <DCCReference Include="..\Server\Units\Forms\uFormDebugThreads.pas">
             <Form>FormDebugThreads</Form>
         </DCCReference>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Base.pas"/>
-        <DCCReference Include="..\Shared\Optix.ClassesRegistry.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.FileSystem.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Process.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Shell.pas"/>
-        <DCCReference Include="..\Shared\Optix.FileSystem.Enum.pas"/>
-        <DCCReference Include="..\Shared\Optix.Process.Enum.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.Registry.pas"/>
-        <DCCReference Include="..\Shared\Optix.Registry.Helper.pas"/>
-        <DCCReference Include="..\Shared\Optix.Registry.Enum.pas"/>
-        <DCCReference Include="..\Shared\Functions\Optix.Func.Commands.ContentReader.pas"/>
-        <DCCReference Include="..\Shared\Optix.Shared.Helper.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.Base.pas"/>
+        <DCCReference Include="..\Core\OptixCore.ClassesRegistry.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.FileSystem.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.Process.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.Shell.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.Registry.pas"/>
+        <DCCReference Include="..\Core\System\OptixCore.System.Registry.pas"/>
+        <DCCReference Include="..\Core\Commands\OptixCore.Commands.ContentReader.pas"/>
+        <DCCReference Include="..\Core\OptixCore.Helper.pas"/>
         <DCCReference Include="Units\Forms\uFormWarning.pas">
             <Form>FormWarning</Form>
         </DCCReference>
@@ -224,8 +227,10 @@
                     <Source Name="MainSource">Client_GUI.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k370.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp370.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="5">

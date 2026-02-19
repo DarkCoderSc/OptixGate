@@ -119,7 +119,7 @@ implementation
 uses
   System.SysUtils,
 
-  Optix.WinApiEx, Optix.Exceptions;
+  OptixCore.WinApiEx, OptixCore.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
 
 constructor TProcessHandler.Create(const ACommandLine : String);

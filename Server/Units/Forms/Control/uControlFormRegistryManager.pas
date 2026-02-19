@@ -64,9 +64,9 @@ uses
   VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.Types,
   OMultiPanel,
 
-  Optix.Protocol.Packet, Optix.Func.Commands.Registry, Optix.Registry.Enum, Optix.Registry.Helper,
+  OptixCore.Protocol.Packet, OptixCore.Commands.Registry, OptixCore.System.Registry,
 
-  __uBaseFormControl__;
+  __uBaseFormControl__, NeoFlat.Panel, NeoFlat.Edit, NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -85,24 +85,12 @@ type
   PValuesTreeData = ^TValuesTreeData;
 
   TControlFormRegistryManager = class(TBaseFormControl)
-    OMultiPanel: TOMultiPanel;
-    VSTKeys: TVirtualStringTree;
-    VSTValues: TVirtualStringTree;
-    EditPath: TEdit;
-    MainMenu: TMainMenu;
-    Options1: TMenuItem;
-    HideUnenumerableKeys1: TMenuItem;
-    PopupKeys: TPopupMenu;
+    PopupKeys: TFlatPopupMenu;
     FullExpand1: TMenuItem;
     FullCollapse1: TMenuItem;
     FullCollapse2: TMenuItem;
-    Registry1: TMenuItem;
-    Refresh1: TMenuItem;
-    N1: TMenuItem;
-    GoTo1: TMenuItem;
     CreateSubKey1: TMenuItem;
-    CreateKey1: TMenuItem;
-    PopupValues: TPopupMenu;
+    PopupValues: TFlatPopupMenu;
     New1: TMenuItem;
     NewKey1: TMenuItem;
     DeleteSelectedKey1: TMenuItem;
@@ -120,6 +108,21 @@ type
     RenameSelectedValue1: TMenuItem;
     N5: TMenuItem;
     DeleteSelectedValue1: TMenuItem;
+    PanelMain: TFlatPanel;
+    OMultiPanel: TOMultiPanel;
+    PanelVSTKeys: TFlatPanel;
+    VSTKeys: TVirtualStringTree;
+    PanelVSTValues: TFlatPanel;
+    VSTValues: TVirtualStringTree;
+    PanelPath: TFlatPanel;
+    EditPath: TFlatEdit;
+    MainMenu: TFlatPopupMenu;
+    Refresh1: TMenuItem;
+    N1: TMenuItem;
+    CreateKey1: TMenuItem;
+    GoTo1: TMenuItem;
+    N6: TMenuItem;
+    HideUnenumerableKeys1: TMenuItem;
     procedure VSTKeysGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTKeysGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -202,7 +205,7 @@ uses
 
   uFormMain,
 
-  Optix.Helper, Optix.Constants, Optix.System.Helper, Optix.VCL.Helper,
+  Optix.Constants, OptixCore.System.Helper, Optix.Helper,
 
   uControlFormRegistryEditor;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -259,7 +262,7 @@ begin
   end;
 
   ///
-  TOptixVCLHelper.ShowForm(AForm);
+  TOptixHelper.ShowForm(AForm);
 end;
 
 function TControlFormRegistryManager.GetNodeByKeyPath(const AKeyPath : String) : PVirtualNode;
@@ -416,7 +419,7 @@ begin
 
             pData^.KeyInformation := TRegistryKeyInformation.Create();
 
-            pData^.ImageIndex := SystemFolderIcon();
+            pData^.ImageIndex := TOptixHelper.SystemFolderIcon();
 
             if Assigned(pParentNode) then begin
               var pParentData := PKeysTreeData(pParentNode.GetData);
@@ -520,9 +523,9 @@ begin
 
   case pData^.ValueInformation._Type of
     REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ:
-      pData^.ImageIndex := IMAGE_REG_SZ;
+      pData^.ImageIndex := IMAGE_PAGE;
     else
-      pData^.ImageIndex := IMAGE_REG_DATA;
+      pData^.ImageIndex := IMAGE_PAGE_SYS;
   end;
 end;
 
@@ -618,8 +621,9 @@ end;
 
 procedure TControlFormRegistryManager.FormCreate(Sender: TObject);
 begin
-  FCurrentKeyPath        := '';
-  FCurrentKeyPermissions := [];
+  FCurrentKeyPath          := '';
+  FCurrentKeyPermissions   := [];
+  FFlatWindow.MenuDropDown := MainMenu;
 end;
 
 procedure TControlFormRegistryManager.FullCollapse1Click(Sender: TObject);
@@ -844,7 +848,7 @@ end;
 
 procedure TControlFormRegistryManager.PopupValuesPopup(Sender: TObject);
 begin
-  TOptixVCLHelper.UpdatePopupMenuRootItemsVisibility(TPopupMenu(Sender), not String.IsNullOrWhiteSpace(FCurrentKeyPath));
+  TOptixHelper.UpdatePopupMenuRootItemsVisibility(TPopupMenu(Sender), not String.IsNullOrWhiteSpace(FCurrentKeyPath));
 
   ///
   NewKey1.Enabled := rkpCreateSubKey in FCurrentKeyPermissions;
@@ -875,9 +879,9 @@ begin
   ///
 
   if not Assigned(pData1) or not Assigned(pData2) then
-    Result := ComparePointerAssigmenet(pData1, pData2)
+    Result := TOptixHelper.ComparePointerAssigmenet(pData1, pData2)
   else if not Assigned(pData1^.KeyInformation) or not Assigned(pData2^.KeyInformation) then
-    Result := CompareObjectAssignement(pData1^.KeyInformation, pData2^.KeyInformation)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.KeyInformation, pData2^.KeyInformation)
   else
     Result := CompareText(pData1^.KeyInformation.Name, pData2^.KeyInformation.Name);
 end;
@@ -945,9 +949,9 @@ begin
   var pData2 := PValuesTreeData(Node2.GetData);
 
   if not Assigned(pData1) or not Assigned(pData2) then
-    Result := ComparePointerAssigmenet(pData1, pData2)
+    Result := TOptixHelper.ComparePointerAssigmenet(pData1, pData2)
   else if not Assigned(pData1^.ValueInformation) or not Assigned(pData2^.ValueInformation) then
-    Result := CompareObjectAssignement(pData1^.ValueInformation, pData2^.ValueInformation)
+    Result := TOptixHelper.CompareObjectAssignement(pData1^.ValueInformation, pData2^.ValueInformation)
   else begin
     case Column of
       0 : Result := CompareText(pData1^.ValueInformation.Name, pData2^.ValueInformation.Name);

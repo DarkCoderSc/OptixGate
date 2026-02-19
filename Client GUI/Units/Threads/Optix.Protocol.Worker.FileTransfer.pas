@@ -59,10 +59,10 @@ uses
 
   Generics.Collections,
 
-  Optix.Protocol.Client, Optix.Protocol.Preflight, Optix.Func.Commands, Optix.Protocol.Client.Handler,
-  Optix.Func.Commands.FileSystem
+  Optix.Protocol.Client, OptixCore.Protocol.Preflight, OptixCore.Commands, OptixCore.Protocol.Client.Handler,
+  OptixCore.Commands.FileSystem
 
-  {$IFDEF USETLS}, Optix.OpenSSL.Helper{$ENDIF};
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -92,10 +92,10 @@ uses
 
   Winapi.Windows,
 
-  Optix.Exceptions, Optix.Protocol.Packet, Optix.Shared.Protocol.FileTransfer, Optix.Func.LogNotifier,
-  Optix.Sockets.Exceptions
+  OptixCore.Exceptions, OptixCore.Protocol.Packet, OptixCore.Protocol.FileTransfer, OptixCore.LogNotifier,
+  OptixCore.Sockets.Exceptions
 
-  {$IFDEF USETLS}, Optix.OpenSSL.Exceptions{$ENDIF};
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Exceptions{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure TOptixFileTransferOrchestratorThread.AddTransfer(const ATransfer : TOptixCommandTransfer);

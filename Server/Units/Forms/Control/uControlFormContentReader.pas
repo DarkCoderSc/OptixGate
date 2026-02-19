@@ -63,21 +63,18 @@ uses
   Vcl.ComCtrls, Vcl.StdCtrls,
 
   VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.Types,
+  OMultiPanel,
 
   __uBaseFormControl__, uFrameHexEditor,
 
-  Optix.Protocol.Packet, Optix.Func.Commands.ContentReader, OMultiPanel;
+  OptixCore.Protocol.Packet, OptixCore.Commands.ContentReader,
+
+  NeoFlat.Panel, NeoFlat.Button, NeoFlat.PopupMenu, NeoFlat.StatusBar;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TControlFormContentReader = class(TBaseFormControl)
-    PanelActions: TPanel;
-    ButtonBack: TSpeedButton;
-    ButtonForward: TSpeedButton;
-    ButtonDownload: TSpeedButton;
-    StatusBar: TStatusBar;
-    ButtonBrowsePage: TSpeedButton;
-    PopupRichStrings: TPopupMenu;
+    PopupRichStrings: TFlatPopupMenu;
     MenuItem1: TMenuItem;
     MenuItem2: TMenuItem;
     MenuItem3: TMenuItem;
@@ -88,12 +85,24 @@ type
     MinimumLength1: TMenuItem;
     NoMinimum1: TMenuItem;
     Custom1: TMenuItem;
-    ButtonUpdatePageSize: TSpeedButton;
+    PanelMain: TFlatPanel;
     MultiPanel: TOMultiPanel;
     PanelHex: TPanel;
     PanelStrings: TPanel;
     RichStrings: TRichEdit;
-    ButtonToggleStrings: TSpeedButton;
+    PanelActions: TFlatPanel;
+    ButtonBack: TFlatButton;
+    ButtonForward: TFlatButton;
+    Shape1: TShape;
+    ButtonDownload: TFlatButton;
+    ButtonBrowsePage: TFlatButton;
+    ButtonUpdatePageSize: TFlatButton;
+    Shape2: TShape;
+    Shape3: TShape;
+    ButtonOptions: TFlatButton;
+    PopupMenuOptions: TFlatPopupMenu;
+    ShowStrings1: TMenuItem;
+    StatusBar: TFlatStatusBar;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ButtonDownloadClick(Sender: TObject);
@@ -109,7 +118,8 @@ type
     procedure ButtonUpdatePageSizeClick(Sender: TObject);
     procedure PopupRichStringsPopup(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure ButtonToggleStringsClick(Sender: TObject);
+    procedure ButtonOptionsClick(Sender: TObject);
+    procedure ShowStrings1Click(Sender: TObject);
   private
     FFrameHexEditor           : TFrameHexEditor;
     FCurrentPage              : TOptixCommandReadContentReaderPage;
@@ -134,9 +144,9 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Math,
+  System.Math, System.Types,
 
-  Optix.Helper, Optix.FileSystem.Helper, Optix.Shared.Helper, Optix.Constants;
+  Optix.Helper, OptixCore.System.FileSystem, OptixCore.Helper, Optix.Constants;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -164,6 +174,16 @@ begin
     FMinExtractedStringLength,
     AStringKinds
   );
+end;
+
+procedure TControlFormContentReader.ShowStrings1Click(Sender: TObject);
+begin
+  if TMenuItem(Sender).Checked then
+    RefreshExtractedStrings()
+  else
+    RichStrings.Clear();
+
+  MultiPanel.PanelCollection.Items[1].Visible := TMenuItem(Sender).Checked;
 end;
 
 procedure TControlFormContentReader.MenuItem1Click(Sender: TObject);
@@ -267,19 +287,16 @@ begin
     BrowsePage(FCurrentPage.PageNumber +1);
 end;
 
-procedure TControlFormContentReader.ButtonToggleStringsClick(Sender: TObject);
+procedure TControlFormContentReader.ButtonOptionsClick(Sender: TObject);
 begin
-  if ButtonToggleStrings.ImageIndex = IMAGE_SHOW_STRINGS then begin
-    RefreshExtractedStrings();
+  var APoint := PanelActions.ClientToScreen(
+    Point(
+      TFlatButton(Sender).Left,
+      TFlatButton(Sender).Top + TFlatButton(Sender).Height
+    )
+  );
 
-    ButtonToggleStrings.ImageIndex := IMAGE_HIDE_STRINGS
-  end else begin
-    ButtonToggleStrings.ImageIndex := IMAGE_SHOW_STRINGS;
-
-    RichStrings.Clear();
-  end;
-
-  MultiPanel.PanelCollection.Items[1].Visible := ButtonToggleStrings.ImageIndex = IMAGE_HIDE_STRINGS;
+  PopupMenuOptions.Popup(APoint.X, APoint.Y);
 end;
 
 procedure TControlFormContentReader.ButtonUpdatePageSizeClick(Sender: TObject);
@@ -377,7 +394,7 @@ begin
   ButtonForward.Enabled        := FCurrentPage.PageNumber < FCurrentPage.PageCount -1;
   ButtonBrowsePage.Enabled     := FCurrentPage.PageCount > 1;
   ButtonUpdatePageSize.Enabled := True;
-  ButtonToggleStrings.Enabled   := Assigned(FCurrentPage);
+  ShowStrings1.Enabled         := Assigned(FCurrentPage);
   ///
 
   StatusBar.Panels.Items[0].Text := Format('Page: %d / %d', [
@@ -386,9 +403,9 @@ begin
   ]);
 
   StatusBar.Panels.Items[1].Text := Format('Data Size: %s (Page Size: %s), Total Size: %s', [
-    FormatFileSize(FCurrentPage.DataSize),
-    FormatFileSize(FCurrentPage.PageSize),
-    FormatFileSize(FCurrentPage.TotalSize)
+    TOptixHelper.FormatFileSize(FCurrentPage.DataSize),
+    TOptixHelper.FormatFileSize(FCurrentPage.PageSize),
+    TOptixHelper.FormatFileSize(FCurrentPage.TotalSize)
   ]);
 
   ///
@@ -420,7 +437,7 @@ begin
         True
       );
 
-    if ButtonToggleStrings.ImageIndex = IMAGE_HIDE_STRINGS then
+    if ShowStrings1.Checked then
       RefreshExtractedStrings();
 
     ///

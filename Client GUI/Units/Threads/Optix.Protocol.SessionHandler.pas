@@ -61,9 +61,10 @@ uses
 
   XSuperObject,
 
-  Optix.Protocol.Client.Handler, Optix.Protocol.Packet, Optix.Protocol.Preflight, Optix.Protocol.Worker.FileTransfer,
-  Optix.Func.Commands, Optix.Func.Commands.Base, Optix.Actions.ProcessHandler, Optix.Func.Commands.FileSystem,
-  Optix.Func.Commands.Shell, Optix.FileSystem.Helper, Optix.Func.Commands.ContentReader;
+  OptixCore.Protocol.Client.Handler, OptixCore.Protocol.Packet, OptixCore.Protocol.Preflight,
+  Optix.Protocol.Worker.FileTransfer, OptixCore.Commands, OptixCore.Commands.Base,
+  Optix.Actions.ProcessHandler, OptixCore.Commands.FileSystem, OptixCore.Commands.Shell,
+  OptixCore.System.FileSystem, OptixCore.Commands.ContentReader;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -139,7 +140,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Func.SessionInformation, Optix.Func.LogNotifier, Optix.Thread, Optix.ClassesRegistry;
+  OptixCore.SessionInformation, OptixCore.LogNotifier, OptixCore.Thread, OptixCore.ClassesRegistry;
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure TOptixSessionHandlerThread.Initialize();
@@ -432,6 +433,9 @@ begin
     ///
     FFileTransferOrchestrator := nil;
   end;
+
+  if Assigned(FShellInstances) then
+    FShellInstances.Clear();
 end;
 
 procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);

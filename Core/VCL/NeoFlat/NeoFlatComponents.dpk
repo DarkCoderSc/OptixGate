@@ -1,0 +1,57 @@
+package NeoFlatComponents;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  vclimg,
+  VirtualTreesR;
+
+contains
+  NeoFlat.Button in 'NeoFlat.Button.pas',
+  NeoFlat.CheckBox in 'NeoFlat.CheckBox.pas',
+  NeoFlat.Classes in 'NeoFlat.Classes.pas',
+  NeoFlat.ComboBox in 'NeoFlat.ComboBox.pas',
+  NeoFlat.Helper in 'NeoFlat.Helper.pas',
+  NeoFlat.Edit in 'NeoFlat.Edit.pas',
+  NeoFlat.Gauge in 'NeoFlat.Gauge.pas',
+  NeoFlat.GroupBox in 'NeoFlat.GroupBox.pas',
+  NeoFlat.Hint in 'NeoFlat.Hint.pas',
+  NeoFlat.ImageButton in 'NeoFlat.ImageButton.pas',
+  NeoFlat.Panel in 'NeoFlat.Panel.pas',
+  NeoFlat.PopupMenu in 'NeoFlat.PopupMenu.pas',
+  NeoFlat.Reg in 'NeoFlat.Reg.pas',
+  NeoFlat.StatusBar in 'NeoFlat.StatusBar.pas',
+  NeoFlat.Theme in 'NeoFlat.Theme.pas',
+  NeoFlat.TreeView in 'NeoFlat.TreeView.pas',
+  NeoFlat.Types in 'NeoFlat.Types.pas',
+  NeoFlat.Validators in 'NeoFlat.Validators.pas',
+  NeoFlat.Window in 'NeoFlat.Window.pas';
+
+end.

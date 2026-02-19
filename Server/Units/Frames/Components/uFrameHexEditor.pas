@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 (*
   TODO:
     - Implement Lazy Loading like I did in an old version of Winja Hex Editor (Extra Tool)
@@ -150,7 +148,11 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.StrUtils, System.Math;
+  System.StrUtils, System.Math,
+
+  Optix.Constants,
+
+  NeoFlat.Theme;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -210,6 +212,8 @@ begin
     FSelKind := gskHex;
   end;
 
+  VST.Colors.GridLineColor := MAIN_GRAY;
+
   ///
   RefreshHexGrid();
 end;
@@ -253,7 +257,7 @@ begin
   var AGridSectionKind := gskNone;
 
   case Column of
-    0 : AColor := clBlack;
+    0 : AColor := RGB(220, 220, 220);
 
     1..ROW_SIZE : begin
       AByteIndex := Column - 1;
@@ -261,7 +265,7 @@ begin
       AGridSectionKind := gskHex;
 
       if odd(Column mod 2) then
-        AColor := clBlack;
+        AColor := RGB(240, 240, 240);
     end;
 
     ROW_SIZE +1..(ROW_SIZE * 2) +1 : begin
@@ -275,9 +279,9 @@ begin
     var ABufferPos : Int64 := (Integer(Node.Index) * ROW_SIZE) + AByteIndex;
     if (ABufferPos >= FSelStart) and (ABufferPos <= FSelEnd) then begin
       if AGridSectionKind = FSelKind then
-        AColor := VST.Colors.FocusedSelectionColor
+        AColor := COLOR_LIST_DARKER_BLUE
       else
-        AColor := VST.Colors.SelectionRectangleBlendColor;
+        AColor := COLOR_LIST_BLUE;
     end;
   end;
 

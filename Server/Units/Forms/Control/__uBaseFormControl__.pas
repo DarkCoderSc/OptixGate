@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit __uBaseFormControl__;
 
 interface
@@ -61,9 +59,11 @@ uses
 
   Winapi.Messages,
 
-  VCL.Forms, VCL.Controls,
+  VCL.Forms, VCL.Controls, VCL.Menus,
 
-  Optix.Func.Commands.Base, Optix.Protocol.Packet;
+  OptixCore.Commands.Base, OptixCore.Protocol.Packet,
+
+  NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -112,21 +112,19 @@ type
 
   TBaseFormControl = class(TForm)
   private
-    FOriginalCaption  : String;
-    FDialogs          : TObjectList<TForm>;
-    FFirstShow        : Boolean;
+    FOriginalCaption : String;
+    FFirstShow       : Boolean;
 
     {@M}
     function GetGUID() : TGUID;
   protected
+    FFlatWindow      : TFlatWindow;
     FSpecialForm     : Boolean;
     FFormInformation : TFormControlInformation;
 
     {@M}
     function GetContextDescription() : String; virtual;
     procedure RefreshCaption(); virtual;
-
-    procedure RegisterNewDialogAndShow(const ADialog : TForm);
 
     function RequestFileDownload(ARemoteFilePath : String = ''; ALocalFilePath : String = '';
       const AContext : String = '') : TGUID; virtual;
@@ -161,10 +159,10 @@ type
     destructor Destroy(); override;
 
     {@G}
-    property GUID               : TGUID                   read GetGUID;
-    property SpecialForm        : Boolean                 read FSpecialForm;
-    property FormInformation    : TFormControlInformation read FFormInformation;
-    property ContextInformation : String                  read GetContextDescription;
+    property GUID                : TGUID                   read GetGUID;
+    property SpecialForm         : Boolean                 read FSpecialForm;
+    property FormInformation     : TFormControlInformation read FFormInformation;
+    property ContextInformation  : String                  read GetContextDescription;
   end;
 
   TBaseFormControlClass = class of TBaseFormControl;
@@ -179,7 +177,7 @@ uses
 
   Winapi.Windows,
 
-  Optix.Func.Commands.ContentReader,
+  OptixCore.Commands.ContentReader,
 
   uFormMain, uControlFormTransfers;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -257,16 +255,6 @@ end;
 
 (* TBaseFormControl *)
 
-procedure TBaseFormControl.RegisterNewDialogAndShow(const ADialog : TForm);
-begin
-  if Assigned(ADialog) and Assigned(FDialogs) then begin
-    FDialogs.Add(ADialog);
-
-    ///
-    ADialog.Show();
-  end;
-end;
-
 function TBaseFormControl.GetContextDescription() : String;
 begin
   result := '';
@@ -324,7 +312,7 @@ end;
 
 procedure TBaseFormControl.OnFirstShow();
 begin
-  ///
+  Height := Height +1;
 end;
 
 constructor TBaseFormControl.Create(AOwner : TComponent; const AUserIdentifier : String;
@@ -333,15 +321,15 @@ begin
   inherited Create(AOwner);
   ///
 
-  FOriginalCaption := self.Caption; // Default
+  FFlatWindow := TFlatWindow.Create(self);
+
+  FOriginalCaption := Caption; // Default
   FSpecialForm     := ASpecialForm;
   FFirstShow       := True;
   FFormInformation := TFormControlInformation.Create();
 
   FFormInformation.UserIdentifier := AUserIdentifier;
   FFormInformation.State := fcsClosed;
-
-  FDialogs := TObjectList<TForm>.Create(True);
 end;
 
 destructor TBaseFormControl.Destroy();
@@ -349,8 +337,8 @@ begin
   if Assigned(FFormInformation) then
     FreeAndNil(FFormInformation);
 
-  if Assigned(FDialogs) then
-    FreeAndNil(FDialogs);
+  if Assigned(FFlatWindow) then
+    FreeAndNil(FFlatWindow);
 
   ///
   inherited;

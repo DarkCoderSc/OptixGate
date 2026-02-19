@@ -63,55 +63,47 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
 
-  uFormServers;
+  uFormServers, System.Skia, Vcl.Skia, NeoFlat.GroupBox, NeoFlat.CheckBox, NeoFlat.ComboBox, NeoFlat.Edit,
+  NeoFlat.Button, NeoFlat.Panel, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormListen = class(TForm)
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
-    PanelClient: TPanel;
+    PanelBottom: TFlatPanel;
+    ButtonConnect: TFlatButton;
+    ButtonCancel: TFlatButton;
+    PanelClient: TFlatPanel;
     Label1: TLabel;
-    SpinPort: TSpinEdit;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
+    EditPort: TFlatEdit;
     LabelCertificate: TLabel;
-    ComboCertificate: TComboBox;
-    CheckBoxAutoStart: TCheckBox;
+    ComboCertificate: TFlatComboBox;
+    CheckBoxAutoStart: TFlatCheckBox;
     Label3: TLabel;
-    ComboIpVersion: TComboBox;
-    GroupBox1: TGroupBox;
-    RadioBindAll: TRadioButton;
-    RadioBindLocal: TRadioButton;
-    RadioBindCustom: TRadioButton;
-    EditServerBindAddress: TEdit;
+    ComboIpVersion: TFlatComboBox;
+    GroupBox1: TFlatGroupBox;
+    RadioBindAll: TFlatCheckBox;
+    RadioBindLocal: TFlatCheckBox;
+    RadioBindCustom: TFlatCheckBox;
+    EditServerBindAddress: TFlatEdit;
+    FlatWindow1: TFlatWindow;
     procedure ButtonConnectClick(Sender: TObject);
-    procedure ButtonCancelClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormResize(Sender: TObject);
-    procedure SpinPortChange(Sender: TObject);
-    procedure RadioBindCustomClick(Sender: TObject);
-    procedure RadioBindLocalClick(Sender: TObject);
+    procedure EditPortChange(Sender: TObject);
     procedure RadioBindAllClick(Sender: TObject);
+    procedure RadioBindCustomStateChanged(Sender: TObject);
+    procedure RadioBindLocalStateChanged(Sender: TObject);
   private
-    FCanceled : Boolean;
-
     {@M}
     procedure DoResize();
   public
+    {@C}
+    constructor Create(AOwner : TComponent); override;
+
     {@M}
     function GetServerConfiguration() : TServerConfiguration;
-
-    {@G}
-    property Canceled : Boolean read FCanceled;
-
-    {$IFDEF USETLS}
-    {@C}
-    constructor Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>); reintroduce;
-    {$ENDIF}
   end;
 
 var
@@ -123,17 +115,26 @@ implementation
 uses
   uFormMain,
 
-  Optix.Helper, Optix.Sockets.Helper
+  OptixCore.Sockets.Helper, Optix.Helper
 
-  {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
+  {$IFDEF USETLS}, Optix.DebugCertificate,
+
+  uFormCertificatesStore{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
 
 function TFormListen.GetServerConfiguration() : TServerConfiguration;
 begin
+  var APort := StrToInt(EditPort.Text);
+  if APort < 0 then
+    APort := 0
+  else if APort > High(Word) then
+    APort := High(Word);
+  ///
+
   result.Address   := EditServerBindAddress.Text;
-  result.Port      := SpinPort.Value;
+  result.Port      := APort;
   result.Version   := TIpVersion(ComboIpVersion.ItemIndex);
 
   if RadioBindCustom.Checked then
@@ -168,12 +169,12 @@ begin
   EditServerBindAddress.Enabled := False;
 end;
 
-procedure TFormListen.RadioBindCustomClick(Sender: TObject);
+procedure TFormListen.RadioBindCustomStateChanged(Sender: TObject);
 begin
-  EditServerBindAddress.Enabled := TRadioButton(Sender).Checked;
+  EditServerBindAddress.Enabled := TFlatCheckBox(Sender).Checked;
 end;
 
-procedure TFormListen.RadioBindLocalClick(Sender: TObject);
+procedure TFormListen.RadioBindLocalStateChanged(Sender: TObject);
 begin
   EditServerBindAddress.Enabled := False;
 end;
@@ -189,7 +190,7 @@ begin
   var ANewHeight := PanelBottom.Height;
 
   if not LabelCertificate.Visible then
-    Inc(ANewHeight, SpinPort.Top + SpinPort.Height + 8)
+    Inc(ANewHeight, EditPort.Top + EditPort.Height + 8)
   else
     Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + 8);
 
@@ -200,7 +201,7 @@ procedure TFormListen.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftSta
 begin
   case Key of
     13 : ButtonConnectClick(ButtonConnect);
-    27 : ButtonCancelClick(ButtonCancel);
+    27 : ModalResult := mrCancel;
   end;
 end;
 
@@ -211,8 +212,6 @@ end;
 
 procedure TFormListen.FormCreate(Sender: TObject);
 begin
-  FCanceled := True;
-
   ComboIpVersion.ItemIndex := 0;
 
   {$IFNDEF USETLS}
@@ -230,7 +229,7 @@ begin
   DoResize();
 end;
 
-procedure TFormListen.SpinPortChange(Sender: TObject);
+procedure TFormListen.EditPortChange(Sender: TObject);
 begin
   if TSpinEdit(Sender).Value < 0 then
     TSpinEdit(Sender).Value := 0
@@ -238,37 +237,50 @@ begin
     TSpinEdit(Sender).Value := 65535;
 end;
 
-procedure TFormListen.ButtonCancelClick(Sender: TObject);
-begin
-  Close();
-end;
-
 procedure TFormListen.ButtonConnectClick(Sender: TObject);
 begin
-  if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
-    raise Exception.Create(
-      'You must select an existing certificate (via its fingerprint) for the server to start listening.'
-    );
-
-  FCanceled := False;
-
-  Close();
-end;
-
-{$IFDEF USETLS}
-constructor TFormListen.Create(AOwner : TComponent; const ACertificatesFingerprints : TList<String>);
-begin
-  inherited Create(AOwner);
+  var AConfiguration := GetServerConfiguration();
   ///
 
-  ComboCertificate.Clear();
+  var AErrorDialog := TOptixErrorDialog.Create(self);
+  try
+    if ComboCertificate.Visible and (ComboCertificate.ItemIndex = -1) then
+      AErrorDialog.Add(
+        'You must select an existing certificate (via its fingerprint) for the server to start listening.'
+      );
 
-  if not Assigned(ACertificatesFingerprints) then
-    Exit();
+    if FormServers.ServerPortExists(AConfiguration.Port, AConfiguration.Version) then
+      AErrorDialog.Add(
+        'The specified port is already present in the server list. A port can only be bound and listened to by one ' +
+        'server instance at a time.'
+      );
 
-  for var AFingerprint in ACertificatesFingerprints do
-    ComboCertificate.Items.Add(AFingerprint);
+    if AErrorDialog.ShowErrors then
+      Exit();
+  finally
+    FreeAndNil(AErrorDialog);
+  end;
+
+  ///
+  ModalResult := mrOk;
 end;
-{$ENDIF}
+
+constructor TFormListen.Create(AOwner : TComponent);
+begin
+  inherited;
+  ///
+
+  {$IFDEF USETLS}
+    ComboCertificate.Clear();
+
+    var AFingerprints := FormCertificatesStore.GetCertificatesFingerprints();
+    try
+      for var AFingerprint in AFingerprints do
+        ComboCertificate.Items.Add(AFingerprint);
+    finally
+      FreeAndNil(AFingerprints);
+    end;
+  {$ENDIF}
+end;
 
 end.

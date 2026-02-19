@@ -2,8 +2,8 @@ object ControlFormContentReader: TControlFormContentReader
   Left = 0
   Top = 0
   Caption = 'Content Reader'
-  ClientHeight = 619
-  ClientWidth = 824
+  ClientHeight = 492
+  ClientWidth = 668
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,215 +16,339 @@ object ControlFormContentReader: TControlFormContentReader
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
-  object PanelActions: TPanel
-    AlignWithMargins = True
-    Left = 4
+  object PanelMain: TFlatPanel
+    Left = 0
     Top = 0
-    Width = 816
-    Height = 30
-    Margins.Left = 4
-    Margins.Top = 0
-    Margins.Right = 4
-    Margins.Bottom = 0
-    Align = alTop
-    BevelOuter = bvNone
+    Width = 668
+    Height = 473
+    Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 806
-    object ButtonBack: TSpeedButton
-      AlignWithMargins = True
-      Left = 36
-      Top = 4
-      Width = 30
-      Height = 22
-      Hint = 'Browse Previous Page'
-      Margins.Left = 2
-      Margins.Top = 4
-      Margins.Right = 2
-      Margins.Bottom = 4
-      Align = alLeft
-      ImageIndex = 60
-      ImageName = 'button-arrow-left'
-      Images = FormMain.VirtualImageList
-      SelectedImageName = '-1'
-      OnClick = ButtonBackClick
-      ExplicitLeft = 34
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    ExplicitWidth = 814
+    ExplicitHeight = 568
+    object MultiPanel: TOMultiPanel
+      Left = 0
+      Top = 30
+      Width = 668
+      Height = 443
+      PanelType = ptVertical
+      PanelCollection = <
+        item
+          Control = PanelHex
+          Position = 0.500000000000000000
+          Visible = True
+          Index = 0
+        end
+        item
+          Control = PanelStrings
+          Position = 1.000000000000000000
+          Visible = False
+          Index = 1
+        end>
+      MinPosition = 0.020000000000000000
+      SplitterHoverColor = clHighlight
+      Align = alClient
+      TabOrder = 0
+      ExplicitWidth = 814
+      ExplicitHeight = 538
+      DesignSize = (
+        668
+        443)
+      object PanelHex: TPanel
+        Left = 0
+        Top = 0
+        Width = 668
+        Height = 222
+        Anchors = []
+        BevelOuter = bvNone
+        Color = 13554645
+        ParentBackground = False
+        TabOrder = 0
+      end
+      object PanelStrings: TPanel
+        Left = 0
+        Top = 225
+        Width = 668
+        Height = 218
+        Anchors = []
+        BevelOuter = bvNone
+        TabOrder = 1
+        Visible = False
+        object RichStrings: TRichEdit
+          Left = 0
+          Top = 0
+          Width = 668
+          Height = 218
+          Align = alClient
+          Color = clWhite
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clBlack
+          Font.Height = -12
+          Font.Name = 'Courier New'
+          Font.Style = []
+          ParentFont = False
+          PlainText = True
+          PopupMenu = PopupRichStrings
+          ReadOnly = True
+          ScrollBars = ssBoth
+          TabOrder = 0
+          ExplicitWidth = 824
+          ExplicitHeight = 16
+        end
+      end
     end
-    object ButtonForward: TSpeedButton
-      AlignWithMargins = True
-      Left = 70
-      Top = 4
-      Width = 30
-      Height = 22
-      Hint = 'Browse Next Page'
-      Margins.Left = 2
+    object PanelActions: TFlatPanel
+      Left = 0
+      Top = 0
+      Width = 668
+      Height = 30
+      Margins.Left = 4
       Margins.Top = 4
-      Margins.Right = 2
+      Margins.Right = 4
       Margins.Bottom = 4
-      Align = alLeft
-      ImageIndex = 61
-      ImageName = 'button-arrow-right'
-      Images = FormMain.VirtualImageList
-      OnClick = ButtonForwardClick
-      ExplicitLeft = 68
-    end
-    object ButtonDownload: TSpeedButton
-      AlignWithMargins = True
-      Left = 2
-      Top = 4
-      Width = 30
-      Height = 22
-      Hint = 'Download File'
-      Margins.Left = 2
-      Margins.Top = 4
-      Margins.Right = 2
-      Margins.Bottom = 4
-      Align = alLeft
-      ImageIndex = 71
-      ImageName = 'button-download'
-      Images = FormMain.VirtualImageList
-      SelectedImageName = '-1'
-      OnClick = ButtonDownloadClick
-      ExplicitLeft = 34
-    end
-    object ButtonBrowsePage: TSpeedButton
-      AlignWithMargins = True
-      Left = 104
-      Top = 4
-      Width = 30
-      Height = 22
-      Hint = 'Go To Page'
-      Margins.Left = 2
-      Margins.Top = 4
-      Margins.Right = 2
-      Margins.Bottom = 4
-      Align = alLeft
-      ImageIndex = 72
-      ImageName = 'execute'
-      Images = FormMain.VirtualImageList
-      OnClick = ButtonBrowsePageClick
-      ExplicitLeft = 198
-    end
-    object ButtonUpdatePageSize: TSpeedButton
-      AlignWithMargins = True
-      Left = 138
-      Top = 4
-      Width = 30
-      Height = 22
-      Hint = 'Update Page Size'
-      Margins.Left = 2
-      Margins.Top = 4
-      Margins.Right = 2
-      Margins.Bottom = 4
-      Align = alLeft
-      ImageIndex = 73
-      ImageName = 'document-update'
-      Images = FormMain.VirtualImageList
-      OnClick = ButtonUpdatePageSizeClick
-      ExplicitLeft = 184
-    end
-    object ButtonToggleStrings: TSpeedButton
-      AlignWithMargins = True
-      Left = 172
-      Top = 4
-      Width = 30
-      Height = 22
-      Hint = 'Update Page Size'
-      Margins.Left = 2
-      Margins.Top = 4
-      Margins.Right = 2
-      Margins.Bottom = 4
-      Align = alLeft
-      ImageIndex = 74
-      ImageName = 'control-rich-text-edit-eye'
-      Images = FormMain.VirtualImageList
-      OnClick = ButtonToggleStringsClick
-      ExplicitTop = 1
+      Align = alTop
+      Caption = 'PanelActions'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 1
+      Padding.Left = 4
+      Padding.Top = 4
+      Padding.Right = 4
+      Padding.Bottom = 6
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
+      ExplicitWidth = 814
+      object ButtonBack: TFlatButton
+        Left = 4
+        Top = 4
+        Width = 32
+        Height = 20
+        Margins.Left = 0
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = '<-'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alLeft
+        ShowHint = True
+        ImageIndex = 17
+        Value = 0
+        OnClick = ButtonBackClick
+        Busy = False
+        ExplicitHeight = 27
+      end
+      object ButtonForward: TFlatButton
+        AlignWithMargins = True
+        Left = 40
+        Top = 4
+        Width = 32
+        Height = 20
+        Margins.Left = 4
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = '->'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alLeft
+        ShowHint = True
+        ImageIndex = 17
+        Value = 0
+        OnClick = ButtonForwardClick
+        Busy = False
+        ExplicitLeft = 68
+        ExplicitHeight = 27
+      end
+      object Shape1: TShape
+        AlignWithMargins = True
+        Left = 80
+        Top = 4
+        Width = 1
+        Height = 20
+        Margins.Left = 8
+        Margins.Top = 0
+        Margins.Right = 4
+        Margins.Bottom = 0
+        Align = alLeft
+        ExplicitLeft = 72
+        ExplicitHeight = 27
+      end
+      object ButtonDownload: TFlatButton
+        AlignWithMargins = True
+        Left = 89
+        Top = 4
+        Width = 80
+        Height = 20
+        Margins.Left = 4
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = 'Download'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alLeft
+        ShowHint = True
+        ImageIndex = 17
+        Value = 0
+        OnClick = ButtonDownloadClick
+        Busy = False
+        ExplicitHeight = 22
+      end
+      object ButtonBrowsePage: TFlatButton
+        AlignWithMargins = True
+        Left = 186
+        Top = 4
+        Width = 80
+        Height = 20
+        Margins.Left = 4
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = 'Go To Page...'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alLeft
+        ShowHint = True
+        ImageIndex = 17
+        Value = 0
+        OnClick = ButtonBrowsePageClick
+        Busy = False
+        ExplicitHeight = 22
+      end
+      object ButtonUpdatePageSize: TFlatButton
+        AlignWithMargins = True
+        Left = 270
+        Top = 4
+        Width = 80
+        Height = 20
+        Margins.Left = 4
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = 'Set Page Size'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alLeft
+        ShowHint = True
+        ImageIndex = 17
+        Value = 0
+        OnClick = ButtonUpdatePageSizeClick
+        Busy = False
+        ExplicitHeight = 22
+      end
+      object Shape2: TShape
+        AlignWithMargins = True
+        Left = 177
+        Top = 4
+        Width = 1
+        Height = 20
+        Margins.Left = 8
+        Margins.Top = 0
+        Margins.Right = 4
+        Margins.Bottom = 0
+        Align = alLeft
+        ExplicitLeft = 178
+        ExplicitHeight = 22
+      end
+      object Shape3: TShape
+        AlignWithMargins = True
+        Left = 358
+        Top = 4
+        Width = 1
+        Height = 20
+        Margins.Left = 8
+        Margins.Top = 0
+        Margins.Right = 4
+        Margins.Bottom = 0
+        Align = alLeft
+        ExplicitHeight = 22
+      end
+      object ButtonOptions: TFlatButton
+        AlignWithMargins = True
+        Left = 367
+        Top = 4
+        Width = 80
+        Height = 20
+        Margins.Left = 4
+        Margins.Top = 0
+        Margins.Right = 0
+        Margins.Bottom = 0
+        Caption = 'Options'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Align = alLeft
+        ShowHint = True
+        ImageIndex = 17
+        Value = 0
+        OnClick = ButtonOptionsClick
+        Busy = False
+        ExplicitLeft = 494
+        ExplicitHeight = 22
+      end
     end
   end
-  object StatusBar: TStatusBar
+  object StatusBar: TFlatStatusBar
     Left = 0
-    Top = 600
-    Width = 824
+    Top = 473
+    Width = 668
     Height = 19
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
     Panels = <
       item
-        Width = 150
+        Width = 200
+        Alignment = taLeftJustify
       end
       item
-        Alignment = taRightJustify
         Width = 50
+        Alignment = taRightJustify
       end>
     ExplicitTop = 568
     ExplicitWidth = 814
   end
-  object MultiPanel: TOMultiPanel
-    Left = 0
-    Top = 30
-    Width = 824
-    Height = 570
-    PanelType = ptVertical
-    PanelCollection = <
-      item
-        Control = PanelHex
-        Position = 0.500000000000000000
-        Visible = True
-        Index = 0
-      end
-      item
-        Control = PanelStrings
-        Position = 1.000000000000000000
-        Visible = False
-        Index = 1
-      end>
-    MinPosition = 0.020000000000000000
-    Align = alClient
-    TabOrder = 2
-    ExplicitWidth = 814
-    ExplicitHeight = 538
-    DesignSize = (
-      824
-      570)
-    object PanelHex: TPanel
-      Left = 0
-      Top = 0
-      Width = 824
-      Height = 285
-      Anchors = []
-      BevelOuter = bvNone
-      TabOrder = 0
-    end
-    object PanelStrings: TPanel
-      Left = 0
-      Top = 288
-      Width = 824
-      Height = 282
-      Anchors = []
-      BevelOuter = bvNone
-      TabOrder = 1
-      Visible = False
-      object RichStrings: TRichEdit
-        Left = 0
-        Top = 0
-        Width = 824
-        Height = 282
-        Align = alClient
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -12
-        Font.Name = 'Courier New'
-        Font.Style = []
-        ParentFont = False
-        PlainText = True
-        PopupMenu = PopupRichStrings
-        ReadOnly = True
-        ScrollBars = ssBoth
-        TabOrder = 0
-        ExplicitWidth = 814
-        ExplicitHeight = 266
-      end
-    end
-  end
-  object PopupRichStrings: TPopupMenu
+  object PopupRichStrings: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupRichStringsPopup
     Left = 500
     Top = 333
@@ -270,6 +394,16 @@ object ControlFormContentReader: TControlFormContentReader
         RadioItem = True
         OnClick = Custom1Click
       end
+    end
+  end
+  object PopupMenuOptions: TFlatPopupMenu
+    OwnerDraw = True
+    Left = 272
+    Top = 214
+    object ShowStrings1: TMenuItem
+      AutoCheck = True
+      Caption = 'Show Strings'
+      OnClick = ShowStrings1Click
     end
   end
 end

@@ -1,15 +1,17 @@
 object FormListen: TFormListen
   Left = 0
   Top = 0
-  BorderStyle = bsDialog
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsNone
   Caption = 'Listen'
-  ClientHeight = 326
-  ClientWidth = 398
+  ClientHeight = 304
+  ClientWidth = 323
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
   Position = poOwnerFormCenter
@@ -17,240 +19,331 @@ object FormListen: TFormListen
   OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow
-  TextHeight = 15
-  object PanelBottom: TPanel
+  TextHeight = 14
+  object PanelBottom: TFlatPanel
     Left = 0
-    Top = 285
-    Width = 398
-    Height = 41
+    Top = 274
+    Width = 323
+    Height = 30
     Align = alBottom
-    BevelOuter = bvNone
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
     TabOrder = 0
-    ExplicitTop = 253
-    ExplicitWidth = 388
-    object ButtonConnect: TButton
-      Left = 152
+    BorderTop = 1
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    object ButtonConnect: TFlatButton
+      Left = 208
       Top = 6
-      Width = 83
-      Height = 25
+      Width = 80
+      Height = 20
       Caption = 'Connect'
-      TabOrder = 0
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
       OnClick = ButtonConnectClick
+      Busy = False
     end
-    object ButtonCancel: TButton
-      Left = 63
+    object ButtonCancel: TFlatButton
+      Left = 119
       Top = 6
-      Width = 83
-      Height = 25
+      Width = 80
+      Height = 20
       Caption = 'Cancel'
-      TabOrder = 1
-      OnClick = ButtonCancelClick
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
+      Busy = False
     end
   end
-  object PanelClient: TPanel
-    Left = 50
+  object PanelClient: TFlatPanel
+    Left = 0
     Top = 0
-    Width = 348
-    Height = 285
+    Width = 323
+    Height = 274
     Align = alClient
-    BevelOuter = bvNone
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
     Padding.Left = 8
     Padding.Top = 8
     Padding.Right = 8
     Padding.Bottom = 8
-    TabOrder = 1
-    ExplicitWidth = 338
-    ExplicitHeight = 253
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     object Label1: TLabel
       AlignWithMargins = True
       Left = 8
-      Top = 170
-      Width = 332
-      Height = 15
+      Top = 156
+      Width = 307
+      Height = 13
       Margins.Left = 0
-      Margins.Top = 8
+      Margins.Top = 4
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Port:'
-      ExplicitWidth = 60
+      ExplicitWidth = 59
     end
     object LabelCertificate: TLabel
       AlignWithMargins = True
       Left = 8
-      Top = 242
-      Width = 332
-      Height = 15
+      Top = 218
+      Width = 307
+      Height = 13
       Margins.Left = 0
-      Margins.Top = 8
+      Margins.Top = 4
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Certificate:'
-      ExplicitWidth = 92
+      ExplicitWidth = 89
     end
     object Label3: TLabel
       AlignWithMargins = True
       Left = 8
       Top = 8
-      Width = 332
-      Height = 15
+      Width = 307
+      Height = 13
       Margins.Left = 0
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
       Caption = 'IP Version:'
-      ExplicitWidth = 54
+      ExplicitWidth = 52
     end
-    object SpinPort: TSpinEdit
+    object EditPort: TFlatEdit
       Left = 8
-      Top = 185
-      Width = 332
+      Top = 169
+      Width = 307
       Height = 24
       Align = alTop
+      AutoSize = False
+      Color = clWhite
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
       MaxLength = 5
-      MaxValue = 65535
-      MinValue = 0
+      NumbersOnly = True
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
-      Value = 2801
-      OnChange = SpinPortChange
-      ExplicitWidth = 322
+      Text = '2801'
+      OnChange = EditPortChange
+      Status = cStatusNormal
+      Validators = []
+      ShowBorder = True
     end
-    object ComboCertificate: TComboBox
+    object ComboCertificate: TFlatComboBox
       Left = 8
-      Top = 257
-      Width = 332
-      Height = 23
+      Top = 231
+      Width = 307
+      Height = 21
       Align = alTop
       Style = csDropDownList
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 1
-      ExplicitWidth = 322
+      ItemIndex = -1
+      Status = cStatusNormal
+      Validators = []
     end
-    object CheckBoxAutoStart: TCheckBox
+    object CheckBoxAutoStart: TFlatCheckBox
       AlignWithMargins = True
       Left = 8
-      Top = 217
-      Width = 332
+      Top = 197
+      Width = 307
       Height = 17
       Margins.Left = 0
-      Margins.Top = 8
+      Margins.Top = 4
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Automatically Start The Server.'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      Mode = cbmCheckBox
       Checked = True
-      State = cbChecked
-      TabOrder = 2
-      ExplicitWidth = 322
     end
-    object ComboIpVersion: TComboBox
+    object ComboIpVersion: TFlatComboBox
       Left = 8
-      Top = 23
-      Width = 332
-      Height = 23
+      Top = 21
+      Width = 307
+      Height = 21
       Align = alTop
       Style = csDropDownList
-      ItemIndex = 0
-      TabOrder = 3
-      Text = 'IPv4'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
       Items.Strings = (
         'IPv4'
         'IPv6')
-      ExplicitWidth = 322
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 3
+      Text = 'IPv4'
+      ItemIndex = 0
+      Status = cStatusNormal
+      Validators = []
     end
-    object GroupBox1: TGroupBox
+    object GroupBox1: TFlatGroupBox
+      AlignWithMargins = True
       Left = 8
       Top = 46
-      Width = 332
-      Height = 116
+      Width = 307
+      Height = 106
+      Margins.Left = 0
+      Margins.Top = 4
+      Margins.Right = 0
+      Margins.Bottom = 0
       Align = alTop
       Caption = 'Bind Address:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Color = 13554645
       Padding.Left = 8
-      Padding.Top = 8
+      Padding.Top = 16
       Padding.Right = 8
       Padding.Bottom = 8
+      ParentColor = False
       TabOrder = 4
-      ExplicitWidth = 322
-      object RadioBindAll: TRadioButton
-        Left = 10
-        Top = 25
-        Width = 312
+      object RadioBindAll: TFlatCheckBox
+        Left = 8
+        Top = 16
+        Width = 291
         Height = 17
         Align = alTop
         Caption = 'All Interfaces (Default)'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Mode = cbmRadioBox
         Checked = True
-        TabOrder = 0
-        TabStop = True
-        OnClick = RadioBindAllClick
-        ExplicitWidth = 302
+        OnStateChanged = RadioBindLocalStateChanged
       end
-      object RadioBindLocal: TRadioButton
-        Left = 10
-        Top = 42
-        Width = 312
+      object RadioBindLocal: TFlatCheckBox
+        Left = 8
+        Top = 33
+        Width = 291
         Height = 17
         Align = alTop
         Caption = 'Local host only'
-        TabOrder = 1
-        OnClick = RadioBindLocalClick
-        ExplicitWidth = 302
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Mode = cbmRadioBox
+        Checked = False
+        OnStateChanged = RadioBindLocalStateChanged
       end
-      object RadioBindCustom: TRadioButton
-        Left = 10
-        Top = 59
-        Width = 312
+      object RadioBindCustom: TFlatCheckBox
+        Left = 8
+        Top = 50
+        Width = 291
         Height = 17
         Align = alTop
         Caption = 'Custom:'
-        TabOrder = 2
-        OnClick = RadioBindCustomClick
-        ExplicitWidth = 302
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clBlack
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        Mode = cbmRadioBox
+        Checked = False
+        OnStateChanged = RadioBindCustomStateChanged
       end
-      object EditServerBindAddress: TEdit
+      object EditServerBindAddress: TFlatEdit
         AlignWithMargins = True
-        Left = 28
-        Top = 84
-        Width = 294
+        Left = 26
+        Top = 69
+        Width = 273
         Height = 23
         Margins.Left = 18
-        Margins.Top = 8
+        Margins.Top = 2
         Margins.Right = 0
         Margins.Bottom = 0
         Align = alTop
+        AutoSize = False
+        Color = clWhite
         Enabled = False
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clGray
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 3
-        ExplicitWidth = 284
+        Status = cStatusNormal
+        Validators = []
+        ShowBorder = True
       end
     end
   end
-  object PanelLeft: TPanel
-    Left = 0
-    Top = 0
-    Width = 50
-    Height = 285
-    Align = alLeft
-    BevelOuter = bvNone
-    Padding.Left = 8
-    Padding.Top = 8
-    Padding.Right = 8
-    Padding.Bottom = 8
-    TabOrder = 2
-    ExplicitHeight = 253
-    object Image: TVirtualImage
-      Left = 8
-      Top = 8
-      Width = 34
-      Height = 269
-      Align = alClient
-      Center = True
-      ImageCollection = FormMain.ImageCollectionDark
-      ImageWidth = 0
-      ImageHeight = 0
-      ImageIndex = 40
-      ImageName = 'servers-connection'
-      ExplicitLeft = 10
-      ExplicitTop = 10
-    end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    ShowBorder = True
+    BorderStyle = bsDialog
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 241
+    Top = 78
   end
 end

@@ -38,7 +38,7 @@ object ControlFormControlForms: TControlFormControlForms
     PopupMenu = PopupMenu
     StateImages = FormMain.VirtualImageList
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnCompareNodes = VSTCompareNodes
@@ -87,7 +87,8 @@ object ControlFormControlForms: TControlFormControlForms
         Width = 100
       end>
   end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnChange = PopupMenuChange
     Left = 160
     Top = 96

@@ -55,36 +55,34 @@ uses
   Vcl.Forms,
   Vcl.Themes,
   Vcl.Styles,
-  XSuperObject in '..\Shared\XSuperObject.pas',
-  Optix.Exceptions in '..\Shared\Optix.Exceptions.pas',
-  Optix.Sockets.Helper in '..\Shared\Optix.Sockets.Helper.pas',
-  Optix.Protocol.Packet in '..\Shared\Optix.Protocol.Packet.pas',
-  Optix.Sockets.Exceptions in '..\Shared\Optix.Sockets.Exceptions.pas',
-  Optix.Interfaces in '..\Shared\Optix.Interfaces.pas',
-  Optix.Thread in '..\Shared\Optix.Thread.pas',
-  Optix.Protocol.Client.Handler in '..\Shared\Optix.Protocol.Client.Handler.pas',
-  Optix.Func.SessionInformation in '..\Shared\Functions\Optix.Func.SessionInformation.pas',
-  Optix.Func.Commands in '..\Shared\Functions\Optix.Func.Commands.pas',
-  Optix.System.Helper in '..\Shared\Optix.System.Helper.pas',
-  Optix.Shared.Types in '..\Shared\Optix.Shared.Types.pas',
-  XSuperJSON in '..\Shared\XSuperJSON.pas',
-  Optix.InformationGathering.Helper in '..\Shared\Optix.InformationGathering.Helper.pas',
-  Optix.WinApiEx in '..\Shared\Optix.WinApiEx.pas',
-  Optix.Process.Helper in '..\Shared\Optix.Process.Helper.pas',
-  Optix.Func.LogNotifier in '..\Shared\Functions\Optix.Func.LogNotifier.pas',
-  Optix.Process.Enum in '..\Shared\Optix.Process.Enum.pas',
-  Optix.FileSystem.Helper in '..\Shared\Optix.FileSystem.Helper.pas',
-  Optix.FileSystem.Enum in '..\Shared\Optix.FileSystem.Enum.pas',
-  Optix.Shared.Classes in '..\Shared\Optix.Shared.Classes.pas',
-  Optix.Protocol.Preflight in '..\Shared\Optix.Protocol.Preflight.pas',
-  Optix.Protocol.Exceptions in '..\Shared\Optix.Protocol.Exceptions.pas',
-  Optix.Shared.Protocol.FileTransfer in '..\Shared\Optix.Shared.Protocol.FileTransfer.pas',
-  Optix.Task.ProcessDump in '..\Shared\Tasks\Optix.Task.ProcessDump.pas',
-  Optix.OpenSSL.Headers in '..\Shared\OpenSSL\Optix.OpenSSL.Headers.pas',
-  Optix.OpenSSL.Helper in '..\Shared\OpenSSL\Optix.OpenSSL.Helper.pas',
-  Optix.OpenSSL.Exceptions in '..\Shared\OpenSSL\Optix.OpenSSL.Exceptions.pas',
-  Optix.OpenSSL.Context in '..\Shared\OpenSSL\Optix.OpenSSL.Context.pas',
-  Optix.OpenSSL.Handler in '..\Shared\OpenSSL\Optix.OpenSSL.Handler.pas',
+  XSuperObject in '..\ExtLibraries\Delphi Libraries\XSuperObject.pas',
+  XSuperJSON in '..\ExtLibraries\Delphi Libraries\XSuperJSON.pas',
+  OptixCore.Exceptions in '..\Core\OptixCore.Exceptions.pas',
+  OptixCore.Sockets.Helper in '..\Core\Network\OptixCore.Sockets.Helper.pas',
+  OptixCore.Protocol.Packet in '..\Core\Network\OptixCore.Protocol.Packet.pas',
+  OptixCore.Sockets.Exceptions in '..\Core\Network\OptixCore.Sockets.Exceptions.pas',
+  OptixCore.Interfaces in '..\Core\OptixCore.Interfaces.pas',
+  OptixCore.Thread in '..\Core\OptixCore.Thread.pas',
+  OptixCore.Protocol.Client.Handler in '..\Core\Network\OptixCore.Protocol.Client.Handler.pas',
+  OptixCore.SessionInformation in '..\Core\Commands\OptixCore.SessionInformation.pas',
+  OptixCore.Commands in '..\Core\Commands\OptixCore.Commands.pas',
+  OptixCore.System.Helper in '..\Core\System\OptixCore.System.Helper.pas',
+  OptixCore.Types in '..\Core\OptixCore.Types.pas',
+  OptixCore.System.InformationGathering in '..\Core\System\OptixCore.System.InformationGathering.pas',
+  OptixCore.WinApiEx in '..\Core\OptixCore.WinApiEx.pas',
+  OptixCore.System.Process in '..\Core\System\OptixCore.System.Process.pas',
+  OptixCore.LogNotifier in '..\Core\Commands\OptixCore.LogNotifier.pas',
+  OptixCore.System.FileSystem in '..\Core\System\OptixCore.System.FileSystem.pas',
+  OptixCore.Classes in '..\Core\OptixCore.Classes.pas',
+  OptixCore.Protocol.Preflight in '..\Core\Network\OptixCore.Protocol.Preflight.pas',
+  OptixCore.Protocol.Exceptions in '..\Core\Network\OptixCore.Protocol.Exceptions.pas',
+  OptixCore.Protocol.FileTransfer in '..\Core\Network\OptixCore.Protocol.FileTransfer.pas',
+  OptixCore.Task.ProcessDump in '..\Core\Tasks\OptixCore.Task.ProcessDump.pas',
+  OptixCore.OpenSSL.Headers in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Headers.pas',
+  OptixCore.OpenSSL.Helper in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Helper.pas',
+  OptixCore.OpenSSL.Exceptions in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Exceptions.pas',
+  OptixCore.OpenSSL.Context in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Context.pas',
+  OptixCore.OpenSSL.Handler in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Handler.pas',
   Optix.DebugCertificate in 'Units\Optix.DebugCertificate.pas',
   Optix.Config.CertificatesStore in 'Units\Configs\Optix.Config.CertificatesStore.pas',
   Optix.Protocol.Worker.FileTransfer in 'Units\Threads\Optix.Protocol.Worker.FileTransfer.pas',
@@ -92,7 +90,6 @@ uses
   Optix.Protocol.SessionHandler in 'Units\Threads\Optix.Protocol.SessionHandler.pas',
   Optix.Protocol.Client in 'Units\Threads\Optix.Protocol.Client.pas',
   Optix.Helper in 'Units\Optix.Helper.pas',
-  Optix.VCL.Helper in 'Units\Optix.VCL.Helper.pas',
   Optix.Config.Helper in 'Units\Configs\Optix.Config.Helper.pas',
   __uBaseFormControl__ in 'Units\Forms\Control\__uBaseFormControl__.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
@@ -115,21 +112,21 @@ uses
   Optix.Config.TrustedCertificatesStore in 'Units\Configs\Optix.Config.TrustedCertificatesStore.pas',
   uFormServers in 'Units\Forms\uFormServers.pas' {FormServers},
   Optix.Config.Servers in 'Units\Configs\Optix.Config.Servers.pas',
-  Optix.Func.Commands.Base in '..\Shared\Functions\Optix.Func.Commands.Base.pas',
-  Optix.ClassesRegistry in '..\Shared\Optix.ClassesRegistry.pas',
-  Optix.Func.Commands.FileSystem in '..\Shared\Functions\Optix.Func.Commands.FileSystem.pas',
-  Optix.Func.Commands.Process in '..\Shared\Functions\Optix.Func.Commands.Process.pas',
-  Optix.Func.Commands.Shell in '..\Shared\Functions\Optix.Func.Commands.Shell.pas',
+  OptixCore.Commands.Base in '..\Core\Commands\OptixCore.Commands.Base.pas',
+  OptixCore.ClassesRegistry in '..\Core\OptixCore.ClassesRegistry.pas',
+  OptixCore.Commands.FileSystem in '..\Core\Commands\OptixCore.Commands.FileSystem.pas',
+  OptixCore.Commands.Process in '..\Core\Commands\OptixCore.Commands.Process.pas',
+  OptixCore.Commands.Shell in '..\Core\Commands\OptixCore.Commands.Shell.pas',
   uControlFormRegistryManager in 'Units\Forms\Control\uControlFormRegistryManager.pas' {ControlFormRegistryManager},
-  Optix.Func.Commands.Registry in '..\Shared\Functions\Optix.Func.Commands.Registry.pas',
-  Optix.Registry.Helper in '..\Shared\Optix.Registry.Helper.pas',
-  Optix.Registry.Enum in '..\Shared\Optix.Registry.Enum.pas',
-  Optix.Func.Commands.ContentReader in '..\Shared\Functions\Optix.Func.Commands.ContentReader.pas',
+  OptixCore.Commands.Registry in '..\Core\Commands\OptixCore.Commands.Registry.pas',
+  OptixCore.System.Registry in '..\Core\System\OptixCore.System.Registry.pas',
+  OptixCore.Commands.ContentReader in '..\Core\Commands\OptixCore.Commands.ContentReader.pas',
   uControlFormContentReader in 'Units\Forms\Control\uControlFormContentReader.pas' {ControlFormContentReader},
   uControlFormSetupContentReader in 'Units\Forms\Control\uControlFormSetupContentReader.pas' {ControlFormSetupContentReader},
   uFrameHexEditor in 'Units\Frames\Components\uFrameHexEditor.pas' {FrameHexEditor: TFrame},
   uControlFormRegistryEditor in 'Units\Forms\Control\uControlFormRegistryEditor.pas' {ControlFormRegistryEditor},
-  Optix.Shared.Helper in '..\Shared\Optix.Shared.Helper.pas';
+  OptixCore.Helper in '..\Core\OptixCore.Helper.pas',
+  uFormSelectCertificate in 'Units\Forms\uFormSelectCertificate.pas' {FormSelectCertificate};
 
 {$R *.res}
 {$R data.res}
@@ -150,8 +147,6 @@ begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  TStyleManager.TrySetStyle('Glossy');
-
   // (!) The order of creation is VERY important (!) //
   Application.CreateForm(TFormMain, FormMain);
   Application.CreateForm(TFormAbout, FormAbout);
@@ -159,6 +154,7 @@ begin
   Application.CreateForm(TFormTrustedCertificates, FormTrustedCertificates);
   Application.CreateForm(TFormCertificatesStore, FormCertificatesStore);
   Application.CreateForm(TFormServers, FormServers);
+
   ///
   Application.Run;
 end.
