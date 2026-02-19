@@ -1,26 +1,27 @@
 object FormServers: TFormServers
   Left = 0
   Top = 0
+  BorderStyle = bsNone
   Caption = 'Servers / Listeners'
-  ClientHeight = 227
-  ClientWidth = 673
+  ClientHeight = 208
+  ClientWidth = 637
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
-  Menu = MainMenu
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 15
+  TextHeight = 14
   object VST: TVirtualStringTree
     Left = 0
     Top = 0
-    Width = 673
-    Height = 227
+    Width = 637
+    Height = 208
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -30,23 +31,22 @@ object FormServers: TFormServers
     BorderStyle = bsNone
     Color = clWhite
     Colors.UnfocusedColor = clWindowText
-    DefaultNodeHeight = 19
     Header.AutoSizeIndex = -1
     Header.DefaultHeight = 25
+    Header.Height = 18
     Header.MainColumn = 1
     Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible, hoHeaderClickAutoSort]
     Header.SortColumn = 0
     Images = FormMain.VirtualImageList
     PopupMenu = PopupMenu
     TabOrder = 0
-    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+    TreeOptions.PaintOptions = [toHideFocusRect, toShowButtons, toShowDropmark, toShowTreeLines, toShowVertGridLines, toUseBlendedImages, toFullVertGridLines]
     TreeOptions.SelectionOptions = [toFullRowSelect, toRightClickSelect, toSelectNextNodeOnRemoval]
     OnBeforeCellPaint = VSTBeforeCellPaint
     OnCompareNodes = VSTCompareNodes
     OnGetText = VSTGetText
     OnGetImageIndex = VSTGetImageIndex
     OnGetNodeDataSize = VSTGetNodeDataSize
-    OnMouseDown = VSTMouseDown
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
     Columns = <
@@ -86,23 +86,8 @@ object FormServers: TFormServers
         Width = 200
       end>
   end
-  object MainMenu: TMainMenu
-    Left = 104
-    Top = 96
-    object Server1: TMenuItem
-      Caption = 'Server'
-      object New1: TMenuItem
-        Caption = 'New'
-        ShortCut = 16462
-        OnClick = New1Click
-      end
-    end
-    object Certificates1: TMenuItem
-      Caption = 'Certificates'
-      OnClick = Certificates1Click
-    end
-  end
-  object PopupMenu: TPopupMenu
+  object PopupMenu: TFlatPopupMenu
+    OwnerDraw = True
     OnPopup = PopupMenuPopup
     Left = 240
     Top = 72
@@ -127,5 +112,40 @@ object FormServers: TFormServers
       Caption = 'Certificate'
       OnClick = Certificate1Click
     end
+  end
+  object MainMenu: TFlatPopupMenu
+    OwnerDraw = True
+    Left = 336
+    Top = 72
+    object New1: TMenuItem
+      Caption = 'New'
+      ShortCut = 16462
+      OnClick = New1Click
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object Certificates1: TMenuItem
+      Caption = 'Certificates'
+      OnClick = Certificates1Click
+    end
+  end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    MenuDropDown = MainMenu
+    ShowBorder = True
+    BorderStyle = bsSizeable
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 144
+    Top = 80
   end
 end

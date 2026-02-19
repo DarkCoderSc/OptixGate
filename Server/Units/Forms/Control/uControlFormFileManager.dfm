@@ -21,12 +21,6 @@ object ControlFormFileManager: TControlFormFileManager
     Top = 0
     Width = 454
     Height = 343
-    BorderTop = 0
-    BorderLeft = 0
-    BorderRight = 0
-    BorderBottom = 0
-    Color = 13554645
-    BorderColor = clBlack
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlack
@@ -35,6 +29,12 @@ object ControlFormFileManager: TControlFormFileManager
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     object MultiPanel: TOMultiPanel
       AlignWithMargins = True
       Left = 4
@@ -71,12 +71,6 @@ object ControlFormFileManager: TControlFormFileManager
         Top = 0
         Width = 128
         Height = 310
-        BorderTop = 2
-        BorderLeft = 2
-        BorderRight = 2
-        BorderBottom = 2
-        Color = 13554645
-        BorderColor = clBlack
         Caption = 'PanelVSTFolders'
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
@@ -91,6 +85,12 @@ object ControlFormFileManager: TControlFormFileManager
         Padding.Top = 2
         Padding.Right = 2
         Padding.Bottom = 2
+        BorderTop = 2
+        BorderLeft = 2
+        BorderRight = 2
+        BorderBottom = 2
+        Color = 13554645
+        BorderColor = clBlack
         object VSTFolders: TVirtualStringTree
           Left = 2
           Top = 2
@@ -138,12 +138,6 @@ object ControlFormFileManager: TControlFormFileManager
         Top = 0
         Width = 235
         Height = 310
-        BorderTop = 2
-        BorderLeft = 2
-        BorderRight = 2
-        BorderBottom = 2
-        Color = 13554645
-        BorderColor = clBlack
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -156,6 +150,12 @@ object ControlFormFileManager: TControlFormFileManager
         Padding.Top = 2
         Padding.Right = 2
         Padding.Bottom = 2
+        BorderTop = 2
+        BorderLeft = 2
+        BorderRight = 2
+        BorderBottom = 2
+        Color = 13554645
+        BorderColor = clBlack
         object VSTFiles: TVirtualStringTree
           Left = 2
           Top = 2
@@ -246,12 +246,6 @@ object ControlFormFileManager: TControlFormFileManager
       Margins.Top = 0
       Margins.Right = 4
       Margins.Bottom = 4
-      BorderTop = 2
-      BorderLeft = 2
-      BorderRight = 2
-      BorderBottom = 2
-      Color = 13554645
-      BorderColor = clBlack
       Align = alBottom
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -264,6 +258,12 @@ object ControlFormFileManager: TControlFormFileManager
       Padding.Top = 1
       Padding.Right = 1
       Padding.Bottom = 1
+      BorderTop = 2
+      BorderLeft = 2
+      BorderRight = 2
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
       object EditPath: TFlatEdit
         Left = 1
         Top = 1
@@ -297,12 +297,6 @@ object ControlFormFileManager: TControlFormFileManager
       Margins.Top = 4
       Margins.Right = 0
       Margins.Bottom = 4
-      BorderTop = 2
-      BorderLeft = 2
-      BorderRight = 0
-      BorderBottom = 2
-      Color = 13554645
-      BorderColor = clBlack
       Align = alRight
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -315,6 +309,12 @@ object ControlFormFileManager: TControlFormFileManager
       Padding.Top = 6
       Padding.Right = 6
       Padding.Bottom = 6
+      BorderTop = 2
+      BorderLeft = 2
+      BorderRight = 0
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
       object ButtonHome: TFlatButton
         Left = 6
         Top = 6
@@ -341,9 +341,9 @@ object ControlFormFileManager: TControlFormFileManager
       end
       object LabelAccess: TLabel
         AlignWithMargins = True
-        Left = 14
+        Left = 45
         Top = 289
-        Width = 52
+        Width = 21
         Height = 15
         Margins.Left = 8
         Margins.Top = 10
@@ -359,8 +359,6 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Style = []
         ParentFont = False
         Visible = False
-        ExplicitLeft = 45
-        ExplicitWidth = 21
       end
       object Shape1: TShape
         AlignWithMargins = True
@@ -482,12 +480,6 @@ object ControlFormFileManager: TControlFormFileManager
         Margins.Top = 4
         Margins.Right = 0
         Margins.Bottom = 0
-        BorderTop = 0
-        BorderLeft = 0
-        BorderRight = 0
-        BorderBottom = 0
-        Color = 13554645
-        BorderColor = clBlack
         Align = alTop
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
@@ -496,6 +488,12 @@ object ControlFormFileManager: TControlFormFileManager
         Font.Style = []
         ParentFont = False
         TabOrder = 0
+        BorderTop = 0
+        BorderLeft = 0
+        BorderRight = 0
+        BorderBottom = 0
+        Color = 13554645
+        BorderColor = clBlack
         object ButtonBack: TFlatButton
           Left = 0
           Top = 0

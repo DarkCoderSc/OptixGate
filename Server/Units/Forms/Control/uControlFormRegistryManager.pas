@@ -621,9 +621,9 @@ end;
 
 procedure TControlFormRegistryManager.FormCreate(Sender: TObject);
 begin
-  FCurrentKeyPath        := '';
-  FCurrentKeyPermissions := [];
-  CaptionBarDropDown     := MainMenu;
+  FCurrentKeyPath          := '';
+  FCurrentKeyPermissions   := [];
+  FFlatWindow.MenuDropDown := MainMenu;
 end;
 
 procedure TControlFormRegistryManager.FullCollapse1Click(Sender: TObject);

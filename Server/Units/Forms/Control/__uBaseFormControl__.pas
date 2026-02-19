@@ -63,7 +63,7 @@ uses
 
   OptixCore.Commands.Base, OptixCore.Protocol.Packet,
 
-  NeoFlat.Form, NeoFlat.CaptionBar;
+  NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -113,13 +113,12 @@ type
   TBaseFormControl = class(TForm)
   private
     FOriginalCaption : String;
-    FFlatForm        : TFlatForm;
     FFirstShow       : Boolean;
 
     {@M}
     function GetGUID() : TGUID;
   protected
-    FCaptionBar      : TFlatCaptionBar;
+    FFlatWindow      : TFlatWindow;
     FSpecialForm     : Boolean;
     FFormInformation : TFormControlInformation;
 
@@ -146,8 +145,6 @@ type
     procedure CMActivate(var AMessage: TCMActivate); message CM_ACTIVATE;
     procedure CMDeactivate(var AMessage: TCMDeactivate); message CM_DEACTIVATE;
     procedure WMWindowPosChanging(var AMessage: TWMWindowPosChanging); message WM_WINDOWPOSCHANGING;
-
-    procedure SetCaptionBarDropDown(const AValue : TPopupMenu);
   public
     {@M}
     procedure SendCommand(const ACommand : TOptixCommand); overload;
@@ -166,9 +163,6 @@ type
     property SpecialForm         : Boolean                 read FSpecialForm;
     property FormInformation     : TFormControlInformation read FFormInformation;
     property ContextInformation  : String                  read GetContextDescription;
-
-    {@S}
-    property CaptionBarDropDown : TPopupMenu write SetCaptionBarDropDown;
   end;
 
   TBaseFormControlClass = class of TBaseFormControl;
@@ -327,12 +321,7 @@ begin
   inherited Create(AOwner);
   ///
 
-  FFlatForm := TFlatForm.Create(self);
-
-  FCaptionBar := TFlatCaptionBar.Create(self);
-  FCaptionBar.Form := FFlatForm;
-  FCaptionBar.Parent := self;
-  FCaptionBar.BorderIcons := BorderIcons;
+  FFlatWindow := TFlatWindow.Create(self);
 
   FOriginalCaption := Caption; // Default
   FSpecialForm     := ASpecialForm;
@@ -348,11 +337,8 @@ begin
   if Assigned(FFormInformation) then
     FreeAndNil(FFormInformation);
 
-  if Assigned(FCaptionBar) then
-    FreeAndNil(FCaptionBar);
-
-  if Assigned(FFlatForm) then
-    FreeAndNil(FFlatForm);
+  if Assigned(FFlatWindow) then
+    FreeAndNil(FFlatWindow);
 
   ///
   inherited;
@@ -423,10 +409,6 @@ begin
       FOriginalCaption,
       FFormINformation.UserIdentifier
     ]);
-
-  ///
-  if Assigned(FCaptionBar) then
-    FCaptionBar.Caption := Caption;
 end;
 
 function TBaseFormControl.GetGUID() : TGUID;
@@ -498,12 +480,6 @@ end;
 procedure TBaseFormControl.__WARNING__OverrideWindowGUID(const ANewGUID : TGUID);
 begin
   FFormInformation.GUID := ANewGUID;
-end;
-
-procedure TBaseFormControl.SetCaptionBarDropDown(const AValue : TPopupMenu);
-begin
-  if Assigned(FCaptionBar) then
-    FCaptionBar.MenuDropDown := AValue;
 end;
 
 end.

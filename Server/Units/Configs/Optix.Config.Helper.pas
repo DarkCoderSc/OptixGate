@@ -194,11 +194,10 @@ initialization
 
   {$IFDEF SERVER}
     AKeyName := 'OptixGate';
-    AHive    := HKEY_CURRENT_USER;
   {$ELSE}
     AKeyName := 'OptixGate_ClientGUI';
-    AHive    := HKEY_LOCAL_MACHINE;
   {$ENDIF}
+  AHive := HKEY_CURRENT_USER;
 
   CONFIG_HELPER := TOptixConfigHelper.Create(AKeyName, AHive);
 

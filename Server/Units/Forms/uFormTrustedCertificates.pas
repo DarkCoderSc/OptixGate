@@ -61,7 +61,8 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus,
 
-  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types;
+  VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
+  NeoFlat.PopupMenu, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -72,11 +73,11 @@ type
 
   TFormTrustedCertificates = class(TForm)
     VST: TVirtualStringTree;
-    MainMenu: TMainMenu;
-    Certificate1: TMenuItem;
-    AddTrustedCertificate1: TMenuItem;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Remove1: TMenuItem;
+    MainMenu: TFlatPopupMenu;
+    AddTrustedCertificate1: TMenuItem;
+    FlatWindow1: TFlatWindow;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -89,7 +90,6 @@ type
     procedure PopupMenuPopup(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
-    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
@@ -120,18 +120,22 @@ uses
 
 procedure TFormTrustedCertificates.Save();
 begin
-  var AConfig := TOptixConfigTrustedCertificatesStore.Create();
   try
-    for var pNode in VST.Nodes do begin
-      var pData := PTreeData(pNode.GetData);
+    var AConfig := TOptixConfigTrustedCertificatesStore.Create();
+    try
+      for var pNode in VST.Nodes do begin
+        var pData := PTreeData(pNode.GetData);
 
-      AConfig.Add(pData^.Fingerprint);
+        AConfig.Add(pData^.Fingerprint);
+      end;
+    finally
+      CONFIG_HELPER.Write('TrustedCertificates', AConfig);
+
+      ///
+      FreeAndNil(AConfig);
     end;
-  finally
-    CONFIG_HELPER.Write('TrustedCertificates', AConfig);
+  except
 
-    ///
-    FreeAndNil(AConfig);
   end;
 end;
 
@@ -229,17 +233,12 @@ end;
 
 procedure TFormTrustedCertificates.FormCreate(Sender: TObject);
 begin
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  {$ENDIF}
+
   Load();
-end;
-
-procedure TFormTrustedCertificates.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
-  Y: Integer);
-begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 procedure TFormTrustedCertificates.PopupMenuPopup(Sender: TObject);
@@ -284,7 +283,7 @@ begin
 
   case Kind of
     TVTImageKind.ikNormal, TVTImageKind.ikSelected :
-      ImageIndex := IMAGE_TRUSTED_CERTIFICATE;
+      ImageIndex := IMAGE_LOCK;
   end;
 end;
 

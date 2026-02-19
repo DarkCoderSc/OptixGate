@@ -65,7 +65,7 @@ uses
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
 
-  OptixCore.OpenSSL.Helper;
+  OptixCore.OpenSSL.Helper, NeoFlat.Window, NeoFlat.PopupMenu;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -76,13 +76,9 @@ type
 
   TFormCertificatesStore = class(TForm)
     VST: TVirtualStringTree;
-    MainMenu: TMainMenu;
-    File1: TMenuItem;
-    GeneratenewCertificate1: TMenuItem;
-    Import1: TMenuItem;
     OD: TOpenDialog;
     SD: TSaveDialog;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     ExportCertificate1: TMenuItem;
     ExportPublicKey1: TMenuItem;
     ExportPrivateKey1: TMenuItem;
@@ -91,7 +87,10 @@ type
     RemoveCertificate1: TMenuItem;
     CopySelectedFingerprint1: TMenuItem;
     N3: TMenuItem;
-    procedure GeneratenewCertificate1Click(Sender: TObject);
+    MainMenu: TFlatPopupMenu;
+    GenerateNew1: TMenuItem;
+    Import1: TMenuItem;
+    FlatWindow1: TFlatWindow;
     procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
@@ -110,9 +109,9 @@ type
     procedure CopySelectedFingerprint1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
-    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+    procedure GenerateNew1Click(Sender: TObject);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
@@ -150,6 +149,42 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
+
+procedure TFormCertificatesStore.GenerateNew1Click(Sender: TObject);
+begin
+  var AForm := TFormGenerateNewCertificate.Create(self);
+  try
+    AForm.ShowModal();
+    ///
+
+    if AForm.ModalResult <> mrOk then
+      Exit();
+
+    var ACertificate : TX509Certificate;
+    Zeromemory(@ACertificate, SizeOf(TX509Certificate));
+    try
+      ACertificate.pPrivKey := TOptixOpenSSLHelper.NewPrivateKey();
+
+      ACertificate.pX509 := TOptixOpenSSLHelper.NewX509(
+        ACertificate.pPrivKey,
+        AForm.EditC.Text,
+        AForm.EditO.Text,
+        AForm.EditCN.Text
+      );
+
+      TOptixOpenSSLHelper.RetrieveCertificateInformation(ACertificate);
+
+      ///
+      RegisterCertificate(ACertificate);
+    except
+      on E : Exception do begin
+        TOptixOpenSSLHelper.FreeCertificate(ACertificate);
+      end;
+    end;
+  finally
+    FreeAndNil(AForm);
+  end;
+end;
 
 function TFormCertificatesStore.GetCertificateCount() : Integer;
 begin
@@ -202,23 +237,27 @@ end;
 
 procedure TFormCertificatesStore.Save();
 begin
-  var AConfig := TOptixConfigCertificatesStore.Create();
   try
-    for var pNode in VST.Nodes do begin
-      var pData := PTreeData(pNode.GetData);
+    var AConfig := TOptixConfigCertificatesStore.Create();
+    try
+      for var pNode in VST.Nodes do begin
+        var pData := PTreeData(pNode.GetData);
 
-      {$IFDEF DEBUG}
-      if String.Compare(pData^.Certificate.Fingerprint, DEBUG_CERTIFICATE_FINGERPRINT, True) = 0 then
-        continue;
-      {$ENDIF}
+        {$IFDEF DEBUG}
+        if String.Compare(pData^.Certificate.Fingerprint, DEBUG_CERTIFICATE_FINGERPRINT, True) = 0 then
+          continue;
+        {$ENDIF}
 
-      AConfig.Add(pData^.Certificate);
+        AConfig.Add(pData^.Certificate);
+      end;
+    finally
+      CONFIG_HELPER.Write('Certificates', AConfig);
+
+      ///
+      FreeAndNil(AConfig);
     end;
-  finally
-    CONFIG_HELPER.Write('Certificates', AConfig);
+  except
 
-    ///
-    FreeAndNil(AConfig);
   end;
 end;
 
@@ -484,53 +523,12 @@ end;
 
 procedure TFormCertificatesStore.FormCreate(Sender: TObject);
 begin
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  {$ENDIF}
+
   Load();
-end;
-
-procedure TFormCertificatesStore.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
-  Y: Integer);
-begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
-end;
-
-procedure TFormCertificatesStore.GeneratenewCertificate1Click(Sender: TObject);
-begin
-  var AForm := TFormGenerateNewCertificate.Create(self);
-  try
-    AForm.ShowModal();
-    ///
-
-    if AForm.ModalResult <> mrOk then
-      Exit();
-
-    var ACertificate : TX509Certificate;
-    Zeromemory(@ACertificate, SizeOf(TX509Certificate));
-    try
-      ACertificate.pPrivKey := TOptixOpenSSLHelper.NewPrivateKey();
-
-      ACertificate.pX509 := TOptixOpenSSLHelper.NewX509(
-        ACertificate.pPrivKey,
-        AForm.EditC.Text,
-        AForm.EditO.Text,
-        AForm.EditCN.Text
-      );
-
-      TOptixOpenSSLHelper.RetrieveCertificateInformation(ACertificate);
-
-      ///
-      RegisterCertificate(ACertificate);
-    except
-      on E : Exception do begin
-        TOptixOpenSSLHelper.FreeCertificate(ACertificate);
-      end;
-    end;
-  finally
-    FreeAndNil(AForm);
-  end;
 end;
 
 procedure TFormCertificatesStore.Import1Click(Sender: TObject);

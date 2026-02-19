@@ -74,7 +74,7 @@ uses
 
   OptixCore.System.FileSystem, OptixCore.Commands.FileSystem, OptixCore.Protocol.Packet,
 
-  NeoFlat.Form, NeoFlat.CaptionBar, NeoFlat.Panel, NeoFlat.Edit, NeoFlat.ImageButton, NeoFlat.Button, NeoFlat.PopupMenu;
+  NeoFlat.Panel, NeoFlat.Edit, NeoFlat.ImageButton, NeoFlat.Button, NeoFlat.PopupMenu;
 
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -895,11 +895,7 @@ end;
 procedure TControlFormFileManager.VSTFilesMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X,
   Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
+ 
 end;
 
 procedure TControlFormFileManager.VSTFoldersCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode;

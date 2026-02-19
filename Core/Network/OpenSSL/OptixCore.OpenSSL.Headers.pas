@@ -128,6 +128,8 @@ const SSL_FILETYPE_PEM                = 1;
       NID_commonName                  = 13;
       NID_countryName                 = 14;
       NID_organizationName            = 17;
+      EVP_PKEY_RSA                    = 6;
+      EVP_PKEY_CTRL_RSA_KEYGEN_BITS   = 4097;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -168,7 +170,7 @@ function EVP_add_digest(const digest: Pointer): Integer; cdecl; external LIB_CRY
 function EVP_sha512(): Pointer cdecl; external LIB_CRYPTO_DLL;
 function EVP_sha384(): Pointer; cdecl; external LIB_CRYPTO_DLL;
 function EVP_PKEY_new(): Pointer cdecl; external LIB_CRYPTO_DLL;
-function RSA_generate_key(bits: Integer; e: culong; callback: Pointer; cb_arg: Pointer): Pointer cdecl; external LIB_CRYPTO_DLL;
+//function RSA_generate_key(bits: Integer; e: culong; callback: Pointer; cb_arg: Pointer): Pointer cdecl; external LIB_CRYPTO_DLL;
 procedure EVP_PKEY_free(pkey: Pointer) cdecl; external LIB_CRYPTO_DLL;
 function EVP_PKEY_assign(pkey: Pointer; _type: Integer; key: PAnsiChar): Integer cdecl; external LIB_CRYPTO_DLL;
 function X509_new(): Pointer cdecl; external LIB_CRYPTO_DLL;
@@ -196,6 +198,11 @@ function PEM_read_bio_PrivateKey(pBIO : Pointer; pKey : Pointer; cb : Pointer; u
 function X509_digest(const data: PX509; const _type: Pointer; md: PByte; var len: cuint): Integer cdecl; external LIB_CRYPTO_DLL;
 function X509_up_ref(x: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
 function EVP_PKEY_up_ref(pkey: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
+function EVP_PKEY_CTX_new_id(id: Integer; e: Pointer): Pointer; cdecl; external LIB_CRYPTO_DLL;
+procedure EVP_PKEY_CTX_free(ctx: Pointer); cdecl; external LIB_CRYPTO_DLL;
+function EVP_PKEY_keygen_init(ctx: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
+function EVP_PKEY_CTX_ctrl(ctx: Pointer; typ, cmd, p1: Integer; p2: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
+function EVP_PKEY_keygen(ctx: Pointer; var ppkey: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
 
 //----------------------------------------------------------------------------------------------------------------------
 

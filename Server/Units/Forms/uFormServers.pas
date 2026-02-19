@@ -63,7 +63,7 @@ uses
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
 
-  Optix.Protocol.Server, OptixCore.Sockets.Helper;
+  Optix.Protocol.Server, OptixCore.Sockets.Helper, NeoFlat.PopupMenu, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -96,16 +96,17 @@ type
 
   TFormServers = class(TForm)
     VST: TVirtualStringTree;
-    MainMenu: TMainMenu;
-    Server1: TMenuItem;
-    New1: TMenuItem;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     Remove1: TMenuItem;
     Start1: TMenuItem;
     N1: TMenuItem;
     AutoStart1: TMenuItem;
     Certificate1: TMenuItem;
+    MainMenu: TFlatPopupMenu;
+    New1: TMenuItem;
+    N2: TMenuItem;
     Certificates1: TMenuItem;
+    FlatWindow1: TFlatWindow;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -119,7 +120,6 @@ type
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure PopupMenuPopup(Sender: TObject);
-    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
@@ -179,19 +179,23 @@ uses
 
 procedure TFormServers.Save();
 begin
-  var AConfig := TOptixConfigServers.Create();
   try
-    for var pNode in VST.Nodes do begin
-      var pData := PTreeData(pNode.GetData);
+    var AConfig := TOptixConfigServers.Create();
+    try
+      for var pNode in VST.Nodes do begin
+        var pData := PTreeData(pNode.GetData);
+
+        ///
+        AConfig.Add(pData^.ServerConfiguration);
+      end;
+    finally
+      CONFIG_HELPER.Write('Servers'{$IFDEF USETLS}+ '+OpenSSL'{$ENDIF}, AConfig);
 
       ///
-      AConfig.Add(pData^.ServerConfiguration);
+      FreeAndNil(AConfig);
     end;
-  finally
-    CONFIG_HELPER.Write('Servers'{$IFDEF USETLS}+ '+OpenSSL'{$ENDIF}, AConfig);
+  except
 
-    ///
-    FreeAndNil(AConfig);
   end;
 end;
 
@@ -371,6 +375,23 @@ begin
 
   ///
   Load();
+
+  {$IFDEF DEBUG}
+  var AConfiguration : TServerConfiguration;
+  AConfiguration.Address := '127.0.0.1';
+  AConfiguration.Port := DEBUG_PORT;
+  AConfiguration.Version := ipv4;
+  AConfiguration.AutoStart := True;
+  AConfiguration.CertificateFingerprint := DEBUG_CERTIFICATE_FINGERPRINT;
+
+  FormServers.RegisterServer(AConfiguration);
+
+  AConfiguration.Version := ipv6;
+  AConfiguration.Address := '::';
+  AConfiguration.CertificateFingerprint := DEBUG_CERTIFICATE_FINGERPRINT;
+
+  FormServers.RegisterServer(AConfiguration);
+  {$ENDIF}
 end;
 
 procedure TFormServers.FormDestroy(Sender: TObject);
@@ -641,7 +662,7 @@ begin
     ikNormal, ikSelected : begin
       case pData^.Status of
         ssStopped   : ImageIndex := IMAGE_SERVER_STOPPED;
-        ssListening : ImageIndex := IMAGE_SERVER_LISTENING;
+        ssListening : ImageIndex := IMAGE_SERVER_RUNNING;
         ssOnError   : ImageIndex := IMAGE_SERVER_ERROR;
       end;
     end;
@@ -696,15 +717,6 @@ begin
 
   ///
   CellText := TOptixHelper.DefaultIfEmpty(CellText);
-end;
-
-procedure TFormServers.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 end.

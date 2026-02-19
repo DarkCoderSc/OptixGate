@@ -53,14 +53,6 @@
     - Ternary operator
 *)
 
-(*
-    Changelog:
-      - Restructuring of core source files (Shared -> Core)
-      - New design implemented: "Neo Flat" (retro flat design)
-*)
-
-// TODO: Red color (THEME) for caption bars in Client_GUI
-
 unit uFormMain;
 
 interface
@@ -83,7 +75,7 @@ uses
   OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base,
   OptixCore.Commands,
 
-  NeoFlat.CaptionBar, NeoFlat.Form, NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button, NeoFlat.Hint;
+  NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button, NeoFlat.Hint, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -125,8 +117,6 @@ type
     N2: TMenuItem;
     ContentReader1: TMenuItem;
     FamFamFamSilkCollection: TImageCollection;
-    FlatForm: TFlatForm;
-    CaptionBar: TFlatCaptionBar;
     FlatMainMenu: TFlatPopupMenu;
     Server1: TMenuItem;
     Stores1: TMenuItem;
@@ -141,6 +131,7 @@ type
     N11: TMenuItem;
     VST: TVirtualStringTree;
     FlatHint: TFlatHint;
+    FlatWindow: TFlatWindow;
     procedure Close1Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree;
@@ -174,7 +165,6 @@ type
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
     procedure Server1Click(Sender: TObject);
-    procedure VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FormDestroy(Sender: TObject);
     procedure RegistryManager1Click(Sender: TObject);
     procedure ContentReader1Click(Sender: TObject);
@@ -722,15 +712,6 @@ begin
   pData^.Workers := TObjectList<TOptixThread>.Create(False);
 end;
 
-procedure TFormMain.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
-end;
-
 procedure TFormMain.OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
 begin
   var pNode := GetNodeByHandler(Sender);
@@ -947,7 +928,6 @@ begin
   ///
 
   Caption := Format('%s - %s', [Caption, OPTIX_PROTOCOL_VERSION]);
-  CaptionBar.Caption := Caption;
 
   {$IFNDEF USETLS}
   Stores1.Visible := False;

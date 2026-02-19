@@ -412,6 +412,10 @@ end;
 
 procedure TFlatButton.SetEnabled(AValue : Boolean);
 begin
+  if AValue = Enabled then
+    Exit();
+  ///
+
   inherited SetEnabled(AValue);
   ///
 

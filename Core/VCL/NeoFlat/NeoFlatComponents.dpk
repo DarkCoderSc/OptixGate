@@ -35,13 +35,11 @@ requires
 
 contains
   NeoFlat.Button in 'NeoFlat.Button.pas',
-  NeoFlat.CaptionBar in 'NeoFlat.CaptionBar.pas',
   NeoFlat.CheckBox in 'NeoFlat.CheckBox.pas',
   NeoFlat.Classes in 'NeoFlat.Classes.pas',
   NeoFlat.ComboBox in 'NeoFlat.ComboBox.pas',
   NeoFlat.Helper in 'NeoFlat.Helper.pas',
   NeoFlat.Edit in 'NeoFlat.Edit.pas',
-  NeoFlat.Form in 'NeoFlat.Form.pas',
   NeoFlat.Gauge in 'NeoFlat.Gauge.pas',
   NeoFlat.GroupBox in 'NeoFlat.GroupBox.pas',
   NeoFlat.Hint in 'NeoFlat.Hint.pas',
@@ -53,6 +51,7 @@ contains
   NeoFlat.Theme in 'NeoFlat.Theme.pas',
   NeoFlat.TreeView in 'NeoFlat.TreeView.pas',
   NeoFlat.Types in 'NeoFlat.Types.pas',
-  NeoFlat.Validators in 'NeoFlat.Validators.pas';
+  NeoFlat.Validators in 'NeoFlat.Validators.pas',
+  NeoFlat.Window in 'NeoFlat.Window.pas';
 
 end.

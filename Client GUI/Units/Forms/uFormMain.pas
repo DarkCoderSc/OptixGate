@@ -70,7 +70,9 @@ uses
 
   Optix.Protocol.SessionHandler, Optix.Protocol.Client
 
-  {$IFDEF USETLS}, OptixCore.OpenSSL.Helper{$ENDIF};
+  {$IFDEF USETLS}, OptixCore.OpenSSL.Helper{$ENDIF},
+
+  NeoFlat.PopupMenu, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -91,24 +93,25 @@ type
 
   TFormMain = class(TForm)
     VST: TVirtualStringTree;
-    MainMenu: TMainMenu;
-    File1: TMenuItem;
-    Close1: TMenuItem;
-    ConnecttoServer1: TMenuItem;
-    N1: TMenuItem;
-    ImageCollectionDark: TImageCollection;
-    VirtualImageList: TVirtualImageList;
-    PopupMenu: TPopupMenu;
+    PopupMenu: TFlatPopupMenu;
     RemoveClient1: TMenuItem;
-    about1: TMenuItem;
-    Debug1: TMenuItem;
-    hreads1: TMenuItem;
     NotificationCenter: TNotificationCenter;
-    Stores1: TMenuItem;
-    Certificates1: TMenuItem;
-    rustedCertificates1: TMenuItem;
     N2: TMenuItem;
     Certificate1: TMenuItem;
+    VirtualImageList: TVirtualImageList;
+    FamFamFamSilkCollection: TImageCollection;
+    FlatWindow1: TFlatWindow;
+    MainMenu: TFlatPopupMenu;
+    Close1: TMenuItem;
+    ConnecttoServer1: TMenuItem;
+    Stores1: TMenuItem;
+    rustedCertificates1: TMenuItem;
+    Certificates1: TMenuItem;
+    Debug1: TMenuItem;
+    hreads1: TMenuItem;
+    About1: TMenuItem;
+    N3: TMenuItem;
+    N1: TMenuItem;
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
@@ -168,7 +171,7 @@ uses
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF},
 
   uFormAbout, uFormDebugThreads
-  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, uFormSelectCertificate{$ENDIF};
+  {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates, uFormSelectCertificate{$ENDIF}, uFormWarning;
 // ---------------------------------------------------------------------------------------------------------------------
 
 {$R *.dfm}
@@ -472,7 +475,7 @@ begin
     // Ipv4
     var AClientConfiguration : TClientConfiguration;
     AClientConfiguration.Address := '127.0.0.1';
-    AClientConfiguration.Port    := 2801;
+    AClientConfiguration.Port    := DEBUG_PORT;
     AClientConfiguration.Version := ipv4;
 
     {$IFDEF USETLS}
@@ -482,9 +485,9 @@ begin
     AddClient(AClientConfiguration);
 
     // Ipv6
-//    AClientConfiguration.Version := ipv6;
-//    AClientConfiguration.Address := '::1';
-//    AddClient(AClientConfiguration);
+    AClientConfiguration.Version := ipv6;
+    AClientConfiguration.Address := '::1';
+    AddClient(AClientConfiguration);
 
     // Minimize main window to taskbar on app startup (during development / debug)
     WindowState := wsMinimized;
@@ -526,7 +529,7 @@ begin
   var AColor := clNone;
 
   case pData^.Status of
-    csConnected : AColor := COLOR_LIST_LIMY;
+    csConnected : AColor := COLOR_LIST_GREEN;
   end;
 
   if AColor <> clNone then begin
@@ -584,9 +587,9 @@ begin
     Exit();
 
   case pData^.Status of
-    csDisconnected : ImageIndex := IMAGE_CLIENT_DISCONNECTED;
-    csConnected    : ImageIndex := IMAGE_CLIENT_CONNECTED;
-    csOnError      : ImageIndex := IMAGE_CLIENT_ERROR;
+    csDisconnected : ImageIndex := IMAGE_COMPUTER;
+    csConnected    : ImageIndex := IMAGE_COMPUTER_LINKED;
+    csOnError      : ImageIndex := IMAGE_COMPUTER_ERROR;
   end;
 end;
 

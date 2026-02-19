@@ -113,6 +113,7 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure RadioTempFileStateChanged(Sender: TObject);
     procedure RadioCutomFileNameStateChanged(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     FProcessId : Cardinal;
 
@@ -288,6 +289,11 @@ begin
   ClientHeight := ButtonCancel.Top + ButtonCancel.Height + PanelMain.Top + ScaleValue(8);
 end;
 
+
+procedure TControlFormDumpProcess.FormCreate(Sender: TObject);
+begin
+  FFlatWindow.BorderStyle := bsDialog;
+end;
 
 procedure TControlFormDumpProcess.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin

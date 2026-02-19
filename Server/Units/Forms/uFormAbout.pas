@@ -60,7 +60,9 @@ uses
   Winapi.Windows, Winapi.Messages,
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls,
-  Vcl.BaseImageCollection, Vcl.ImageCollection;
+  Vcl.BaseImageCollection, Vcl.ImageCollection,
+
+  NeoFlat.Window, NeoFlat.Panel, NeoFlat.Button;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -68,9 +70,11 @@ type
     ImageLogo: TVirtualImage;
     LabelName: TLabel;
     LabelDarkCoderSc: TLabel;
-    ButtonClose: TButton;
-    Disclaimer: TRichEdit;
+    ButtonClose: TFlatButton;
     ImageCollection: TImageCollection;
+    FlatWindow1: TFlatWindow;
+    PanelDisclaimer: TFlatPanel;
+    Disclaimer: TRichEdit;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure ButtonCloseClick(Sender: TObject);
@@ -114,11 +118,11 @@ begin
   LabelDarkCoderSc.Top  := LabelName.Top + LabelName.Height + self.ScaleValue(4);
   LabelDarkCoderSc.Left := (ClientWidth div 2) - (labelDarkCoderSc.Width div 2);
 
-  Disclaimer.Top   := labelDarkCoderSc.Top + labelDarkCoderSc.Height + self.ScaleValue(8);
-  Disclaimer.Left  := self.ScaleValue(8);
-  Disclaimer.Width := ClientWidth - (Disclaimer.Left * 2);
+  PanelDisclaimer.Top   := labelDarkCoderSc.Top + labelDarkCoderSc.Height + self.ScaleValue(8);
+  PanelDisclaimer.Left  := self.ScaleValue(8);
+  PanelDisclaimer.Width := ClientWidth - (PanelDisclaimer.Left * 2);
 
-  ButtonClose.Top  := Disclaimer.Top + Disclaimer.Height + self.ScaleValue(8);
+  ButtonClose.Top  := PanelDisclaimer.Top + PanelDisclaimer.Height + self.ScaleValue(8);
   ButtonClose.Left := (ClientWidth div 2) - (ButtonClose.Width div 2);
 
   ClientHeight := ButtonClose.Top + ButtonClose.Height + self.ScaleValue(8);
@@ -127,6 +131,11 @@ end;
 procedure TFormAbout.FormCreate(Sender: TObject);
 begin
   FFirstShow := True;
+
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  {$ENDIF}
 end;
 
 procedure TFormAbout.FormResize(Sender: TObject);

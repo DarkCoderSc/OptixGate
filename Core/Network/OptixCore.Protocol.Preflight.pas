@@ -53,7 +53,7 @@ unit OptixCore.Protocol.Preflight;
 
 interface
 
-const OPTIX_PROTOCOL_VERSION = 'v1.5.0' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
+const OPTIX_PROTOCOL_VERSION = 'v2.0.0' {$IFDEF USETLS} + '+OpenSSL'{$ENDIF};
 
 type
   TClientKind = (

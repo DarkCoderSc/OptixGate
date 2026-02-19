@@ -53,19 +53,24 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.ExtCtrls, NeoFlat.ComboBox, NeoFlat.Panel, NeoFlat.Button,
+  NeoFlat.Window;
 
 type
   TFormSelectCertificate = class(TForm)
-    PanelBottom: TPanel;
-    ButtonValidate: TButton;
-    ButtonCancel: TButton;
-    PanelMain: TPanel;
+    PanelMain: TFlatPanel;
     LabelCertificate: TLabel;
-    ComboCertificate: TComboBox;
+    ComboCertificate: TFlatComboBox;
+    FlatWindow1: TFlatWindow;
+    PanelBottom: TFlatPanel;
+    ButtonValidate: TFlatButton;
+    ButtonCancel: TFlatButton;
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure ButtonValidateClick(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormCreate(Sender: TObject);
   private
     FDefaultIndex : Integer;
 
@@ -96,6 +101,24 @@ begin
   ButtonCancel.Left  := ButtonValidate.Left - ButtonValidate.Width - 8;
 end;
 
+procedure TFormSelectCertificate.FormCreate(Sender: TObject);
+begin
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  PanelMain.Color        := FlatWindow1.Background;
+  PanelBottom.Color      := FlatWindow1.Background;
+  {$ENDIF}
+end;
+
+procedure TFormSelectCertificate.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    13 : ButtonValidateClick(ButtonValidate);
+    27 : ModalResult := mrCancel;
+  end;
+end;
+
 procedure TFormSelectCertificate.FormResize(Sender: TObject);
 begin
   DoResize();
@@ -104,6 +127,11 @@ end;
 procedure TFormSelectCertificate.FormShow(Sender: TObject);
 begin
   DoResize();
+end;
+
+procedure TFormSelectCertificate.ButtonCancelClick(Sender: TObject);
+begin
+  ModalResult := mrCancel
 end;
 
 procedure TFormSelectCertificate.ButtonValidateClick(Sender: TObject);

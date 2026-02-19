@@ -106,13 +106,11 @@
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="VirtualTreesR.dcp"/>
         <DCCReference Include="NeoFlat.Button.pas"/>
-        <DCCReference Include="NeoFlat.CaptionBar.pas"/>
         <DCCReference Include="NeoFlat.CheckBox.pas"/>
         <DCCReference Include="NeoFlat.Classes.pas"/>
         <DCCReference Include="NeoFlat.ComboBox.pas"/>
         <DCCReference Include="NeoFlat.Helper.pas"/>
         <DCCReference Include="NeoFlat.Edit.pas"/>
-        <DCCReference Include="NeoFlat.Form.pas"/>
         <DCCReference Include="NeoFlat.Gauge.pas"/>
         <DCCReference Include="NeoFlat.GroupBox.pas"/>
         <DCCReference Include="NeoFlat.Hint.pas"/>
@@ -125,6 +123,7 @@
         <DCCReference Include="NeoFlat.TreeView.pas"/>
         <DCCReference Include="NeoFlat.Types.pas"/>
         <DCCReference Include="NeoFlat.Validators.pas"/>
+        <DCCReference Include="NeoFlat.Window.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

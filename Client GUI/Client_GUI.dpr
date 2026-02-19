@@ -85,7 +85,7 @@ uses
   OptixCore.Task.ProcessDump in '..\Core\Tasks\OptixCore.Task.ProcessDump.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
   Optix.Helper in '..\Server\Units\Optix.Helper.pas',
-  Optix.Constants in 'Units\Optix.Constants.pas',
+  Optix.Constants in '..\Server\Units\Optix.Constants.pas',
   Optix.Config.Helper in '..\Server\Units\Configs\Optix.Config.Helper.pas',
   uFormMain in 'Units\Forms\uFormMain.pas' {FormMain},
   uFormConnectToServer in 'Units\Forms\uFormConnectToServer.pas' {FormConnectToServer},
@@ -136,7 +136,6 @@ begin
 
     Application.Initialize;
     Application.MainFormOnTaskbar := True;
-    TStyleManager.TrySetStyle('Glossy');
     Application.CreateForm(TFormMain, FormMain);
     Application.CreateForm(TFormAbout, FormAbout);
     Application.CreateForm(TFormDebugThreads, FormDebugThreads);

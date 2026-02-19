@@ -22,12 +22,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
     Top = 0
     Width = 457
     Height = 514
-    BorderTop = 0
-    BorderLeft = 0
-    BorderRight = 0
-    BorderBottom = 0
-    Color = 13554645
-    BorderColor = clBlack
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlack
@@ -36,6 +30,12 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
     Font.Style = []
     ParentFont = False
     TabOrder = 0
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     ExplicitWidth = 447
     ExplicitHeight = 482
     object PanelHeader: TFlatPanel
@@ -43,12 +43,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Top = 0
       Width = 457
       Height = 48
-      BorderTop = 0
-      BorderLeft = 0
-      BorderRight = 0
-      BorderBottom = 1
-      Color = 13554645
-      BorderColor = clBlack
       Align = alTop
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -61,12 +55,18 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Padding.Top = 4
       Padding.Right = 4
       Padding.Bottom = 4
+      BorderTop = 0
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 1
+      Color = 13554645
+      BorderColor = clBlack
       ExplicitWidth = 447
       object LabelName: TLabel
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 449
+        Width = 31
         Height = 13
         Margins.Left = 0
         Margins.Top = 0
@@ -74,7 +74,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Margins.Bottom = 4
         Align = alTop
         Caption = 'Name:'
-        ExplicitWidth = 31
       end
       object EditName: TFlatEdit
         Left = 4
@@ -133,7 +132,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             AlignWithMargins = True
             Left = 4
             Top = 4
-            Width = 449
+            Width = 30
             Height = 13
             Margins.Left = 0
             Margins.Top = 0
@@ -141,7 +140,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Bottom = 4
             Align = alTop
             Caption = 'Value:'
-            ExplicitWidth = 30
           end
           object EditSZ: TFlatEdit
             Left = 4
@@ -172,8 +170,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Left = 0
         Top = 0
         Caption = 'MSZ'
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object PanelMSZ: TPanel
           Left = 0
           Top = 0
@@ -208,12 +204,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Top = 0
             Margins.Right = 0
             Margins.Bottom = 8
-            BorderTop = 1
-            BorderLeft = 1
-            BorderRight = 1
-            BorderBottom = 1
-            Color = 13554645
-            BorderColor = clBlack
             Align = alClient
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clBlack
@@ -226,6 +216,12 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Padding.Top = 1
             Padding.Right = 1
             Padding.Bottom = 1
+            BorderTop = 1
+            BorderLeft = 1
+            BorderRight = 1
+            BorderBottom = 1
+            Color = 13554645
+            BorderColor = clBlack
             object RichMSZ: TRichEdit
               Left = 1
               Top = 1
@@ -397,12 +393,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Top = 478
       Width = 457
       Height = 36
-      BorderTop = 1
-      BorderLeft = 0
-      BorderRight = 0
-      BorderBottom = 0
-      Color = 13554645
-      BorderColor = clBlack
       Align = alBottom
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -411,6 +401,12 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Font.Style = []
       ParentFont = False
       TabOrder = 2
+      BorderTop = 1
+      BorderLeft = 0
+      BorderRight = 0
+      BorderBottom = 0
+      Color = 13554645
+      BorderColor = clBlack
       ExplicitTop = 446
       ExplicitWidth = 447
       object ButtonAction: TFlatButton

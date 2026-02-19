@@ -53,6 +53,8 @@ unit Optix.DebugCertificate;
 
 interface
 
+const DEBUG_PORT = 53001;
+
 const DEBUG_CERTIFICATE_PRIVATE_KEY =
 '-----BEGIN PRIVATE KEY-----'                                      + #13#10 +
 'MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQDApxaCK/oNuYXV' + #13#10 +

@@ -47,9 +47,9 @@ interface
 uses
   System.Classes,
 
-  NeoFlat.Button, NeoFlat.CaptionBar, NeoFlat.Edit, NeoFlat.Form, NeoFlat.CheckBox, NeoFlat.Panel, NeoFlat.StatusBar,
-  NeoFlat.TreeView, NeoFlat.ImageButton, NeoFlat.ComboBox, NeoFlat.Theme, NeoFlat.Hint, NeoFlat.Gauge,
-  NeoFlat.PopupMenu, NeoFlat.GroupBox;
+  NeoFlat.Button, NeoFlat.Edit,  NeoFlat.CheckBox, NeoFlat.Panel, NeoFlat.StatusBar, NeoFlat.TreeView,
+  NeoFlat.ImageButton, NeoFlat.ComboBox, NeoFlat.Theme, NeoFlat.Hint, NeoFlat.Gauge, NeoFlat.PopupMenu,
+  NeoFlat.GroupBox, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure register;
@@ -61,9 +61,7 @@ begin
   RegisterComponents('NeoFlat',
   [
     TFlatButton,
-    TFlatCaptionbar,
     TFlatEdit,
-    TFlatForm,
     TFlatCheckBox,
     TFlatPanel,
     TFlatStatusBar,
@@ -73,7 +71,8 @@ begin
     TFlatHint,
     TFlatGauge,
     TFlatPopupMenu,
-    TFlatGroupBox
+    TFlatGroupBox,
+    TFlatWindow
   ]);
 end;
 

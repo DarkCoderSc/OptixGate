@@ -2,20 +2,22 @@ object FormAbout: TFormAbout
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
+  BorderStyle = bsNone
   Caption = 'About'
-  ClientHeight = 385
-  ClientWidth = 422
+  ClientHeight = 400
+  ClientWidth = 439
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
   Position = poMainFormCenter
   OnCreate = FormCreate
   OnResize = FormResize
   OnShow = FormShow
-  TextHeight = 15
+  TextHeight = 14
   object ImageLogo: TVirtualImage
     Left = 128
     Top = 8
@@ -53,29 +55,66 @@ object FormAbout: TFormAbout
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object ButtonClose: TButton
-    Left = 168
-    Top = 336
-    Width = 89
-    Height = 25
+  object ButtonClose: TFlatButton
+    Left = 152
+    Top = 366
+    Width = 80
+    Height = 20
     Caption = 'OK.'
-    TabOrder = 0
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ShowHint = True
+    ImageIndex = -1
+    Value = 0
     OnClick = ButtonCloseClick
+    Busy = False
   end
-  object Disclaimer: TRichEdit
+  object PanelDisclaimer: TFlatPanel
     Left = 8
-    Top = 165
-    Width = 401
-    Height = 148
-    Font.Charset = ANSI_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -12
-    Font.Name = 'Segoe UI'
+    Top = 176
+    Width = 409
+    Height = 167
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
-    ReadOnly = True
-    ScrollBars = ssVertical
-    TabOrder = 1
+    TabOrder = 0
+    Padding.Left = 1
+    Padding.Top = 1
+    Padding.Right = 1
+    Padding.Bottom = 1
+    BorderTop = 1
+    BorderLeft = 1
+    BorderRight = 1
+    BorderBottom = 1
+    Color = 13554645
+    BorderColor = clBlack
+    object Disclaimer: TRichEdit
+      Left = 1
+      Top = 1
+      Width = 407
+      Height = 165
+      Align = alClient
+      BorderStyle = bsNone
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -12
+      Font.Name = 'Segoe UI'
+      Font.Style = []
+      ParentFont = False
+      ReadOnly = True
+      ScrollBars = ssVertical
+      TabOrder = 0
+      ExplicitLeft = 0
+      ExplicitTop = -1
+      ExplicitWidth = 405
+      ExplicitHeight = 163
+    end
   end
   object ImageCollection: TImageCollection
     Images = <
@@ -1782,5 +1821,22 @@ object FormAbout: TFormAbout
       end>
     Left = 264
     Top = 40
+  end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    ShowBorder = True
+    BorderStyle = bsDialog
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 72
+    Top = 72
   end
 end

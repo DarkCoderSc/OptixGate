@@ -3,8 +3,9 @@ object FormDebugThreads: TFormDebugThreads
   Top = 0
   BorderStyle = bsNone
   BorderWidth = 2
-  ClientHeight = 293
-  ClientWidth = 667
+  Caption = 'Threads'
+  ClientHeight = 165
+  ClientWidth = 651
   Color = clBlack
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -14,33 +15,14 @@ object FormDebugThreads: TFormDebugThreads
   Font.Style = []
   Position = poOwnerFormCenter
   OnClose = FormClose
-  OnMouseDown = FormMouseDown
+  OnCreate = FormCreate
   OnShow = FormShow
   TextHeight = 14
-  object FlatCaptionBar1: TFlatCaptionBar
-    Left = 0
-    Top = 0
-    Width = 667
-    Height = 25
-    Align = alTop
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    BorderIcons = [biSystemMenu, biMinimize, biMaximize]
-    Form = FlatForm
-    Transparent = False
-    TextCenter = False
-    ExplicitLeft = 240
-    ExplicitTop = 56
-    ExplicitWidth = 0
-  end
   object VST: TVirtualStringTree
     Left = 0
-    Top = 25
-    Width = 667
-    Height = 268
+    Top = 0
+    Width = 651
+    Height = 165
     Margins.Left = 2
     Margins.Top = 2
     Margins.Right = 2
@@ -67,8 +49,8 @@ object FormDebugThreads: TFormDebugThreads
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 671
-    ExplicitHeight = 272
+    ExplicitWidth = 667
+    ExplicitHeight = 268
     Columns = <
       item
         Position = 0
@@ -99,24 +81,34 @@ object FormDebugThreads: TFormDebugThreads
   object TimerRefresh: TTimer
     Enabled = False
     OnTimer = TimerRefreshTimer
-    Left = 120
-    Top = 120
+    Left = 128
+    Top = 80
   end
   object PopupMenu: TFlatPopupMenu
     OwnerDraw = True
     OnPopup = PopupMenuPopup
-    Left = 240
-    Top = 120
+    Left = 256
+    Top = 64
     object Terminate1: TMenuItem
       Caption = 'Terminate'
       OnClick = Terminate1Click
     end
   end
-  object FlatForm: TFlatForm
-    Resizable = True
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
     ShowBorder = True
-    Color = clBlack
-    Left = 408
-    Top = 88
+    BorderStyle = bsSizeable
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 336
+    Top = 80
   end
 end

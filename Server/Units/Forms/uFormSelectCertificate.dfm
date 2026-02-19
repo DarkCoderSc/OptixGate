@@ -2,84 +2,151 @@ object FormSelectCertificate: TFormSelectCertificate
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
+  BorderStyle = bsNone
   Caption = 'Select Certificate'
-  ClientHeight = 110
-  ClientWidth = 398
+  ClientHeight = 89
+  ClientWidth = 410
   Color = clBtnFace
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Name = 'Tahoma'
   Font.Style = []
+  KeyPreview = True
   Position = poOwnerFormCenter
+  OnCreate = FormCreate
+  OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow
-  TextHeight = 15
-  object PanelBottom: TPanel
-    Left = 0
-    Top = 69
-    Width = 398
-    Height = 41
-    Align = alBottom
-    BevelOuter = bvNone
-    TabOrder = 0
-    ExplicitTop = 37
-    ExplicitWidth = 388
-    object ButtonValidate: TButton
-      Left = 152
-      Top = 6
-      Width = 83
-      Height = 25
-      Caption = 'Validate'
-      TabOrder = 0
-      OnClick = ButtonValidateClick
-    end
-    object ButtonCancel: TButton
-      Left = 63
-      Top = 6
-      Width = 83
-      Height = 25
-      Caption = 'Cancel'
-      ModalResult = 2
-      TabOrder = 1
-    end
-  end
-  object PanelMain: TPanel
+  TextHeight = 14
+  object PanelMain: TFlatPanel
     Left = 0
     Top = 0
-    Width = 398
-    Height = 69
+    Width = 410
+    Height = 59
     Align = alClient
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 0
     Padding.Left = 8
     Padding.Top = 8
     Padding.Right = 8
     Padding.Bottom = 8
-    TabOrder = 1
-    ExplicitWidth = 388
-    ExplicitHeight = 37
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
     object LabelCertificate: TLabel
       AlignWithMargins = True
-      Left = 9
-      Top = 17
-      Width = 380
-      Height = 15
+      Left = 8
+      Top = 8
+      Width = 394
+      Height = 13
       Margins.Left = 0
-      Margins.Top = 8
+      Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
       Align = alTop
       Caption = 'Server Certificate:'
-      ExplicitWidth = 92
+      ExplicitWidth = 89
     end
-    object ComboCertificate: TComboBox
-      Left = 9
-      Top = 32
-      Width = 380
-      Height = 23
+    object ComboCertificate: TFlatComboBox
+      Left = 8
+      Top = 21
+      Width = 394
+      Height = 21
       Align = alTop
       Style = csDropDownList
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
-      ExplicitWidth = 370
+      ItemIndex = -1
+      Status = cStatusNormal
+      Validators = []
     end
+  end
+  object PanelBottom: TFlatPanel
+    Left = 0
+    Top = 59
+    Width = 410
+    Height = 30
+    Align = alBottom
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    TabOrder = 1
+    BorderTop = 1
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    object ButtonValidate: TFlatButton
+      Left = 152
+      Top = 6
+      Width = 80
+      Height = 20
+      Caption = 'Validate'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
+      OnClick = ButtonValidateClick
+      Busy = False
+    end
+    object ButtonCancel: TFlatButton
+      Left = 63
+      Top = 6
+      Width = 80
+      Height = 20
+      Caption = 'Cancel'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ShowHint = True
+      ImageIndex = -1
+      Value = 0
+      OnClick = ButtonCancelClick
+      Busy = False
+    end
+  end
+  object FlatWindow1: TFlatWindow
+    BorderWidth = 2
+    CaptionHeight = 25
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    CaptionAlign = taLeftJustify
+    ShowBorder = True
+    BorderStyle = bsDialog
+    Background = 13554645
+    Border = clBlack
+    Caption = clBlack
+    Left = 216
+    Top = 56
   end
 end

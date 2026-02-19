@@ -63,38 +63,38 @@ uses
 
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
 
-  uFormServers;
+  uFormServers, System.Skia, Vcl.Skia, NeoFlat.GroupBox, NeoFlat.CheckBox, NeoFlat.ComboBox, NeoFlat.Edit,
+  NeoFlat.Button, NeoFlat.Panel, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormListen = class(TForm)
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
-    PanelClient: TPanel;
+    PanelBottom: TFlatPanel;
+    ButtonConnect: TFlatButton;
+    ButtonCancel: TFlatButton;
+    PanelClient: TFlatPanel;
     Label1: TLabel;
-    SpinPort: TSpinEdit;
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
+    EditPort: TFlatEdit;
     LabelCertificate: TLabel;
-    ComboCertificate: TComboBox;
-    CheckBoxAutoStart: TCheckBox;
+    ComboCertificate: TFlatComboBox;
+    CheckBoxAutoStart: TFlatCheckBox;
     Label3: TLabel;
-    ComboIpVersion: TComboBox;
-    GroupBox1: TGroupBox;
-    RadioBindAll: TRadioButton;
-    RadioBindLocal: TRadioButton;
-    RadioBindCustom: TRadioButton;
-    EditServerBindAddress: TEdit;
+    ComboIpVersion: TFlatComboBox;
+    GroupBox1: TFlatGroupBox;
+    RadioBindAll: TFlatCheckBox;
+    RadioBindLocal: TFlatCheckBox;
+    RadioBindCustom: TFlatCheckBox;
+    EditServerBindAddress: TFlatEdit;
+    FlatWindow1: TFlatWindow;
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormResize(Sender: TObject);
-    procedure SpinPortChange(Sender: TObject);
-    procedure RadioBindCustomClick(Sender: TObject);
-    procedure RadioBindLocalClick(Sender: TObject);
+    procedure EditPortChange(Sender: TObject);
     procedure RadioBindAllClick(Sender: TObject);
+    procedure RadioBindCustomStateChanged(Sender: TObject);
+    procedure RadioBindLocalStateChanged(Sender: TObject);
   private
     {@M}
     procedure DoResize();
@@ -126,8 +126,15 @@ uses
 
 function TFormListen.GetServerConfiguration() : TServerConfiguration;
 begin
+  var APort := StrToInt(EditPort.Text);
+  if APort < 0 then
+    APort := 0
+  else if APort > High(Word) then
+    APort := High(Word);
+  ///
+
   result.Address   := EditServerBindAddress.Text;
-  result.Port      := SpinPort.Value;
+  result.Port      := APort;
   result.Version   := TIpVersion(ComboIpVersion.ItemIndex);
 
   if RadioBindCustom.Checked then
@@ -162,12 +169,12 @@ begin
   EditServerBindAddress.Enabled := False;
 end;
 
-procedure TFormListen.RadioBindCustomClick(Sender: TObject);
+procedure TFormListen.RadioBindCustomStateChanged(Sender: TObject);
 begin
-  EditServerBindAddress.Enabled := TRadioButton(Sender).Checked;
+  EditServerBindAddress.Enabled := TFlatCheckBox(Sender).Checked;
 end;
 
-procedure TFormListen.RadioBindLocalClick(Sender: TObject);
+procedure TFormListen.RadioBindLocalStateChanged(Sender: TObject);
 begin
   EditServerBindAddress.Enabled := False;
 end;
@@ -183,7 +190,7 @@ begin
   var ANewHeight := PanelBottom.Height;
 
   if not LabelCertificate.Visible then
-    Inc(ANewHeight, SpinPort.Top + SpinPort.Height + 8)
+    Inc(ANewHeight, EditPort.Top + EditPort.Height + 8)
   else
     Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + 8);
 
@@ -222,7 +229,7 @@ begin
   DoResize();
 end;
 
-procedure TFormListen.SpinPortChange(Sender: TObject);
+procedure TFormListen.EditPortChange(Sender: TObject);
 begin
   if TSpinEdit(Sender).Value < 0 then
     TSpinEdit(Sender).Value := 0

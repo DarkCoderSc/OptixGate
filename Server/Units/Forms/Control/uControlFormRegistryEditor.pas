@@ -267,7 +267,7 @@ begin
   end;
 
   if ANewH > 0 then begin
-    Inc(ANewH, FCaptionBar.Height + PanelHeader.Height + PanelFooter.Height + StatusBar.Height);
+    Inc(ANewH, PanelHeader.Height + PanelFooter.Height + StatusBar.Height);
 
     ///
     ClientHeight := ANewH;
@@ -432,7 +432,7 @@ end;
 
 procedure TControlFormRegistryEditor.FormCreate(Sender: TObject);
 begin
-  CaptionBarDropDown := PopupMain;
+  FFlatWindow.MenuDropDown := PopupMain;
 end;
 
 procedure TControlFormRegistryEditor.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -68,8 +68,6 @@ uses
 type
   TControlFormSetupContentReader = class(TBaseFormControl)
     PanelForm: TFlatPanel;
-    PanelLeft: TFlatPanel;
-    SkSvg1: TSkSvg;
     PanelMain: TFlatPanel;
     EditPath: TFlatEdit;
     Label2: TLabel;
@@ -152,6 +150,8 @@ begin
     TContentReader.MIN_PAGE_SIZE,
     TContentReader.MAX_PAGE_SIZE
   ]);
+
+  FFlatWindow.BorderStyle := bsDialog;
 end;
 
 procedure TControlFormSetupContentReader.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -105,27 +105,50 @@ uses
   OptixCore.OpenSSL.Exceptions, OptixCore.OpenSSL.Context;
 // ---------------------------------------------------------------------------------------------------------------------
 
+//class function TOptixOpenSSLHelper.NewPrivateKey() : Pointer;
+//begin
+//  var pTempKey := EVP_PKEY_new();
+//  if not Assigned(pTempKey) then
+//    raise EOpenSSLBaseException.Create();
+//  try
+//    var pRSA := RSA_generate_key(4096, RSA_F4, nil, nil);
+//    if not Assigned(pRSA) then
+//      raise EOpenSSLBaseException.Create();
+//
+//    if EVP_PKEY_assign(pTempKey, 6, pRSA) <> 1 then
+//      raise EOpenSSLBaseException.Create();
+//
+//    ///
+//    result := pTempKey;
+//  except
+//    on E : Exception do begin
+//      EVP_PKEY_free(pTempKey);
+//
+//      raise;
+//    end;
+//  end;
+//end;
+
 class function TOptixOpenSSLHelper.NewPrivateKey() : Pointer;
 begin
-  var pTempKey := EVP_PKEY_new();
-  if not Assigned(pTempKey) then
+  var pTempKey := nil;
+
+  var AContext := EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nil);
+  if not Assigned(AContext) then
     raise EOpenSSLBaseException.Create();
   try
-    var pRSA := RSA_generate_key(4096, RSA_F4, nil, nil);
-    if not Assigned(pRSA) then
+    if EVP_PKEY_keygen_init(AContext) <= 0 then
       raise EOpenSSLBaseException.Create();
 
-    if EVP_PKEY_assign(pTempKey, 6, pRSA) <> 1 then
+    if EVP_PKEY_CTX_ctrl(AContext, -1, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, 4096, nil) <= 0 then
       raise EOpenSSLBaseException.Create();
 
-    ///
-    result := pTempKey;
-  except
-    on E : Exception do begin
-      EVP_PKEY_free(pTempKey);
+    if EVP_PKEY_keygen(AContext, pTempKey) <= 0 then
+      raise EOpenSSLBaseException.Create();
 
-      raise;
-    end;
+    Result := pTempKey;
+  finally
+    EVP_PKEY_CTX_free(AContext);
   end;
 end;
 

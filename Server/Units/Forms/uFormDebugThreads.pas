@@ -62,7 +62,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Menus, Vcl.ExtCtrls,
 
   VirtualTrees, VirtualTrees.BaseAncestorVCL, VirtualTrees.BaseTree, VirtualTrees.AncestorVCL, VirtualTrees.Types,
-  NeoFlat.PopupMenu, NeoFlat.Form, NeoFlat.CaptionBar;
+  NeoFlat.PopupMenu, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -85,8 +85,7 @@ type
     TimerRefresh: TTimer;
     PopupMenu: TFlatPopupMenu;
     Terminate1: TMenuItem;
-    FlatCaptionBar1: TFlatCaptionBar;
-    FlatForm: TFlatForm;
+    FlatWindow1: TFlatWindow;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -101,7 +100,7 @@ type
     procedure Terminate1Click(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
-    procedure FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FormCreate(Sender: TObject);
   private
     {@M}
     FRefreshTick : UInt64;
@@ -219,13 +218,12 @@ begin
   VST.Clear();
 end;
 
-procedure TFormDebugThreads.FormMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TFormDebugThreads.FormCreate(Sender: TObject);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
-
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
+  {$IFDEF CLIENT_GUI}
+  FlatWindow1.Caption    := clRed;
+  FlatWindow1.Background := clWhite;
+  {$ENDIF}
 end;
 
 procedure TFormDebugThreads.FormShow(Sender: TObject);

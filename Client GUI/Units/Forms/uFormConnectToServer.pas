@@ -62,7 +62,7 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Mask,
   Vcl.Samples.Spin,
 
-  OptixCore.Sockets.Helper;
+  OptixCore.Sockets.Helper, NeoFlat.Button, NeoFlat.ComboBox, NeoFlat.Edit, NeoFlat.Panel, NeoFlat.Window;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -77,27 +77,27 @@ type
   end;
 
   TFormConnectToServer = class(TForm)
-    PanelLeft: TPanel;
-    Image: TVirtualImage;
-    PanelClient: TPanel;
+    PanelClient: TFlatPanel;
     Label1: TLabel;
-    EditServerAddress: TEdit;
+    EditServerAddress: TFlatEdit;
     Label2: TLabel;
-    SpinPort: TSpinEdit;
-    PanelBottom: TPanel;
-    ButtonConnect: TButton;
-    ButtonCancel: TButton;
+    EditPort: TFlatEdit;
+    PanelBottom: TFlatPanel;
+    ButtonConnect: TFlatButton;
+    ButtonCancel: TFlatButton;
     LabelCertificate: TLabel;
-    ComboCertificate: TComboBox;
-    ComboIpVersion: TComboBox;
+    ComboCertificate: TFlatComboBox;
+    ComboIpVersion: TFlatComboBox;
     Label3: TLabel;
+    FlatWindow1: TFlatWindow;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ButtonConnectClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure SpinPortChange(Sender: TObject);
+    procedure EditPortChange(Sender: TObject);
     procedure ComboIpVersionChange(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
   private
     {@M}
     procedure DoResize();
@@ -127,13 +127,25 @@ uses
 
 function TFormConnectToServer.GetClientConfiguration() : TClientConfiguration;
 begin
+  var APort := StrToInt(EditPort.Text);
+  if APort < 0 then
+    APort := 0
+  else if APort > High(Word) then
+    APort := High(Word);
+  ///
+
   result.Address := EditServerAddress.Text;
-  result.Port    := SpinPort.Value;
+  result.Port    := APort;
   result.Version := TIpVersion(ComboIpVersion.ItemIndex);
 
   {$IFDEF USETLS}
   result.CertificateFingerprint := ComboCertificate.Text;
   {$ENDIF}
+end;
+
+procedure TFormConnectToServer.ButtonCancelClick(Sender: TObject);
+begin
+  ModalResult := mrCancel;
 end;
 
 procedure TFormConnectToServer.ButtonConnectClick(Sender: TObject);
@@ -184,15 +196,15 @@ begin
   ButtonConnect.Top := (PanelBottom.Height div 2) - (ButtonConnect.Height div 2);
   ButtonCancel.Top  := ButtonConnect.Top;
 
-  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - 8;
-  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - 8;
+  ButtonConnect.Left := PanelBottom.Width - ButtonConnect.Width - ScaleValue(8);
+  ButtonCancel.Left  := ButtonConnect.Left - ButtonConnect.Width - ScaleValue(8);
 
   var ANewHeight := PanelBottom.Height;
 
   if not LabelCertificate.Visible then
-    Inc(ANewHeight, SpinPort.Top + SpinPort.Height + 8)
+    Inc(ANewHeight, EditPort.Top + EditPort.Height + ScaleValue(8))
   else
-    Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + 8);
+    Inc(ANewHeight, ComboCertificate.Top + ComboCertificate.Height + ScaleValue(8));
 
   ClientHeight := ANewHeight;
 end;
@@ -227,7 +239,7 @@ begin
   {$ENDIF}
 end;
 
-procedure TFormConnectToServer.SpinPortChange(Sender: TObject);
+procedure TFormConnectToServer.EditPortChange(Sender: TObject);
 begin
   if TSpinEdit(Sender).Value < 0 then
     TSpinEdit(Sender).Value := 0

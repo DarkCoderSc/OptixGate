@@ -18,6 +18,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
   KeyPreview = True
   Position = poOwnerFormCenter
   ShowHint = True
+  OnCreate = FormCreate
   OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow
@@ -46,7 +47,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
     Color = 13554645
     BorderColor = clBlack
     ExplicitWidth = 495
-    ExplicitHeight = 1237
+    ExplicitHeight = 496
     object ButtonCancel: TFlatButton
       Left = 147
       Top = 485
@@ -106,7 +107,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
       Padding.Bottom = 8
       ParentColor = False
       TabOrder = 2
-      ExplicitTop = 381
       ExplicitWidth = 479
       object RadioTempFile: TFlatCheckBox
         Left = 8
@@ -204,7 +204,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
       Padding.Bottom = 8
       ParentColor = False
       TabOrder = 0
-      ExplicitTop = 70
       ExplicitWidth = 479
       object PanelRightTypes: TFlatPanel
         Left = 249
@@ -225,9 +224,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
         BorderBottom = 0
         Color = 13554645
         BorderColor = clBlack
-        ExplicitLeft = 268
-        ExplicitWidth = 207
-        ExplicitHeight = 279
+        ExplicitWidth = 222
         object CheckBoxMiniDumpWithThreadInfo: TFlatCheckBox
           AlignWithMargins = True
           Left = 0
@@ -248,7 +245,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithCodeSegs: TFlatCheckBox
           AlignWithMargins = True
@@ -272,7 +269,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithoutAuxiliaryState: TFlatCheckBox
           AlignWithMargins = True
@@ -294,7 +291,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithFullAuxiliaryState: TFlatCheckBox
           AlignWithMargins = True
@@ -318,7 +315,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithPrivateWriteCopyMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -342,7 +339,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpIgnoreInaccessibleMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -370,7 +367,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithTokenInformation: TFlatCheckBox
           AlignWithMargins = True
@@ -394,7 +391,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithModuleHeaders: TFlatCheckBox
           AlignWithMargins = True
@@ -416,7 +413,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpFilterTriage: TFlatCheckBox
           AlignWithMargins = True
@@ -438,7 +435,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithAvxXStateContext: TFlatCheckBox
           AlignWithMargins = True
@@ -460,7 +457,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpWithIptTrace: TFlatCheckBox
           AlignWithMargins = True
@@ -482,7 +479,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpScanInaccessiblePartialPages: TFlatCheckBox
           AlignWithMargins = True
@@ -504,7 +501,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
         object CheckBoxMiniDumpValidTypeFlags: TFlatCheckBox
           AlignWithMargins = True
@@ -526,7 +523,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 207
+          ExplicitWidth = 222
         end
       end
       object PanelLeftTypes: TFlatPanel
@@ -574,7 +571,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithDataSegs: TFlatCheckBox
           AlignWithMargins = True
@@ -598,7 +594,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithFullMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -622,7 +617,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithHandleData: TFlatCheckBox
           AlignWithMargins = True
@@ -646,7 +640,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpScanMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -670,7 +663,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpFilterMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -694,7 +686,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithUnloadedModules: TFlatCheckBox
           AlignWithMargins = True
@@ -718,7 +709,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithIndirectlyReferencedMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -742,7 +732,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpFilterModulePaths: TFlatCheckBox
           AlignWithMargins = True
@@ -766,7 +755,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithProcessThreadData: TFlatCheckBox
           AlignWithMargins = True
@@ -790,7 +778,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithPrivateReadWriteMemory: TFlatCheckBox
           AlignWithMargins = True
@@ -814,7 +801,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithoutOptionalData: TFlatCheckBox
           AlignWithMargins = True
@@ -838,7 +824,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = False
-          ExplicitWidth = 264
         end
         object CheckBoxMiniDumpWithFullMemoryInfo: TFlatCheckBox
           AlignWithMargins = True
@@ -860,7 +845,6 @@ object ControlFormDumpProcess: TControlFormDumpProcess
           Font.Style = []
           Mode = cbmCheckBox
           Checked = True
-          ExplicitWidth = 264
         end
       end
     end
@@ -891,6 +875,7 @@ object ControlFormDumpProcess: TControlFormDumpProcess
       BorderBottom = 1
       Color = 13554645
       BorderColor = clBlack
+      ExplicitWidth = 479
       object Image: TSkSvg
         Left = 8
         Top = 8

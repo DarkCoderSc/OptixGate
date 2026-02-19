@@ -85,7 +85,7 @@ uses
   OptixCore.Task.ProcessDump in '..\Core\Tasks\OptixCore.Task.ProcessDump.pas',
   Optix.Actions.ProcessHandler in 'Units\Actions\Optix.Actions.ProcessHandler.pas',
   Optix.Helper in '..\Server\Units\Optix.Helper.pas',
-  Optix.Constants in 'Units\Optix.Constants.pas',
+  Optix.Constants in '..\Server\Units\Optix.Constants.pas',
   OptixCore.OpenSSL.Headers in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Headers.pas',
   OptixCore.OpenSSL.Helper in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Helper.pas',
   OptixCore.OpenSSL.Exceptions in '..\Core\Network\OpenSSL\OptixCore.OpenSSL.Exceptions.pas',
@@ -153,8 +153,6 @@ begin
 
     Application.Initialize;
     Application.MainFormOnTaskbar := True;
-    TStyleManager.TrySetStyle('Glossy');
-
     Application.CreateForm(TFormMain, FormMain);
     Application.CreateForm(TFormAbout, FormAbout);
     Application.CreateForm(TFormDebugThreads, FormDebugThreads);

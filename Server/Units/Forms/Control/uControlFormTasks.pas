@@ -406,11 +406,7 @@ end;
 
 procedure TControlFormTasks.VSTMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  if TBaseVirtualTree(Sender).GetNodeAt(Point(X, Y)) = nil then begin
-    TBaseVirtualTree(Sender).ClearSelection();
 
-    TBaseVirtualTree(Sender).FocusedNode := nil;
-  end;
 end;
 
 end.

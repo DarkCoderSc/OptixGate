@@ -18,12 +18,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     Top = 0
     Width = 537
     Height = 311
-    BorderTop = 0
-    BorderLeft = 0
-    BorderRight = 0
-    BorderBottom = 0
-    Color = 13554645
-    BorderColor = clBlack
     Align = alClient
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clBlack
@@ -32,8 +26,13 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     Font.Style = []
     ParentFont = False
     TabOrder = 0
-    ExplicitWidth = 527
-    ExplicitHeight = 279
+    BorderTop = 0
+    BorderLeft = 0
+    BorderRight = 0
+    BorderBottom = 0
+    Color = 13554645
+    BorderColor = clBlack
+    ExplicitWidth = 547
     object OMultiPanel: TOMultiPanel
       AlignWithMargins = True
       Left = 4
@@ -61,8 +60,7 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       SplitterHoverColor = clHighlight
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 519
-      ExplicitHeight = 246
+      ExplicitWidth = 539
       DesignSize = (
         529
         278)
@@ -71,12 +69,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
         Top = 0
         Width = 175
         Height = 278
-        BorderTop = 2
-        BorderLeft = 2
-        BorderRight = 2
-        BorderBottom = 2
-        Color = 13554645
-        BorderColor = clBlack
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -89,6 +81,12 @@ object ControlFormRegistryManager: TControlFormRegistryManager
         Padding.Top = 2
         Padding.Right = 2
         Padding.Bottom = 2
+        BorderTop = 2
+        BorderLeft = 2
+        BorderRight = 2
+        BorderBottom = 2
+        Color = 13554645
+        BorderColor = clBlack
         object VSTKeys: TVirtualStringTree
           Left = 2
           Top = 2
@@ -137,12 +135,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
         Top = 0
         Width = 351
         Height = 278
-        BorderTop = 2
-        BorderLeft = 2
-        BorderRight = 2
-        BorderBottom = 2
-        Color = 13554645
-        BorderColor = clBlack
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clBlack
         Font.Height = -11
@@ -155,6 +147,12 @@ object ControlFormRegistryManager: TControlFormRegistryManager
         Padding.Top = 2
         Padding.Right = 2
         Padding.Bottom = 2
+        BorderTop = 2
+        BorderLeft = 2
+        BorderRight = 2
+        BorderBottom = 2
+        Color = 13554645
+        BorderColor = clBlack
         object VSTValues: TVirtualStringTree
           Left = 2
           Top = 2
@@ -217,12 +215,6 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       Margins.Top = 4
       Margins.Right = 4
       Margins.Bottom = 0
-      BorderTop = 2
-      BorderLeft = 2
-      BorderRight = 2
-      BorderBottom = 2
-      Color = 13554645
-      BorderColor = clBlack
       Align = alTop
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlack
@@ -235,6 +227,12 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       Padding.Top = 1
       Padding.Right = 1
       Padding.Bottom = 1
+      BorderTop = 2
+      BorderLeft = 2
+      BorderRight = 2
+      BorderBottom = 2
+      Color = 13554645
+      BorderColor = clBlack
       ExplicitWidth = 519
       object EditPath: TFlatEdit
         Left = 1
