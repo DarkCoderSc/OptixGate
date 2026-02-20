@@ -178,6 +178,8 @@ begin
       RegisterCertificate(ACertificate);
     except
       on E : Exception do begin
+        Application.MessageBox(PWideChar(E.Message), 'Generate New Certificate', MB_ICONHAND);
+
         TOptixOpenSSLHelper.FreeCertificate(ACertificate);
       end;
     end;

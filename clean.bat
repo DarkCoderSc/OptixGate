@@ -1,11 +1,6 @@
-:: Clean Compiled Units
-del /s /q *.dcu
-del /s /q *.exe
-del /s /q *.tmp
-del /s /q *.rsm
-del /s /q *.dproj.local
-del /s /q *.identcache
+REM Clean Compiled Units
+del /s /q *.dcu *.exe *.tmp *.rsm *.dproj.local *.identcache 2>nul
 
-:: Clean Embarcadero Directories
-for /f "usebackq" %%a in (`"dir /ad/b/s __history"`) do rmdir /q /s "%%a"
-for /f "usebackq" %%a in (`"dir /ad/b/s __recovery"`) do rmdir /q /s "%%a"
+REM Clean Embarcadero Directories
+for /f "delims=" %%a in ('dir /ad /b /s __history 2^>nul') do rmdir /q /s "%%a" 2>nul
+for /f "delims=" %%a in ('dir /ad /b /s __recovery 2^>nul') do rmdir /q /s "%%a" 2>nul

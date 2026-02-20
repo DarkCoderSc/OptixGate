@@ -140,7 +140,7 @@ begin
     if EVP_PKEY_keygen_init(AContext) <= 0 then
       raise EOpenSSLBaseException.Create();
 
-    if EVP_PKEY_CTX_ctrl(AContext, -1, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, 4096, nil) <= 0 then
+    if EVP_PKEY_CTX_ctrl(AContext, EVP_PKEY_RSA, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, 4096, nil) <= 0 then
       raise EOpenSSLBaseException.Create();
 
     if EVP_PKEY_keygen(AContext, pTempKey) <= 0 then

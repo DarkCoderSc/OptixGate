@@ -129,7 +129,9 @@ const SSL_FILETYPE_PEM                = 1;
       NID_countryName                 = 14;
       NID_organizationName            = 17;
       EVP_PKEY_RSA                    = 6;
-      EVP_PKEY_CTRL_RSA_KEYGEN_BITS   = 4097;
+      EVP_PKEY_ALG_CTRL               = $1000;
+      EVP_PKEY_CTRL_RSA_KEYGEN_BITS   = EVP_PKEY_ALG_CTRL + 3;
+      EVP_PKEY_OP_KEYGEN              = 1 shl 2;
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -201,7 +203,7 @@ function EVP_PKEY_up_ref(pkey: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL
 function EVP_PKEY_CTX_new_id(id: Integer; e: Pointer): Pointer; cdecl; external LIB_CRYPTO_DLL;
 procedure EVP_PKEY_CTX_free(ctx: Pointer); cdecl; external LIB_CRYPTO_DLL;
 function EVP_PKEY_keygen_init(ctx: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
-function EVP_PKEY_CTX_ctrl(ctx: Pointer; typ, cmd, p1: Integer; p2: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
+function EVP_PKEY_CTX_ctrl(ctx: Pointer; keytype, optype, cmd, p1: Integer; p2: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
 function EVP_PKEY_keygen(ctx: Pointer; var ppkey: Pointer): Integer; cdecl; external LIB_CRYPTO_DLL;
 
 //----------------------------------------------------------------------------------------------------------------------
