@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uFormCertificatesStore;
 
 interface
@@ -91,6 +89,9 @@ type
     GenerateNew1: TMenuItem;
     Import1: TMenuItem;
     FlatWindow1: TFlatWindow;
+    GenerateNew2: TMenuItem;
+    Import2: TMenuItem;
+    N4: TMenuItem;
     procedure VSTFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
@@ -112,6 +113,8 @@ type
     procedure VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;
       Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure GenerateNew1Click(Sender: TObject);
+    procedure GenerateNew2Click(Sender: TObject);
+    procedure Import2Click(Sender: TObject);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerPrint : String) : PVirtualNode;
@@ -186,6 +189,11 @@ begin
   finally
     FreeAndNil(AForm);
   end;
+end;
+
+procedure TFormCertificatesStore.GenerateNew2Click(Sender: TObject);
+begin
+  GenerateNew1Click(GenerateNew1);
 end;
 
 function TFormCertificatesStore.GetCertificateCount() : Integer;
@@ -285,9 +293,7 @@ begin
   try
     VST.BeginUpdate();
     try
-      for var I := 0 to AConfig.Count -1 do begin
-        ACertificate := AConfig.Items[I];
-
+      for ACertificate in AConfig do begin
         if not Assigned(ACertificate.pX509) or not Assigned(ACertificate.pPrivKey) then
           continue;
 
@@ -305,6 +311,9 @@ end;
 procedure TFormCertificatesStore.PopupMenuPopup(Sender: TObject);
 begin
   TOptixHelper.HideAllPopupMenuRootItems(TPopupMenu(Sender));
+
+  GenerateNew2.Visible := True;
+  Import2.Visible      := True;
 
   var pCertificate := GetCertificateFromNode(VST.FocusedNode);
   if not Assigned(pCertificate) then
@@ -566,6 +575,11 @@ begin
     RegisterCertificate(ACertificate)
   else
     Application.MessageBox(PWideChar(AErrorMessage), 'Import Certificate', MB_ICONERROR);
+end;
+
+procedure TFormCertificatesStore.Import2Click(Sender: TObject);
+begin
+  Import1Click(Import1);
 end;
 
 end.

@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: (!) CHECK README.md (!)                           }
+{                   License: GPLv3                                             }
 {                                                                              }
 {                                                                              }
 {                                                                              }
@@ -49,7 +49,10 @@ uses
 
   NeoFlat.Button, NeoFlat.Edit,  NeoFlat.CheckBox, NeoFlat.Panel, NeoFlat.StatusBar, NeoFlat.TreeView,
   NeoFlat.ImageButton, NeoFlat.ComboBox, NeoFlat.Theme, NeoFlat.Hint, NeoFlat.Gauge, NeoFlat.PopupMenu,
-  NeoFlat.GroupBox, NeoFlat.Window;
+  NeoFlat.GroupBox, NeoFlat.Window,
+
+  // Third-Party
+  OMultiPanel;
 // ---------------------------------------------------------------------------------------------------------------------
 
 procedure register;
@@ -73,6 +76,12 @@ begin
     TFlatPopupMenu,
     TFlatGroupBox,
     TFlatWindow
+  ]);
+
+  // Third-party
+  RegisterComponents('OMultiPanel',
+  [
+    TOMultiPanel
   ]);
 end;
 

@@ -12,7 +12,7 @@
 {                   https://www.twitter.com/darkcodersc                        }
 {                   https://bsky.app/profile/darkcodersc.bsky.social           }
 {                   https://github.com/darkcodersc                             }
-{                   License: (!) CHECK README.md (!)                           }
+{                   License: GPLv3                                             }
 {                                                                              }
 {                                                                              }
 {                                                                              }

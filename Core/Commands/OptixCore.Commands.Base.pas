@@ -47,17 +47,13 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit OptixCore.Commands.Base;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes, System.SysUtils, System.Threading,
-
-  XSuperObject,
+  System.Classes, System.SysUtils, System.Threading, System.JSON,
 
   OptixCore.System.FileSystem, OptixCore.Interfaces, OptixCore.Classes, OptixCore.Protocol.Packet;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -107,11 +103,10 @@ type
     procedure SetTaskDuration(const AValue : UInt64);
     procedure TaskFailed(const AExceptionMessage : String);
     procedure TaskSucceed();
-    function Serialize() : ISuperObject; override;
 
     {@C}
     constructor Create(); override;
-    constructor Create(const ASerializedObject : ISuperObject); override;
+    constructor Create(const ASerializedObject : TJsonObject); override;
     destructor Destroy(); override;
 
     {@G}
@@ -135,14 +130,14 @@ type
     FResult  : TOptixTaskResult;
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
+    procedure DeSerialize(const ASerializedObject : TJsonObject); override;
   public
     {@C}
     constructor Create(const ATask : TOptixTask); overload;
     destructor Destroy(); override;
 
     {@M}
-    function Serialize() : ISuperObject; override;
+    function Serialize() : TJsonObject; override;
 
     {@G}
     property Id            : TGUID            read FId;
@@ -245,33 +240,37 @@ begin
   inherited Destroy();
 end;
 
-procedure TOptixTaskCallback.DeSerialize(const ASerializedObject : ISuperObject);
+procedure TOptixTaskCallback.DeSerialize(const ASerializedObject : TJsonObject);
 begin
   inherited;
   ///
 
-  var ASerializedResult := ASerializedObject.O['Result'];
-  if Assigned(ASerializedResult) then begin
-    if ASerializedResult.Contains('ResultClass') then begin
-      var AResultClass := ASerializedResult.S['ResultClass'];
-      ///
+  var AResult : TJsonObject;
+  if not ASerializedObject.TryGetValue<TJSONObject>('Result', AResult) then
+    Exit;
+  ///
 
-      FResult := TOptixTaskResult(TClassesRegistry.CreateInstance(AResultClass, [
-        TValue.From<ISuperObject>(ASerializedResult)
-      ]));
-    end;
-  end;
+  var AResultClass : String;
+  if not AResult.TryGetValue<String>('META_CLASSNAME', AResultClass) then
+    Exit;
+
+  if Assigned(FResult) then
+    FreeAndNil(FResult);
+
+  FResult := TOptixTaskResult(TClassesRegistry.CreateInstance(AResultClass, [TValue.From<TJsonObject>(AResult)]));
 end;
 
-function TOptixTaskCallback.Serialize() : ISuperObject;
+function TOptixTaskCallback.Serialize() : TJsonObject;
 begin
   result := inherited;
+  if not Assigned(result) then
+    Exit;
   ///
 
   if Assigned(FResult) then
-    result.O['result'] := FResult.Serialize()
+    result.AddPair('Result', FResult.Serialize())
   else
-    result.O['result'] := SO();
+    result.AddPair('Result', TJsonObject.Create());
 end;
 
 (* TOptixTask *)
@@ -391,7 +390,7 @@ begin
   FTaskDuration     := 0;
 end;
 
-constructor TOptixTaskResult.Create(const ASerializedObject : ISuperObject);
+constructor TOptixTaskResult.Create(const ASerializedObject : TJsonObject);
 begin
   Create();
   ///
@@ -450,14 +449,6 @@ procedure TOptixTaskResult.TaskSucceed();
 begin
   FSuccess          := True;
   FExceptionMessage := '';
-end;
-
-function TOptixTaskResult.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['ResultClass'] := ClassName;
 end;
 
 end.

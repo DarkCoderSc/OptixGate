@@ -57,7 +57,7 @@ object FormListen: TFormListen
       Busy = False
     end
     object ButtonCancel: TFlatButton
-      Left = 119
+      Left = 122
       Top = 6
       Width = 80
       Height = 20
@@ -70,6 +70,7 @@ object FormListen: TFormListen
       ShowHint = True
       ImageIndex = -1
       Value = 0
+      OnClick = ButtonCancelClick
       Busy = False
     end
   end

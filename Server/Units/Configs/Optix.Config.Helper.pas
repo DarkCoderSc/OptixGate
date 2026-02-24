@@ -47,34 +47,35 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit Optix.Config.Helper;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes, System.Win.Registry,
+  System.Classes, System.Win.Registry, System.JSON,
 
   Winapi.Windows,
-
-  XSuperObject,
 
   OptixCore.Interfaces;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixConfigBase = class
+  TOptixConfigEnumBase = class
   protected
-    FJsonObject : ISuperObject;
+    FItems : TJsonArray;
   public
     {@M}
     procedure Clear();
     function ToString() : String; override;
+    function GetCount() : Integer;
 
     {@C}
     constructor Create(const AJsonString : String = '');
+    destructor Destroy(); override;
+
+    {@G}
+    property Count : Integer read GetCount;
   end;
 
   TOptixConfigHelper = class
@@ -90,8 +91,8 @@ type
     destructor Destroy(); override;
 
     {@}
-    procedure Write(const AName : String; const AConfig : TOptixConfigBase);
-    function Read(const AName : String) : TOptixConfigBase;
+    procedure Write(const AName : String; const AConfig : TOptixConfigEnumBase);
+    function Read(const AName : String) : TOptixConfigEnumBase;
   end;
 
   {$IF defined(SERVER) or defined(CLIENT_GUI)}
@@ -105,28 +106,60 @@ uses
   System.SysUtils;
 // ---------------------------------------------------------------------------------------------------------------------
 
-(* TOptixConfigBase *)
+(* TOptixConfigEnumBase *)
 
-constructor TOptixConfigBase.Create(const AJsonString : String);
+constructor TOptixConfigEnumBase.Create(const AJsonString : String);
 begin
   inherited Create();
   ///
 
   try
-    FJsonObject := SO(AJsonString);
+    var AJsonValue := TJsonArray.ParseJsonValue(AJsonString);
+    if Assigned(AJsonValue) and (AJsonValue is TJsonArray) then
+      FItems := AJsonValue as TJsonArray
+    else begin
+      AJsonValue.Free;
+
+      ///
+      FItems := TJsonArray.Create();
+    end;
   except
     Clear();
   end;
 end;
 
-procedure TOptixConfigBase.Clear();
+destructor TOptixConfigEnumBase.Destroy();
 begin
-  FJsonObject := SO();
+  if Assigned(FItems) then
+    FreeAndNil(FItems);
+
+  ///
+  inherited Destroy();
 end;
 
-function TOptixConfigBase.ToString() : String;
+procedure TOptixConfigEnumBase.Clear();
 begin
-  result := FJsonObject.AsJson();
+  if Assigned(FItems) then
+    FreeAndNil(FItems);
+
+  ///
+  FItems := TJsonArray.Create();
+end;
+
+function TOptixConfigEnumBase.ToString() : String;
+begin
+  if Assigned(FItems) then
+    result := FItems.ToJson()
+  else
+    result := '';
+end;
+
+function TOptixConfigEnumBase.GetCount() : Integer;
+begin
+  if Assigned(FItems) then
+    result := FItems.Count
+  else
+    result := 0;
 end;
 
 (* TOptixConfigHelper *)
@@ -162,7 +195,7 @@ begin
     FRegistry.OpenKey(AKeyPath, True);
 end;
 
-procedure TOptixConfigHelper.Write(const AName : String; const AConfig : TOptixConfigBase);
+procedure TOptixConfigHelper.Write(const AName : String; const AConfig : TOptixConfigEnumBase);
 begin
   if not Assigned(AConfig) then
     Exit();
@@ -173,7 +206,7 @@ begin
   FRegistry.WriteString(AName, AConfig.ToString());
 end;
 
-function TOptixConfigHelper.Read(const AName : String) : TOptixConfigBase;
+function TOptixConfigHelper.Read(const AName : String) : TOptixConfigEnumBase;
 begin
   result := nil;
   ///
@@ -181,7 +214,7 @@ begin
   Open();
   try
     if FRegistry.ValueExists(AName) then
-      result := TOptixConfigBase.Create(FRegistry.ReadString(AName));
+      result := TOptixConfigEnumBase.Create(FRegistry.ReadString(AName));
   except
 
   end;

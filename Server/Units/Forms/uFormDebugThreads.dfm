@@ -49,8 +49,6 @@ object FormDebugThreads: TFormDebugThreads
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 667
-    ExplicitHeight = 268
     Columns = <
       item
         Position = 0

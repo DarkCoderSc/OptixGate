@@ -47,19 +47,15 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit OptixCore.Sockets.Helper;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils, System.JSON,
 
   Winapi.Windows, Winapi.Winsock2,
-
-  XSuperObject,
 
   OptixCore.Protocol.Packet, OptixCore.WinApiEx
 
@@ -154,14 +150,13 @@ type
     procedure SendString(const AString : String);
     function ReceiveString() : String;
 
-    procedure SendJson(const AJson : ISuperObject); overload;
-    procedure SendJson(const AJsonArray : ISuperArray); overload;
+    procedure SendJson(const AJsonObject : TJsonObject);
 
-    function ReceiveJson() : ISuperObject;
-    function ReceiveJsonArray() : ISuperArray;
+    function ReceiveJson() : TJsonObject;
+    function ReceiveJsonArray() : TJsonArray;
 
     procedure SendPacket(const APacket : TOptixPacket);
-    procedure ReceivePacket(var APacketBody : ISuperObject; const ABlockUntilDataAvailable : Boolean = False);
+    procedure ReceivePacket(var APacket : TOptixPacket; const ABlockUntilDataAvailable : Boolean = False);
 
     procedure Connect(); overload;
 
@@ -185,9 +180,9 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.ZLib,
+  System.ZLib, System.Rtti,
 
-  OptixCore.Sockets.Exceptions
+  OptixCore.Sockets.Exceptions, OptixCore.ClassesRegistry
 
   {$IFDEF USETLS}, OptixCore.OpenSSL.Headers, OptixCore.OpenSSL.Exceptions, OptixCore.OpenSSL.Helper{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
@@ -570,45 +565,45 @@ begin
   end;
 end;
 
-procedure TClientSocket.SendJson(const AJson : ISuperObject);
+procedure TClientSocket.SendJson(const AJsonObject : TJsonObject);
 begin
-  if not Assigned(AJson) then
-    Exit();
-
-  ///
-  SendString(AJson.AsJSON());
+  if Assigned(AJsonObject) then
+    SendString(AJsonObject.ToJSON());
 end;
 
-procedure TClientSocket.SendJson(const AJsonArray : ISuperArray);
+function TClientSocket.ReceiveJson() : TJsonObject;
 begin
-  if not Assigned(AJsonArray) then
-    Exit();
-
+  result := nil;
   ///
-  SendString(AJsonArray.AsJSON());
-end;
 
-function TClientSocket.ReceiveJson() : ISuperObject;
-begin
   var AJsonString := ReceiveString();
-  ///
-
+  if AJsonString = '' then
+    Exit;
   try
-    result := TSuperObject.Create(AJsonString);
+    var AJsonValue := TJSONObject.ParseJSONValue(AJsonString);
+    if Assigned(AJsonValue) and (AJsonValue is TJsonObject) then
+      result := AJsonValue as TJsonObject
+    else if Assigned(AJsonValue) then
+      FreeAndNil(AJsonValue);
   except
-    result := nil;
   end;
 end;
 
-function TClientSocket.ReceiveJsonArray() : ISuperArray;
+function TClientSocket.ReceiveJsonArray() : TJsonArray;
 begin
-  var AJsonString := ReceiveString();
+  result := nil;
   ///
 
+  var AJsonString := ReceiveString();
+  if AJsonString = '' then
+    Exit;
   try
-    result := TSuperArray.Create(AJsonString);
+    var AJsonValue := TJSONObject.ParseJSONValue(AJsonString);
+    if Assigned(AJsonValue) and (AJsonValue is TJsonArray) then
+      result := AJsonValue as TJsonArray
+    else if Assigned(AJsonValue) then
+      FreeAndNil(AJsonValue);
   except
-    result := nil;
   end;
 end;
 
@@ -618,16 +613,44 @@ begin
     Exit();
   ///
 
-  SendJson(APacket.Serialize);
+  var ASerializedPacket := APacket.Serialize();
+  if Assigned(ASerializedPacket) then begin
+    SendJson(ASerializedPacket);
+
+    ///
+    FreeAndNil(ASerializedPacket);
+  end;
 end;
 
-procedure TClientSocket.ReceivePacket(var APacketBody : ISuperObject; const ABlockUntilDataAvailable : Boolean = False);
+procedure TClientSocket.ReceivePacket(var APacket : TOptixPacket; const ABlockUntilDataAvailable : Boolean = False);
 begin
+  APacket := nil;
+  ///
+
   if not ABlockUntilDataAvailable then
     if not IsDataAvailable() then
-      Exit();
+      Exit;
+  ///
 
-  APacketBody := ReceiveJson();
+  var AReceivedJson := ReceiveJson();
+  if not Assigned(AReceivedJson) then
+    Exit;
+  try
+    var AClassName      : String;
+    var AWindowGUID_Str : String;
+
+    if not AReceivedJson.TryGetValue<String>('META_CLASSNAME', AClassName) or
+       not AReceivedJson.TryGetValue<String>('FWindowGUID', AWindowGUID_Str)
+    then
+      Exit;
+
+    var AWindowGUID := TGUID.Create(AWindowGUID_Str);
+
+    ///
+    APacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [TValue.From<TJsonObject>(AReceivedJson)]));
+  finally
+    FreeAndNil(AReceivedJson);
+  end;
 end;
 
 function TClientSocket.IsDataAvailable(): Boolean;

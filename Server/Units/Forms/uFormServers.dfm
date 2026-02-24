@@ -91,6 +91,13 @@ object FormServers: TFormServers
     OnPopup = PopupMenuPopup
     Left = 240
     Top = 72
+    object NewServer1: TMenuItem
+      Caption = 'New Server'
+      OnClick = NewServer1Click
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
     object Start1: TMenuItem
       Caption = 'Start'
       OnClick = Start1Click

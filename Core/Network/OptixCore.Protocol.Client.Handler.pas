@@ -61,8 +61,6 @@ uses
 
   Generics.Collections,
 
-  XSuperObject,
-
   Optix.Protocol.Client, OptixCore.Protocol.Packet, OptixCore.Sockets.Helper, OptixCore.Protocol.Preflight;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -80,7 +78,7 @@ type
     procedure Finalize(); override;
     procedure ClientExecute(); override;
     procedure PollActions(); virtual;
-    procedure PacketReceived(const ASerializedPacket : ISuperObject); virtual; abstract;
+    procedure PacketReceived(const AOptixPacket : TOptixPacket; var ACallHandleMemory : Boolean); virtual; abstract;
   public
     {@M}
     procedure AddPacket(const APacket : TOptixPacket);
@@ -109,8 +107,7 @@ begin
 end;
 
 procedure TOptixClientHandlerThread.ClientExecute();
-var APacket           : TOptixPacket;
-    ASerializedPacket : ISuperObject;
+var APacket : TOptixPacket;
 begin
   if not Assigned(FPacketQueue) then
     Exit();
@@ -151,12 +148,16 @@ begin
     // Dispatch Incomming Packets (Ingress)
     // -----------------------------------------------------------------------------------------------------------------
     try
-      ASerializedPacket := nil;
-
-      FClient.ReceivePacket(ASerializedPacket);
-
-      if Assigned(ASerializedPacket) then
-        PacketReceived(ASerializedPacket);
+      FClient.ReceivePacket(APacket);
+      if Assigned(APacket) then begin
+        var ACallHandleMemory := False;
+        try
+          PacketReceived(APacket, ACallHandleMemory);
+        finally
+          if not ACallHandleMemory then
+            FreeAndNil(APacket);
+        end;
+      end;
     except
       on E : Exception do begin
         if (E is ESocketException) {$IFDEF USETLS}or (E is EOpenSSLBaseException){$ENDIF} then

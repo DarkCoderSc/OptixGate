@@ -95,6 +95,7 @@ type
     procedure RadioBindAllClick(Sender: TObject);
     procedure RadioBindCustomStateChanged(Sender: TObject);
     procedure RadioBindLocalStateChanged(Sender: TObject);
+    procedure ButtonCancelClick(Sender: TObject);
   private
     {@M}
     procedure DoResize();
@@ -136,6 +137,7 @@ begin
   result.Address   := EditServerBindAddress.Text;
   result.Port      := APort;
   result.Version   := TIpVersion(ComboIpVersion.ItemIndex);
+  result.Debug     := False;
 
   if RadioBindCustom.Checked then
     result.Address := EditServerBindAddress.Text
@@ -235,6 +237,11 @@ begin
     TSpinEdit(Sender).Value := 0
   else if TSpinEdit(Sender).Value > 65535 then
     TSpinEdit(Sender).Value := 65535;
+end;
+
+procedure TFormListen.ButtonCancelClick(Sender: TObject);
+begin
+  ModalResult := mrCancel;
 end;
 
 procedure TFormListen.ButtonConnectClick(Sender: TObject);

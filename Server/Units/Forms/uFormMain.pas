@@ -67,12 +67,11 @@ uses
   Winapi.ShellAPI, Winapi.Messages, Winapi.Windows, Winapi.Winsock2,
 
   VirtualTrees.BaseAncestorVCL, VirtualTrees.AncestorVCL, VirtualTrees, VirtualTrees.Types, VirtualTrees.BaseTree,
-  XSuperObject,
 
   __uBaseFormControl__,
 
   OptixCore.Thread, OptixCore.Protocol.Preflight, Optix.Protocol.Server, OptixCore.Sockets.Helper,
-  OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base,
+  OptixCore.SessionInformation, Optix.Protocol.SessionHandler, OptixCore.Commands.Base, OptixCore.Protocol.Packet,
   OptixCore.Commands,
 
   NeoFlat.TreeView, NeoFlat.PopupMenu, NeoFlat.Panel, NeoFlat.Button, NeoFlat.Hint, NeoFlat.Window;
@@ -196,7 +195,8 @@ type
 
     {@ME}
     procedure OnSessionDisconnect(Sender : TOptixSessionHandlerThread);
-    procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
+    procedure OnReceivePacket(Sender : TOptixSessionHandlerThread; const AOptixPacket : TOptixPacket;
+      var ACallHandleMemory : Boolean);
     procedure OnRegisterWorker(Sender : TOptixServerThread; const AClient : TClientSocket; const AHandlerId  : TGUID; const AWorkerKind : TClientKind);
   end;
 
@@ -214,9 +214,8 @@ uses
   uControlFormRegistryManager, uControlFormSetupContentReader, uControlFormContentReader
   {$IFDEF USETLS}, uFormCertificatesStore, uFormTrustedCertificates{$ENDIF},
 
-  OptixCore.Protocol.Packet, Optix.Helper, Optix.Constants, OptixCore.System.Process,
-  OptixCore.LogNotifier, Optix.Protocol.Worker.FileTransfer, OptixCore.ClassesRegistry,
-  OptixCore.Commands.ContentReader
+  Optix.Helper, Optix.Constants, OptixCore.System.Process, OptixCore.LogNotifier, Optix.Protocol.Worker.FileTransfer,
+  OptixCore.ClassesRegistry, OptixCore.Commands.ContentReader
   {$IFDEF USETLS}, Optix.DebugCertificate{$ENDIF};
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -747,73 +746,50 @@ begin
   CreateOrOpenControlForm(VST.FocusedNode, TControlFormTransfers);
 end;
 
-procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject);
+procedure TFormMain.OnReceivePacket(Sender : TOptixSessionHandlerThread; const AOptixPacket : TOptixPacket;
+  var ACallHandleMemory : Boolean);
 begin
-  if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') or
-     not ASerializedPacket.Contains('FWindowGUID') then
-      Exit();
-  ///
-
-  // allocconsole();
-  // writeln(ASerializedPacket.AsJson(true));
-
-  var AClassName := ASerializedPacket.S['PacketClass'];
-  var AWindowGUID := TGUID.Create(ASerializedPacket.S['FWindowGUID']);
-
-  var AOptixPacket : TOptixPacket := nil;
-  var AHandleMemory := False;
+  if not Assigned(AOptixPacket) then
+    Exit;
   try
-    try
-      AOptixPacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [
-        TValue.From<ISuperObject>(ASerializedPacket)
-      ]));
-      if not Assigned(AOptixPacket) then
-        raise Exception.Create(Format('Unknown or Unregistered Packet Class=[%s]', [AClassName]));
+    if AOptixPacket is TOptixCommandReceiveSessionInformation then begin
+      ACallHandleMemory := True;
+
+      ///
+      RegisterSession(Sender, TOptixCommandReceiveSessionInformation(AOptixPacket));
+    end else begin
+      var pNode := GetNodeByHandler(Sender);
+      if not Assigned(pNode) then
+        Exit();
       ///
 
-      if AOptixPacket is TOptixCommandReceiveSessionInformation then begin
-        AHandleMemory := True;
+      // ---------------------------------------------------------------------------------------------------------------
+      if AOptixPacket is TOptixCommandReadContentReaderPageFirstPage then begin
+        var AForm := CreateNewControlForm(pNode, TControlFormContentReader);
 
         ///
-        RegisterSession(Sender, TOptixCommandReceiveSessionInformation(AOptixPacket));
-      end else begin
-        var pNode := GetNodeByHandler(Sender);
-        if not Assigned(pNode) then
-          Exit();
-        ///
-
-        // -------------------------------------------------------------------------------------------------------------
-        if AOptixPacket is TOptixCommandReadContentReaderPageFirstPage then begin
-          var AForm := CreateNewControlForm(pNode, TControlFormContentReader);
-
-          ///
-          AForm.__WARNING__OverrideWindowGUID(AOptixPacket.WindowGUID);
-        end;
-        // -------------------------------------------------------------------------------------------------------------
-
-        if AWindowGUID.IsEmpty then begin
-          // -----------------------------------------------------------------------------------------------------------
-          if (AOptixPacket is TOptixCommandReceiveLogMessage) or (AOptixPacket is TOptixCommandReceiveTransferException) then begin
-            var ALogsForm := GetControlForm(pNode, TControlFormLogs);
-            if Assigned(ALogsForm) then
-              ALogsForm.ReceivePacket(AOptixPacket, AHandleMemory);
-          // -----------------------------------------------------------------------------------------------------------
-          end else if AOptixPacket is TOptixTaskCallback then begin
-            var ATaskForm := GetControlForm(pNode, TControlFormTasks);
-            if Assigned(ATaskForm) then
-              ATaskForm.ReceivePacket(AOptixPacket, AHandleMemory);
-          end;
-          // -----------------------------------------------------------------------------------------------------------
-        end else begin
-          var AControlForm := GetControlForm(pNode, AWindowGUID);
-          if Assigned(AControlForm) then
-            AControlForm.ReceivePacket(AOptixPacket, AHandleMemory);
-        end;
+        AForm.__WARNING__OverrideWindowGUID(AOptixPacket.WindowGUID);
       end;
-    finally
-      if not AHandleMemory and Assigned(AOptixPacket) then
-        FreeAndNil(AOptixPacket);
+      // ---------------------------------------------------------------------------------------------------------------
+
+      if AOptixPacket.WindowGUID.IsEmpty then begin
+        // -------------------------------------------------------------------------------------------------------------
+        if (AOptixPacket is TOptixCommandReceiveLogMessage) or (AOptixPacket is TOptixCommandReceiveTransferException) then begin
+          var ALogsForm := GetControlForm(pNode, TControlFormLogs);
+          if Assigned(ALogsForm) then
+            ALogsForm.ReceivePacket(AOptixPacket, ACallHandleMemory);
+        // -------------------------------------------------------------------------------------------------------------
+        end else if AOptixPacket is TOptixTaskCallback then begin
+          var ATaskForm := GetControlForm(pNode, TControlFormTasks);
+          if Assigned(ATaskForm) then
+            ATaskForm.ReceivePacket(AOptixPacket, ACallHandleMemory);
+        end;
+        // -------------------------------------------------------------------------------------------------------------
+      end else begin
+        var AControlForm := GetControlForm(pNode, AOptixPacket.WindowGUID);
+        if Assigned(AControlForm) then
+          AControlForm.ReceivePacket(AOptixPacket, ACallHandleMemory);
+      end;
     end;
   except
     on E : Exception do begin

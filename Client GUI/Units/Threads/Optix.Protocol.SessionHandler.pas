@@ -59,8 +59,6 @@ uses
 
   Generics.Collections,
 
-  XSuperObject,
-
   OptixCore.Protocol.Client.Handler, OptixCore.Protocol.Packet, OptixCore.Protocol.Preflight,
   Optix.Protocol.Worker.FileTransfer, OptixCore.Commands, OptixCore.Commands.Base,
   Optix.Actions.ProcessHandler, OptixCore.Commands.FileSystem, OptixCore.Commands.Shell,
@@ -123,7 +121,7 @@ type
 
     procedure Connected(); override;
     procedure Disconnected(); override;
-    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
+    procedure PacketReceived(const AOptixPacket : TOptixPacket; var ACallHandleMemory : Boolean); override;
   {$IFDEF CLIENT_GUI}
   public
     property OnConnectedToServer       : TOnConnectedToServer         write FOnConnectedToServer;
@@ -438,47 +436,40 @@ begin
     FShellInstances.Clear();
 end;
 
-procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
+procedure TOptixSessionHandlerThread.PacketReceived(const AOptixPacket : TOptixPacket; var ACallHandleMemory : Boolean);
 begin
-  if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') then
-      Exit();
-  ///
-
-  var AClassName := ASerializedPacket.S['PacketClass'];
-
-  var AOptixPacket  : TOptixPacket := nil;
-  var AHandleMemory : Boolean := True;
+  if not Assigned(AOptixPacket) then
+    Exit;
   try
-    try
-      AOptixPacket := TOptixPacket(TClassesRegistry.CreateInstance(AClassName, [
-        TValue.From<ISuperObject>(ASerializedPacket)
-      ]));
-      if not Assigned(AOptixPacket) then
-        Exit();
-      ///
+    ACallHandleMemory := True;
+    ///
 
-      // Optix Action Command (& Response) -----------------------------------------------------------------------------
-      if AOptixPacket is TOptixCommandAction then begin
-        TOptixCommandActionResponse(AOptixPacket).DoAction();
+    // Optix Action Command (& Response) -------------------------------------------------------------------------------
+    if AOptixPacket is TOptixCommandAction then begin
+      TOptixCommandActionResponse(AOptixPacket).DoAction();
 
-        // For Action & Response
-        if AOptixPacket is TOptixCommandActionResponse then begin
-
-          ///
-          AddPacket(AOptixPacket);
-        end;
-      // Optix Task Command --------------------------------------------------------------------------------------------
-      end else if AOptixPacket is TOptixCommandTask then begin
-        var ATask := TOptixCommandTask(AOptixPacket).CreateTask(TOptixCommand(AOptixPacket));
+      // For Action & Response
+      if AOptixPacket is TOptixCommandActionResponse then begin
 
         ///
-        RegisterAndStartNewTask(ATask);
-      // Optix Transfers (Download & Upload) ---------------------------------------------------------------------------
-      end else if AOptixPacket is TOptixCommandTransfer then
-        RegisterNewFileTransfer(TOptixCommandTransfer(AOptixPacket))
-      // Shell Commands ------------------------------------------------------------------------------------------------
-      else if AOptixPacket is TOptixCommandCreateShellInstance then
+        AddPacket(AOptixPacket);
+      end;
+    // Optix Task Command ----------------------------------------------------------------------------------------------
+    end else if AOptixPacket is TOptixCommandTask then begin
+      var ATask := TOptixCommandTask(AOptixPacket).CreateTask(TOptixCommand(AOptixPacket));
+
+      ///
+      RegisterAndStartNewTask(ATask);
+    // Optix Transfers (Download & Upload) -----------------------------------------------------------------------------
+    end else if AOptixPacket is TOptixCommandTransfer then begin
+      RegisterNewFileTransfer(TOptixCommandTransfer(AOptixPacket));
+    end
+    // Shell Commands --------------------------------------------------------------------------------------------------
+    else if AOptixPacket is TOptixCommandShellBase then begin
+      ACallHandleMemory := False;
+      ///
+
+      if AOptixPacket is TOptixCommandCreateShellInstance then
         RegisterAndStartNewShellInstance(TOptixCommandCreateShellInstance(AOptixPacket))
       else if AOptixPacket is TOptixCommandDeleteShellInstance then
         TerminateShellInstance(TOptixCommandDeleteShellInstance(AOptixPacket))
@@ -486,8 +477,13 @@ begin
         BreakShellInstance(TOptixCommandSigIntShellInstance(AOptixPacket))
       else if AOptixPacket is TOptixCommandWriteShellInstance then
         StdinToShellInstance(TOptixCommandWriteShellInstance(AOptixPacket))
-      // Content Reader Commands ---------------------------------------------------------------------------------------
-      else if AOptixPacket is TOptixCommandCreateFileContentReader then
+    end
+    // Content Reader Commands -----------------------------------------------------------------------------------------
+    else if AOptixPacket is TOptixCommandContentReader then begin
+      ACallHandleMemory := False;
+      ///
+
+      if AOptixPacket is TOptixCommandCreateFileContentReader then
         CreateAndRegisterNewContentReader(TOptixCommandCreateFileContentReader(AOptixPacket))
       else if AOptixPacket is TOptixCommandDeleteContentReader then
         FContentReaders.Remove(AOptixPacket.WindowGUID)
@@ -497,23 +493,20 @@ begin
           TOptixCommandGetContentReaderPage(AOptixPacket).PageNumber,
           TOptixCommandGetContentReaderPage(AOptixPacket).PageSize
         )
-      // Basic Commands -----------------------------------------------------------------------------------------------
-      else if AOptixPacket is TOptixBasicCommand then begin
-        AHandleMemory := False;
-        ///
+    end
+    // Basic Commands --------------------------------------------------------------------------------------------------
+    else if AOptixPacket is TOptixBasicCommand then begin
+      ACallHandleMemory := False;
+      ///
 
-        // -------------------------------------------------------------------------------------------------------------
-        if AOptixPacket is TOptixCommandTerminateCurrentProcess then
-          Terminate;
-        // -------------------------------------------------------------------------------------------------------------
-      end;
-    except
-      on E : Exception do
-        AddPacket(TOptixCommandReceiveLogMessage.Create(E.Message, AClassName, lkException));
+      // ---------------------------------------------------------------------------------------------------------------
+      if AOptixPacket is TOptixCommandTerminateCurrentProcess then
+        Terminate;
+      // ---------------------------------------------------------------------------------------------------------------
     end;
-  finally
-    if not AHandleMemory and Assigned(AOptixPacket) then
-      FreeAndNil(AOptixPacket);
+  except
+    on E : Exception do
+      AddPacket(TOptixCommandReceiveLogMessage.Create(E.Message, AOptixPacket.ClassName, lkException));
   end;
 end;
 

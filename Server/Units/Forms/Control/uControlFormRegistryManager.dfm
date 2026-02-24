@@ -32,7 +32,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
     BorderBottom = 0
     Color = 13554645
     BorderColor = clBlack
-    ExplicitWidth = 547
+    ExplicitWidth = 527
+    ExplicitHeight = 279
     object OMultiPanel: TOMultiPanel
       AlignWithMargins = True
       Left = 4
@@ -60,7 +61,8 @@ object ControlFormRegistryManager: TControlFormRegistryManager
       SplitterHoverColor = clHighlight
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 539
+      ExplicitWidth = 519
+      ExplicitHeight = 246
       DesignSize = (
         529
         278)

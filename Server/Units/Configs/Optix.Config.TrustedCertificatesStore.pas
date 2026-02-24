@@ -47,107 +47,123 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit Optix.Config.TrustedCertificatesStore;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  XSuperObject,
+  System.JSON,
 
   Optix.Config.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  // TODO: Create a custom iterator for..in
-  TOptixConfigTrustedCertificatesStore = class(TOptixConfigBase)
+  TOptixConfigTrustedCertificateStore = class;
+
+  TOptixTrustedFingerprintEnumerator = record
+  private
+    FTarget : TOptixConfigTrustedCertificateStore;
+    FIndex  : Integer;
+
+    {@M}
+    function GetCurrent() : String;
+  public
+    {@C}
+    constructor Create(ATarget: TOptixConfigTrustedCertificateStore);
+
+    {@M}
+    function MoveNext() : Boolean;
+
+    {@G}
+    property Current: String read GetCurrent;
+  end;
+
+  TOptixConfigTrustedCertificateStore = class(TOptixConfigEnumBase)
   private
     {@M}
-    function GetCount() : Integer;
-
-    function GetItem(AIndex: Integer): String;
-    procedure SetItem(AIndex: Integer; const AValue: String);
+    function GetItem(const AIndex: Integer) : String;
   public
     {@M}
-    procedure Add(const AFingerprint : String);
+    procedure Add(const ATrustedFingerprint : String);
+    function GetEnumerator() : TOptixTrustedFingerprintEnumerator;
 
     {@G}
     property Count : Integer read GetCount;
-    property Items[AIndex : Integer]: String read GetItem write SetItem; default;
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  System.SysUtils, System.Generics.Collections,
+
   Winapi.Windows,
 
   Optix.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
-function TOptixConfigTrustedCertificatesStore.GetCount() : Integer;
+(* TOptixTrustedFingerprintEnumerator *)
+
+constructor TOptixTrustedFingerprintEnumerator.Create(ATarget : TOptixConfigTrustedCertificateStore);
 begin
-  result := 0;
-  ///
-
- if not FJsonObject.Contains('Items') then
-  Exit();
-
-  result := FJsonObject.A['Items'].Length;
+  FTarget := ATarget;
+  FIndex  := -1;
 end;
 
-function TOptixConfigTrustedCertificatesStore.GetItem(AIndex: Integer): String;
+function TOptixTrustedFingerprintEnumerator.MoveNext() : Boolean;
+begin
+  Inc(FIndex);
+
+  result := FIndex < FTarget.Count;
+end;
+
+function TOptixTrustedFingerprintEnumerator.GetCurrent() : String;
+begin
+  result := FTarget.GetItem(FIndex);
+end;
+
+(* TOptixConfigTrustedCertificateStore *)
+
+function TOptixConfigTrustedCertificateStore.GetItem(const AIndex : Integer) : String;
 begin
   result := '';
-
-  if not FJsonObject.Contains('Items') then
-    Exit();
+  if not Assigned(FItems) then
+    Exit;
   ///
 
-  var AJsonArray := FJsonObject.A['Items'];
+  if (AIndex < 0) or (AIndex > FItems.Count-1) then
+    Exit;
 
-  if (AIndex < 0) or (AIndex > AJsonArray.Length-1) then
-    Exit();
+  var ARow := FItems.Items[AIndex];
 
-  var ANode := AJsonArray.O[AIndex];
-  if not ANode.Contains('Fingerprint') then
-    Exit();
+  var AFingerprint : String;
+  if not ARow.TryGetValue('Fingerprint', AFingerprint) then
+    Exit;
+  ///
+
+  result := AFingerprint;
+end;
+
+procedure TOptixConfigTrustedCertificateStore.Add(const ATrustedFingerprint : String);
+begin
+  if not Assigned(FItems) then
+    Exit;
+  ///
+
+  var AItem := TJsonObject.Create();
   try
-    var AFingerprint := ANode.S['Fingerprint'];
-    TOptixHelper.CheckCertificateFingerprint(AFingerprint);
-
-    result := AFingerprint;
+    AItem.AddPair('Fingerprint', ATrustedFingerprint);
   except
+    FreeAndNil(AItem);
   end;
+
+  FItems.AddElement(AItem);
 end;
 
-procedure TOptixConfigTrustedCertificatesStore.Add(const AFingerprint : String);
+function TOptixConfigTrustedCertificateStore.GetEnumerator() : TOptixTrustedFingerprintEnumerator;
 begin
-  SetItem(-1, AFingerprint);
-end;
-
-procedure TOptixConfigTrustedCertificatesStore.SetItem(AIndex: Integer; const AValue: String);
-begin
-  var AJsonArray  : ISuperArray;
-
-  if FJsonObject.Contains('Items') then
-    AJsonArray := FJsonObject.A['Items']
-  else
-    AJsonArray := SA();
-
-  var ANode := SO();
-
-  ANode.S['Fingerprint']  := AValue;
-
-  if AIndex < 0 then
-    AJsonArray.Add(ANode)
-  else if (AIndex >= 0) and (AIndex <= AJsonArray.Length-1) then
-    AJsonArray.O[AIndex] := ANode;
-
-  ///
-  FJsonObject.A['Items'] := AJsonArray;
+  result := TOptixTrustedFingerprintEnumerator.Create(Self);
 end;
 
 end.

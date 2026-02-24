@@ -78,6 +78,8 @@ type
     MainMenu: TFlatPopupMenu;
     AddTrustedCertificate1: TMenuItem;
     FlatWindow1: TFlatWindow;
+    AddFingerprint1: TMenuItem;
+    N1: TMenuItem;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -90,6 +92,7 @@ type
     procedure PopupMenuPopup(Sender: TObject);
     procedure VSTCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex;
       var Result: Integer);
+    procedure AddFingerprint1Click(Sender: TObject);
   private
     {@M}
     function GetNodeByFingerprint(const AFingerprint : String) : PVirtualNode;
@@ -121,7 +124,7 @@ uses
 procedure TFormTrustedCertificates.Save();
 begin
   try
-    var AConfig := TOptixConfigTrustedCertificatesStore.Create();
+    var AConfig := TOptixConfigTrustedCertificateStore.Create();
     try
       for var pNode in VST.Nodes do begin
         var pData := PTreeData(pNode.GetData);
@@ -135,7 +138,6 @@ begin
       FreeAndNil(AConfig);
     end;
   except
-
   end;
 end;
 
@@ -144,14 +146,13 @@ begin
   VST.Clear();
   ///
 
-  var AConfig := TOptixConfigTrustedCertificatesStore(CONFIG_HELPER.Read('TrustedCertificates'));
+  var AConfig := TOptixConfigTrustedCertificateStore(CONFIG_HELPER.Read('TrustedCertificates'));
   if not Assigned(AConfig) then
     Exit();
   try
     VST.BeginUpdate();
     try
-      for var I := 0 to AConfig.Count -1 do begin
-        var AFingerprint := AConfig.Items[I];
+      for var AFingerprint in AConfig do begin
         if String.IsNullOrWhitespace(AFingerprint) then
           continue;
 
@@ -199,6 +200,11 @@ begin
       break;
     end;
   end;
+end;
+
+procedure TFormTrustedCertificates.AddFingerprint1Click(Sender: TObject);
+begin
+  AddTrustedCertificate1Click(AddTrustedCertificate1);
 end;
 
 procedure TFormTrustedCertificates.AddTrustedCertificate(const AFingerprint : String);

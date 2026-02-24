@@ -53,7 +53,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  XSuperObject,
+  System.JSON,
 
   uFormServers,
 
@@ -61,116 +61,133 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  // TODO: Create a custom iterator for..in
-  TOptixConfigServers = class(TOptixConfigBase)
+  TOptixConfigServers = class;
+
+  TOptixServerConfigurationEnumerator = record
+  private
+    FTarget : TOptixConfigServers;
+    FIndex  : Integer;
+
+    {@M}
+    function GetCurrent() : TServerConfiguration;
+  public
+    {@C}
+    constructor Create(ATarget: TOptixConfigServers);
+
+    {@M}
+    function MoveNext() : Boolean;
+
+    {@G}
+    property Current: TServerConfiguration read GetCurrent;
+  end;
+
+  TOptixConfigServers = class(TOptixConfigEnumBase)
   private
     {@M}
-    function GetCount() : Integer;
-
-    function GetItem(AIndex: Integer): TServerConfiguration;
-    procedure SetItem(AIndex: Integer; const AServerConfiguration : TServerConfiguration);
+    function GetItem(const AIndex : Integer) : TServerConfiguration;
   public
     {@M}
     procedure Add(const AServerConfiguration : TServerConfiguration);
+    function GetEnumerator() : TOptixServerConfigurationEnumerator;
 
     {@G}
     property Count : Integer read GetCount;
-    property Items[AIndex : Integer]: TServerConfiguration read GetItem write SetItem; default;
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  System.SysUtils, System.Generics.Collections,
+
   Winapi.Windows,
 
-  OptixCore.Sockets.Helper;
+  OptixCore.Sockets.Helper, Optix.Helper, OptixCore.Exceptions;
 // ---------------------------------------------------------------------------------------------------------------------
 
-function TOptixConfigServers.GetCount() : Integer;
+(* TOptixServerConfigurationEnumerator *)
+
+constructor TOptixServerConfigurationEnumerator.Create(ATarget: TOptixConfigServers);
 begin
-  result := 0;
-  ///
-
- if not FJsonObject.Contains('Items') then
-  Exit();
-
-  result := FJsonObject.A['Items'].Length;
+  FTarget := ATarget;
+  FIndex  := -1;
 end;
 
-function TOptixConfigServers.GetItem(AIndex: Integer): TServerConfiguration;
+function TOptixServerConfigurationEnumerator.MoveNext() : Boolean;
+begin
+  Inc(FIndex);
+
+  result := FIndex < FTarget.Count;
+end;
+
+function TOptixServerConfigurationEnumerator.GetCurrent() : TServerConfiguration;
+begin
+  result := FTarget.GetItem(FIndex);
+end;
+
+(* TOptixConfigServers *)
+
+function TOptixConfigServers.GetItem(const AIndex : Integer) : TServerConfiguration;
 begin
   ZeroMemory(@result, SizeOf(TServerConfiguration));
+  if not Assigned(FItems) then
+    Exit;
   ///
 
-  if not FJsonObject.Contains('Items') then
-    Exit();
-  ///
+  if (AIndex < 0) or (AIndex > FItems.Count-1) then
+    Exit;
 
-  var AJsonArray := FJsonObject.A['Items'];
-
-  if (AIndex < 0) or (AIndex > AJsonArray.Length-1) then
-    Exit();
-
-  var ANode := AJsonArray.O[AIndex];
-  if not ANode.Contains('Address') or not ANode.Contains('Port') or not ANode.Contains('Version') or
-     not ANode.Contains('AutoStart')
-     {$IFDEF USETLS} or not ANode.Contains('CertificateFingerprint'){$ENDIF}
-  then
-    Exit();
   try
-    var APort := ANode.I['Port'];
-    if (APort < Low(Word)) or (APort > High(Word)) then
-      Exit();
+    var ARow := FItems.Items[AIndex];
 
-    var AVersion := ANode.I['Version'];
-    if (AVersion < 0) or (AVersion > 1) then
-      Exit();
-
-    result.Address   := ANode.S['Address'];
-    result.Port      := ANode.I['Port'];
-    result.Version   := TIPVersion(ANode.I['Version']);
-    result.AutoStart := ANode.B['AutoStart'];
+    var AVersion : Integer;
+    if not ARow.TryGetValue('Address', result.Address) or
+       not ARow.TryGetValue<Word>('Port', result.Port) or
+       not ARow.TryGetValue('Version', AVersion) or
+       not ARow.TryGetValue('AutoStart', result.AutoStart)
+       {$IFDEF USETLS}
+          or not ARow.TryGetValue('CertificateFingerprint', result.CertificateFingerprint)
+       {$ENDIF}
+    then
+      raise EOptixConfigException.Create(oceMissingField);
 
     {$IFDEF USETLS}
-    result.CertificateFingerprint  := ANode.S['CertificateFingerprint'];
+    if not TOptixHelper.IsCertificateFingerprintValid(result.CertificateFingerprint) then
+      raise EOptixConfigException.Create(oceInvalidDataFormat);
     {$ENDIF}
+
+    result.VersionAsInt := AVersion;
   except
+    ZeroMemory(@result, SizeOf(TServerConfiguration));
   end;
 end;
 
 procedure TOptixConfigServers.Add(const AServerConfiguration : TServerConfiguration);
 begin
-  SetItem(-1, AServerConfiguration);
+  if not Assigned(FItems) then
+    Exit;
+  ///
+
+  var AItem := TJsonObject.Create();
+  try
+    AItem.AddPair('Address', AServerConfiguration.Address);
+    AItem.AddPair('Port', AServerConfiguration.Port);
+    AItem.AddPair('Version', Cardinal(AServerConfiguration.Version));
+    AItem.AddPair('AutoStart', AServerConfiguration.AutoStart);
+
+    {$IFDEF USETLS}
+    AItem.AddPair('CertificateFingerprint', AServerConfiguration.CertificateFingerprint);
+    {$ENDIF}
+  except
+    FreeAndNil(AItem);
+  end;
+
+  FItems.AddElement(AItem);
 end;
 
-procedure TOptixConfigServers.SetItem(AIndex: Integer; const AServerConfiguration : TServerConfiguration);
+function TOptixConfigServers.GetEnumerator() : TOptixServerConfigurationEnumerator;
 begin
-  var AJsonArray  : ISuperArray;
-
-  if FJsonObject.Contains('Items') then
-    AJsonArray := FJsonObject.A['Items']
-  else
-    AJsonArray := SA();
-
-  var ANode := SO();
-
-  ANode.S['Address']   := AServerConfiguration.Address;
-  ANode.I['Port']      := AServerConfiguration.Port;
-  ANode.I['Version']   := Cardinal(AServerConfiguration.Version);
-  ANode.B['AutoStart'] := AServerConfiguration.AutoStart;
-
-  {$IFDEF USETLS}
-  ANode.S['CertificateFingerprint'] := AServerConfiguration.CertificateFingerprint;
-  {$ENDIF}
-
-  if AIndex < 0 then
-    AJsonArray.Add(ANode)
-  else if (AIndex >= 0) and (AIndex <= AJsonArray.Length-1) then
-    AJsonArray.O[AIndex] := ANode;
-
-  ///
-  FJsonObject.A['Items'] := AJsonArray;
+  result := TOptixServerConfigurationEnumerator.Create(Self);
 end;
 
 end.

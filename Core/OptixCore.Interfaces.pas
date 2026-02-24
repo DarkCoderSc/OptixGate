@@ -55,9 +55,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes,
-
-  XSuperObject;
+  System.Classes, System.JSON;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -68,8 +66,8 @@ type
   end;
 
   IOptixSerializable = Interface(IInterface)
-    function Serialize() : ISuperObject;
-    procedure DeSerialize(const ASerializedObject : ISuperObject);
+    function Serialize() : TJsonObject;
+    procedure DeSerialize(const ASerializedObject : TJsonObject);
   end;
 
   IOptixAction = Interface(IInterface)

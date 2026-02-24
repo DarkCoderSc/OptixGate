@@ -47,102 +47,123 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit Optix.Config.CertificatesStore;
 
 interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  XSuperObject,
+  System.JSON,
 
   Optix.Config.Helper, OptixCore.OpenSSL.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  // TODO: Create a custom iterator for..in
-  TOptixConfigCertificatesStore = class(TOptixConfigBase)
+  TOptixConfigCertificatesStore = class;
+
+  TX509CertificateEnumerator = record
+  private
+    FTarget : TOptixConfigCertificatesStore;
+    FIndex  : Integer;
+
+    {@M}
+    function GetCurrent() : TX509Certificate;
+  public
+    {@C}
+    constructor Create(ATarget : TOptixConfigCertificatesStore);
+
+    {@M}
+    function MoveNext() : Boolean;
+
+    {@G}
+    property Current: TX509Certificate read GetCurrent;
+  end;
+
+  TOptixConfigCertificatesStore = class(TOptixConfigEnumBase)
   private
     {@M}
-    function GetCount() : Integer;
-
-    function GetItem(AIndex: Integer): TX509Certificate;
-    procedure SetItem(AIndex: Integer; const AValue: TX509Certificate);
+    function GetItem(const AIndex : Integer) : TX509Certificate;
   public
     {@M}
     procedure Add(const ACertificate : TX509Certificate);
+    function GetEnumerator() : TX509CertificateEnumerator;
 
     {@G}
     property Count : Integer read GetCount;
-    property Items[AIndex : Integer]: TX509Certificate read GetItem write SetItem; default;
   end;
 
 implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
+  System.SysUtils, System.Generics.Collections,
+
   Winapi.Windows;
 // ---------------------------------------------------------------------------------------------------------------------
 
-function TOptixConfigCertificatesStore.GetCount() : Integer;
+(* TX509CertificateEnumerator *)
+
+constructor TX509CertificateEnumerator.Create(ATarget: TOptixConfigCertificatesStore);
 begin
-  result := 0;
-  ///
-
- if not FJsonObject.Contains('Items') then
-  Exit();
-
-  result := FJsonObject.A['Items'].Length;
+  FTarget := ATarget;
+  FIndex  := -1;
 end;
 
-function TOptixConfigCertificatesStore.GetItem(AIndex: Integer): TX509Certificate;
+function TX509CertificateEnumerator.MoveNext(): Boolean;
+begin
+  Inc(FIndex);
+
+  result := FIndex < FTarget.Count;
+end;
+
+function TX509CertificateEnumerator.GetCurrent() : TX509Certificate;
+begin
+  result := FTarget.GetItem(FIndex);
+end;
+
+(* TOptixConfigCertificatesStore *)
+
+function TOptixConfigCertificatesStore.GetItem(const AIndex : Integer) : TX509Certificate;
 begin
   ZeroMemory(@result, SizeOf(TX509Certificate));
-  if not FJsonObject.Contains('Items') then
-    Exit();
+  if not Assigned(FItems) then
+    Exit;
   ///
 
-  var AJsonArray := FJsonObject.A['Items'];
+  if (AIndex < 0) or (AIndex > FItems.Count-1) then
+    Exit;
 
-  if (AIndex < 0) or (AIndex > AJsonArray.Length-1) then
-    Exit();
+  var ARow := FItems.Items[AIndex];
 
-  var ANode := AJsonArray.O[AIndex];
-  if not ANode.Contains('PublicKey') or not ANode.Contains('PrivateKey') then
-    Exit();
+  var APublicKey, APrivateKey : String;
+  if not ARow.TryGetValue('PublicKey', APublicKey) or not ARow.TryGetValue('PrivateKey', APrivateKey) then
+    Exit;
   try
-    TOptixOpenSSLHelper.LoadCertificate(ANode.S['PublicKey'], ANode.S['PrivateKey'], result);
+    TOptixOpenSSLHelper.LoadCertificate(APublicKey, APrivateKey, result);
   except
   end;
 end;
 
 procedure TOptixConfigCertificatesStore.Add(const ACertificate : TX509Certificate);
 begin
-  SetItem(-1, ACertificate);
+  if not Assigned(FItems) then
+    Exit;
+  ///
+
+  var AItem := TJsonObject.Create();
+  try
+    AItem.AddPair('PublicKey', TOptixOpenSSLHelper.SerializeCertificateKey(ACertificate, cktPublic));
+    AItem.AddPair('PrivateKey', TOptixOpenSSLHelper.SerializeCertificateKey(ACertificate, cktPrivate));
+  except
+    FreeAndNil(AItem);
+  end;
+
+  FItems.AddElement(AItem);
 end;
 
-procedure TOptixConfigCertificatesStore.SetItem(AIndex: Integer; const AValue: TX509Certificate);
+function TOptixConfigCertificatesStore.GetEnumerator() : TX509CertificateEnumerator;
 begin
-  var AJsonArray  : ISuperArray;
-
-  if FJsonObject.Contains('Items') then
-    AJsonArray := FJsonObject.A['Items']
-  else
-    AJsonArray := SA();
-
-  var ANode := SO();
-
-  ANode.S['PublicKey']  := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPublic);
-  ANode.S['PrivateKey'] := TOptixOpenSSLHelper.SerializeCertificateKey(AValue, cktPrivate);
-
-  if AIndex < 0 then
-    AJsonArray.Add(ANode)
-  else if (AIndex >= 0) and (AIndex <= AJsonArray.Length-1) then
-    AJsonArray.O[AIndex] := ANode;
-
-  ///
-  FJsonObject.A['Items'] := AJsonArray;
+  result := TX509CertificateEnumerator.Create(Self);
 end;
 
 end.

@@ -79,10 +79,9 @@ implementation
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  OptixCore.Commands.FileSystem, OptixCore.Commands.Process, OptixCore.Commands,
-  OptixCore.Commands.Shell, OptixCore.Task.ProcessDump, OptixCore.Commands.Base,
-  OptixCore.SessionInformation, OptixCore.LogNotifier, OptixCore.Commands.Registry,
-  OptixCore.Commands.ContentReader;
+  OptixCore.Commands.FileSystem, OptixCore.Commands.Process, OptixCore.Commands, OptixCore.Commands.Shell,
+  OptixCore.Task.ProcessDump, OptixCore.Commands.Base, OptixCore.SessionInformation, OptixCore.LogNotifier,
+  OptixCore.Commands.Registry, OptixCore.Commands.ContentReader;
 // ---------------------------------------------------------------------------------------------------------------------
 
 class constructor TClassesRegistry.Create();

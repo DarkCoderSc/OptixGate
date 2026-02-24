@@ -47,8 +47,6 @@
 {                                                                              }
 {******************************************************************************}
 
-
-
 unit uFormServers;
 
 interface
@@ -74,14 +72,23 @@ type
   );
 
   TServerConfiguration = record
+  private
+    {@M}
+    procedure SetVersionAsInt(const AValue : Integer);
+    function GetVersionAsInt() : Integer;
+  public
     Address   : String;
     Port      : Word;
     Version   : TIpVersion;
     AutoStart : Boolean;
+    Debug     : Boolean;
 
     {$IFDEF USETLS}
     CertificateFingerprint : String;
     {$ENDIF}
+
+    {@S}
+    property VersionAsInt : Integer read GetVersionAsInt write SetVersionAsInt;
   end;
 
   TTreeData = record
@@ -107,6 +114,8 @@ type
     N2: TMenuItem;
     Certificates1: TMenuItem;
     FlatWindow1: TFlatWindow;
+    NewServer1: TMenuItem;
+    N3: TMenuItem;
     procedure VSTGetNodeDataSize(Sender: TBaseVirtualTree; var NodeDataSize: Integer);
     procedure VSTGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
@@ -126,6 +135,7 @@ type
     procedure AutoStart1Click(Sender: TObject);
     procedure Certificate1Click(Sender: TObject);
     procedure Certificates1Click(Sender: TObject);
+    procedure NewServer1Click(Sender: TObject);
   private
     {@M}
     function GetNodeByPort(const APort : Word; const AVersion : TIPVersion) : PVirtualNode;
@@ -175,6 +185,23 @@ uses
 
 {$R *.dfm}
 
+(* TServerConfiguration *)
+
+procedure TServerConfiguration.SetVersionAsInt(const AValue : Integer);
+begin
+  if AValue < Ord(Low(TIpVersion)) then
+    Version := Low(TIpVersion)
+  else if AValue > Ord(High(TIpVersion)) then
+    Version := High(TIpVersion)
+  else
+    Version := TIpVersion(AValue);
+end;
+
+function TServerConfiguration.GetVersionAsInt() : Integer;
+begin
+  result := Integer(Version);
+end;
+
 (* TFormServers *)
 
 procedure TFormServers.Save();
@@ -184,6 +211,8 @@ begin
     try
       for var pNode in VST.Nodes do begin
         var pData := PTreeData(pNode.GetData);
+        if pData^.ServerConfiguration.Debug then
+          continue;
 
         ///
         AConfig.Add(pData^.ServerConfiguration);
@@ -195,7 +224,6 @@ begin
       FreeAndNil(AConfig);
     end;
   except
-
   end;
 end;
 
@@ -210,8 +238,7 @@ begin
   try
     VST.BeginUpdate();
     try
-      for var I := 0 to AConfig.Count -1 do begin
-        var AServerConfiguration := AConfig.Items[I];
+      for var AServerConfiguration in AConfig do begin
         if String.IsNullOrWhitespace(AServerConfiguration.Address) then
           continue;
 
@@ -383,6 +410,7 @@ begin
   AConfiguration.Version := ipv4;
   AConfiguration.AutoStart := True;
   AConfiguration.CertificateFingerprint := DEBUG_CERTIFICATE_FINGERPRINT;
+  AConfiguration.Debug := True;
 
   FormServers.RegisterServer(AConfiguration);
 
@@ -599,6 +627,11 @@ begin
   finally
     FreeAndNil(AForm);
   end;
+end;
+
+procedure TFormServers.NewServer1Click(Sender: TObject);
+begin
+  New1Click(New1);
 end;
 
 procedure TFormServers.VSTBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode;

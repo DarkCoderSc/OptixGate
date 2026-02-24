@@ -84,6 +84,7 @@
         <DCC_DcuOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_DcuOutput>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <DCC_Define>SERVER;$(DCC_Define)</DCC_Define>
+        <DCC_UnitSearchPath>..\Core\VCL\NeoFlat;..\Core\VCL\OMultiPanel;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_UsePackage>vclwinx;fmx;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;FireDACCommonODBC;FireDACCommonDriver;appanalytics;IndyProtocols;vclx;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;bindcompfmx;inetdb;FireDACSqliteDriver;DbxClientDriver;soapmidas;vclactnband;fmxFireDAC;dbexpress;DBXMySQLDriver;VclSmp;inet;vcltouch;fmxase;dbrtl;fmxdae;FireDACMSAccDriver;CustomIPTransport;vcldsnap;DBXInterBaseDriver;IndySystem;Skia.Package.VCL;vcldb;VirtualTreesR;vclFireDAC;bindcomp;FireDACCommon;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;adortl;vclimg;FireDACPgDriver;FireDAC;inetdbxpress;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;fmxobj;bindcompvclsmp;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -97,6 +98,7 @@
         <DCC_DcuOutput>.\bins\NoSSL\$(Platform)\$(Config)</DCC_DcuOutput>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <DCC_Define>SERVER;$(DCC_Define)</DCC_Define>
+        <DCC_UnitSearchPath>..\Core\VCL\NeoFlat;..\Core\VCL\OMultiPanel;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -155,8 +157,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\ExtLibraries\Delphi Libraries\XSuperObject.pas"/>
-        <DCCReference Include="..\ExtLibraries\Delphi Libraries\XSuperJSON.pas"/>
         <DCCReference Include="..\Core\OptixCore.Exceptions.pas"/>
         <DCCReference Include="..\Core\Network\OptixCore.Sockets.Helper.pas"/>
         <DCCReference Include="..\Core\Network\OptixCore.Protocol.Packet.pas"/>

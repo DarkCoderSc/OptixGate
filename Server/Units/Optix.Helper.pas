@@ -79,9 +79,10 @@ type
     class function Pluralize(const AText, ASuffix : String; const ACount : Cardinal;
       APluralForm : String = '') : String; static;
     class function FormatInt(const AInteger : Integer) : String; static;
-    class function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String;
-    class function FormatFileSize(const ASize : Int64) : string;
-    class procedure CheckCertificateFingerprint(const AValue : String);
+    class function DefaultIfEmpty(const AValue : String; const ADefault : String = '-') : String; static;
+    class function FormatFileSize(const ASize : Int64) : string; static;
+    class function IsCertificateFingerprintValid(const AValue : String) : Boolean; static;
+    class procedure CheckCertificateFingerprint(const AValue : String); static;
 
     { Dialogs / Forms Helpers }
     class function Error(const AHandle : THandle; const AMessage : String) : Integer; static;
@@ -430,9 +431,14 @@ begin
     Result := -1
 end;
 
+class function TOptixHelper.IsCertificateFingerprintValid(const AValue : String) : Boolean;
+begin
+  result := TRegEx.IsMatch(AValue, '^([0-9A-Fa-f]{2}:){63}[0-9A-Fa-f]{2}$');
+end;
+
 class procedure TOptixHelper.CheckCertificateFingerprint(const AValue : String);
 begin
-  if not TRegEx.IsMatch(AValue, '^([0-9A-Fa-f]{2}:){63}[0-9A-Fa-f]{2}$') then
+  if not IsCertificateFingerprintValid(AValue) then
     raise Exception.Create(
       'Invalid certificate fingerprint. It must be a valid SHA-512 fingerprint, with each byte separated by a colon ' +
       '(e.g., AA:BB:CC:DD…:FF).'

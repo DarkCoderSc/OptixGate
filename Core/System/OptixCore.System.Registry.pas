@@ -717,8 +717,11 @@ begin
     FType := TRegistryValueInformation(ASource).FType;
 
     if Assigned(TRegistryValueInformation(ASource).FValue) then begin
-      FValue := TOptixMemoryObject.Create();
-      FValue.CopyFrom(TRegistryValueInformation(ASource).FValue);
+      if not Assigned(FValue) then
+        FValue := TOptixMemoryObject.Create();
+
+      ///
+      FValue.CopyFrom(TRegistryValueInformation(ASource).FValue)
     end else
       FValue := nil;
   end else

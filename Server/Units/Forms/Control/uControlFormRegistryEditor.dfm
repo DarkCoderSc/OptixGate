@@ -36,8 +36,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
     BorderBottom = 0
     Color = 13554645
     BorderColor = clBlack
-    ExplicitWidth = 447
-    ExplicitHeight = 482
     object PanelHeader: TFlatPanel
       Left = 0
       Top = 0
@@ -61,12 +59,11 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       BorderBottom = 1
       Color = 13554645
       BorderColor = clBlack
-      ExplicitWidth = 447
       object LabelName: TLabel
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 31
+        Width = 449
         Height = 13
         Margins.Left = 0
         Margins.Top = 0
@@ -74,6 +71,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Margins.Bottom = 4
         Align = alTop
         Caption = 'Name:'
+        ExplicitWidth = 31
       end
       object EditName: TFlatEdit
         Left = 4
@@ -96,7 +94,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Status = cStatusNormal
         Validators = []
         ShowBorder = True
-        ExplicitWidth = 439
       end
     end
     object Notebook: TNotebook
@@ -106,14 +103,10 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       Height = 430
       Align = alClient
       TabOrder = 1
-      ExplicitWidth = 447
-      ExplicitHeight = 398
       object TPage
         Left = 0
         Top = 0
         Caption = 'SZ'
-        ExplicitWidth = 447
-        ExplicitHeight = 398
         object PanelSZ: TPanel
           Left = 0
           Top = 0
@@ -126,13 +119,11 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           Padding.Right = 4
           Padding.Bottom = 4
           TabOrder = 0
-          ExplicitWidth = 447
-          ExplicitHeight = 398
           object Label1: TLabel
             AlignWithMargins = True
             Left = 4
             Top = 4
-            Width = 30
+            Width = 449
             Height = 13
             Margins.Left = 0
             Margins.Top = 0
@@ -140,6 +131,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Bottom = 4
             Align = alTop
             Caption = 'Value:'
+            ExplicitWidth = 30
           end
           object EditSZ: TFlatEdit
             Left = 4
@@ -162,7 +154,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Status = cStatusNormal
             Validators = []
             ShowBorder = True
-            ExplicitWidth = 439
           end
         end
       end
@@ -185,7 +176,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             AlignWithMargins = True
             Left = 4
             Top = 4
-            Width = 30
+            Width = 449
             Height = 13
             Margins.Left = 0
             Margins.Top = 0
@@ -193,6 +184,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Bottom = 4
             Align = alTop
             Caption = 'Value:'
+            ExplicitWidth = 30
           end
           object PanelRichMSZ: TFlatPanel
             AlignWithMargins = True
@@ -246,8 +238,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Left = 0
         Top = 0
         Caption = 'DQWord'
-        ExplicitWidth = 447
-        ExplicitHeight = 398
         object PanelQDword: TPanel
           Left = 0
           Top = 0
@@ -262,12 +252,11 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
           Padding.Bottom = 4
           ParentBackground = False
           TabOrder = 0
-          ExplicitTop = -3
           object Label3: TLabel
             AlignWithMargins = True
             Left = 4
             Top = 4
-            Width = 30
+            Width = 449
             Height = 13
             Margins.Left = 0
             Margins.Top = 0
@@ -275,6 +264,7 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Margins.Bottom = 4
             Align = alTop
             Caption = 'Value:'
+            ExplicitWidth = 30
           end
           object EditQDword: TFlatEdit
             Left = 4
@@ -298,9 +288,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Status = cStatusNormal
             Validators = []
             ShowBorder = True
-            ExplicitLeft = 8
-            ExplicitTop = 25
-            ExplicitWidth = 431
           end
           object GroupBoxBase: TFlatGroupBox
             AlignWithMargins = True
@@ -327,9 +314,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
             Padding.Bottom = 8
             ParentColor = False
             TabOrder = 1
-            ExplicitLeft = 8
-            ExplicitTop = 52
-            ExplicitWidth = 441
             object RadioBaseDecimal: TFlatCheckBox
               Left = 8
               Top = 16
@@ -345,9 +329,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
               Mode = cbmRadioBox
               Checked = True
               OnStateChanged = RadioBaseDecimalStateChanged
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 302
             end
             object RadioBaseHexadecimal: TFlatCheckBox
               Left = 8
@@ -364,9 +345,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
               Mode = cbmRadioBox
               Checked = False
               OnStateChanged = RadioBaseHexadecimalStateChanged
-              ExplicitLeft = 13
-              ExplicitTop = 72
-              ExplicitWidth = 270
             end
           end
         end
@@ -375,8 +353,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Left = 0
         Top = 0
         Caption = 'Binary'
-        ExplicitWidth = 0
-        ExplicitHeight = 0
         object PanelBinary: TPanel
           Left = 0
           Top = 0
@@ -407,8 +383,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
       BorderBottom = 0
       Color = 13554645
       BorderColor = clBlack
-      ExplicitTop = 446
-      ExplicitWidth = 447
       object ButtonAction: TFlatButton
         AlignWithMargins = True
         Left = 373
@@ -475,8 +449,6 @@ object ControlFormRegistryEditor: TControlFormRegistryEditor
         Width = 200
         Alignment = taLeftJustify
       end>
-    ExplicitTop = 482
-    ExplicitWidth = 447
   end
   object PopupMain: TFlatPopupMenu
     OwnerDraw = True

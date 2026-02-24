@@ -59,8 +59,6 @@ uses
 
   Winapi.Windows,
 
-  XSuperObject,
-
   OptixCore.Protocol.Client.Handler, OptixCore.Protocol.Packet, OptixCore.Sockets.Helper;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -68,7 +66,9 @@ type
   TOptixSessionHandlerThread = class;
 
   TOnSessionDisconnect = procedure(Sender : TOptixSessionHandlerThread) of object;
-  TOnReceivePacket = procedure(Sender : TOptixSessionHandlerThread; const ASerializedPacket : ISuperObject) of object;
+
+  TOnReceivePacket = procedure(Sender : TOptixSessionHandlerThread; const AOptixPacket : TOptixPacket;
+    var AHandleMemory : Boolean) of object;
 
   TOptixSessionHandlerThread = class(TOptixClientHandlerThread)
   private
@@ -77,7 +77,7 @@ type
   protected
     {@M}
     procedure ClientTerminate(); override;
-    procedure PacketReceived(const ASerializedPacket : ISuperObject); override;
+    procedure PacketReceived(const AOptixPacket : TOptixPacket; var ACallHandleMemory : Boolean); override;
     procedure Initialize(); override;
   public
     {@G/S}
@@ -86,6 +86,11 @@ type
   end;
 
 implementation
+
+// ---------------------------------------------------------------------------------------------------------------------
+uses
+  System.SysUtils;
+// ---------------------------------------------------------------------------------------------------------------------
 
 procedure TOptixSessionHandlerThread.Initialize();
 begin
@@ -107,17 +112,19 @@ begin
     end);
 end;
 
-procedure TOptixSessionHandlerThread.PacketReceived(const ASerializedPacket : ISuperObject);
+procedure TOptixSessionHandlerThread.PacketReceived(const AOptixPacket : TOptixPacket; var ACallHandleMemory : Boolean);
 begin
-  if not Assigned(ASerializedPacket) or
-     not ASerializedPacket.Contains('PacketClass') or
-     not Assigned(FOnReceivePacket) then
-      Exit();
+  if not Assigned(AOptixPacket) or not Assigned(FOnReceivePacket) then
+    Exit;
   ///
 
+  var _ACallHandleMemory := False;
   Synchronize(procedure begin
-    FOnReceivePacket(self, ASerializedPacket);
+    FOnReceivePacket(self, AOptixPacket, _ACallHandleMemory);
   end);
+
+  ///
+  ACallHandleMemory := _ACallHandleMemory;
 end;
 
 end.

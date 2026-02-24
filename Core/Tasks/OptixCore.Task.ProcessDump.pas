@@ -55,7 +55,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  XSuperObject, OptixCore.Commands.Base;
+  OptixCore.Classes, OptixCore.Commands.Base;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
@@ -67,20 +67,21 @@ type
 
   TOptixTaskGetProcessDumpResult = class(TOptixTaskResult)
   private
-    FOutputFilePath    : String;
-    FDumpedProcessId   : Cardinal;
+    [OptixSerializableAttribute]
+    FOutputFilePath : String;
+
+    [OptixSerializableAttribute]
+    FDumpedProcessId : Cardinal;
+
+    [OptixSerializableAttribute]
     FDumpedProcessName : String;
 
     {@M}
     function GetProcessDisplayName() : String;
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); override;
     function GetExtendedDescription() : String; override;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
     {@C}
     constructor Create(const AOutputFileName : String; const ADumpedProcessId : Cardinal); overload;
 
@@ -151,26 +152,6 @@ begin
     GetProcessDisplayName(),
     FOutputFilePath
   ]);
-end;
-
-procedure TOptixTaskGetProcessDumpResult.DeSerialize(const ASerializedObject : ISuperObject);
-begin
-  inherited;
-  ///
-
-  FOutputFilePath    := ASerializedObject.S['OutputFilePath'];
-  FDumpedProcessId   := ASerializedObject.I['DumpedProcessId'];
-  FDumpedProcessName := ASerializedObject.S['DumpedProcessName'];
-end;
-
-function TOptixTaskGetProcessDumpResult.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['OutputFilePath']    := FOutputFilePath;
-  result.I['DumpedProcessId']   := FDumpedProcessId;
-  result.S['DumpedProcessName'] := FDumpedProcessName;
 end;
 
 end.

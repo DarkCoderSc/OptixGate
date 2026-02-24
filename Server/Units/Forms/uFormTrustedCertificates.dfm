@@ -46,8 +46,6 @@ object FormTrustedCertificates: TFormTrustedCertificates
     OnGetNodeDataSize = VSTGetNodeDataSize
     Touch.InteractiveGestures = [igPan, igPressAndTap]
     Touch.InteractiveGestureOptions = [igoPanSingleFingerHorizontal, igoPanSingleFingerVertical, igoPanInertia, igoPanGutter, igoParentPassthrough]
-    ExplicitWidth = 424
-    ExplicitHeight = 218
     Columns = <
       item
         Position = 0
@@ -60,6 +58,13 @@ object FormTrustedCertificates: TFormTrustedCertificates
     OnPopup = PopupMenuPopup
     Left = 248
     Top = 48
+    object AddFingerprint1: TMenuItem
+      Caption = 'Add Fingerprint'
+      OnClick = AddFingerprint1Click
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
     object Remove1: TMenuItem
       Caption = 'Remove'
       OnClick = Remove1Click

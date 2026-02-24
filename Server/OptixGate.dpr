@@ -49,14 +49,10 @@
 
 program OptixGate;
 
-{$WARN DUPLICATE_CTOR_DTOR OFF}
-
 uses
   Vcl.Forms,
   Vcl.Themes,
   Vcl.Styles,
-  XSuperObject in '..\ExtLibraries\Delphi Libraries\XSuperObject.pas',
-  XSuperJSON in '..\ExtLibraries\Delphi Libraries\XSuperJSON.pas',
   OptixCore.Exceptions in '..\Core\OptixCore.Exceptions.pas',
   OptixCore.Sockets.Helper in '..\Core\Network\OptixCore.Sockets.Helper.pas',
   OptixCore.Protocol.Packet in '..\Core\Network\OptixCore.Protocol.Packet.pas',

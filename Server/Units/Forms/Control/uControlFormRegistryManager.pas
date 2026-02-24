@@ -80,7 +80,6 @@ type
   TValuesTreeData = record
     ValueInformation : TRegistryValueInformation;
     ValueAsString    : String;
-    ImageIndex       : Integer;
   end;
   PValuesTreeData = ^TValuesTreeData;
 
@@ -520,13 +519,6 @@ begin
   pData^.ValueInformation := TRegistryValueInformation.Create();
   pData^.ValueInformation.Assign(AValueInformation);
   pData^.ValueAsString := AValueInformation.ToString;
-
-  case pData^.ValueInformation._Type of
-    REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ:
-      pData^.ImageIndex := IMAGE_PAGE;
-    else
-      pData^.ImageIndex := IMAGE_PAGE_SYS;
-  end;
 end;
 
 procedure TControlFormRegistryManager.DisplayValues(const AList : TOptixCommandEnumRegistry);
@@ -985,7 +977,12 @@ begin
 
   case Kind of
     ikNormal, ikSelected :
-      ImageIndex := pData^.ImageIndex;
+      case pData^.ValueInformation._Type of
+        REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ:
+          ImageIndex := IMAGE_PAGE;
+        else
+          ImageIndex := IMAGE_PAGE_SYS;
+      end;
 
     ikState: ;
     ikOverlay: ;

@@ -61,9 +61,11 @@ uses
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
-  TOptixCommandCreateShellInstance = class(TOptixCommand);
+  TOptixCommandShellBase = class(TOptixCommand);
 
-  TOptixCommandShellInstance = class(TOptixCommand)
+  TOptixCommandCreateShellInstance = class(TOptixCommandShellBase);
+
+  TOptixCommandShellInstance = class(TOptixCommandShellBase)
   private
     [OptixSerializableAttribute]
     FInstanceId : TGUID;
@@ -91,11 +93,8 @@ type
     property CommandLine : String read FCommandLine;
   end;
 
-  TOptixCommandReadShellInstance = class(TOptixCommand)
+  TOptixCommandReadShellInstance = class(TOptixCommandShellInstance)
   private
-    [OptixSerializableAttribute]
-    FInstanceId : TGUID;
-
     [OptixSerializableAttribute]
     FOutput : String;
   public
@@ -103,8 +102,7 @@ type
     constructor Create(const AGroupId : TGUID; const AOutput : String; const AInstanceId : TGUID);
 
     {@G}
-    property InstanceId : TGUID  read FInstanceId;
-    property Output     : String read FOutput;
+    property Output : String read FOutput;
   end;
 
 implementation
@@ -131,11 +129,10 @@ end;
 (* TOptixCommandReadShellInstance *)
 constructor TOptixCommandReadShellInstance.Create(const AGroupId : TGUID; const AOutput : String; const AInstanceId : TGUID);
 begin
-  inherited Create();
+  inherited Create(AInstanceId);
   ///
 
   FOutput     := AOutput;
-  FInstanceId := AInstanceId;
   FWindowGUID := AGroupId;
 end;
 

@@ -57,8 +57,6 @@ interface
 uses
   System.Classes, System.SysUtils,
 
-  XSuperObject,
-
   OptixCore.Classes, OptixCore.Interfaces;
 // ---------------------------------------------------------------------------------------------------------------------
 
@@ -68,28 +66,10 @@ type
     [OptixSerializableAttribute]
     FWindowGUID : TGUID;
   public
-    {@M}
-    function Serialize() : ISuperObject; override;
-
     {@G/S}
     property WindowGUID : TGUID read FWindowGUID write FWindowGUID;
   end;
 
 implementation
-
-// ---------------------------------------------------------------------------------------------------------------------
-uses
-  OptixCore.System.InformationGathering;
-// ---------------------------------------------------------------------------------------------------------------------
-
-(* TOptixPacket *)
-
-function TOptixPacket.Serialize() : ISuperObject;
-begin
-  result := inherited;
-  ///
-
-  result.S['PacketClass'] := ClassName;
-end;
 
 end.

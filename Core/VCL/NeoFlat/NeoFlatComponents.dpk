@@ -34,6 +34,7 @@ requires
   VirtualTreesR;
 
 contains
+  OMultiPanel in '..\OMultiPanel\OMultiPanel.pas',
   NeoFlat.Button in 'NeoFlat.Button.pas',
   NeoFlat.CheckBox in 'NeoFlat.CheckBox.pas',
   NeoFlat.Classes in 'NeoFlat.Classes.pas',

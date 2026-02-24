@@ -76,6 +76,22 @@ type
     constructor Create(const ASystemmErrorIdentifier : TGUID); overload;
   end;
 
+  TOptixConfigError = (
+    oceMissingField,
+    oceInvalidDataFormat
+  );
+
+  EOptixConfigException = class(Exception)
+  private
+    FError : TOptixConfigError;
+  public
+    {@C}
+    constructor Create(const AError : TOptixConfigError); reintroduce;
+
+    {@G}
+    property Error : TOptixConfigError read FError;
+  end;
+
 implementation
 
 (* EWindowsException *)
@@ -103,6 +119,22 @@ end;
 constructor EOptixSystemException.Create(const ASystemmErrorIdentifier : TGUID);
 begin
   inherited Create(Format('Optix System Error: "%s"', [ASystemmErrorIdentifier.ToString]));
+end;
+
+(* EOptixConfigException *)
+
+constructor EOptixConfigException.Create(const AError : TOptixConfigError);
+begin
+  var AMessage := '';
+  case AError of
+    oceMissingField      : AMessage := 'Missing Field';
+    oceInvalidDataFormat : AMessage := 'Invalid Data Format';
+  end;
+
+  inherited Create(AMessage);
+  ///
+
+  FError := AError;
 end;
 
 end.

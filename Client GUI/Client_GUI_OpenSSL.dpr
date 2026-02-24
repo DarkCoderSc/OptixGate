@@ -57,8 +57,6 @@ uses
   Vcl.Forms,
   Vcl.Themes,
   Vcl.Styles,
-  XSuperObject in '..\ExtLibraries\Delphi Libraries\XSuperObject.pas',
-  XSuperJSON in '..\ExtLibraries\Delphi Libraries\XSuperJSON.pas',
   OptixCore.Exceptions in '..\Core\OptixCore.Exceptions.pas',
   OptixCore.Sockets.Helper in '..\Core\Network\OptixCore.Sockets.Helper.pas',
   OptixCore.Protocol.Packet in '..\Core\Network\OptixCore.Protocol.Packet.pas',
@@ -120,6 +118,10 @@ uses
 begin
   IsMultiThread := True;
   ///
+
+  {$IFDEF DEBUG}
+  ReportMemoryLeaksOnShutdown := True;
+  {$ENDIF}
 
   {$IFNDEF CLIENT}
   'The CLIENT compiler directive is missing from the project options. Please define it in the respective build '

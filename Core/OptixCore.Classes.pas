@@ -55,9 +55,7 @@ interface
 
 // ---------------------------------------------------------------------------------------------------------------------
 uses
-  System.Classes,
-
-  XSuperObject,
+  System.Classes, System.JSON, System.Generics.Collections,
 
   OptixCore.Interfaces;
 // ---------------------------------------------------------------------------------------------------------------------
@@ -71,15 +69,16 @@ type
       SEARCH_LIST_PATTERN = '(?:.*\.|^)(TObjectList|TList)<\s*(?:.*\.)?([A-Za-z_]\w*)\s*>';
   protected
     {@M}
-    procedure DeSerialize(const ASerializedObject : ISuperObject); virtual;
+    procedure BeforeDeserialize(); virtual;
+    procedure DeSerialize(const ASerializedObject : TJsonObject); virtual;
     procedure AfterCreate(); virtual;
   public
     {@M}
-    function Serialize() : ISuperObject; virtual;
+    function Serialize() : TJsonObject; virtual;
 
     {@C}
     constructor Create(); overload; virtual;
-    constructor Create(const ASerializedObject : ISuperObject); overload; virtual;
+    constructor Create(const ASerializedObject : TJsonObject); overload; virtual;
   end;
 
   TOptixMemoryObject = class
@@ -117,108 +116,133 @@ uses
   System.NetEncoding, System.Rtti, System.TypInfo, System.SysUtils, System.Hash, System.RegularExpressions;
 // ---------------------------------------------------------------------------------------------------------------------
 
-function TOptixSerializableObject.Serialize() : ISuperObject;
+function TOptixSerializableObject.Serialize() : TJsonObject;
 begin
-  result := SO();
-  ///
+  result := TJsonObject.Create();
+  try
+    result.AddPair('META_CLASSNAME', ClassName);
 
-  var AContext := TRttiContext.Create();
-  var AType := AContext.GetType(ClassType);
+    var AContext := TRttiContext.Create();
+    var AType := AContext.GetType(ClassType);
 
-  for var AField in AType.GetFields() do begin
-    for var AFieldAttribute in AField.GetAttributes() do begin
-      if not (AFieldAttribute is OptixSerializableAttribute) then
-        continue;
-      ///
+    for var AField in AType.GetFields() do begin
+      for var AFieldAttribute in AField.GetAttributes() do begin
+        if not (AFieldAttribute is OptixSerializableAttribute) then
+          continue;
+        ///
 
-      case AField.FieldType.TypeKind of
-        // Handle compatible records -----------------------------------------------------------------------------------
-        tkRecord : begin
-          // TGUID -----------------------------------------------------------------------------------------------------
-          if AField.FieldType.Handle = TypeInfo(TGUID) then
-            result.S[AField.Name] := AField.GetValue(self).AsType<TGUID>.ToString();
-          // -----------------------------------------------------------------------------------------------------------
-        end;
-
-        // Objects -----------------------------------------------------------------------------------------------------
-        tkClass : begin
-          var AFieldClass := AField.FieldType.AsInstance.MetaclassType;
-          var AObject := AField.GetValue(self).AsObject;
-          if not Assigned(AObject) then
-            continue;
-          ///
-
-          // Serializable Object ---------------------------------------------------------------------------------------
-          if AFieldClass.InheritsFrom(TOptixSerializableObject) then begin
-            var ASerializableObject := AObject as TOptixSerializableObject;
-
-            ///
-            result.O[AField.Name] := ASerializableObject.Serialize();
-          // Memory Object ---------------------------------------------------------------------------------------------
-          end else if AFieldClass.InheritsFrom(TOptixMemoryObject) then
-            result.S[AField.Name] := (AObject as TOptixMemoryObject).ToBase64
-          else if TRegEx.Match(AFieldClass.ClassName, SEARCH_LIST_PATTERN).Success then begin
-            var AToArrayMethod := AField.FieldType.GetMethod('ToArray');
-            if not Assigned(AToArrayMethod) then
-              Exit();
-            ///
-
-            var AInvokedMethod := AToArrayMethod.Invoke(AObject, []);
-
-            var AJsonArray := SA();
-
-            for var I := 0 to AInvokedMethod.GetArrayLength -1 do begin
-              var AItemObject := AInvokedMethod.GetArrayElement(I).AsObject();
-              ///
-
-              if not Assigned(AItemObject) or not (AItemObject is TOptixSerializableObject) then
-                continue;
-
-              ///
-              AJsonArray.Add(TOptixSerializableObject(AItemObject).Serialize())
-            end;
-
-            ///
-            result.A[AField.Name] := AJsonArray;
+        case AField.FieldType.TypeKind of
+          // Handle compatible records ---------------------------------------------------------------------------------
+          tkRecord : begin
+            // TGUID ---------------------------------------------------------------------------------------------------
+            if AField.FieldType.Handle = TypeInfo(TGUID) then
+              result.AddPair(AField.Name, AField.GetValue(self).AsType<TGUID>.ToString());
+            // ---------------------------------------------------------------------------------------------------------
           end;
+
+          // Objects ---------------------------------------------------------------------------------------------------
+          tkClass : begin
+            var AFieldClass := AField.FieldType.AsInstance.MetaclassType;
+            var AObject := AField.GetValue(self).AsObject;
+            if not Assigned(AObject) then
+              continue;
+            ///
+
+            // Serializable Object -------------------------------------------------------------------------------------
+            if AFieldClass.InheritsFrom(TOptixSerializableObject) then begin
+              var ASerializableObject := AObject as TOptixSerializableObject;
+
+              ///
+              result.AddPair(AField.Name, ASerializableObject.Serialize());
+            // Memory Object -------------------------------------------------------------------------------------------
+            end else if AFieldClass.InheritsFrom(TOptixMemoryObject) then
+              result.AddPair(AField.Name, (AObject as TOptixMemoryObject).ToBase64)
+            else if TRegEx.Match(AFieldClass.ClassName, SEARCH_LIST_PATTERN).Success then begin
+              var AToArrayMethod := AField.FieldType.GetMethod('ToArray');
+              if not Assigned(AToArrayMethod) then
+                Exit();
+              ///
+
+              var AInvokedMethod := AToArrayMethod.Invoke(AObject, []);
+
+              var AJsonArray := TJSONArray.Create();
+              try
+                for var I := 0 to AInvokedMethod.GetArrayLength -1 do begin
+                  var AItemObject := AInvokedMethod.GetArrayElement(I).AsObject();
+                  ///
+
+                  if not Assigned(AItemObject) or not (AItemObject is TOptixSerializableObject) then
+                    continue;
+
+                  ///
+                  AJsonArray.AddElement(TOptixSerializableObject(AItemObject).Serialize())
+                end;
+
+                ///
+                result.AddPair(AField.Name, AJsonArray);
+              except
+                FreeAndNil(AJsonArray);
+              end;
+            end;
+            // ---------------------------------------------------------------------------------------------------------
+          end;
+          // Sets ------------------------------------------------------------------------------------------------------
+          tkSet :
+            result.AddPair(
+              AField.Name, SetToString(AField.FieldType.Handle, AField.GetValue(self).GetReferenceToRawData)
+            );
+          // Enum ------------------------------------------------------------------------------------------------------
+          tkEnumeration :
+            result.AddPair(AField.Name, AField.GetValue(self).AsOrdinal());
+          // Other Primitives ------------------------------------------------------------------------------------------
+          tkInteger, tkInt64:
+            result.AddPair(AField.Name, AField.GetValue(Self).AsInt64);
+
+          tkFloat:
+            result.AddPair(AField.Name, AField.GetValue(Self).AsExtended);
+
+          tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
+            result.AddPair(AField.Name, AField.GetValue(Self).AsString);
           // -----------------------------------------------------------------------------------------------------------
         end;
-        // Sets --------------------------------------------------------------------------------------------------------
-        tkSet :
-          result.S[AField.Name] := SetToString(AField.FieldType.Handle, AField.GetValue(self).GetReferenceToRawData);
-        // Enum --------------------------------------------------------------------------------------------------------
-        tkEnumeration :
-          result.I[AField.Name] := AField.GetValue(self).AsOrdinal();
-        // Variants -----------------------------------------------------------------------------------------------------
-        tkInteger, tkFloat, tkInt64, tkChar, tkString, tkWChar, tkLString, tkWString, tkUString :
-          result.V[AField.Name] := AField.GetValue(self).AsVariant();
-        // -------------------------------------------------------------------------------------------------------------
       end;
     end;
+  except
+    result.Free;
+    result := nil;
   end;
 end;
 
-procedure TOptixSerializableObject.DeSerialize(const ASerializedObject : ISuperObject);
+procedure TOptixSerializableObject.BeforeDeserialize();
+begin
+  ///
+end;
+
+procedure TOptixSerializableObject.DeSerialize(const ASerializedObject : TJsonObject);
 begin
   if not Assigned(ASerializedObject) then
-    Exit();
+    Exit;
   ///
+
+  BeforeDeserialize();
 
   var AContext := TRttiContext.Create();
   var AType := AContext.GetType(ClassType);
 
-  for var APair in ASerializedObject.AsObject() do begin
-    var AField := AType.GetField(APair.Name);
+  for var APair in ASerializedObject do begin
+    var AField := AType.GetField(APair.JsonString.Value);
     if not Assigned(AField) or not Assigned(AField.GetAttribute(OptixSerializableAttribute)) then
       continue;
     ///
+
+    var AJsonValue := APair.JsonValue;
 
     case AField.FieldType.TypeKind of
       // Handle compatible records -------------------------------------------------------------------------------------
       tkRecord : begin
         // TGUID -------------------------------------------------------------------------------------------------------
         if AField.FieldType.Handle = TypeInfo(TGUID) then
-          AField.SetValue(self, TValue.From<TGUID>(TGUID.Create(APair.AsString)));
+          AField.SetValue(Self, TValue.From<TGUID>(StringToGUID(AJsonValue.Value)));
         // -------------------------------------------------------------------------------------------------------------
       end;
 
@@ -229,42 +253,46 @@ begin
         ///
 
         // Serializable Object -----------------------------------------------------------------------------------------
-        if AFieldClass.InheritsFrom(TOptixSerializableObject) and Assigned(AObject) then begin
-          var ASerializableObject := AObject as TOptixSerializableObject;
-
-          ///
-          ASerializableObject.DeSerialize(APair.AsObject);
+        if AFieldClass.InheritsFrom(TOptixSerializableObject) and Assigned(AObject) then
+          (AObject as TOptixSerializableObject).DeSerialize(AJsonValue as TJSONObject)
         // Memory Object -----------------------------------------------------------------------------------------------
-        end else if AFieldClass.InheritsFrom(TOptixMemoryObject) then begin
+        else if AFieldClass.InheritsFrom(TOptixMemoryObject) then begin
           if Assigned(AObject) then
             FreeAndNil(AObject);
           ///
 
-          AField.SetValue(self, TOptixMemoryObject.Create(APair.AsString));
+          AField.SetValue(self, TOptixMemoryObject.Create(AJsonValue.Value));
         end else if TRegEx.Match(AFieldClass.ClassName, SEARCH_LIST_PATTERN).Success then begin
           // TODO: Create object if not already + support OwnsObject
           var AAddMethod := AField.FieldType.GetMethod('Add');
           var AClearMethod := AField.FieldType.GetMethod('Clear');
           ///
 
-          if not Assigned(AClearMethod) or not Assigned(AAddMethod) or (Length(AAddMethod.GetParameters) = 0) then
-            Exit();
+          if not Assigned(AClearMethod) or not Assigned(AAddMethod) or (Length(AAddMethod.GetParameters) = 0) or
+            not (AJsonValue is TJsonArray)
+          then
+            continue;
 
           AClearMethod.Invoke(AObject, []);
 
-          var AJsonArray := ASerializedObject.A[AField.Name];
+          var AJsonArray := AJsonValue as TJSONArray;
 
           // Trick to get <TObjectKind> class from the list using its first argument ("Add() method")
           var AItemType := AAddMethod.GetParameters[0].ParamType;
           var AItemClass := AItemType.AsInstance.MetaclassType;
 
-          for var I := 0 to AJsonArray.Length -1 do begin
+          for var I := 0 to AJsonArray.Count -1 do begin
             var AItem := AItemClass.Create();
-            if not (AItem is TOptixSerializableObject) then
+            if not (AItem is TOptixSerializableObject) then begin
+              FreeAndNil(AItem);
+
               break;
+            end;
             ///
 
-            TOptixSerializableObject(AItem).DeSerialize(AJsonArray.O[I]);
+            var AArrayItem := AJsonArray.Items[I] as TJsonObject;
+            if Assigned(AArrayItem) then
+              TOptixSerializableObject(AItem).DeSerialize(AArrayItem);
 
             AAddMethod.Invoke(AObject, [AItem]);
           end;
@@ -272,21 +300,28 @@ begin
         // -------------------------------------------------------------------------------------------------------------
       end;
 
-      // Variants ------------------------------------------------------------------------------------------------------
-      tkInteger, tkChar, tkFloat, tkString, tkWChar, tkLString, tkWString, tkVariant, tkInt64, tkUString :
-        AField.SetValue(self, TValue.FromVariant(APair.AsVariant));
+      // Primitives ----------------------------------------------------------------------------------------------------
+      tkInteger: AField.SetValue(Self, AJsonValue.AsType<Integer>);
+      tkInt64:   AField.SetValue(Self, AJsonValue.AsType<Int64>);
+      tkFloat:   AField.SetValue(Self, AJsonValue.AsType<Double>);
+
+      tkChar, tkString, tkWChar, tkLString, tkWString, tkUString:
+        AField.SetValue(Self, AJsonValue.Value);
 
       // Enums ---------------------------------------------------------------------------------------------------------
       tkEnumeration : begin
         var ATypeData := GetTypeData(AField.FieldType.Handle);
-        if (APair.AsInteger >= ATypeData^.MinValue) and (APair.AsInteger <= ATypeData^.MaxValue) then
-          AField.SetValue(self, TValue.FromOrdinal(AField.FieldType.Handle, APair.AsInteger));
+        var AIntegerValue := AJsonValue.AsType<Integer>;
+        ///
+
+        if (AIntegerValue >= ATypeData^.MinValue) and (AIntegerValue <= ATypeData^.MaxValue) then
+          AField.SetValue(self, TValue.FromOrdinal(AField.FieldType.Handle, AIntegerValue));
       end;
 
       // Sets ----------------------------------------------------------------------------------------------------------
       tkSet :
         try
-          StringToSet(AField.FieldType.Handle, APair.AsString, Pointer(NativeUInt(self) + NativeUInt(AField.Offset)));
+          StringToSet(AField.FieldType.Handle, AJsonValue.Value, Pointer(NativeUInt(Self) + NativeUInt(AField.Offset)));
         except
         end;
       // ---------------------------------------------------------------------------------------------------------------
@@ -307,7 +342,7 @@ begin
   AfterCreate();
 end;
 
-constructor TOptixSerializableObject.Create(const ASerializedObject : ISuperObject);
+constructor TOptixSerializableObject.Create(const ASerializedObject : TJsonObject);
 begin
   Create();
   ///

@@ -84,6 +84,17 @@ object FormCertificatesStore: TFormCertificatesStore
     OnPopup = PopupMenuPopup
     Left = 104
     Top = 96
+    object GenerateNew2: TMenuItem
+      Caption = 'Generate New'
+      OnClick = GenerateNew2Click
+    end
+    object Import2: TMenuItem
+      Caption = 'Import'
+      OnClick = Import2Click
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
     object ExportCertificate1: TMenuItem
       Caption = 'Export Certificate'
       OnClick = ExportCertificate1Click

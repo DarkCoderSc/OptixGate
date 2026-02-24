@@ -83,7 +83,6 @@ type
     FCreatedDate     : TDateTime;
     FOnThreadExecute : TNotifyEvent;
     FOnThreadEnd     : TNotifyEvent;
-    FStarted         : Boolean;
   protected
     {@M}
     procedure Execute(); override;
@@ -333,7 +332,6 @@ end;
 
 procedure TOptixThread.Execute();
 begin
-  FStarted := True;
   try
     if Assigned(FOnThreadExecute) then
       Synchronize(procedure begin
@@ -347,9 +345,6 @@ begin
       Synchronize(procedure begin
         FOnThreadEnd(self);
       end);
-
-    ///
-    ExitThread(0); // !important
   end;
 end;
 
@@ -357,8 +352,6 @@ constructor TOptixThread.Create();
 begin
   inherited Create(True);
   ///
-
-  FStarted := False;
 
   if Assigned(OPTIX_THREAD_HIVE) then
     OPTIX_THREAD_HIVE.Add(self);

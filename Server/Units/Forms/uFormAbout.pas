@@ -62,23 +62,21 @@ uses
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.VirtualImage, Vcl.StdCtrls, Vcl.ComCtrls,
   Vcl.BaseImageCollection, Vcl.ImageCollection,
 
-  NeoFlat.Window, NeoFlat.Panel, NeoFlat.Button;
+  NeoFlat.Window, NeoFlat.Panel, NeoFlat.Button, Vcl.Imaging.pngimage, Vcl.ExtCtrls;
 // ---------------------------------------------------------------------------------------------------------------------
 
 type
   TFormAbout = class(TForm)
-    ImageLogo: TVirtualImage;
-    LabelName: TLabel;
-    LabelDarkCoderSc: TLabel;
-    ButtonClose: TFlatButton;
+    ImageBanner: TVirtualImage;
     ImageCollection: TImageCollection;
     FlatWindow1: TFlatWindow;
     PanelDisclaimer: TFlatPanel;
     Disclaimer: TRichEdit;
+    ShapeBanner: TShape;
     procedure FormShow(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure ButtonCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure ImageBannerMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   private
     FFirstShow : Boolean;
 
@@ -102,30 +100,21 @@ uses
 
 {$R *.dfm}
 
-procedure TFormAbout.ButtonCloseClick(Sender: TObject);
-begin
-  self.Close();
-end;
-
 procedure TFormAbout.DoResize();
 begin
-  ImageLogo.Top  := self.ScaleValue(8);
-  ImageLogo.Left := (ClientWidth div 2) - (ImageLogo.Width div 2);
+  ImageBanner.Top   := 0;
+  ImageBanner.Left  := 0;
 
-  LabelName.Top  := ImageLogo.Top + ImageLogo.Height + self.ScaleValue(8);
-  LabelName.Left := (ClientWidth div 2) - (LabelName.Width div 2);
+  ShapeBanner.Top   := ImageBanner.Top + ImageBanner.Height;
+  ShapeBanner.Left  := 0;
+  ShapeBanner.Width := ClientWidth;
 
-  LabelDarkCoderSc.Top  := LabelName.Top + LabelName.Height + self.ScaleValue(4);
-  LabelDarkCoderSc.Left := (ClientWidth div 2) - (labelDarkCoderSc.Width div 2);
+  PanelDisclaimer.Top   := ShapeBanner.Top + ShapeBanner.Height + ScaleValue(4);
+  PanelDisclaimer.Left  := ScaleValue(4);
+  PanelDisclaimer.Width := ClientWidth - (ScaleValue(4) * 2);
 
-  PanelDisclaimer.Top   := labelDarkCoderSc.Top + labelDarkCoderSc.Height + self.ScaleValue(8);
-  PanelDisclaimer.Left  := self.ScaleValue(8);
-  PanelDisclaimer.Width := ClientWidth - (PanelDisclaimer.Left * 2);
-
-  ButtonClose.Top  := PanelDisclaimer.Top + PanelDisclaimer.Height + self.ScaleValue(8);
-  ButtonClose.Left := (ClientWidth div 2) - (ButtonClose.Width div 2);
-
-  ClientHeight := ButtonClose.Top + ButtonClose.Height + self.ScaleValue(8);
+  ClientHeight := PanelDisclaimer.Top + PanelDisclaimer.Height + ScaleValue(4);
+  ClientWidth  := ImageBanner.Width;
 end;
 
 procedure TFormAbout.FormCreate(Sender: TObject);
@@ -153,6 +142,12 @@ begin
   end;
 
   DoResize();
+end;
+
+procedure TFormAbout.ImageBannerMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  ReleaseCapture();
+  SendMessage(Handle, WM_SYSCOMMAND, $F012, 0);
 end;
 
 end.

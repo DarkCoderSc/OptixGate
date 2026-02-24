@@ -152,7 +152,7 @@ type
     FNewValue : TRegistryValueInformation;
   protected
     {@M}
-    procedure AfterCreate(); override;
+    procedure BeforeDeserialize(); override;
   public
     {@C}
     constructor Create(const AKeyPath : String; const AName : String; const AKind : DWORD; const pData : Pointer;
@@ -339,8 +339,11 @@ end;
 
 (* TOptixCommandSetRegistryValue *)
 
-procedure TOptixCommandSetRegistryValue.AfterCreate();
+procedure TOptixCommandSetRegistryValue.BeforeDeserialize();
 begin
+  inherited;
+  ///
+
   FNewValue := TRegistryValueInformation.Create();
 end;
 
