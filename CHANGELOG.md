@@ -1,5 +1,47 @@
 # Changelogs
 
+## 2.0.1 (Feb 2026)
+
+Version 2.0.1 is a significant quality update. The primary focus is to further enhance its already outstanding stability and simplify the build process for users with limited experience.
+
+- Several code segments have been optimized and simplified, and minor memory leaks have been addressed.
+- The external library **XSuperObject** has been fully replaced by the native, modern Delphi alternative, **System.JSON**.
+- The **OMultiPanel** external component has been integrated into the NeoFlat package for greater convenience, reducing the installation steps for users with limited Delphi experience.
+- The `Dist.bat` script has been enhanced for users with a **Delphi Professional license**, allowing them to build all project components and modes across all architectures without needing to open the IDE.
+
+## 2.0.0 (Feb 2026)
+
+- Major codebase restructuring and refactoring. The architecture is now more logical and modular, making maintenance easier and allowing faster access to topic-specific functions.
+- General code optimizations, multiple bug fixes, and overall performance improvements.
+- Updated OpenSSL to version 1.1w (planned upgrade to the latest stable release in a future update).
+- Introduced Neo Flat v1.0, a fully hand-crafted component suite for Delphi, designed to faithfully reproduce the visual style of many Delphi applications from the 2000s era. Inspired by Fast Style Component, Neo Flat is a complete remake and enhancement, rebuilt from the ground up to ensure compatibility and optimal performance on modern Windows versions. This release establishes the definitive visual direction of the application, with further refinements and feature expansions planned for future updates.
+- Integrated FamFamFam (HDPI) icons to further reinforce the early-2000s desktop application design.
+
+## 1.4.0 (Dec 2025)
+
+#### Registry Manager
+- Create new keys.
+- Delete existing keys.
+- Rename keys.
+- Create new values (String, Multi-Line String, Binary, DWORD, QWORD) with the ability to switch between modes (Convert data when applicable).
+- Edit values.
+- Delete values.
+- Rename values.
+- Fix issues in the registry tree display and navigation.
+
+#### File Manager
+- Fix issues in the folder tree display and navigation.
+
+#### File Content Streaming
+- Redesigned interface for improved user experience.
+- Added new hex table component for easier viewing and editing.
+
+#### Miscellaneous
+- Code refactored and improved for clarity, maintainability and extensibility - further work is expected progressively.
+- Updated Optix command serializer to support `TObjectList<T>` and `TList<T>`.
+- Custom hex table component added with support for read-only mode, editing, and dynamic memory expansion.
+- Removed non-GUI client from repository. Only the Client GUI remains.
+
 ## 1.3.0 (Oct 2025)
 
 The Content Reader feature introduces a new capability that allows users to remotely open and view readable files in a dedicated editor. Currently available for files only, this feature enables instant server-side access to any file, regardless of its size.
